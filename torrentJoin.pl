@@ -22,6 +22,7 @@
 use strict;
 use warnings;
 my$dir="/home/kk/Downloads";
+#my$md5file="/home/kk/Dropbox/torrent_done_before.md5";
 
 #open FH,"</home/kk/.mldonkey/done_before.md5";
 open FH,"</home/kk/Dropbox/torrent_done_before.md5";
