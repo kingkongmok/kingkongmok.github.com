@@ -7,7 +7,7 @@ tagline: Supporting tagline
 
 
 ## about perl
-
+perl is a scripting language.
 
 <ul class="posts">
   {% for post in site.posts %}
