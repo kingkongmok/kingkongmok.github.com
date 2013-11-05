@@ -8,8 +8,8 @@ pygments: true
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
-title : 莫庆强的运维博客
-tagline: KK's blog
+title : kk's blog
+tagline: perl bash and linux
 author :
   name : kingkong mok
   email : kingkongmok@gmail.com
