@@ -1,13 +1,8 @@
 ---
 layout: page
-title: Hello World!
-tagline: Supporting tagline
+title: 莫庆强的运维博客
+tagline: about linux perl and networking.
 ---
-{% include JB/setup %}
-
-
-## about perl
-
 
 <ul class="posts">
   {% for post in site.posts %}
