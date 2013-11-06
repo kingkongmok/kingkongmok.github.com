@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "hello world hello git"
-category: [ web ]
+category:  web 
 tags: [git github newbie blog]
 ---
 {% include JB/setup %}
