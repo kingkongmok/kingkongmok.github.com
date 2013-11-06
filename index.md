@@ -7,7 +7,7 @@ tagline: about linux perl and networking
 
 
 ## about me
-**  A linux administrator living in Guangzhou China. 
+**A linux administrator living in Guangzhou China. 
     
 
 <ul class="posts">
