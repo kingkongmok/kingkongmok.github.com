@@ -12,7 +12,6 @@ tags: [sitemap.txt, atom.xml, dynamic, _config, production_url ]
 
 ```sh
 kk@debian:~/Documents/kingkongmok.github.com$ curl www.datlet.com/sitemap.txt?sdfas
-
 http://www.datlet.com/archive.html
 http://www.datlet.com/index.html
 http://www.datlet.com/pages.html
@@ -20,7 +19,6 @@ http://www.datlet.com/tags.html
 http://www.datlet.com/categories.html
 http://www.datlet.com/atom.xml
 http://www.datlet.com/sitemap.txt
-
 http://www.datlet.com/web/2013/11/06/hello-world-hello-git
 http://www.datlet.com/lessons/2011/12/29/jekyll-introduction
 ```
