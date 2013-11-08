@@ -9,8 +9,7 @@ tags: [sitemap.txt, atom.xml, dynamic, _config, production_url ]
 ## sitemap.txt 终于能生成正常
 **sitemap.txt atom.xml 是由production_url生产的静态页**
 之前一直不断尝试修改_config文件和sitemap.txt文件，但一直无法看到正常的路径。原因是太高估自己能避免缓存了。忘记txt文件也可能是动态文件,可以由服务端缓存的。碰到这个情况，以后要加?来去尝试。
-
-```sh
+```
 kk@debian:~/Documents/kingkongmok.github.com$ curl www.datlet.com/sitemap.txt?sdfas
 
 http://www.datlet.com/archive.html
