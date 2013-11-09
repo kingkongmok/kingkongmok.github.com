@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "debian font config"
-category: 
-tags: []
+category: linux
+tags: [debian font config]
 ---
 {% include JB/setup %}
 
