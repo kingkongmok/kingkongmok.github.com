@@ -2,7 +2,7 @@
 layout: post
 title: "Port Forwarding in Virtualbox with VBoxManage"
 category: linux
-tags: [virtualbox windows port forward]
+tags: [virtualbox, windows, port, forward]
 ---
 {% include JB/setup %}
 

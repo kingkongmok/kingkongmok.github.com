@@ -2,7 +2,7 @@
 layout: post
 title: "install a jekyll serve on debian"
 category: web
-tags: [debian jekyll]
+tags: [debian, jekyll]
 ---
 {% include JB/setup %}
 ## install with forrowing commmands:

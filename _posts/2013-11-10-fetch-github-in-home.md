@@ -2,7 +2,7 @@
 layout: post
 title: "fetch github in home"
 category: web
-tags: [github pull ssh clone https]
+tags: [github, pull, ssh, clone, https]
 ---
 {% include JB/setup %}
 
