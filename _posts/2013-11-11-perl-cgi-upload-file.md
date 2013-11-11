@@ -12,15 +12,16 @@ tags: [perl, cgi, upload, curl]
 
 **curl上传的方法**
 
-```sh
+{% highlight bash %}
 curl --form filename=@/home/kk/check_inn.pl localhost/uploadfile.pl
-```
+{% endhighlight %}
+
 
 出现了`nginx 413 Request Entity Too Large`的字样，那个是web server的request设置过小了，需要在nginx.conf的server区加入： `client_max_body_size 2000M;`
 当然这样由于我要上传软件。
 
 
-```pl
+{% highlight perl %}
 use strict;
 use warnings;
  
@@ -48,4 +49,4 @@ else {
     close FILE;
     print $q->header, $q->p("$filename is saved");
 }
-```
+{% endhighlight %}
