@@ -22,12 +22,13 @@ Already up-to-date.
 **其实上面的方法没有验证过……, clone的方法倒是比较稳健**
 
 <pre>
-kk@t510:~/workplace$ git clone git://github.com/kingkongmok/perl perl
+kk@t510:~/workplace$ git clone git://github.com/kingkongmok/perl.git perl
 Cloning into 'perl'...
 remote: Counting objects: 88, done.
 remote: Compressing objects: 100% (56/56), done.
 remote: Total 88 (delta 34), reused 70 (delta 24)
 Receiving objects: 100% (88/88), 23.02 KiB | 7 KiB/s, done.
 Resolving deltas: 100% (34/34), done.
+kk@t510:~/workplace/perl$ git remote set-url origin git@github.com:kingkongmok/perl.git
 </pre>
 
