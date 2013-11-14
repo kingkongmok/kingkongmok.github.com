@@ -44,4 +44,27 @@ vrrp_instance VI_1 {
 }
 {% endhighlight %}
 
-##台式机上使用的是100
+**台式机上使用的是100**
+
+##查看
+
+**除了syslog外，可以使用ip a来查看**
+
+```sh
+kk@t510:~$ sudo ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
+    link/ether f0:de:f1:51:c6:d4 brd ff:ff:ff:ff:ff:ff
+3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
+    link/ether 18:3d:a2:2b:11:10 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.51/24 brd 192.168.1.255 scope global wlan0
+    inet 192.168.1.254/32 scope global wlan0
+    inet6 fe80::1a3d:a2ff:fe2b:1110/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+
