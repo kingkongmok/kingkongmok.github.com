@@ -6,11 +6,13 @@ tags: [data, structur, aoa, hoa, hoh, aoh]
 ---
 {% include JB/setup %}
 
-==data structure example
-hoh是考虑修正一下文件的：
-**https://github.com/kingkongmok/perl/blob/master/billConvert.pl**
+##data structure
 
-{% highlight perl %}
+**hoh是考虑修正一下文件的：**
+
+https://github.com/kingkongmok/perl/blob/master/billConvert.pl
+
+{% highlight  perl %}
 use strict;
 use warnings;
 
@@ -92,4 +94,4 @@ while ( my($key1,$value1)=each%hash ) {
     }
 }
 
-{% endhighlight }
+{% endhighlight %}
