@@ -6,11 +6,13 @@ tags: [smart match, '~~', perl]
 ---
 {% include JB/setup %}
 
-<code>
+###用法
+<pre>
 $key ~~ %hash       # Does $key exist in %hash ?
 $value ~~ @array    # Does $value exist in @array?
-</code>
+</pre>
 
+###以下一个失败一个成功
 <pre lang="perl">
 my @primary = ("red", "blue", "green");
     if (@primary ~~ "red") { # false
