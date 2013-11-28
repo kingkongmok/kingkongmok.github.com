@@ -2,9 +2,11 @@
 layout: post
 title: "using hash counting in string"
 category: perl
-tags: [count, hash, string]
+tags: [count, hash, string, perl, gsm]
 ---
 {% include JB/setup %}
+
+##换行的字符串分类
 
 qq群里面有朋友问如何使得有大小写并有换行的字符串分类并 列明数量，以下是方法。
 
