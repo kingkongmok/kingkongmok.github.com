@@ -6,8 +6,7 @@ tagline: about linux perl and networking
 {% include JB/setup %}
 
 
-## about me
-**A linux administrator living in Guangzhou China. **
+** 大家好，我是一名Linux运维，家住广州。
     
 
 <ul class="posts">
