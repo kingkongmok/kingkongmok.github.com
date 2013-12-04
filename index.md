@@ -6,7 +6,7 @@ tagline: about linux perl and networking
 {% include JB/setup %}
 
 
-** 大家好，我是一名Linux运维，家住广州。
+**文章列表
     
 
 <ul class="posts">
