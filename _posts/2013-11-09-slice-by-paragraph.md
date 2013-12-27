@@ -6,7 +6,7 @@ tags: [slice, paragraph]
 ---
 {% include JB/setup %}
 **这样的字段，需要查询exon的在tran中间的exon次数，例如这里是2 3**
-<pre>
+{% highlight perl %}
 kk@R61e:~$ cat test.txt
 tran
 exon
@@ -15,7 +15,7 @@ tran
 exon
 exon
 exon
-</pre>
+{% endhighlight %}
 
 {% highlight perl %}
 use strict;

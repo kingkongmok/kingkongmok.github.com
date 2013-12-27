@@ -9,17 +9,17 @@ tags: [squid, proxy, transparenet]
 ##只有一个网卡
 **公司的文件服务器只有一个网卡，但考虑网络经常出现瓶颈。所以搭建代理服务器，顺便把透明代理设置好。**
 
-<pre lang="bash" line="1">
+{% highlight bash %}
 kk@fileserver:~$ cat /etc/debian_version
 7.1
-</pre>
+{% endhighlight %}
 
 由于设置透明代理，需要在http_port中设定类型为"transparenet"，否则会有类似的提示
-<pre lang="bash" line="1">
+{% highlight bash %}
 HTTP/1.0 400 Bad Request
 Content-Type: text/html 
 X-Squid-Error: ERR_INVALID_REQ 0
-</pre>
+{% endhighlight %}
 
 squid的设置一般不需过多修改，比较重要的是cache_dir，这个参数决定了squid的cache目录空间，一般越大
 越好。
@@ -27,7 +27,7 @@ http_port 后面加上transparent，则能支持透明代理，而且是无需�
 google上还有需设置为cache_peer localhost 等设置，但我这里不启用也一样可以设置成功，所以这里先忽略
 这个选项。
 
-<pre lang="bash" line="1">
+{% highlight bash %}
 kk@fileserver:~$ sudo diff /etc/squid/squid.conf.orig /etc/squid/squid.conf
 630a631
 > acl igbnet src 192.1.6.0/24
@@ -39,8 +39,8 @@ kk@fileserver:~$ sudo diff /etc/squid/squid.conf.orig /etc/squid/squid.conf
 > http_port 3128 transparent
 1945a1948
 > cache_dir ufs /var/spool/squid 50000 16 256
-</pre>
-<pre lang="bash" line="1">
+{% endhighlight %}
+{% highlight bash %}
 kk@fileserver:~$ sudo grep "^[^#]" /etc/squid/squid.conf
 acl all src all
 acl manager proto cache_object
@@ -95,12 +95,12 @@ broken_vary_encoding allow apache
 extension_methods REPORT MERGE MKACTIVITY CHECKOUT
 hosts_file /etc/hosts
 coredump_dir /var/spool/squid
-</pre>
+{% endhighlight %}
 
 iptables则只需简单得让prerouting包做一下redir即可。
 
-<pre lang="bash" line="1">
+{% highlight bash %}
 kk@fileserver:~$ sudo iptables -A PREROUTING -s 192.1.6.0/24 ! -d 192.0.0.0/8 -i eth0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
-</pre>
+{% endhighlight %}
 
 
