@@ -39,7 +39,3 @@ xwininfo -id $(xdotool getactivewindow)
 ##用于ffmpeg的录像
 
 [原文](http://www.commandlinefu.com/commands/view/148/capture-video-of-a-linux-desktop)
-
-{% highlight bash %}
-ffmpeg -s `xdpyinfo | grep 'dimensions:'|awk '{print $2}'` -f x11grab -r 25 -i :0.0 /tmp/outputFile.mpg
-{% endhighlight %}
