@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "new post"
+title: "how do i find the window dimensions and position accurately"
 category: linux
 tags: [X, location, demensions]
 ---
@@ -34,4 +34,12 @@ xwininfo -id $(xdotool getactivewindow)
            -e "s/^ \+Height: \+\([0-9]\+\).*/h=\1/p" )
   echo -n "$x $y $w $h"
 #
+{% endhighlight %}
+
+##用于ffmpeg的录像
+
+[原文](http://www.commandlinefu.com/commands/view/148/capture-video-of-a-linux-desktop)
+
+{% highlight bash %}
+ffmpeg -s `xdpyinfo | grep 'dimensions:'|awk '{print $2}'` -f x11grab -r 25 -i :0.0 /tmp/outputFile.mpg
 {% endhighlight %}
