@@ -14,9 +14,9 @@ tags: [lm_sensors, sensors, kernel, modules]
 Now follows a summary of the probes I have just done.
 Just press ENTER to continue: 
 
-Driver `w83627ehf':
+Driver w83627ehf:
   * ISA bus, address 0x290
-    Chip `Winbond W83627EHF/EF/EHG/EG Super IO Sensors' (confidence: 9)
+    Chip Winbond W83627EHF/EF/EHG/EG Super IO Sensors (confidence: 9)
 
 {% endhighlight %}
 编译w83627ehf.ko后正常。
