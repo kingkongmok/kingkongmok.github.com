@@ -6,6 +6,27 @@ tags: [xiaomi, android, adb, recovery, fastboot]
 ---
 {% include JB/setup %}
 
+### Android adb permision error ###
+
+running ./adb device
+I get this error:
+
+
+{% highlight bash %}
+ List of devices attached 
+ ????????????    no permissions
+{% endhighlight %}
+
+解决方法：
+{% highlight bash %}
+kk@gentoo ~ $ cat /etc/udev/rules.d/50-android.rules 
+SUBSYSTEM=="usb", SYSFS{idVendor}=="2717", MODE=="0666", OWNER="kk"
+SUBSYSTEM=="usb_device", SYSFS{idVendor}=="2717", MODE=="0666", OWNER="kk"
+SUBSYSTEM=="usb", ATTR{idVendor}=="2717", ATTR{idProduct}=="9039", SYMLINK+="android_adb", OWNER="kk"
+{% endhighlight %}
+
+
+
 ### recovery ###
 
 recovery的使用方法：
@@ -31,6 +52,7 @@ kk@gentoo ~ $ cat ~/.android/adb_usb.ini
 0x2717
 {% endhighlight %}
 
+注意可能会出现permission的异常，解决方法看上面。
 {% highlight bash %}
 kk@gentoo ~ $ cat /etc/udev/rules.d/50-android.rules 
 SUBSYSTEM=="usb", SYSFS{idVendor}=="2717", MODE=="0666"
@@ -62,3 +84,5 @@ f2a393338c35a1c40e93dbc6666fd7f0  recovery_mi2_cofface_V3.2.zip
 97e410a17dc76a67c25c444e61923de9  recovery_offical.zip
 是小米的官方recovery，但不能选择zip进行安装也不能安装gapps。
 {% endhighlight %}
+
+
