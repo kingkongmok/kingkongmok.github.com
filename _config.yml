@@ -123,4 +123,12 @@ JB :
   # and include your custom code. Your custom file must be defined at:
   #   ./_includes/custom/[HELPER]
   # where [HELPER] is the name of the helper you are overriding.
-  
+
+#Migrating your Pages site from Maruku
+#By default, Jekyll sites on GitHub Pages rely on a program called Maruku to interpret Markdown. In October 2012 the maintainers of Maruku announced that they were shutting down the project. Maruku is now considered obsolete and may cause some builds with invalid Markdown or HTML syntax to unexpectedly fail.
+#
+#We highly recommend that you upgrade to a new Markdown interpreter. Although Jekyll (and GitHub Pages) will upgrade to a new default Markdown interpreter soon, you can get all the advantages of a shiny new interpreter now by adding the following to your site's _config.yml file:
+#https://help.github.com/articles/migrating-your-pages-site-from-maruku
+#
+#http://jekyllrb.com/docs/extras/
+markdown: kramdown
