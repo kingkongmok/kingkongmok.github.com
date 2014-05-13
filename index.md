@@ -6,7 +6,7 @@ tagline: about linux perl and networking
 {% include JB/setup %}
 
 
-我是一名Linux运维，家住广州。可以通过 kingkongmok AT gmail DOT com 联系我。
+我是一名Linux运维，家住广州。可以通过 kingkongmok AT gmail DOT com 联系我。这是我的<a href="/resume/index.html">工作简历</a>。
 
 <ul class="posts">
   {% for post in site.posts %}
