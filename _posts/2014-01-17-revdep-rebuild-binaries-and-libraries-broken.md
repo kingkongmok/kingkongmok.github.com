@@ -106,7 +106,7 @@ Number removed:       0
 sudo mv /usr/lib64/codecs/cook.so /tmp/
 sudo mv /usr/lib64/codecs/drvc.so /tmp/
 
-sudo revdep-rebuild --ignore --pretend
+sudo revdep-rebuild --ignore
  * Configuring search environment for revdep-rebuild
 
  * Checking reverse dependencies
