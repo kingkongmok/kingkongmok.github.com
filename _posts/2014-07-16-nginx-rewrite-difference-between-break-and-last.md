@@ -13,7 +13,7 @@ You may have different sets of rewrite rules for different locations. When rewri
 That is, if there are two locations: loc1 and loc2, and there's a rewriting rule in loc1 that changes loc1 to loc2 AND ends with last, the request will be rewritten and passed to location loc2. If the rule ends with break, it will belong to location loc1.
 
 简单总结，`last`会继续匹配下一个location，
-`last`不会。
+`break`不会。
 
 也有同学提出不同观点：
 last 停止处理后续rewrite指令集，然后对当前重写的新URI在rewrite指令集上重新查找。
