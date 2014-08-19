@@ -26,3 +26,8 @@ kk@debian:/tmp/test$ touch 23423\ 234afadf\ \ \ 234.sdf
 kk@debian:/tmp/test$ rename -n 's/\d+ //; s/\s+/_/g' *
 23423 234afadf   234.sdf renamed as 234afadf_234.sdf
 </pre>
+
+另外需要222.jpg改名为22200000.jpg这样的需求
+{% highlight bash %}
+ls |perl -pe 'while(length$_<20){s/(?=\.[^.]+$|$)/0/}'
+{% endhighlight %}
