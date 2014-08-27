@@ -25,5 +25,5 @@ Use git@github.com:my_user_name/my_repo.git
 
 
 {% highlight bash %}
-git remote set-url origin git@github.com:kingkongmok/kingkongmok/perl.git
+git remote set-url origin git@github.com:kingkongmok/perl.git
 {% endhighlight %}
