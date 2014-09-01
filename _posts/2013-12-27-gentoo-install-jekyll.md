@@ -102,3 +102,45 @@ Thread.c:(.text+0x35f): undefined reference to `pthread_key_create'
 collect2: error: ld returned 1 exit status
 make: *** [ffi_c.so] Error 1
 {% endhighlight %}
+
+今天重新设置的时候，出现一个javascript无法解析的异常
+{% highlight bash %}
+kk@ins14 ~/workspace/kingkongmok.github.com $ jekyll server
+/usr/local/lib64/ruby/gems/1.9.1/gems/execjs-2.2.1/lib/execjs/runtimes.rb:51:in `autodetect': Could not find a JavaScript runtime. See https://github.com/sstephenson/execjs for a list of available runtimes. (ExecJS::RuntimeUnavailable)
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/execjs-2.2.1/lib/execjs.rb:5:in `<module:ExecJS>'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/execjs-2.2.1/lib/execjs.rb:4:in `<top (required)>'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/coffee-script-2.3.0/lib/coffee_script.rb:1:in `<top (required)>'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/coffee-script-2.3.0/lib/coffee-script.rb:1:in `<top (required)>'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-coffeescript-1.0.1/lib/jekyll-coffeescript.rb:2:in `<top (required)>'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/lib/jekyll/deprecator.rb:46:in `block in gracefully_require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/lib/jekyll/deprecator.rb:44:in `each'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/lib/jekyll/deprecator.rb:44:in `gracefully_require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/lib/jekyll.rb:141:in `<top (required)>'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/lib64/ruby/site_ruby/1.9.1/rubygems/core_ext/kernel_require.rb:53:in `require'
+    from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/bin/jekyll:6:in `<top (required)>'
+    from /usr/local/bin/jekyll:23:in `load'
+    from /usr/local/bin/jekyll:23:in `<main>'
+{% endhighlight %}
+
+[解决方法](http://jekyllrb.com/docs/troubleshooting/)
+{% highlight bash %}
+kk@ins14 ~ $ sudo emerge -pv nodejs
+
+These are the packages that would be merged, in order:
+
+Calculating dependencies... done!
+[ebuild  N     ] net-libs/nodejs-0.10.30  USE="npm snapshot" 13,211 kB
+
+Total: 1 package (1 new), Size of downloads: 13,211 kB
+{% endhighlight %}
+安装后正常.
+
