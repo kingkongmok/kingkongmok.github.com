@@ -1,0 +1,2 @@
+@reboot  kk /usr/bin/autossh -M 0 -p 22 -N -D 7070 kingkongmok@hk.5bird.com
+

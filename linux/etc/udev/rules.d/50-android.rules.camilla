@@ -1,0 +1,4 @@
+SUBSYSTEM=="usb", SYSFS{idVendor}=="04e8", MODE=="0666", OWNER="kk"
+SUBSYSTEM=="usb_device", SYSFS{idVendor}=="04e8", MODE=="0666", OWNER="kk"
+SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", ATTR{idProduct}=="6860", SYMLINK+="android_adb", OWNER="kk"
+

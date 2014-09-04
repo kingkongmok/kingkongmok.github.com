@@ -1,0 +1,139 @@
+app-admin/rsyslog
+app-admin/sudo
+app-admin/sysstat
+app-arch/file-roller
+<<<<<<< HEAD
+app-crypt/gnupg
+app-editors/mousepad
+app-editors/vim
+=======
+app-arch/p7zip
+app-arch/unrar
+app-arch/unzip
+app-benchmarks/httperf
+app-crypt/gnupg
+app-editors/mousepad
+app-editors/vim
+app-emulation/emul-linux-x86-baselibs
+app-emulation/virtualbox
+app-forensics/foremost
+>>>>>>> gentoo
+app-i18n/fcitx
+app-misc/pwsafe
+app-misc/screen
+app-portage/gentoolkit
+app-shells/bash-completion
+app-text/catdoc
+app-text/mupdf
+app-text/sdcv
+app-text/wgetpaste
+dev-lang/ruby
+dev-libs/libpthread-stubs
+dev-perl/XML-Parser
+dev-perl/rename
+dev-ruby/rake
+dev-ruby/rubygems
+dev-vcs/git
+games-misc/cowsay
+games-misc/fortune-mod-all
+<<<<<<< HEAD
+=======
+gnome-extra/zenity
+mail-client/mailx
+>>>>>>> gentoo
+mail-client/mutt
+mail-mta/postfix
+media-gfx/gimp
+media-gfx/mcomix
+media-gfx/ristretto
+media-libs/alsa-lib
+media-sound/alsa-utils
+media-sound/mpg123
+media-sound/vorbis-tools
+media-video/gnome-mplayer
+media-video/mplayer
+<<<<<<< HEAD
+net-analyzer/iptraf-ng
+=======
+net-analyzer/arpoison
+net-analyzer/fping
+net-analyzer/iptraf-ng
+net-analyzer/net-snmp
+>>>>>>> gentoo
+net-analyzer/netcat
+net-analyzer/nmap
+net-analyzer/tcpdump
+net-analyzer/wireshark
+net-dns/bind-tools
+net-fs/samba
+net-ftp/lftp
+net-irc/irssi
+net-mail/fetchmail
+<<<<<<< HEAD
+=======
+net-misc/autossh
+>>>>>>> gentoo
+net-misc/axel
+net-misc/curl
+net-misc/dhcpcd
+net-misc/dropbox
+<<<<<<< HEAD
+=======
+net-misc/memcached
+>>>>>>> gentoo
+net-misc/ntp
+net-misc/proxychains
+net-misc/rdesktop
+net-misc/telnet-bsd
+<<<<<<< HEAD
+=======
+net-misc/tightvnc
+>>>>>>> gentoo
+net-misc/wakeonlan
+net-misc/whois
+net-p2p/mldonkey
+net-proxy/squid
+net-wireless/wireless-tools
+net-wireless/wpa_supplicant
+sys-apps/mlocate
+sys-apps/usbutils
+sys-boot/grub
+sys-cluster/keepalived
+sys-devel/bc
+<<<<<<< HEAD
+sys-firmware/iwl6000-ucode
+=======
+>>>>>>> gentoo
+sys-fs/fuse
+sys-fs/ntfs3g
+sys-fs/sshfs-fuse
+sys-kernel/genkernel
+sys-kernel/gentoo-sources
+sys-power/acpid
+sys-process/at
+sys-process/cronie
+sys-process/lsof
+www-client/chromium
+www-client/google-chrome
+<<<<<<< HEAD
+=======
+www-misc/fcgiwrap
+www-servers/nginx
+www-servers/spawn-fcgi
+x11-apps/mesa-progs
+x11-apps/xdpyinfo
+x11-apps/xrandr
+>>>>>>> gentoo
+x11-base/xorg-drivers
+x11-base/xorg-server
+x11-misc/slim
+x11-misc/xdialog
+x11-misc/xdotool
+x11-terms/xfce4-terminal
+xfce-base/thunar
+xfce-base/xfce4-meta
+xfce-extra/thunar-archive-plugin
+xfce-extra/thunar-volman
+xfce-extra/tumbler
+xfce-extra/xfce4-mount-plugin
+xfce-extra/xfce4-screenshooter

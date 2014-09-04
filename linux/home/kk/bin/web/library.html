@@ -1,0 +1,25 @@
+<html>
+<head><title>Library reminder</title></head>
+<body>
+<p>
+Dear <!-- TMPL_VAR name="name" -->,
+</p>
+<p>
+Don’t forget that your book titled <!-- TMPL_VAR name="title" -->
+by <!--TMPL_VAR name="author" --> is due back
+<!-- TMPL_VAR name="duedate" -->.
+</p>
+<p>
+If your book is returned late, a fine of $<!-- TMPL_VAR name="fine" -->
+will apply for each <!-- TMPL_VAR name="timeperiod" --> the book
+is late.
+</p>
+
+<p>
+Yours sincerely,
+<br />
+<i>The management</i>.
+</p>
+</body>
+</html>
+

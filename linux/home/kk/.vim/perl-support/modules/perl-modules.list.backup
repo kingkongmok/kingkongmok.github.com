@@ -1,0 +1,581 @@
+Can't stat /usr/local/share/perl/5.14.2: No such file or directory
+ at /home/kk/.vim/perl-support/scripts/pmdesc3.pl line 243
+Can't stat /usr/local/lib/perl/5.14.2: No such file or directory
+ at /home/kk/.vim/perl-support/scripts/pmdesc3.pl line 243
+Can't stat /usr/local/lib/site_perl: No such file or directory
+ at /home/kk/.vim/perl-support/scripts/pmdesc3.pl line 243
+Algorithm::Diff                      (1.1902)  Compute `intelligent' differences between two files / lists
+Algorithm::Diff::XS                  (0.04)    Algorithm::Diff with XS core loop
+Algorithm::DiffOld                   (1.1)     Compute `intelligent' differences between two files / lists but use the old (<=0.59) interface.
+Algorithm::Merge                     (0.08)    Three-way merge and diff
+Bit::Vector                          (7.2)     Efficient bit vector, set of integers and "big int" math library
+Bit::Vector::Overload                (7.2)     Overloaded operators add-on for Bit::Vector
+Bit::Vector::String                  (7.2)     Generic string import/export for Bit::Vector
+Bundle::DBI                          (12.008695) A bundle to install DBI and required modules.
+Bundle::PlRPC                        (0.03)    A bundle to install PlRPC-Server, Client and prerequisites.
+Carp::Clan                           (6.04)    Report errors from perspective of caller of a "clan" of modules
+Class::ISA                           (0.36)    report the search path for a class's ISA tree
+DBD::DBM                             (0.06)    a DBI driver for DBM & MLDBM files
+DBD::ExampleP                        (12.014310) <description not available>
+DBD::File                            (0.40)    Base class for writing file based DBI drivers
+DBD::File::Developers                (n/a)     Developers documentation for DBD::File
+DBD::File::HowTo                     (n/a)     Guide to create DBD::File based driver
+DBD::File::Roadmap                   (n/a)     Planned Enhancements for DBD::File and pure Perl DBD's
+DBD::Gofer                           (0.015326) A stateless-proxy driver for communicating with a remote DBI
+DBD::Gofer::Policy::Base             (0.010087) Base class for DBD::Gofer policies
+DBD::Gofer::Policy::classic          (0.010087) The 'classic' policy for DBD::Gofer
+DBD::Gofer::Policy::pedantic         (0.010087) The 'pedantic' policy for DBD::Gofer
+DBD::Gofer::Policy::rush             (0.010087) The 'rush' policy for DBD::Gofer
+DBD::Gofer::Transport::Base          (0.014120) base class for DBD::Gofer client transports
+DBD::Gofer::Transport::corostream    (n/a)     Async DBD::Gofer stream transport using Coro and AnyEvent
+DBD::Gofer::Transport::null          (0.010087) DBD::Gofer client transport for testing
+DBD::Gofer::Transport::pipeone       (0.010087) DBD::Gofer client transport for testing
+DBD::Gofer::Transport::stream        (0.014598) DBD::Gofer transport for stdio streaming
+DBD::NullP                           (12.014714) <description not available>
+DBD::Proxy                           (0.2004)  A proxy driver for the DBI
+DBD::Sponge                          (12.010002) Create a DBI statement handle from Perl data
+DBD::mysql                           (4.021)   MySQL driver for the Perl5 Database Interface (DBI)
+DBD::mysql::GetInfo                  (n/a)     <description not available>
+DBI                                  (1.622)   Database independent interface for Perl
+DBI::Changes                         (n/a)     List of significant changes to the DBI
+DBI::Const::GetInfo::ANSI            (2.008696) ISO/IEC SQL/CLI Constants for GetInfo
+DBI::Const::GetInfo::ODBC            (2.011373) ODBC Constants for GetInfo
+DBI::Const::GetInfoReturn            (2.008696) Data and functions for describing GetInfo results
+DBI::Const::GetInfoType              (2.008696) Data describing GetInfo type codes
+DBI::DBD                             (12.015128) Perl DBI Database Driver Writer's Guide
+DBI::DBD::Metadata                   (2.014213) Generate the code and data for some DBI metadata methods
+DBI::DBD::SqlEngine                  (0.03)    Base class for DBI drivers without their own SQL engine
+DBI::DBD::SqlEngine::Developers      (n/a)     Developers documentation for DBI::DBD::SqlEngine
+DBI::DBD::SqlEngine::HowTo           (n/a)     Guide to create DBI::DBD::SqlEngine based driver
+DBI::FAQ                             (1.014934) The Frequently Asked Questions for the Perl5 Database Interface
+DBI::Gofer::Execute                  (0.014282) Executes Gofer requests and returns Gofer responses
+DBI::Gofer::Request                  (0.012536) Encapsulate a request from DBD::Gofer to DBI::Gofer::Execute
+DBI::Gofer::Response                 (0.011565) Encapsulate a response from DBI::Gofer::Execute to DBD::Gofer
+DBI::Gofer::Serializer::Base         (0.009949) base class for Gofer serialization
+DBI::Gofer::Serializer::DataDumper   (0.009949) Gofer serialization using DataDumper
+DBI::Gofer::Serializer::Storable     (0.009949) Gofer serialization using Storable
+DBI::Gofer::Transport::Base          (0.012536) Base class for Gofer transports
+DBI::Gofer::Transport::pipeone       (0.012536) DBD::Gofer server-side transport for pipeone
+DBI::Gofer::Transport::stream        (0.012536) DBD::Gofer server-side transport for stream
+DBI::Profile                         (2.015064) Performance profiling and benchmarking for the DBI
+DBI::ProfileData                     (2.010007) manipulate DBI::ProfileDumper data dumps
+DBI::ProfileDumper                   (2.015324) profile DBI usage and output data to a file
+DBI::ProfileDumper::Apache           (2.014120) capture DBI profiling data from Apache/mod_perl
+DBI::ProfileSubs                     (0.009395) Subroutines for dynamic profile Path
+DBI::ProxyServer                     (0.3005)  a server for the DBD::Proxy driver
+DBI::PurePerl                        (2.014285) a DBI emulation using pure perl (no C/XS compilation required)
+DBI::SQL::Nano                       (1.014600) a very tiny SQL engine
+DBI::Util::CacheMemory               (0.010314) a very fast but very minimal subset of Cache::Memory
+DBI::Util::_accessor                 (0.009478) <description not available>
+DBI::W32ODBC                         (n/a)     An experimental DBI emulation layer for Win32::ODBC
+Date::Calc                           (6.3)     Gregorian calendar date calculations
+Date::Calc::Object                   (6.3)     Object-oriented add-on for Date::Calc with overloaded operators
+Date::Calc::PP                       (6.3)     pure-Perl plug-in for Date::Calc
+Date::Calc::XS                       (6.3)     XS wrapper and C library plug-in for Date::Calc
+Date::Calendar                       (6.3)     Calendar objects for different holiday schemes
+Date::Calendar::Profiles             (6.3)     Some sample profiles for Date::Calendar and Date::Calendar::Year
+Date::Calendar::Year                 (6.3)     Implements embedded "year" objects for Date::Calendar
+Date::Format                         (2.24)    Date formating subroutines
+Date::Language                       (1.10)    Language specific date formating and parsing
+Date::Language::Afar                 (0.99)    <description not available>
+Date::Language::Amharic              (1.00)    <description not available>
+Date::Language::Austrian             (1.01)    <description not available>
+Date::Language::Brazilian            (1.01)    <description not available>
+Date::Language::Chinese              (1.00)    <description not available>
+Date::Language::Chinese_GB           (1.01)    <description not available>
+Date::Language::Czech                (1.01)    <description not available>
+Date::Language::Danish               (1.01)    <description not available>
+Date::Language::Dutch                (1.02)    <description not available>
+Date::Language::English              (1.01)    <description not available>
+Date::Language::Finnish              (1.01)    <description not available>
+Date::Language::French               (1.04)    <description not available>
+Date::Language::Gedeo                (0.99)    <description not available>
+Date::Language::German               (1.02)    <description not available>
+Date::Language::Greek                (1.00)    <description not available>
+Date::Language::Hungarian            (1.01)    Magyar format for Date::Format
+Date::Language::Icelandic            (1.01)    <description not available>
+Date::Language::Italian              (1.01)    <description not available>
+Date::Language::Norwegian            (1.01)    <description not available>
+Date::Language::Oromo                (0.99)    <description not available>
+Date::Language::Romanian             (1.01)    <description not available>
+Date::Language::Russian              (1.01)    <description not available>
+Date::Language::Russian_cp1251       (1.01)    <description not available>
+Date::Language::Russian_koi8r        (1.01)    <description not available>
+Date::Language::Sidama               (0.99)    <description not available>
+Date::Language::Somali               (0.99)    <description not available>
+Date::Language::Spanish              (1.00)    <description not available>
+Date::Language::Swedish              (1.01)    <description not available>
+Date::Language::Tigrinya             (1.00)    <description not available>
+Date::Language::TigrinyaEritrean     (1.00)    <description not available>
+Date::Language::TigrinyaEthiopian    (1.00)    <description not available>
+Date::Language::Turkish              (1.0)     <description not available>
+Date::Parse                          (2.30)    Parse date strings into time values
+Debconf::AutoSelect                  (n/a)     <description not available>
+Debconf::Base                        (n/a)     <description not available>
+Debconf::Client::ConfModule          (n/a)     client module for ConfModules
+Debconf::ConfModule                  (n/a)     <description not available>
+Debconf::Config                      (n/a)     <description not available>
+Debconf::Db                          (n/a)     <description not available>
+Debconf::DbDriver                    (n/a)     <description not available>
+Debconf::DbDriver::Backup            (n/a)     <description not available>
+Debconf::DbDriver::Cache             (n/a)     <description not available>
+Debconf::DbDriver::Copy              (n/a)     <description not available>
+Debconf::DbDriver::Debug             (n/a)     <description not available>
+Debconf::DbDriver::DirTree           (n/a)     <description not available>
+Debconf::DbDriver::Directory         (n/a)     <description not available>
+Debconf::DbDriver::File              (n/a)     <description not available>
+Debconf::DbDriver::LDAP              (n/a)     <description not available>
+Debconf::DbDriver::PackageDir        (n/a)     <description not available>
+Debconf::DbDriver::Pipe              (n/a)     <description not available>
+Debconf::DbDriver::Stack             (n/a)     <description not available>
+Debconf::Element                     (n/a)     <description not available>
+Debconf::Element::Dialog::Boolean    (n/a)     <description not available>
+Debconf::Element::Dialog::Error      (n/a)     <description not available>
+Debconf::Element::Dialog::Multiselect (n/a)     <description not available>
+Debconf::Element::Dialog::Note       (n/a)     <description not available>
+Debconf::Element::Dialog::Password   (n/a)     <description not available>
+Debconf::Element::Dialog::Progress   (n/a)     <description not available>
+Debconf::Element::Dialog::Select     (n/a)     <description not available>
+Debconf::Element::Dialog::String     (n/a)     <description not available>
+Debconf::Element::Dialog::Text       (n/a)     <description not available>
+Debconf::Element::Editor::Boolean    (n/a)     <description not available>
+Debconf::Element::Editor::Error      (n/a)     <description not available>
+Debconf::Element::Editor::Multiselect (n/a)     <description not available>
+Debconf::Element::Editor::Note       (n/a)     <description not available>
+Debconf::Element::Editor::Password   (n/a)     <description not available>
+Debconf::Element::Editor::Progress   (n/a)     <description not available>
+Debconf::Element::Editor::Select     (n/a)     <description not available>
+Debconf::Element::Editor::String     (n/a)     <description not available>
+Debconf::Element::Editor::Text       (n/a)     <description not available>
+Debconf::Element::Gnome              (n/a)     <description not available>
+Debconf::Element::Gnome::Boolean     (n/a)     <description not available>
+Debconf::Element::Gnome::Error       (n/a)     <description not available>
+Debconf::Element::Gnome::Multiselect (n/a)     <description not available>
+Debconf::Element::Gnome::Note        (n/a)     <description not available>
+Debconf::Element::Gnome::Password    (n/a)     <description not available>
+Debconf::Element::Gnome::Progress    (n/a)     <description not available>
+Debconf::Element::Gnome::Select      (n/a)     <description not available>
+Debconf::Element::Gnome::String      (n/a)     <description not available>
+Debconf::Element::Gnome::Text        (n/a)     <description not available>
+Debconf::Element::Kde                (n/a)     <description not available>
+Debconf::Element::Kde::Boolean       (n/a)     <description not available>
+Debconf::Element::Kde::Error         (n/a)     <description not available>
+Debconf::Element::Kde::Multiselect   (n/a)     <description not available>
+Debconf::Element::Kde::Note          (n/a)     <description not available>
+Debconf::Element::Kde::Password      (n/a)     <description not available>
+Debconf::Element::Kde::Progress      (n/a)     <description not available>
+Debconf::Element::Kde::Select        (n/a)     <description not available>
+Debconf::Element::Kde::String        (n/a)     <description not available>
+Debconf::Element::Kde::Text          (n/a)     <description not available>
+Debconf::Element::Multiselect        (n/a)     <description not available>
+Debconf::Element::Noninteractive     (n/a)     <description not available>
+Debconf::Element::Noninteractive::Boolean (n/a)     <description not available>
+Debconf::Element::Noninteractive::Error (n/a)     <description not available>
+Debconf::Element::Noninteractive::Multiselect (n/a)     <description not available>
+Debconf::Element::Noninteractive::Note (n/a)     <description not available>
+Debconf::Element::Noninteractive::Password (n/a)     <description not available>
+Debconf::Element::Noninteractive::Progress (n/a)     <description not available>
+Debconf::Element::Noninteractive::Select (n/a)     <description not available>
+Debconf::Element::Noninteractive::String (n/a)     <description not available>
+Debconf::Element::Noninteractive::Text (n/a)     <description not available>
+Debconf::Element::Select             (n/a)     <description not available>
+Debconf::Element::Teletype::Boolean  (n/a)     <description not available>
+Debconf::Element::Teletype::Error    (n/a)     <description not available>
+Debconf::Element::Teletype::Multiselect (n/a)     <description not available>
+Debconf::Element::Teletype::Note     (n/a)     <description not available>
+Debconf::Element::Teletype::Password (n/a)     <description not available>
+Debconf::Element::Teletype::Progress (n/a)     <description not available>
+Debconf::Element::Teletype::Select   (n/a)     <description not available>
+Debconf::Element::Teletype::String   (n/a)     <description not available>
+Debconf::Element::Teletype::Text     (n/a)     <description not available>
+Debconf::Element::Web::Boolean       (n/a)     <description not available>
+Debconf::Element::Web::Error         (n/a)     <description not available>
+Debconf::Element::Web::Multiselect   (n/a)     <description not available>
+Debconf::Element::Web::Note          (n/a)     <description not available>
+Debconf::Element::Web::Password      (n/a)     <description not available>
+Debconf::Element::Web::Progress      (n/a)     <description not available>
+Debconf::Element::Web::Select        (n/a)     <description not available>
+Debconf::Element::Web::String        (n/a)     <description not available>
+Debconf::Element::Web::Text          (n/a)     <description not available>
+Debconf::Encoding                    (n/a)     <description not available>
+Debconf::Format                      (n/a)     <description not available>
+Debconf::Format::822                 (n/a)     <description not available>
+Debconf::FrontEnd                    (n/a)     <description not available>
+Debconf::FrontEnd::Dialog            (n/a)     <description not available>
+Debconf::FrontEnd::Editor            (n/a)     <description not available>
+Debconf::FrontEnd::Gnome             (n/a)     <description not available>
+Debconf::FrontEnd::Kde               (n/a)     <description not available>
+Debconf::FrontEnd::Kde::Ui_DebconfWizard (n/a)     <description not available>
+Debconf::FrontEnd::Kde::Wizard       (n/a)     <description not available>
+Debconf::FrontEnd::Noninteractive    (n/a)     <description not available>
+Debconf::FrontEnd::Passthrough       (n/a)     <description not available>
+Debconf::FrontEnd::Readline          (n/a)     <description not available>
+Debconf::FrontEnd::ScreenSize        (n/a)     <description not available>
+Debconf::FrontEnd::Teletype          (n/a)     <description not available>
+Debconf::FrontEnd::Text              (n/a)     <description not available>
+Debconf::FrontEnd::Web               (n/a)     <description not available>
+Debconf::Gettext                     (n/a)     <description not available>
+Debconf::Iterator                    (n/a)     <description not available>
+Debconf::Log                         (n/a)     <description not available>
+Debconf::Path                        (n/a)     <description not available>
+Debconf::Priority                    (n/a)     <description not available>
+Debconf::Question                    (n/a)     <description not available>
+Debconf::Template                    (n/a)     <description not available>
+Debconf::Template::Transient         (n/a)     <description not available>
+Debconf::TmpFile                     (n/a)     <description not available>
+Debian::AdduserCommon                (n/a)     <description not available>
+Debian::DebConf::Client::ConfModule  (n/a)     <description not available>
+Debian::Debhelper::Buildsystem       (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::ant  (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::autoconf (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::cmake (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::makefile (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::perl_build (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::perl_makemaker (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::python_distutils (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::qmake (n/a)     <description not available>
+Debian::Debhelper::Buildsystem::qmake_qt4 (n/a)     <description not available>
+Debian::Debhelper::Dh_Buildsystems   (n/a)     <description not available>
+Debian::Debhelper::Dh_Getopt         (n/a)     <description not available>
+Debian::Debhelper::Dh_Lib            (n/a)     <description not available>
+Debian::Debhelper::Dh_Version        (n/a)     <description not available>
+Debian::Debhelper::Sequence::autotools_dev (n/a)     <description not available>
+Debian::Debhelper::Sequence::bash_completion (n/a)     <description not available>
+Debian::Debhelper::Sequence::dkms    (n/a)     <description not available>
+Debian::Debhelper::Sequence::perl_dbi (n/a)     <description not available>
+Debian::Debhelper::Sequence::python2 (n/a)     <description not available>
+Debian::Debhelper::Sequence::python_support (n/a)     <description not available>
+Debian::DictionariesCommon           (n/a)     dictionaries-common library
+DebianLinux                          (n/a)     <description not available>
+DebianNet                            (n/a)     <description not available>
+Dpkg                                 (1.00)    <description not available>
+Dpkg::Arch                           (0.01)    <description not available>
+Dpkg::BuildEnv                       (0.01)    track build environment
+Dpkg::BuildFlags                     (1.03)    query build flags
+Dpkg::BuildOptions                   (1.01)    parse and update build options
+Dpkg::Changelog                      (1.00)    base class to implement a changelog parser
+Dpkg::Changelog::Debian              (1.00)    parse Debian changelogs
+Dpkg::Changelog::Entry               (1.00)    represents a changelog entry
+Dpkg::Changelog::Entry::Debian       (1.00)    represents a Debian changelog entry
+Dpkg::Changelog::Parse               (1.00)    generic changelog parser for dpkg-parsechangelog
+Dpkg::Checksums                      (1.00)    generate and manipulate file checksums
+Dpkg::Compression                    (1.01)    simple database of available compression methods
+Dpkg::Compression::FileHandle        (1.00)    object dealing transparently with file compression
+Dpkg::Compression::Process           (1.00)    run compression/decompression processes
+Dpkg::Conf                           (1.01)    parse dpkg configuration files
+Dpkg::Control                        (1.00)    parse and manipulate official control-like information
+Dpkg::Control::Changelog             (1.00)    represent info fields output by dpkg-parsechangelog
+Dpkg::Control::Fields                (1.00)    manage (list of official) control fields
+Dpkg::Control::Hash                  (1.00)    parse and manipulate a block of RFC822-like fields
+Dpkg::Control::Info                  (1.00)    parse files like debian/control
+Dpkg::Control::Types                 (n/a)     export CTRL_* constants
+Dpkg::Deps                           (1.01)    parse and manipulate dependencies of Debian packages
+Dpkg::ErrorHandling                  (0.01)    <description not available>
+Dpkg::Exit                           (1.00)    <description not available>
+Dpkg::File                           (0.01)    <description not available>
+Dpkg::Gettext                        (1.00)    <description not available>
+Dpkg::IPC                            (1.00)    helper functions for IPC
+Dpkg::Index                          (1.00)    generic index of control information
+Dpkg::Interface::Storable            (1.00)    common methods related to object serialization
+Dpkg::Package                        (0.01)    <description not available>
+Dpkg::Path                           (1.02)    some common path handling functions
+Dpkg::Shlibs                         (0.01)    <description not available>
+Dpkg::Shlibs::Cppfilt                (0.01)    <description not available>
+Dpkg::Shlibs::Objdump                (0.01)    <description not available>
+Dpkg::Shlibs::Symbol                 (0.01)    <description not available>
+Dpkg::Shlibs::SymbolFile             (0.01)    <description not available>
+Dpkg::Source::Archive                (0.01)    <description not available>
+Dpkg::Source::Functions              (0.01)    <description not available>
+Dpkg::Source::Package                (1.0)     manipulate Debian source packages
+Dpkg::Source::Package::V1            (0.01)    <description not available>
+Dpkg::Source::Package::V2            (0.01)    <description not available>
+Dpkg::Source::Package::V3::bzr       (0.01)    <description not available>
+Dpkg::Source::Package::V3::custom    (0.01)    <description not available>
+Dpkg::Source::Package::V3::git       (0.02)    <description not available>
+Dpkg::Source::Package::V3::native    (0.01)    <description not available>
+Dpkg::Source::Package::V3::quilt     (0.01)    <description not available>
+Dpkg::Source::Patch                  (0.01)    <description not available>
+Dpkg::Source::Quilt                  (0.01)    <description not available>
+Dpkg::Substvars                      (1.02)    handle variable substitution in strings
+Dpkg::Vars                           (0.02)    <description not available>
+Dpkg::Vendor                         (1.00)    get access to some vendor specific information
+Dpkg::Vendor::Debian                 (0.01)    Debian vendor object
+Dpkg::Vendor::Default                (0.01)    default vendor object
+Dpkg::Vendor::Ubuntu                 (0.01)    Ubuntu vendor object
+Dpkg::Version                        (1.00)    handling and comparing dpkg-style version numbers
+Encode::Locale                       (1.03)    Determine the locale encoding
+Error                                (0.17010) Error/exception handling in an OO-ish way
+Error::Simple                        (n/a)     the simple error sub-class of Error
+File::BaseDir                        (0.03)    Use the Freedesktop.org base directory specification
+File::Copy::Recursive                (0.38)    Perl extension for recursively copying files and directories
+File::DesktopEntry                   (0.04)    Object to handle .desktop files
+File::FcntlLock                      (0.14)    File locking with fcntl(2)
+File::Listing                        (6.04)    parse directory listing
+File::MimeInfo                       (0.16)    Determine file type
+File::MimeInfo::Applications         (0.16)    Find programs to open a file by mimetype
+File::MimeInfo::Cookbook             (n/a)     various code snippets
+File::MimeInfo::Magic                (0.16)    Determine file type with magic
+File::MimeInfo::Rox                  (0.16)    Open files by mimetype "Rox style"
+Font::AFM                            (1.20)    Interface to Adobe Font Metrics files
+Font::Metrics::Courier               (n/a)     <description not available>
+Font::Metrics::CourierBold           (n/a)     <description not available>
+Font::Metrics::CourierBoldOblique    (n/a)     <description not available>
+Font::Metrics::CourierOblique        (n/a)     <description not available>
+Font::Metrics::Helvetica             (n/a)     <description not available>
+Font::Metrics::HelveticaBold         (n/a)     <description not available>
+Font::Metrics::HelveticaBoldOblique  (n/a)     <description not available>
+Font::Metrics::HelveticaOblique      (n/a)     <description not available>
+Font::Metrics::TimesBold             (n/a)     <description not available>
+Font::Metrics::TimesBoldItalic       (n/a)     <description not available>
+Font::Metrics::TimesItalic           (n/a)     <description not available>
+Font::Metrics::TimesRoman            (n/a)     <description not available>
+Git                                  (0.01)    Perl interface to the Git version control system
+Git::I18N                            (n/a)     Perl interface to Git's Gettext localizations
+Git::SVN::Memoize::YAML              (n/a)     store Memoized data in YAML format
+HTML::AsSubs                         (5.02)    functions that construct a HTML syntax tree
+HTML::Element                        (5.02)    Class for objects that represent HTML elements
+HTML::Element::traverse              (5.02)    discussion of HTML::Element's traverse method
+HTML::Entities                       (3.69)    Encode or decode strings with HTML entities
+HTML::Filter                         (3.57)    Filter HTML text through the parser
+HTML::Form                           (6.03)    Class that represents an HTML form element
+HTML::FormatPS                       (2.10)    Format HTML as PostScript
+HTML::FormatRTF                      (2.10)    Format HTML as RTF
+HTML::FormatText                     (2.10)    Format HTML as plaintext
+HTML::Formatter                      (2.10)    Base class for HTML formatters
+HTML::HeadParser                     (3.69)    Parse <HEAD> section of a HTML document
+HTML::LinkExtor                      (3.69)    Extract links from an HTML document
+HTML::Parse                          (5.02)    Deprecated, a wrapper around HTML::TreeBuilder
+HTML::Parser                         (3.69)    HTML parser class
+HTML::PullParser                     (3.57)    Alternative HTML::Parser interface
+HTML::Tagset                         (3.20)    data tables useful in parsing HTML
+HTML::Template                       (2.91)    Perl module to use HTML-like templating language
+HTML::Template::FAQ                  (n/a)     Frequently Asked Questions about HTML::Template
+HTML::TokeParser                     (3.69)    Alternative HTML::Parser interface
+HTML::Tree                           (5.02)    build and scan parse-trees of HTML
+HTML::Tree::AboutObjects             (n/a)     article: "User's View of Object-Oriented Modules"
+HTML::Tree::AboutTrees               (n/a)     article on tree-shaped data structures in Perl
+HTML::Tree::Scanning                 (n/a)     article: "Scanning HTML"
+HTML::TreeBuilder                    (5.02)    Parser that builds a HTML syntax tree
+HTTP::Config                         (6.00)    Configuration for request and response objects
+HTTP::Cookies                        (6.00)    HTTP cookie jars
+HTTP::Cookies::Microsoft             (6.00)    access to Microsoft cookies files
+HTTP::Cookies::Netscape              (6.00)    access to Netscape cookies files
+HTTP::Daemon                         (6.01)    a simple http server class
+HTTP::Date                           (6.02)    date conversion routines
+HTTP::Headers                        (6.00)    Class encapsulating HTTP Message headers
+HTTP::Headers::Auth                  (6.00)    <description not available>
+HTTP::Headers::ETag                  (6.00)    <description not available>
+HTTP::Headers::Util                  (6.03)    Header value parsing utility functions
+HTTP::Message                        (6.03)    HTTP style message (base class)
+HTTP::Negotiate                      (6.00)    choose a variant to serve
+HTTP::Request                        (6.00)    HTTP style request message
+HTTP::Request::Common                (6.03)    Construct common HTTP::Request objects
+HTTP::Response                       (6.03)    HTTP style response message
+HTTP::Status                         (6.03)    HTTP Status code processing
+IO::Socket::IP                       (0.16)    A drop-in replacement for 'IO::Socket::INET' supporting both IPv4 and IPv6
+IO::Socket::SSL                      (1.76)    Nearly transparent SSL encapsulation for IO::Socket::INET.
+IPTables::ChainMgr                   (1.2)     Perl extension for manipulating iptables and ip6tables policies
+IPTables::Parse                      (1.1)     Perl extension for parsing iptables and ip6tables policies
+LWP                                  (6.04)    The World-Wide Web library for Perl
+LWP::Authen::Basic                   (n/a)     <description not available>
+LWP::Authen::Digest                  (n/a)     <description not available>
+LWP::Authen::Ntlm                    (6.00)    Library for enabling NTLM authentication (Microsoft) in LWP
+LWP::ConnCache                       (6.02)    Connection cache manager
+LWP::Debug                           (n/a)     deprecated
+LWP::DebugFile                       (n/a)     <description not available>
+LWP::MediaTypes                      (6.02)    guess media type for a file or a URL
+LWP::MemberMixin                     (n/a)     Member access mixin class
+LWP::Protocol                        (6.00)    Base class for LWP protocols
+LWP::Protocol::GHTTP                 (n/a)     <description not available>
+LWP::Protocol::cpan                  (n/a)     <description not available>
+LWP::Protocol::data                  (n/a)     <description not available>
+LWP::Protocol::file                  (n/a)     <description not available>
+LWP::Protocol::ftp                   (n/a)     <description not available>
+LWP::Protocol::gopher                (n/a)     <description not available>
+LWP::Protocol::http                  (n/a)     <description not available>
+LWP::Protocol::https                 (6.03)    Provide https support for LWP::UserAgent
+LWP::Protocol::loopback              (n/a)     <description not available>
+LWP::Protocol::mailto                (n/a)     <description not available>
+LWP::Protocol::nntp                  (n/a)     <description not available>
+LWP::Protocol::nogo                  (n/a)     <description not available>
+LWP::RobotUA                         (6.03)    a class for well-behaved Web robots
+LWP::Simple                          (6.00)    simple procedural interface to LWP
+LWP::UserAgent                       (6.04)    Web user agent class
+Locale::gettext                      (1.05)    message handling functions
+Mail::Address                        (2.09)    Parse mail addresses
+Mail::Cap                            (2.09)    Parse mailcap files
+Mail::Field                          (2.09)    Base class for manipulation of mail header fields
+Mail::Field::AddrList                (2.09)    object representation of e-mail address lists
+Mail::Field::Date                    (2.09)    a date header field
+Mail::Field::Generic                 (2.09)    implementation for inspecific fields
+Mail::Filter                         (2.09)    Filter mail through multiple subroutines
+Mail::Header                         (2.09)    manipulate MIME headers
+Mail::Internet                       (2.09)    manipulate email messages
+Mail::Mailer                         (2.09)    Simple interface to electronic mailing mechanisms
+Mail::Mailer::qmail                  (2.09)    <description not available>
+Mail::Mailer::rfc822                 (2.09)    <description not available>
+Mail::Mailer::sendmail               (2.09)    <description not available>
+Mail::Mailer::smtp                   (2.09)    <description not available>
+Mail::Mailer::smtps                  (2.09)    <description not available>
+Mail::Mailer::testfile               (2.09)    <description not available>
+Mail::Send                           (2.09)    Simple electronic mail interface
+Mail::Sendmail                       (n/a)     Simple platform independent mailer
+Mail::Util                           (2.09)    mail utility functions
+Net::DBus                            (1.0.0)   Perl extension for the DBus message system
+Net::DBus::ASyncReply                (n/a)     asynchronous method reply handler
+Net::DBus::Annotation                (n/a)     annotations for changing behaviour of APIs
+Net::DBus::Binding::Bus              (n/a)     Handle to a well-known message bus instance
+Net::DBus::Binding::Connection       (n/a)     A connection between client and server
+Net::DBus::Binding::Introspector     (n/a)     Handler for object introspection data
+Net::DBus::Binding::Iterator         (n/a)     Reading and writing message parameters
+Net::DBus::Binding::Message          (n/a)     Base class for messages
+Net::DBus::Binding::Message::Error   (n/a)     a message encoding a method call error
+Net::DBus::Binding::Message::MethodCall (n/a)     a message encoding a method call
+Net::DBus::Binding::Message::MethodReturn (n/a)     a message encoding a method return
+Net::DBus::Binding::Message::Signal  (n/a)     a message encoding a signal
+Net::DBus::Binding::PendingCall      (n/a)     A handler for pending method replies
+Net::DBus::Binding::Server           (n/a)     A server to accept incoming connections
+Net::DBus::Binding::Value            (n/a)     Strongly typed data value
+Net::DBus::Binding::Watch            (n/a)     binding to the dbus watch API
+Net::DBus::Callback                  (n/a)     a callback for receiving reactor events
+Net::DBus::Dumper                    (n/a)     Stringify Net::DBus objects suitable for printing
+Net::DBus::Error                     (n/a)     Error details for remote method invocation
+Net::DBus::Exporter                  (n/a)     Export object methods and signals to the bus
+Net::DBus::Object                    (n/a)     Provide objects to the bus for clients to use
+Net::DBus::Reactor                   (n/a)     application event loop
+Net::DBus::RemoteObject              (n/a)     Access objects provided on the bus
+Net::DBus::RemoteService             (n/a)     Access services provided on the bus
+Net::DBus::Service                   (n/a)     Provide a service to the bus for clients to use
+Net::DBus::Test::MockConnection      (n/a)     Fake a connection to the bus unit testing
+Net::DBus::Test::MockIterator        (n/a)     Iterator over a mock message
+Net::DBus::Test::MockMessage         (n/a)     Fake a message object when unit testing
+Net::DBus::Test::MockObject          (n/a)     Fake an object from the bus for unit testing
+Net::DBus::Tutorial                  (n/a)     tutorials on the Perl DBus APIs
+Net::DBus::Tutorial::ExportingObjects (n/a)     tutorials on providing a DBus service
+Net::DBus::Tutorial::UsingObjects    (n/a)     tutorial on accessing a DBus service
+Net::Daemon                          (0.48)    Perl extension for portable daemons
+Net::Daemon::Log                     (0.01)    Utility functions for logging
+Net::Daemon::Test                    (0.03)    support functions for testing Net::Daemon servers
+Net::HTTP                            (6.03)    Low-level HTTP connection (client)
+Net::HTTP::Methods                   (6.00)    <description not available>
+Net::HTTP::NB                        (6.00)    Non-blocking HTTP client
+Net::HTTPS                           (6.02)    Low-level HTTP over SSL/TLS connection (client)
+Net::IP                              (1.25)    Perl extension for manipulating IPv4/IPv6 addresses
+Net::SSLeay                          (1.48)    Perl extension for using OpenSSL
+Net::SSLeay::Handle                  (0.61)    Perl module that lets SSL (HTTPS) sockets be handled as standard file handles.
+NetAddr::IP                          (n/a)     Manages IPv4 and IPv6 addresses and subnets
+NetAddr::IP::InetBase                (0.06)    IPv4 and IPV6 utilities
+NetAddr::IP::Lite                    (1.44)    Manages IPv4 and IPv6 addresses and subnets
+NetAddr::IP::Util                    (1.47)    IPv4/6 and 128 bit number utilities
+NetAddr::IP::UtilPP                  (1.08)    pure Perl functions for NetAddr::IP::Util
+NetAddr::IP::Util_IS                 (1)       Tell about Pure Perl
+RPC::PlClient                        (0.2020)  Perl extension for writing PlRPC clients
+RPC::PlClient::Comm                  (0.1002)  <description not available>
+RPC::PlServer                        (0.2020)  Perl extension for writing PlRPC servers
+RPC::PlServer::Comm                  (0.1003)  <description not available>
+RPC::PlServer::Test                  (0.01)    <description not available>
+Socket                               (2.002)   networking constants and support functions
+Socket6                              (0.23)    IPv6 related part of the C socket.h defines and structure manipulators
+Switch                               (2.16)    A switch statement for Perl
+Sys::Hostname::Long                  (1.4)     Try every conceivable way to get full hostname
+Text::CharWidth                      (0.04)    Get number of occupied columns of a string on terminal
+Text::Iconv                          (1.7)     Perl interface to iconv() codeset conversion function
+Text::WrapI18N                       (0.06)    Line wrapping module with support for multibyte, fullwidth, and combining characters and languages without whitespaces between words
+Tie::IxHash                          (1.21)    ordered associative arrays for Perl
+Time::Zone                           (2.24)    miscellaneous timezone manipulations routines
+URI                                  (1.60)    Uniform Resource Identifiers (absolute and relative)
+URI::Escape                          (3.31)    Percent-encode and percent-decode unsafe characters
+URI::Heuristic                       (4.20)    Expand URI using heuristics
+URI::IRI                             (n/a)     <description not available>
+URI::QueryParam                      (n/a)     Additional query methods for URIs
+URI::Split                           (n/a)     Parse and compose URI strings
+URI::URL                             (5.04)    Uniform Resource Locators
+URI::WithBase                        (2.20)    URIs which remember their base
+URI::_foreign                        (n/a)     <description not available>
+URI::_generic                        (n/a)     <description not available>
+URI::_idna                           (n/a)     <description not available>
+URI::_ldap                           (1.12)    <description not available>
+URI::_login                          (n/a)     <description not available>
+URI::_punycode                       (0.04)    encodes Unicode string in Punycode
+URI::_query                          (n/a)     <description not available>
+URI::_segment                        (n/a)     <description not available>
+URI::_server                         (n/a)     <description not available>
+URI::_userpass                       (n/a)     <description not available>
+URI::data                            (n/a)     URI that contains immediate data
+URI::file                            (4.21)    URI that maps to local file names
+URI::file::Base                      (n/a)     <description not available>
+URI::file::FAT                       (n/a)     <description not available>
+URI::file::Mac                       (n/a)     <description not available>
+URI::file::OS2                       (n/a)     <description not available>
+URI::file::QNX                       (n/a)     <description not available>
+URI::file::Unix                      (n/a)     <description not available>
+URI::file::Win32                     (n/a)     <description not available>
+URI::ftp                             (n/a)     <description not available>
+URI::gopher                          (n/a)     <description not available>
+URI::http                            (n/a)     <description not available>
+URI::https                           (n/a)     <description not available>
+URI::ldap                            (1.12)    LDAP Uniform Resource Locators
+URI::ldapi                           (n/a)     <description not available>
+URI::ldaps                           (n/a)     <description not available>
+URI::mailto                          (n/a)     <description not available>
+URI::mms                             (n/a)     <description not available>
+URI::news                            (n/a)     <description not available>
+URI::nntp                            (n/a)     <description not available>
+URI::pop                             (n/a)     <description not available>
+URI::rlogin                          (n/a)     <description not available>
+URI::rsync                           (n/a)     <description not available>
+URI::rtsp                            (n/a)     <description not available>
+URI::rtspu                           (n/a)     <description not available>
+URI::sip                             (0.11)    <description not available>
+URI::sips                            (n/a)     <description not available>
+URI::snews                           (n/a)     <description not available>
+URI::ssh                             (n/a)     <description not available>
+URI::telnet                          (n/a)     <description not available>
+URI::tn3270                          (n/a)     <description not available>
+URI::urn                             (n/a)     <description not available>
+URI::urn::isbn                       (n/a)     <description not available>
+URI::urn::oid                        (n/a)     <description not available>
+UUID                                 (0.02)    Perl extension for using UUID interfaces as defined in e2fsprogs.
+Unix::Syslog                         (1.1)     Perl interface to the UNIX syslog(3) calls
+WWW::RobotRules                      (6.01)    database of robots.txt-derived permissions
+WWW::RobotRules::AnyDBM_File         (6.00)    Persistent RobotRules
+Win32::DBIODBC                       (n/a)     Win32::ODBC emulation layer for the DBI
+X11::Auth                            (0.05)    Perl module to read X11 authority files
+X11::Keysyms                         (0.01)    Perl module for names of X11 keysyms
+X11::Protocol                        (0.56)    Perl module for the X Window System Protocol, version 11
+X11::Protocol::Connection            (0.01)    Perl module abstract base class for X11 client to server connections
+X11::Protocol::Connection::FileHandle (0.02)    Perl module base class for FileHandle-based X11 connections
+X11::Protocol::Connection::INETFH    (0.01)    Perl module for FileHandle-based TCP/IP X11 connections
+X11::Protocol::Connection::INETSocket (0.01)    Perl module for IO::Socket::INET-based X11 connections
+X11::Protocol::Connection::Socket    (0.02)    Perl module base class for IO::Socket-based X11 connections
+X11::Protocol::Connection::UNIXFH    (0.01)    Perl module for FileHandle-based Unix-domain X11 connections
+X11::Protocol::Connection::UNIXSocket (0.01)    Perl module for IO::Socket::UNIX-based X11 connections
+X11::Protocol::Constants             (0.01)    <description not available>
+X11::Protocol::Ext::BIG_REQUESTS     (0.01)    Perl module for the X11 protocol Big Requests extension
+X11::Protocol::Ext::DPMS             (0.01)    Perl module for the X11 Protocol DPMS Extension
+X11::Protocol::Ext::RENDER           (0.01)    Perl module for the X Rendering Extension
+X11::Protocol::Ext::SHAPE            (0.01)    Perl module for the X11 Protocol Nonrectangular Window Shape Extension
+X11::Protocol::Ext::XC_MISC          (0.01)    Perl module for the X11 Protocol XC-MISC Extension
+X11::Protocol::Ext::XFree86_Misc     (0.01)    Perl module for the XFree86 Misc Extension
+XML::Parser                          (2.41)    A perl module for parsing XML documents
+XML::Parser::Expat                   (2.41)    Lowlevel access to James Clark's expat XML parser
+XML::Parser::Style::Debug            (n/a)     Debug style for XML::Parser
+XML::Parser::Style::Objects          (n/a)     Objects styler parser
+XML::Parser::Style::Stream           (n/a)     Stream style for XML::Parser
+XML::Parser::Style::Subs             (n/a)     glue for handling element callbacks
+XML::Parser::Style::Tree             (n/a)     Tree style parser
+XML::Twig                            (3.39)    A perl module for processing huge XML documents in tree mode.
+XML::Twig::XPath                     (0.02)    <description not available>
+XML::XPathEngine                     (0.13)    a re-usable XPath engine for DOM-like trees
+XML::XPathEngine::Boolean            (n/a)     Boolean true/false values
+XML::XPathEngine::Expr               (n/a)     <description not available>
+XML::XPathEngine::Function           (n/a)     <description not available>
+XML::XPathEngine::Literal            (n/a)     Simple string values.
+XML::XPathEngine::LocationPath       (n/a)     <description not available>
+XML::XPathEngine::NodeSet            (n/a)     a list of XML document nodes
+XML::XPathEngine::Number             (n/a)     Simple numeric values.
+XML::XPathEngine::Root               (n/a)     <description not available>
+XML::XPathEngine::Step               (n/a)     <description not available>
+XML::XPathEngine::Variable           (n/a)     <description not available>
+lwpcook                              (n/a)     The libwww-perl cookbook
+lwptut                               (n/a)     An LWP Tutorial
