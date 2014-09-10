@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use File::Basename ;
 use File::Spec;
-use lib '/home/kk/workspace/perl';
+use lib '/home/kk/bin';
 use KK::Gpgutil ;
 use KK::Dropboxutil ;
 use Getopt::Std;

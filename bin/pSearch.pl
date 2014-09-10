@@ -20,7 +20,7 @@
 
 use strict;
 use warnings;
-use lib '/home/kk/workspace/perl';
+use lib '/home/kk/bin';
 use KK::Gpgutil;
 use KK::Mlocate;
 
