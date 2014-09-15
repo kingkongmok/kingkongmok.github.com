@@ -21,3 +21,17 @@ patch original.c < original.patch
 diff -rupN original/ new/ > original.patch
 patch -Np1 < original.patch
 {% endhighlight %}
+
+## 在[github](http://stackoverflow.com/questions/9980186/how-to-create-a-patch-for-a-whole-directory-to-update-it) 有人有不同的方法来处理
+
+
+{% highlight bash %}
+diff -ruN orig/ new/ > file.patch
+# -r == recursive, so do subdirectories
+# -u == unified style, if your system lacks it or if recipient may not have it, use "-c"
+# -N == treat absent files as empty
+
+patch -s -p0 < file.patch
+# -s == silent except errors
+# -p0 == needed to find the proper folder
+{% endhighlight %}
