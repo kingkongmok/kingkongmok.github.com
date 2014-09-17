@@ -2,10 +2,12 @@ unmy_hdr *       # delete existing header-settings, if there are any.
 #my_hdr X-Homepage: http://kingkongmok.3322.org:8080
 #my_hdr X-PGP-Key: http://kingkongmok.3322.org:8080/kingkongmok.asc
 
-set from="kk@kk.datlet.com"
-set realname="kk"
 #set signature='~/.signature'
 #set sendmail="/usr/bin/msmtp"
+set sendmail="/usr/bin/email"
+set from="moqingqiang@richinfo.cn"
+set realname="莫庆强"
+
 
 #set mbox_type=Maildir
 set mbox_type=Mbox
