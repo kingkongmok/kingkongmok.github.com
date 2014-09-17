@@ -25,5 +25,5 @@ set -o nounset                              # Treat unset variables as an error
 
 if cd  /home/kk/workspace/kingkongmok.github.com/linux/home/kk/ ; then
     for i in `find -type d -printf "%P\n"`; do  mkdir -vp ~/"$i"; done
-    for i in `find -type f -printf "%P\n"`; do  ln -v "$i" ~/"$i" 2>/dev/null; done
+    for i in `find -type f -printf "%P\n"`; do  ln -fv "$i" ~/"$i" ; done
 fi

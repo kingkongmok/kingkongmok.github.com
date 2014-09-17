@@ -1,7 +1,11 @@
 unmy_hdr *       # delete existing header-settings, if there are any.
+#my_hdr X-Homepage: http://kingkongmok.3322.org:8080
+#my_hdr X-PGP-Key: http://kingkongmok.3322.org:8080/kingkongmok.asc
 
+set from="kk@kk.datlet.com"
 set realname="kk"
 #set signature='~/.signature'
+#set sendmail="/usr/bin/msmtp"
 
 #set mbox_type=Maildir
 set mbox_type=Mbox
@@ -9,6 +13,8 @@ set folder="$HOME/.mail/"
 set spoolfile=+mbox
 #set move=yes
 #set mbox=+received
+set alias_file=+alias
+source	+alias
 
 set postponed=+postponed       # an 'internal' box for mutt basically
 set record="+Sent-`date +%Y`"  # sent messages goes there (e.g. $folder/Sent-2006)
@@ -30,3 +36,5 @@ set mail_check=5  # mutt checks for new mails on every keystroke
                   # but not more often then once in 5 seconds
 set beep_new      # beep on new messages in the mailboxes
 set abort_unmodified=no
+
+macro index G "!fetchmail -k -m 'procmail -d %T'\r" 
