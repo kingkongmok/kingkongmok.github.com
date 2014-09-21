@@ -2,9 +2,9 @@
 ~/sbin/smsRebuild_update.sh setting backup
 
 # 删除旧配置
-ssh 172.16.200.2 'ls ~/setting.together/setting/WEB-INF/*'
-ssh 172.16.200.8 'ls ~/setting.together/setting/WEB-INF/*'
-ssh 172.16.200.9 'ls ~/setting.together/setting/WEB-INF/*'
+#ssh 172.16.200.2 'ls ~/setting.together/setting/WEB-INF/*'
+#ssh 172.16.200.8 'ls ~/setting.together/setting/WEB-INF/*'
+#ssh 172.16.200.9 'ls ~/setting.together/setting/WEB-INF/*'
 ssh 172.16.200.2 'rm -rf ~/setting.together/setting/WEB-INF/*'
 ssh 172.16.200.8 'rm -rf ~/setting.together/setting/WEB-INF/*'
 ssh 172.16.200.9 'rm -rf ~/setting.together/setting/WEB-INF/*'
@@ -18,7 +18,5 @@ ssh 172.16.200.8 '~/sbin/tomcat_setting_together.sh restart'
 ssh 172.16.200.9 '~/sbin/tomcat_setting_together.sh restart'
 
 # 异常处理, 下午已经做了还原点
-#~/sbin/smsRebuild_update.sh setting resume 201409181652
-#ssh 172.16.200.2 '~/sbin/tomcat_setting_together.sh restart'
-#ssh 172.16.200.8 '~/sbin/tomcat_setting_together.sh restart'
-#ssh 172.16.200.9 '~/sbin/tomcat_setting_together.sh restart'
+~/sbin/smsRebuild_update.sh setting resume 201409181652
+for i in 2 8 9 ; do ssh 172.16.200.$i '~/sbin/tomcat_setting_together.sh restart'; done
