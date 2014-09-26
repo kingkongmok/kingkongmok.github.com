@@ -22,26 +22,19 @@ set -o nounset                              # Treat unset variables as an error
 [ -n "$LANG" ] && export LANG
 
 
-#MODULES_ARRAY=( sms mms disk calendar bmail card file setting weather together mnote uec )
 MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote uec )
 
 #-------------------------------------------------------------------------------
 #  don't edit below
 #-------------------------------------------------------------------------------
 
-TIMESTAMP="`date +%F_%T`"
-BACKUP_LOCATION=${BACKUP_LOCATION:-"/home/appBackup/$TIMESTAMP"}
-TFILE="/tmp/$(basename $0).$$.tmp"
-#IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
-IP_ADDR=`/bin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
-
-
 MODULE=
 REMOVE_WEBINF_TRIGER="1"
 TEST_TRIGER=
 RESTORE_TRIGER=
-
+TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
+
 
 #===  FUNCTION  ================================================================
 #         NAME:  usage
@@ -57,7 +50,6 @@ function usage ()
     -r|restore                  restore the modules and restart.
     -m|module                   sms|mms|disk|calendar|bmail|card|file?|
                                 setting|weather|together|mnote|uec
-    -w|NOT_REMOVE_WEBINF_TRIGER     Remove WEB_INF in module.
     -t|test                     See what will happen, echo only.
     -h|help                     Display this message
     -v|version                  Display script version
@@ -65,27 +57,28 @@ function usage ()
 	EOT
 }    # ----------  end of function usage  ----------
 
+
 #-----------------------------------------------------------------------
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "rwtm:hv" opt
+while getopts "rtm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
     m|module       )   MODULE="$OPTARG" ;;   
-    w|REMOVE_WEBINF_TRIGER )   REMOVE_WEBINF_TRIGER="0" ;;
     t|test )                   TEST_TRIGER="1" ;;
     h|help     )  usage; exit 0   ;;
     v|version  )  echo "$0 -- Version $ScriptVersion"; exit 0   ;;
     \? )  echo -e "\n  Option does not exist : $OPTARG\n"
           usage; exit 1   ;;
-
   esac    # --- end of case ---
 done
 shift $(($OPTIND-1))
 
 [ "${TEST_TRIGER}" ] && ECHO="echo "
+
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  setVariables
 #   DESCRIPTION:  
@@ -94,10 +87,21 @@ shift $(($OPTIND-1))
 #-------------------------------------------------------------------------------
 setVariables ()
 {
+    #TIMESTAMP="`date +%F`"
+    TIMESTAMP="`date +%Y%m%d%H%M%S`"
+    BACKUP_LOCATION=${BACKUP_LOCATION:-"/home/appBackup/$TIMESTAMP"}
+    TFILE="/tmp/$(basename $0).$$.tmp"
+    #IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
+    IP_ADDR=`/bin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
     TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${TOMCAT_NAME}/webapps/${MODULE}"
     TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/AppConfig/${MODULE}cfg"
     LOCAL_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/sbin/update/local_${MODULE}/${MODULE}"
     LOCAL_TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/sbin/update/local_${MODULE}/${MODULE}cfg"
+    RESTORE_LOCATION="/home/appBackup/`ls /home/appBackup/ -tr|tail -n1`"
+    RESTORE_BAKCUP_MODULE_LOCATION="${RESTORE_LOCATION}/${MODULE}"
+    RESTORE_BAKCUP_CONFIG_LOCATION="${RESTORE_LOCATION}/${MODULE}cfg"
+    RESTORE_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${TOMCAT_NAME}/webapps/"
+    RESTORE_TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/AppConfig/"
 }	# ----------  end of function setVariables  ----------
 
 
@@ -109,18 +113,28 @@ setVariables ()
 #-------------------------------------------------------------------------------
 updateModule ()
 {
+    echo -e "\n\nupdating the ${MODULE} modules.\n\n"
     for host in ${HOST_ARRAY[@]}; do
-        if [ "${REMOVE_WEBINF_TRIGER}" ] ; then
-            if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB_INF" ] ; then
-                $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB_INF" "${host}":"${TOMCAT_MODULE_LOCATION}/"
-            else
-                echo "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB_INF" not exits
-                exit 56
-            fi
-        fi
-        $ECHO rsync -az "${LOCAL_TOMCAT_MODULE_LOCATION}/" "${host}":"${TOMCAT_MODULE_LOCATION}/"
+        $ECHO rsync -az "${LOCAL_TOMCAT_MODULE_LOCATION}/" "${host}":"${TOMCAT_MODULE_LOCATION}/" 
     done
+    TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function updateModule  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  updateWebInf
+#   DESCRIPTION:  delete the old WEB_INF folder and copy the new one.
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+updateWebInf ()
+{
+    echo -e "\n\nupdating the ${MODULE} WEB_INF folder.\n\n"
+    for host in ${HOST_ARRAY[@]}; do
+        $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB_INF" "${host}":"${TOMCAT_MODULE_LOCATION}/"
+    done
+    TOMCAT_RESTART_TRIGER=1
+}	# ----------  end of function updateWebInf  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -131,9 +145,11 @@ updateModule ()
 #-------------------------------------------------------------------------------
 updateConfig ()
 {
+    echo -e "\n\nupdating the ${MODULE} configs.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync -az "${LOCAL_TOMCAT_CONFIG_LOCATION}/" "${host}":"${TOMCAT_CONFIG_LOCATION}/"
     done
+    TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function updateConfig  ----------
 
 
@@ -145,7 +161,7 @@ updateConfig ()
 #-------------------------------------------------------------------------------
 backupModule ()
 {
-    
+    echo -e "\n\nbackuping the ${MODULE} modules.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"
     done
@@ -160,24 +176,43 @@ backupModule ()
 #-------------------------------------------------------------------------------
 backupConfig ()
 {
-    
+    echo -e "\n\nbackuping the ${MODULE} configs.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"
     done
 }	# ----------  end of function backupConfig  ----------
 
+
 #---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  restoreModulesConfig
+#          NAME:  restoreModules
 #   DESCRIPTION:  restore from backup files
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-restoreModulesConfig ()
+restoreModules ()
 {
-   
-    $ECHO ssh $host rsync -a "$TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"
-    $ECHO ssh $host rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"
-}	# ----------  end of function restoreModulesConfig  ----------
+    echo -e "\n\nrestoring the ${MODULE} modules.\n\n"
+    for host in ${HOST_ARRAY[@]}; do
+        $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_MODULE_LOCATION" "$RESTORE_TOMCAT_MODULE_LOCATION"
+    done
+    TOMCAT_RESTART_TRIGER=1
+}	# ----------  end of function restoreModules  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  restoreConfig
+#   DESCRIPTION:  restore from backup files
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+restoreConfig ()
+{
+    echo -e "\n\nrestoring the ${MODULE} configs.\n\n"
+    for host in ${HOST_ARRAY[@]}; do
+        $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
+    done
+    TOMCAT_RESTART_TRIGER=1
+}	# ----------  end of function restoreConfig  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -188,10 +223,14 @@ restoreModulesConfig ()
 #-------------------------------------------------------------------------------
 restartTomcat ()
 {
-    for host in ${HOST_ARRAY[@]}; do
-        $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
-    done
+    if [ "$TOMCAT_RESTART_TRIGER" ] ; then
+        echo -e "\n\nrestarting the tomcat.\n\n"
+        for host in ${HOST_ARRAY[@]}; do
+            $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
+        done
+    fi
 }	# ----------  end of function restartTomcat  ----------
+
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  containsElement
@@ -205,8 +244,10 @@ containsElement () {
     return 1
 }
 
+
 containsElement "$MODULE" "${MODULES_ARRAY[@]}" || echo -e "\n  Modules does not exist \n"
 containsElement "$MODULE" "${MODULES_ARRAY[@]}" || exit 34 
+
 
 case $MODULE in
     sms)
@@ -275,17 +316,38 @@ case $MODULE in
 esac    # --- end of case ---
 
 
+setVariables
+
+
 # actions
 if [ "$RESTORE_TRIGER" ] ; then
-    setVariables
-    restoreModulesConfig ;
-else
-    setVariables
-    if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-        backupModule && updateModule
+    if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
+        restoreModules
+    else
+        echo -e "\n\n${MODULE} backup_modules not found.\n\n"
     fi
+    if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
+        restoreConfig
+    else
+        echo -e "\n\n${MODULE} backup_configs not found.\n\n"
+    fi
+    restartTomcat
+else
+    if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
+        backupModule 
+        if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION/WEB_INF" ] ; then
+            updateWebInf
+        fi
+        updateModule
+    else
+        echo -e "\n\n${MODULE} modules not found.\n\n"
+    fi
+
     if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
         backupConfig && updateConfig
+    else
+        echo -e "\n\n${MODULE} configs not found.\n\n"
     fi
     restartTomcat
 fi
+
