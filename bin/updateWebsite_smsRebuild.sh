@@ -37,7 +37,7 @@ MODULE=
 REMOVE_WEBINF_TRIGER="1"
 TEST_TRIGER=
 RESTORE_TRIGER=
-WEBINFO_TRIGER=1
+WEBINFO_TRIGER=
 TOMCAT_RESTART_TRIGER=
 CAL_TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
@@ -119,8 +119,8 @@ setVariables ()
     RESTORE_TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/AppConfig/"
     #
     CAL_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${CAL_TOMCAT_NAME}/webapps/${CAL_MODULE}"
-    CAL_RESTORE_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${CAL_TOMCAT_NAME}/webapps"
-    CAL_RESTORE_BAKCUP_MODULE_LOCATION="${RESTORE_LOCATION}/${CAL_MODULE}"
+    CAL_RESTORE_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${CAL_TOMCAT_NAME}/webapps/${CAL_MODULE}"
+    CAL_RESTORE_BAKCUP_MODULE_LOCATION="${RESTORE_LOCATION}/${MODULE}"
     CAL_RESTORE_BAKCUP_CONFIG_LOCATION="${RESTORE_LOCATION}/${CAL_MODULE}cfg"
 }	# ----------  end of function setVariables  ----------
 
@@ -333,7 +333,7 @@ cal_backupConfig ()
 cal_restoreModules ()
 {
     echo -e "\n\n\t#restoring the local ${MODULE} modules.\n\n"
-    $ECHO rsync -a "$CAL_RESTORE_BAKCUP_MODULE_LOCATION" "$CAL_RESTORE_TOMCAT_MODULE_LOCATION"
+    $ECHO rsync -a "${CAL_RESTORE_BAKCUP_MODULE_LOCATION}/" "${CAL_RESTORE_TOMCAT_MODULE_LOCATION}/"
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_restoreModules  ----------
 
