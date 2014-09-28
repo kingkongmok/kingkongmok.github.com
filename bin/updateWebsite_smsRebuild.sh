@@ -9,8 +9,6 @@
 # 
 #       OPTIONS: ---
 #  REQUIREMENTS: 
-#  需要相应的文件夹，可以新建用于测试： 新建所有需要的文件夹：
-#   for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_${i}/${i}/WEB-INF,local_${i}/${i}cfg}; done ; mkdir /home/appBackup/
 #          BUGS: ---
 #         NOTES: SOURCE FILES should be put in ~/sbin/update/local_$modulename.
 #        AUTHOR: kk (Kingkong Mok), kingkongmok AT gmail DOT com
@@ -25,6 +23,11 @@ set -o nounset                              # Treat unset variables as an error
 
 
 MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote uec )
+#-------------------------------------------------------------------------------
+#  
+#  需要相应的文件夹，可以新建用于测试： 新建所有需要的文件夹：
+#   for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_${i}/${i}/WEB-INF,local_${i}/${i}cfg}; done ; mkdir /home/appBackup/
+#-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
 #  don't edit below
@@ -34,6 +37,7 @@ MODULE=
 REMOVE_WEBINF_TRIGER="1"
 TEST_TRIGER=
 RESTORE_TRIGER=
+WEBINFO_TRIGER=1
 TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
 
@@ -50,7 +54,9 @@ function usage ()
 
     Options: 
     -r|restore                  还原最近的备份的状态
+    -w|WEB-INF                  同步前删除原WEB-INF文件夹
     -m|module                   sms|mms|disk|calendar|bmail|card|file?|
+                                程序不删除目标文档的相应文件夹
                                 setting|weather|together|mnote|uec
     -t|test                     生成bash script，观察运行的情况
     -h|help                     Display this message
@@ -59,8 +65,7 @@ function usage ()
     使用示范：
     ${0##/*/} -t -m sms      #测试升级sms模块，如果包含smscfg文件夹并升级config设置
     ${0##/*/} -t -r -m sms   #还原最近一次sms模块和config设置
-    ${0##/*/} -m sms         #进行sms模块的升级
-
+    ${0##/*/} -m -w mms      #删除WEB-INF文档,进行sms模块的升级,
 	EOT
 }    # ----------  end of function usage  ----------
 
@@ -69,10 +74,11 @@ function usage ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "rtm:hv" opt
+while getopts "wrtm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
+    w|WEB-INF      )   WEBINFO_TRIGER="1" ;;   
     m|module       )   MODULE="$OPTARG" ;;   
     t|test )                   TEST_TRIGER="1" ;;
     h|help     )  usage; exit 0   ;;
@@ -343,8 +349,10 @@ if [ "$RESTORE_TRIGER" ] ; then
 else
     if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
         backupModule 
-        if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
-            updateWebInf
+        if [ "$WEBINFO_TRIGER" ] ; then
+            if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
+                updateWebInf
+            fi
         fi
         updateModule
     else
