@@ -8,7 +8,9 @@
 #   DESCRIPTION: update smsRebuild modules & configs from 172.16.210.33.
 # 
 #       OPTIONS: ---
-#  REQUIREMENTS: ---
+#  REQUIREMENTS: 
+#  需要相应的文件夹，可以新建用于测试： 新建所有需要的文件夹：
+#   for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_${i}/${i}/WEB-INF,local_${i}/${i}cfg}; done ; mkdir /home/appBackup/
 #          BUGS: ---
 #         NOTES: SOURCE FILES should be put in ~/sbin/update/local_$modulename.
 #        AUTHOR: kk (Kingkong Mok), kingkongmok AT gmail DOT com
@@ -44,15 +46,20 @@ function usage ()
 {
 	cat <<- EOT
 
-    Usage :  ${0##/*/} [options] [--] 
+    Usage :  ${0##/*/} [options] -m <ModulesName>
 
     Options: 
-    -r|restore                  restore the modules and restart.
+    -r|restore                  还原最近的备份的状态
     -m|module                   sms|mms|disk|calendar|bmail|card|file?|
                                 setting|weather|together|mnote|uec
-    -t|test                     See what will happen, echo only.
+    -t|test                     生成bash script，观察运行的情况
     -h|help                     Display this message
     -v|version                  Display script version
+
+    使用示范：
+    ${0##/*/} -t -m sms      #测试升级sms模块，如果包含smscfg文件夹并升级config设置
+    ${0##/*/} -t -r -m sms   #还原最近一次sms模块和config设置
+    ${0##/*/} -m sms         #进行sms模块的升级
 
 	EOT
 }    # ----------  end of function usage  ----------
@@ -113,7 +120,7 @@ setVariables ()
 #-------------------------------------------------------------------------------
 updateModule ()
 {
-    echo -e "\n\nupdating the ${MODULE} modules.\n\n"
+    echo -e "\n\n\t#updating the ${MODULE} modules.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync -az "${LOCAL_TOMCAT_MODULE_LOCATION}/" "${host}":"${TOMCAT_MODULE_LOCATION}/" 
     done
@@ -123,15 +130,15 @@ updateModule ()
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  updateWebInf
-#   DESCRIPTION:  delete the old WEB_INF folder and copy the new one.
+#   DESCRIPTION:  delete the old WEB-INF folder and copy the new one.
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
 updateWebInf ()
 {
-    echo -e "\n\nupdating the ${MODULE} WEB_INF folder.\n\n"
+    echo -e "\n\n\t#updating the ${MODULE} WEB-INF folder.\n\n"
     for host in ${HOST_ARRAY[@]}; do
-        $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB_INF" "${host}":"${TOMCAT_MODULE_LOCATION}/"
+        $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" "${host}":"${TOMCAT_MODULE_LOCATION}/"
     done
     TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function updateWebInf  ----------
@@ -145,7 +152,7 @@ updateWebInf ()
 #-------------------------------------------------------------------------------
 updateConfig ()
 {
-    echo -e "\n\nupdating the ${MODULE} configs.\n\n"
+    echo -e "\n\n\t#updating the ${MODULE} configs.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync -az "${LOCAL_TOMCAT_CONFIG_LOCATION}/" "${host}":"${TOMCAT_CONFIG_LOCATION}/"
     done
@@ -161,9 +168,10 @@ updateConfig ()
 #-------------------------------------------------------------------------------
 backupModule ()
 {
-    echo -e "\n\nbackuping the ${MODULE} modules.\n\n"
+    echo -e "\n\n\t#backuping the ${MODULE} modules.\n\n"
     for host in ${HOST_ARRAY[@]}; do
-        $ECHO ssh $host rsync -a "$TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"
+        $ECHO ssh $host mkdir -p "$BACKUP_LOCATION"
+        $ECHO ssh $host rsync -a "$TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"/
     done
 }	# ----------  end of function backupModule  ----------
 
@@ -176,9 +184,10 @@ backupModule ()
 #-------------------------------------------------------------------------------
 backupConfig ()
 {
-    echo -e "\n\nbackuping the ${MODULE} configs.\n\n"
+    echo -e "\n\n\t#backuping the ${MODULE} configs.\n\n"
     for host in ${HOST_ARRAY[@]}; do
-        $ECHO ssh $host rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"
+        $ECHO ssh $host mkdir -p "$BACKUP_LOCATION"
+        $ECHO ssh $host rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"/
     done
 }	# ----------  end of function backupConfig  ----------
 
@@ -191,7 +200,7 @@ backupConfig ()
 #-------------------------------------------------------------------------------
 restoreModules ()
 {
-    echo -e "\n\nrestoring the ${MODULE} modules.\n\n"
+    echo -e "\n\n\t#restoring the ${MODULE} modules.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_MODULE_LOCATION" "$RESTORE_TOMCAT_MODULE_LOCATION"
     done
@@ -207,7 +216,7 @@ restoreModules ()
 #-------------------------------------------------------------------------------
 restoreConfig ()
 {
-    echo -e "\n\nrestoring the ${MODULE} configs.\n\n"
+    echo -e "\n\n\t#restoring the ${MODULE} configs.\n\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
     done
@@ -224,7 +233,7 @@ restoreConfig ()
 restartTomcat ()
 {
     if [ "$TOMCAT_RESTART_TRIGER" ] ; then
-        echo -e "\n\nrestarting the tomcat.\n\n"
+        echo -e "\n\n\t#restarting the tomcat.\n\n"
         for host in ${HOST_ARRAY[@]}; do
             $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
         done
@@ -245,8 +254,7 @@ containsElement () {
 }
 
 
-containsElement "$MODULE" "${MODULES_ARRAY[@]}" || echo -e "\n  Modules does not exist \n"
-containsElement "$MODULE" "${MODULES_ARRAY[@]}" || exit 34 
+containsElement "$MODULE" "${MODULES_ARRAY[@]}" || ( echo -e "\n  Modules does not exist \n" && exit 63 )
 
 
 case $MODULE in
@@ -311,7 +319,7 @@ case $MODULE in
         TOMCAT_SCRIPT_NAME="tomcat_weather.sh";
         ;;
     *)
-        echo all;
+        echo "Module $MODULE is not found" && usage && exit 64;
         ;;
 esac    # --- end of case ---
 
@@ -324,29 +332,29 @@ if [ "$RESTORE_TRIGER" ] ; then
     if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
         restoreModules
     else
-        echo -e "\n\n${MODULE} backup_modules not found.\n\n"
+        echo -e "\n\n\t#${MODULE} backup_modules not found.\n\n"
     fi
     if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
         restoreConfig
     else
-        echo -e "\n\n${MODULE} backup_configs not found.\n\n"
+        echo -e "\n\n\t#${MODULE} backup_configs not found.\n\n"
     fi
     restartTomcat
 else
     if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
         backupModule 
-        if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION/WEB_INF" ] ; then
+        if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
             updateWebInf
         fi
         updateModule
     else
-        echo -e "\n\n${MODULE} modules not found.\n\n"
+        echo -e "\n\n\t#${MODULE} modules not found.\n\n"
     fi
 
     if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
         backupConfig && updateConfig
     else
-        echo -e "\n\n${MODULE} configs not found.\n\n"
+        echo -e "\n\n\t#${MODULE} configs not found.\n\n"
     fi
     restartTomcat
 fi
