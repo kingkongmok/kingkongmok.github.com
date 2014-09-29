@@ -39,6 +39,7 @@ TEST_TRIGER=
 RESTORE_TRIGER=
 WEBINFO_TRIGER=
 TOMCAT_RESTART_TRIGER=
+CAL_TRIGER=
 CAL_TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
 
@@ -54,14 +55,14 @@ function usage ()
     Usage :  ${0##/*/} [options] -m <ModulesName>
 
     Options: 
-    -r|restore                  还原最近的备份的状态
-    -w|WEB-INF                  同步前删除原WEB-INF文件夹
-    -m|module                   sms|mms|disk|calendar|bmail|card|file?|
-                                程序不删除目标文档的相应文件夹
-                                setting|weather|together|mnote|uec
-    -t|test                     生成bash script，观察运行的情况
-    -h|help                     Display this message
-    -v|version                  Display script version
+    -r|restore     还原最近的备份的状态
+    -w|WEB-INF     同步前删除原WEB-INF文件夹
+    -m|module      sms|mms|disk|calendar|bmail|card|
+                   setting|weather|together|mnote|uec
+    -t|test        生成bash script，只做测试不执行
+    -c|cal_local   calendar做本地升级，即升级定时服务，默认不执行
+    -h|help        Display this message
+    -v|version     Display script version
 
     使用示范：
     ${0##/*/} -t -m sms      #测试升级sms模块，如果包含smscfg文件夹并升级config设置
@@ -75,13 +76,14 @@ function usage ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "wrtm:hv" opt
+while getopts "wrtcm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
     w|WEB-INF      )   WEBINFO_TRIGER="1" ;;   
-    m|module       )   MODULE="$OPTARG" ;;   
-    t|test )                   TEST_TRIGER="1" ;;
+    m|module       )   MODULE=$OPTARG ;;   
+    t|test         )   TEST_TRIGER="1" ;;
+    c|cal_local    )   CAL_TRIGER="1" ;;
     h|help     )  usage; exit 0   ;;
     v|version  )  echo "$0 -- Version $ScriptVersion"; exit 0   ;;
     \? )  echo -e "\n  Option does not exist : $OPTARG\n"
@@ -117,12 +119,22 @@ setVariables ()
     RESTORE_BAKCUP_CONFIG_LOCATION="${RESTORE_LOCATION}/${MODULE}cfg"
     RESTORE_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${TOMCAT_NAME}/webapps/"
     RESTORE_TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/AppConfig/"
-    #
+}	# ----------  end of function setVariables  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  cal_setVariables
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+cal_setVariables ()
+{
     CAL_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${CAL_TOMCAT_NAME}/webapps/${CAL_MODULE}"
     CAL_RESTORE_TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${CAL_TOMCAT_NAME}/webapps/${CAL_MODULE}"
-    CAL_RESTORE_BAKCUP_MODULE_LOCATION="${RESTORE_LOCATION}/${MODULE}"
+    CAL_RESTORE_BAKCUP_MODULE_LOCATION="${RESTORE_LOCATION}/${CAL_MODULE}"
     CAL_RESTORE_BAKCUP_CONFIG_LOCATION="${RESTORE_LOCATION}/${CAL_MODULE}cfg"
-}	# ----------  end of function setVariables  ----------
+}	# ----------  end of function cal_setVariables  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -133,7 +145,7 @@ setVariables ()
 #-------------------------------------------------------------------------------
 updateModule ()
 {
-    echo -e "\n\n\t#updating the ${MODULE} modules.\n\n"
+    echo -e "\n\t#updating the ${MODULE} modules.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync -az "${LOCAL_TOMCAT_MODULE_LOCATION}/" "${host}":"${TOMCAT_MODULE_LOCATION}/" 
     done
@@ -149,7 +161,7 @@ updateModule ()
 #-------------------------------------------------------------------------------
 updateWebInf ()
 {
-    echo -e "\n\n\t#updating the ${MODULE} WEB-INF folder.\n\n"
+    echo -e "\n\t#updating the ${MODULE} WEB-INF folder.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" "${host}":"${TOMCAT_MODULE_LOCATION}/"
     done
@@ -165,7 +177,7 @@ updateWebInf ()
 #-------------------------------------------------------------------------------
 updateConfig ()
 {
-    echo -e "\n\n\t#updating the ${MODULE} configs.\n\n"
+    echo -e "\n\t#updating the ${MODULE} configs.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO rsync -az "${LOCAL_TOMCAT_CONFIG_LOCATION}/" "${host}":"${TOMCAT_CONFIG_LOCATION}/"
     done
@@ -181,7 +193,7 @@ updateConfig ()
 #-------------------------------------------------------------------------------
 backupModule ()
 {
-    echo -e "\n\n\t#backuping the ${MODULE} modules.\n\n"
+    echo -e "\n\t#backuping the ${MODULE} modules.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host mkdir -p "$BACKUP_LOCATION"
         $ECHO ssh $host rsync -a "$TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"/
@@ -197,7 +209,7 @@ backupModule ()
 #-------------------------------------------------------------------------------
 backupConfig ()
 {
-    echo -e "\n\n\t#backuping the ${MODULE} configs.\n\n"
+    echo -e "\n\t#backuping the ${MODULE} configs.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host mkdir -p "$BACKUP_LOCATION"
         $ECHO ssh $host rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"/
@@ -213,7 +225,7 @@ backupConfig ()
 #-------------------------------------------------------------------------------
 restoreModules ()
 {
-    echo -e "\n\n\t#restoring the ${MODULE} modules.\n\n"
+    echo -e "\n\t#restoring the ${MODULE} modules.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_MODULE_LOCATION" "$RESTORE_TOMCAT_MODULE_LOCATION"
     done
@@ -229,7 +241,7 @@ restoreModules ()
 #-------------------------------------------------------------------------------
 restoreConfig ()
 {
-    echo -e "\n\n\t#restoring the ${MODULE} configs.\n\n"
+    echo -e "\n\t#restoring the ${MODULE} configs.\n"
     for host in ${HOST_ARRAY[@]}; do
         $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
     done
@@ -246,7 +258,7 @@ restoreConfig ()
 restartTomcat ()
 {
     if [ "$TOMCAT_RESTART_TRIGER" ] ; then
-        echo -e "\n\n\t#restarting the tomcat.\n\n"
+        echo -e "\n\t#restarting the tomcat.\n"
         for host in ${HOST_ARRAY[@]}; do
             $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
         done
@@ -262,7 +274,7 @@ restartTomcat ()
 #-------------------------------------------------------------------------------
 cal_updateModule ()
 {
-    echo -e "\n\n\t#updating the local ${MODULE} modules.\n\n"
+    echo -e "\n\t#updating the local ${MODULE} modules.\n"
     $ECHO rsync -az "${LOCAL_TOMCAT_MODULE_LOCATION}/" "${CAL_TOMCAT_MODULE_LOCATION}/" 
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_updateModule  ----------
@@ -276,7 +288,7 @@ cal_updateModule ()
 #-------------------------------------------------------------------------------
 cal_updateWebInf ()
 {
-    echo -e "\n\n\t#updating the local ${MODULE} WEB-INF folder.\n\n"
+    echo -e "\n\t#updating the local ${MODULE} WEB-INF folder.\n"
     $ECHO rsync --delete -az "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" "${CAL_TOMCAT_MODULE_LOCATION}/"
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_updateWebInf  ----------
@@ -290,7 +302,7 @@ cal_updateWebInf ()
 #-------------------------------------------------------------------------------
 cal_updateConfig ()
 {
-    echo -e "\n\n\t#updating the local ${MODULE} configs.\n\n"
+    echo -e "\n\t#updating the local ${MODULE} configs.\n"
     $ECHO rsync -az "${LOCAL_TOMCAT_CONFIG_LOCATION}/" "${TOMCAT_CONFIG_LOCATION}/"
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_updateConfig  ----------
@@ -304,7 +316,7 @@ cal_updateConfig ()
 #-------------------------------------------------------------------------------
 cal_backupModule ()
 {
-    echo -e "\n\n\t#backuping the local ${MODULE} modules.\n\n"
+    echo -e "\n\t#backuping the local ${MODULE} modules.\n"
     $ECHO mkdir -p "$BACKUP_LOCATION"
     $ECHO rsync -a "$CAL_TOMCAT_MODULE_LOCATION" "$BACKUP_LOCATION"/
 }	# ----------  end of function cal_backupModule  ----------
@@ -318,7 +330,7 @@ cal_backupModule ()
 #-------------------------------------------------------------------------------
 cal_backupConfig ()
 {
-    echo -e "\n\n\t#backuping the local ${MODULE} configs.\n\n"
+    echo -e "\n\t#backuping the local ${MODULE} configs.\n"
     $ECHO mkdir -p "$BACKUP_LOCATION"
     $ECHO rsync -a "$TOMCAT_CONFIG_LOCATION" "$BACKUP_LOCATION"/
 }	# ----------  end of function cal_backupConfig  ----------
@@ -332,7 +344,7 @@ cal_backupConfig ()
 #-------------------------------------------------------------------------------
 cal_restoreModules ()
 {
-    echo -e "\n\n\t#restoring the local ${MODULE} modules.\n\n"
+    echo -e "\n\t#restoring the local ${MODULE} modules.\n"
     $ECHO rsync -a "${CAL_RESTORE_BAKCUP_MODULE_LOCATION}/" "${CAL_RESTORE_TOMCAT_MODULE_LOCATION}/"
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_restoreModules  ----------
@@ -346,7 +358,7 @@ cal_restoreModules ()
 #-------------------------------------------------------------------------------
 cal_restoreConfig ()
 {
-    echo -e "\n\n\t#restoring the local ${MODULE} configs.\n\n"
+    echo -e "\n\t#restoring the local ${MODULE} configs.\n"
     $ECHO rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
     TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_restoreConfig  ----------
@@ -361,7 +373,7 @@ cal_restoreConfig ()
 cal_restartTomcat ()
 {
     if [ "$CAL_TOMCAT_RESTART_TRIGER" ] ; then
-        echo -e "\n\n\t#restarting the local tomcat.\n\n"
+        echo -e "\n\t#restarting the local tomcat.\n"
         $ECHO /home/appSys/smsRebuild/sbin/${CAL_TOMCAT_SCRIPT_NAME} restart
     fi
 }	# ----------  end of function cal_restartTomcat  ----------
@@ -461,12 +473,12 @@ if [ "$RESTORE_TRIGER" ] ; then
     if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
         restoreModules
     else
-        echo -e "\n\n\t#${MODULE} backup_modules not found.\n\n"
+        echo -e "\n\t#${MODULE} backup_modules not found.\n"
     fi
     if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
         restoreConfig
     else
-        echo -e "\n\n\t#${MODULE} backup_configs not found.\n\n"
+        echo -e "\n\t#${MODULE} backup_configs not found.\n"
     fi
     restartTomcat
 else
@@ -479,49 +491,51 @@ else
         fi
         updateModule
     else
-        echo -e "\n\n\t#${MODULE} modules not found.\n\n"
+        echo -e "\n\t#${MODULE} modules not found.\n"
     fi
 
     if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
         backupConfig && updateConfig
     else
-        echo -e "\n\n\t#${MODULE} configs not found.\n\n"
+        echo -e "\n\t#${MODULE} configs not found.\n"
     fi
     restartTomcat
 fi
 
 # if modulesname is calendar
-if [ "$MODULE" == "calendar" ] ; then
-    if [ "$RESTORE_TRIGER" ] ; then
-        if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
-            cal_restoreModules
-        else
-            echo -e "\n\n\t#${MODULE} cal_backup_modules not found.\n\n"
-        fi
-        if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
-            cal_restoreConfig
-        else
-            echo -e "\n\n\t#${MODULE} cal_backup_configs not found.\n\n"
-        fi
-        cal_restartTomcat
-    else
-        if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-            cal_backupModule 
-            if [ "$WEBINFO_TRIGER" ] ; then
-                if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
-                    cal_updateWebInf
-                fi
+if [ "$CAL_TRIGER" ]  ; then
+    if [ "$MODULE" == "calendar" ] ; then
+        cal_setVariables ;
+        if [ "$RESTORE_TRIGER" ] ; then
+            if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
+                cal_restoreModules
+            else
+                echo -e "\n\t#${MODULE} cal_backup_modules not found.\n"
             fi
-            cal_updateModule
+            if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
+                cal_restoreConfig
+            else
+                echo -e "\n\t#${MODULE} cal_backup_configs not found.\n"
+            fi
+            cal_restartTomcat
         else
-            echo -e "\n\n\t#${MODULE} cal_modules not found.\n\n"
+            if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
+                cal_backupModule 
+                if [ "$WEBINFO_TRIGER" ] ; then
+                    if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
+                        cal_updateWebInf
+                    fi
+                fi
+                cal_updateModule
+            else
+                echo -e "\n\t#${MODULE} cal_modules not found.\n"
+            fi
+            if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
+                cal_backupConfig && cal_updateConfig
+            else
+                echo -e "\n\t#${MODULE} cal_configs not found.\n"
+            fi
+            cal_restartTomcat
         fi
-
-        if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
-            cal_backupConfig && cal_updateConfig
-        else
-            echo -e "\n\n\t#${MODULE} cal_configs not found.\n\n"
-        fi
-        cal_restartTomcat
     fi
 fi
