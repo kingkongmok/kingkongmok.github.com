@@ -5,14 +5,14 @@
 # 
 #         USAGE: ./updateWebsite_smsRebuild.sh 
 # 
-#   DESCRIPTION: update smsRebuild modules & configs from 172.16.210.33.
+#   DESCRIPTION: 升级smsRebuild各个模块使用
 # 
 #       OPTIONS: ---
-#  REQUIREMENTS: 
+#  REQUIREMENTS: 需在172.16.210.33运行
 #          BUGS: ---
-#         NOTES: SOURCE FILES should be put in ~/sbin/update/local_$modulename.
+#         NOTES: ---
 #        AUTHOR: kk (Kingkong Mok), kingkongmok AT gmail DOT com
-#  ORGANIZATION: 
+#  ORGANIZATION: richinfo.cn
 #       CREATED: 09/19/2014 03:26:44 PM CST
 #      REVISION:  ---
 #===============================================================================
@@ -22,13 +22,20 @@ set -o nounset                              # Treat unset variables as an error
 [ -n "$LANG" ] && export LANG
 
 
-MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote uec )
 #-------------------------------------------------------------------------------
-#  
-#  需要相应的文件夹，可以新建用于测试： 新建所有需要的文件夹：
-#   for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_${i}/${i}/WEB-INF,local_${i}/${i}cfg}; done ; mkdir /home/appBackup/
+#  请务必先使用-t参数来测试
+#  需要相应的文件夹，否则程序检测到没有相应的升级文件夹将会停止运行。
+#
+#  添加测试文件夹 请勿在生产机上运行！
+#  for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_${i}/${i}/WEB-INF,local_${i}/${i}cfg}; mkdir -p /home/appBackup/`date +%Y%m%d%H%M%S`/$i;  done
+#
+#  删除测试文件夹 请勿在生产机上运行！
+#   find /home/appSys/ -type d -empty -delete
+#   find /home/appBackup/ -type d -empty -delete
+#   
 #-------------------------------------------------------------------------------
 
+MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote uec )
 #-------------------------------------------------------------------------------
 #  don't edit below
 #-------------------------------------------------------------------------------
@@ -55,19 +62,20 @@ function usage ()
     Usage :  ${0##/*/} [options] -m <ModulesName>
 
     Options: 
-    -r|restore     还原最近的备份的状态
+    -r|restore     开启还原模式，还原最近的备份的状态
     -w|WEB-INF     同步前删除原WEB-INF文件夹
     -m|module      sms|mms|disk|calendar|bmail|card|
                    setting|weather|together|mnote|uec
-    -t|test        生成bash script，只做测试不执行
-    -c|cal_local   calendar做本地升级，即升级定时服务，默认不执行
+    -t|test        生成bash script，只做测试,不执行
+    -c|cal_local   只针对calendar的，即升级定时服务，默认不执行
     -h|help        Display this message
     -v|version     Display script version
 
     使用示范：
-    ${0##/*/} -t -m sms      #测试升级sms模块，如果包含smscfg文件夹并升级config设置
-    ${0##/*/} -t -r -m sms   #还原最近一次sms模块和config设置
-    ${0##/*/} -m -w mms      #删除WEB-INF文档,进行sms模块的升级,
+    ${0##/*/} -t -m sms         #测试升级sms模块和config
+    ${0##/*/} -t -r -m mms      #还原最近一次mms模块和config
+    ${0##/*/} -m mms -w         #删除WEB-INF文档,进行sms模块和config的升级,
+    ${0##/*/} -c -m calendar    #升级calendar模块和配置，并升级本地的定时服务
 	EOT
 }    # ----------  end of function usage  ----------
 
