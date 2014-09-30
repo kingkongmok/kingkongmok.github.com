@@ -6,10 +6,10 @@ tags: [rsync, smsRebuild, update]
 ---
 {% include JB/setup %}
 
-'使用方法'
+`使用方法`
 [原文件地址](https://raw.githubusercontent.com/kingkongmok/kingkongmok.github.com/master/bin/updateWebsite_smsRebuild.sh)
 
-'示范'
+`示范`
 {% highlight bash %}
     ./bin/updateWebsite_smsRebuild.sh -t -m sms         #测试升级sms模块和config
     ./bin/updateWebsite_smsRebuild.sh -t -r -m mms      #还原最近一次mms模块和config
