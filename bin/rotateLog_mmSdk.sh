@@ -18,9 +18,6 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
-[ -r /etc/default/locale ] && . /etc/default/locale
-[ -n "$LANG" ] && export LANG
-
 MAILUSER='13725269365@139.com'
 
 
@@ -30,6 +27,7 @@ MAILUSER='13725269365@139.com'
 
 TFILE="/tmp/$(basename $0).$$.tmp"
 LOG_LOCATION=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
+IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -40,7 +38,7 @@ LOG_LOCATION=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    find ${LOG_LOCATION}/tomcat_77* -type f -mtime +3 -exec rm "{}" \; 2>$TFILE
+    find ${LOG_LOCATION}/tomcat_77* -type f -mtime +3 -exec rm "{}" \; 2>>$TFILE
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -53,7 +51,7 @@ rm_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    find ${LOG_LOCATION}/tomcat_77* -type f ! -name \*\.gz -exec gzip "{}" \; 2>$TFILE
+    find ${LOG_LOCATION}/tomcat_77* -type f ! -name \*\.gz -exec gzip "{}" \; 2>>$TFILE
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -66,7 +64,7 @@ gzip_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 rm_yesterday_mmlog ()
 {
-    rm -r ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d` 2>$TFILE
+    rm -r ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d` 2>>$TFILE
 }	# ----------  end of function rm_yesterday_mmlog  ----------
 
 
@@ -78,20 +76,14 @@ rm_yesterday_mmlog ()
 #-------------------------------------------------------------------------------
 errorMail ()
 {
-    IP=${IP:-"/sbin/ip"}
-    SENDMAIL=${SENDMAIL:-"/usr/sbin/sendmail"}
-    CURL=${CURL:-"/usr/bin/curl"}
-    PRIV_IP="${IP_ADDR:-`$IP -f inet addr | grep -oP "(?<=inet )\S+(?=\/.*global)"`}"
-    AUTHORITY="-s smtp.163.com -xu kk_richinfo -xp 1q2w3e4r"
-    SUBJECT="`hostname`_`basename $0`_${PRIV_IP}"
-    MAIL_CONTENT=`cat "$TFILE"`;
-    MAIL="Subject: $SUBJECT\n${MAIL_CONTENT:-"error"}"
-    echo -e $MAIL | $SENDMAIL $AUTHORITY "$MAILUSER"
+    echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
 }   # ----------  end of function errorMail  ----------
 
 
 rm_old_tomcatlog
 gzip_old_tomcatlog
 rm_yesterday_mmlog
-errorMail
+if [ -x "$TFILE" ] ; then
+    errorMail
+fi
 rm $TFILE
