@@ -8,7 +8,7 @@ tags: [time, find, touch, date]
 
 有多个时间相关的设置，其中比较常用的是find和date，对于日志应用较多。
 
-'find'的例子, 其中find -mtime +0是昨天以前的文件，不包含昨天。
+`find`的例子, 其中find -mtime +0是昨天以前的文件，不包含昨天。
 
 {% highlight bash %}
 kk@ins14 /var/log $ ls -l | sort -k 6 | cat -n
@@ -61,7 +61,7 @@ kk@ins14 /var/log $ find -maxdepth 1 -type f -mtime +0 | xargs ls --time-style=l
 {% endhighlight %}
 
 
-'date'的例子
+`date`的例子
 {% highlight bash %}
 kk@ins14 /var/log $ date
 Wed Oct  8 13:46:45 CST 2014
@@ -73,7 +73,7 @@ kk@ins14 /var/log $ date -d 3week
 Wed Oct 29 13:47:02 CST 2014
 {% endhighlight %}
 
-'touch'的例子
+`touch`的例子
 {% highlight bash %}
 kk@ins14 /tmp/Pictures $ ls -l Misa\ Campo\ 1\ 1280x1024\ Sexy\ Wallpaper.jpg.gz
 -rw-r--r-- 1 kk kk 344510 2013-11-11 11:11 Misa Campo 1 1280x1024 Sexy Wallpaper.jpg.gz
