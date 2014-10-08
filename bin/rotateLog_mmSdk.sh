@@ -80,10 +80,24 @@ errorMail ()
 }   # ----------  end of function errorMail  ----------
 
 
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  tomcat_restart
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+tomcat_restart ()
+{
+    for i in 11 22 33 44 ; do /opt/mmSdk/sbin/tomcat_77${i}.sh restart ; done    
+}	# ----------  end of function tomcat_restart  ----------
+
+
 rm_old_tomcatlog
 gzip_old_tomcatlog
 rm_yesterday_mmlog
 if [ -x "$TFILE" ] ; then
     errorMail
+    rm $TFILE
 fi
-rm $TFILE
+tomcat_restart
+
