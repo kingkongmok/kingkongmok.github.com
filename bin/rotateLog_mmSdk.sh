@@ -51,7 +51,7 @@ rm_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    find ${LOG_LOCATION}/tomcat_77* -type f ! -name \*\.gz -exec gzip "{}" \; 2>>$TFILE
+    find ${LOG_LOCATION}/tomcat_77* -mmin +180 -type f ! -name \*\.gz -exec gzip "{}" \; 2>>$TFILE
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -80,6 +80,18 @@ errorMail ()
 }   # ----------  end of function errorMail  ----------
 
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  rm_weblog
+#   DESCRIPTION:  remove weblog files
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+rm_weblog ()
+{
+    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +3 | xargs -i  nice -n 19 tar czf {}.tar {} --remove-files >> $TFILE
+}	# ----------  end of function rm_weblog  ----------
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  tomcat_restart
 #   DESCRIPTION:  
@@ -94,10 +106,11 @@ tomcat_restart ()
 
 rm_old_tomcatlog
 gzip_old_tomcatlog
+rm_weblog
 rm_yesterday_mmlog
 if [ -x "$TFILE" ] ; then
     errorMail
     rm $TFILE
 fi
-tomcat_restart
+#tomcat_restart
 
