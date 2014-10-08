@@ -1,10 +1,6 @@
 /* Override some defaults */
-/*html, body {
-  background-color: #eee;
-} */
 html, body {
-  background-color: #eee; 
-  font-size: 24px;
+  background-color: #eee;
 }
 .navbar {
   margin-bottom: 0;
