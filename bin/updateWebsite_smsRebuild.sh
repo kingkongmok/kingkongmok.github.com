@@ -45,6 +45,7 @@ TOMCAT_RESTART_TRIGER=
 CAL_TRIGER=
 CAL_TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
+ECHO=
 
 
 #===  FUNCTION  ================================================================
