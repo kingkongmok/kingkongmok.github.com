@@ -10,10 +10,10 @@ tags: [patch, diff]
 
 # 对于文件
 
-```bash
+{% highlight bash %}
 diff -u original.c new.c > original.patch
 patch original.c < original.patch
-```
+{% endhighlight %}
 
 # 对于文件夹
 
