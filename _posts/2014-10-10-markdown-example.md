@@ -8,7 +8,7 @@ tags: [git, markdown]
 
 
 ```bash
-#!/bin/sh
-echo hello world 
-echo you have mail 
+#!/bin/sh  
+echo hello world  
+echo you have mail   
 ```
