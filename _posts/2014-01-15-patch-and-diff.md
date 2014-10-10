@@ -10,7 +10,7 @@ tags: [patch, diff]
 
 # 对于文件
 
-```perl
+```bash
 diff -u original.c new.c > original.patch
 patch original.c < original.patch
 ```
