@@ -10,5 +10,5 @@ tags: [git, markdown]
 ```bash
 #!/bin/sh  
 echo hello world  
-echo you have mail   
+echo you have mail  
 ```
