@@ -131,4 +131,5 @@ JB :
 #https://help.github.com/articles/migrating-your-pages-site-from-maruku
 #
 #http://jekyllrb.com/docs/extras/
-markdown: kramdown
+#markdown: kramdown
+markdown: redcarpet
