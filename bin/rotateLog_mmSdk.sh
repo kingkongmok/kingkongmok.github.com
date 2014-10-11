@@ -5,7 +5,7 @@
 # 
 #         USAGE: ./rotateLog_mmSdk.sh 
 # 
-#   DESCRIPTION: 删除昨天的mmlog，删除3天以前的tomcatzip，压缩log文件
+#   DESCRIPTION: 删除昨天的mmlog，删除1天以前的log，压缩log文件
 # 
 #       OPTIONS: ---
 #  REQUIREMENTS: ---
@@ -32,13 +32,13 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  rm_old_tomcatlog
-#   DESCRIPTION:  删除多余3天的tomcatlog
+#   DESCRIPTION:  删除多余1天的tomcatlog
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +3 -exec rm "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm "{}" \; 2>>$TFILE
     nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +180 -name catalina.20* -exec rm "{}" \; 2>>$TFILE
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
