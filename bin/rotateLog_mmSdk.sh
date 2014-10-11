@@ -39,7 +39,7 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 rm_old_tomcatlog ()
 {
     nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm "{}" \; 2>>$TFILE
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +180 -name catalina.20* -exec rm "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm "{}" \; 2>>$TFILE
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -52,7 +52,7 @@ rm_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +180 -type f -name \*\.log -exec gzip "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \; 2>>$TFILE
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -109,9 +109,9 @@ rm_old_tomcatlog
 gzip_old_tomcatlog
 rm_weblog
 rm_yesterday_mmlog
+tomcat_restart
 if [ -x "$TFILE" ] ; then
     errorMail
     rm $TFILE
 fi
-#tomcat_restart
 
