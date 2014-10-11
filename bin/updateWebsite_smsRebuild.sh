@@ -92,7 +92,7 @@ showerror ()
 	cat <<- EOT
        
     无法检测所需文件，如果是测试，请生成多个虚假文件夹，请勿在生产机上运行以下命令！
-    for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_\${i}/\${i}/WEB-INF,local_\${i}/\${i}cfg}; mkdir -p /home/appBackup/`date +%Y%m%d%H%M%S`/\${i}{,cfg};  done
+    for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_\${i}/\${i}/WEB-INF,local_\${i}/\${i}cfg}; mkdir -p /home/appBackup/\${i}_`date +%Y%m%d`/\${i}{,cfg};  done
 
     删除上面的虚假文件夹，请勿在生产机上运行以下命令！
     find /home/appSys/ -type d -empty -delete && find /home/appBackup/ -type d -empty -delete
@@ -132,10 +132,9 @@ shift $(($OPTIND-1))
 #-------------------------------------------------------------------------------
 setVariables ()
 {
-    #TIMESTAMP="`date +%F`"
-    TIMESTAMP="`date +%Y%m%d%H%M%S`"
-    BACKUP_LOCATION=${BACKUP_LOCATION:-"/home/appBackup/$TIMESTAMP"}
-    RESTORE_LOCATION="/home/appBackup/`ls /home/appBackup/ -tr|tail -n1`"
+    TIMESTAMP_DAY="`date +%Y%m%d`"
+    BACKUP_LOCATION=${BACKUP_LOCATION:-"/home/appBackup/${MODULE}_$TIMESTAMP_DAY"}
+    RESTORE_LOCATION="/home/appBackup/${MODULE}_${TIMESTAMP_DAY}"
     #
     TOMCAT_MODULE_LOCATION="/home/appSys/smsRebuild/${TOMCAT_NAME}/webapps/${MODULE}"
     TOMCAT_CONFIG_LOCATION="/home/appSys/smsRebuild/AppConfig/${MODULE}cfg"
@@ -253,7 +252,7 @@ restoreModules ()
 {
     echo -e "\n#restoring the ${MODULE} modules."
     for host in ${HOST_ARRAY[@]}; do
-        $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_MODULE_LOCATION" "$RESTORE_TOMCAT_MODULE_LOCATION"
+        $ECHO ssh $host rsync --delete -a "$RESTORE_BAKCUP_MODULE_LOCATION" "$RESTORE_TOMCAT_MODULE_LOCATION"
     done
     TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function restoreModules  ----------
@@ -269,7 +268,7 @@ restoreConfig ()
 {
     echo -e "\n#restoring the ${MODULE} configs."
     for host in ${HOST_ARRAY[@]}; do
-        $ECHO ssh $host rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
+        $ECHO ssh $host rsync --delete -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
     done
     TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function restoreConfig  ----------
@@ -371,7 +370,7 @@ cal_backupConfig ()
 cal_restoreModules ()
 {
     echo -e "\n#restoring the local ${MODULE} modules."
-    $ECHO rsync -a "${CAL_RESTORE_BAKCUP_MODULE_LOCATION}/" "${CAL_RESTORE_TOMCAT_MODULE_LOCATION}/"
+    $ECHO rsync --delete -a "${CAL_RESTORE_BAKCUP_MODULE_LOCATION}/" "${CAL_RESTORE_TOMCAT_MODULE_LOCATION}/"
     CAL_TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_restoreModules  ----------
 
@@ -385,7 +384,7 @@ cal_restoreModules ()
 cal_restoreConfig ()
 {
     echo -e "\n#restoring the local ${MODULE} configs."
-    $ECHO rsync -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
+    $ECHO rsync --delete -a "$RESTORE_BAKCUP_CONFIG_LOCATION" "$RESTORE_TOMCAT_CONFIG_LOCATION"
     TOMCAT_RESTART_TRIGER=1
 }	# ----------  end of function cal_restoreConfig  ----------
 
