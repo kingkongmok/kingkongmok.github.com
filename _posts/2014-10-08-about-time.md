@@ -10,7 +10,7 @@ tags: [time, find, touch, date]
 
 `find`的例子, 其中find -mtime +0是昨天以前的文件，不包含昨天。
 
-{% highlight bash %}
+```bash
 kk@ins14 /var/log $ ls -l | sort -k 6 | cat -n
      1  total 16128
      2  drwxrwsr-x 3 portage portage    4096 2014-08-14 15:09 portage
@@ -58,11 +58,12 @@ kk@ins14 /var/log $ find -maxdepth 1 -type f -mtime +0 | xargs ls --time-style=l
      8  -rw-r----- 1 root    adm      574235 2014-10-05 22:58 ./debug
      9  -rw-r----- 1 root    adm     4627369 2014-10-05 22:58 ./syslog
     10  -rw-rw---- 1 portage portage    7440 2014-10-06 23:52 ./emerge-fetch.log
-{% endhighlight %}
+```
 
 
 `date`的例子
-{% highlight bash %}
+
+```bash
 kk@ins14 /var/log $ date
 Wed Oct  8 13:46:45 CST 2014
 kk@ins14 /var/log $ date -d -1day
@@ -71,10 +72,11 @@ kk@ins14 /var/log $ date -d 1day
 Thu Oct  9 13:46:55 CST 2014
 kk@ins14 /var/log $ date -d 3week
 Wed Oct 29 13:47:02 CST 2014
-{% endhighlight %}
+```
 
 `touch`的例子
-{% highlight bash %}
+
+```bash
 kk@ins14 /tmp/Pictures $ ls -l Misa\ Campo\ 1\ 1280x1024\ Sexy\ Wallpaper.jpg.gz
 -rw-r--r-- 1 kk kk 344510 2013-11-11 11:11 Misa Campo 1 1280x1024 Sexy Wallpaper.jpg.gz
 kk@ins14 /tmp/Pictures $ stat Misa\ Campo\ 1\ 1280x1024\ Sexy\ Wallpaper.jpg.gz
@@ -86,6 +88,4 @@ Access: 2013-11-11 11:11:11.000000000 +0800
 Modify: 2013-11-11 11:11:11.000000000 +0800
 Change: 2014-10-08 13:37:41.620258450 +0800
  Birth: -
-{% endhighlight %}
-
-
+ ```
