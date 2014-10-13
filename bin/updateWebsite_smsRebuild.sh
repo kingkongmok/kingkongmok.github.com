@@ -37,13 +37,12 @@ MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote 
 #  default values
 #-------------------------------------------------------------------------------
 MODULE=
-REMOVE_WEBINF_TRIGER="1"
 TEST_TRIGER=
 RESTORE_TRIGER=
-WEBINFO_TRIGER=
+WEBINFO_TRIGER=1
 TOMCAT_RESTART_TRIGER=
 CAL_TRIGER=
-BACKUP_TRIGER="1"
+BACKUP_TRIGER=1
 CAL_TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
 ECHO=
@@ -61,9 +60,13 @@ function usage ()
 
     Options: 
     -r|restore     开启还原模式，还原最近的备份的状态
-    -w|WEB-INF     同步前删除原WEB-INF文件夹
-    -t|test        生成bash script，只做测试,不执行
-    -b|backup      不进行备份，直接更新,当天二次更新的时候使用
+    -w|WEB-INF     *不删除*WEB-INF,不推荐
+                   在richinfo中，一般已经约好一定删除WEB-INF，此选项用于
+                   非常特殊的临时更新（只有一两个文件）
+    -t|test        生成bash script，只做测试,不执行,推荐先用此选项测试
+    -b|backup      *不备份*,不推荐
+                   在richinfo中，一般都应该先备份然后再更新,此选项用于
+                   非常特殊的临时更新（只有一两个文件）
     -c|cal_local   只针对calendar的，即升级定时服务，默认不执行
     -h|help        Display this message
     -v|version     Display script version
@@ -75,7 +78,7 @@ function usage ()
     使用示范：
     ${0##/*/} -t -m sms         #测试升级sms模块和config
     ${0##/*/} -t -r -m mms      #还原最近一次mms模块和config
-    ${0##/*/} -m mms -w         #删除WEB-INF文档,进行sms模块和config的升级,
+    ${0##/*/} -m setting -w -b  #不删除WEB-INF文档,不备份，用于临时的二次的升级,
     ${0##/*/} -c -m calendar    #升级calendar模块和配置，并升级本地的定时服务
 
 	EOT
@@ -111,7 +114,7 @@ while getopts "wrtcbm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
-    w|WEB-INF      )   WEBINFO_TRIGER="1" ;;   
+    w|WEB-INF      )   WEBINFO_TRIGER="0" ;;   
     m|module       )   MODULE=$OPTARG ;;   
     t|test         )   TEST_TRIGER="1" ;;
     b|backup       )   BACKUP_TRIGER="0" ;;
@@ -517,10 +520,10 @@ if [ "$RESTORE_TRIGER" ] ; then
     restartTomcat
 else
     if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-        if [ "$BACKUP_TRIGER" ] ; then
+        if [ "$BACKUP_TRIGER" == "1" ] ; then
             backupModule 
         fi
-        if [ "$WEBINFO_TRIGER" ] ; then
+        if [ "$WEBINFO_TRIGER" == "1" ] ; then
             if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
                 updateWebInf
             fi
@@ -531,7 +534,7 @@ else
     fi
 
     if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
-        if [ "$BACKUP_TRIGER" ] ; then
+        if [ "$BACKUP_TRIGER" == "1" ] ; then
             backupConfig 
         fi
         updateConfig
@@ -559,10 +562,10 @@ if [ "$CAL_TRIGER" ]  ; then
             cal_restartTomcat
         else
             if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-                if [ "$BACKUP_TRIGER" ] ; then
+                if [ "$BACKUP_TRIGER" == "1" ] ; then
                     cal_backupModule 
                 fi
-                if [ "$WEBINFO_TRIGER" ] ; then
+                if [ "$WEBINFO_TRIGER" == "1" ] ; then
                     if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
                         cal_updateWebInf
                     fi
@@ -572,7 +575,7 @@ if [ "$CAL_TRIGER" ]  ; then
                 echo -e "\n#${MODULE} cal_modules not found."
             fi
             if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
-                if [ "$BACKUP_TRIGER" ] ; then
+                if [ "$BACKUP_TRIGER" == "1" ] ; then
                     cal_backupConfig 
                 fi
                 cal_updateConfig
