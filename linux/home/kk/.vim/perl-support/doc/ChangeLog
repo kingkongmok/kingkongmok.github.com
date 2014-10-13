@@ -1,4 +1,80 @@
 ---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.3.1
+---------------------------------------------------------------------------------------
+- Always load the newest version of the template engine available on 'runtimepath'.
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.3
+---------------------------------------------------------------------------------------
+- Adjusting end-of-line comments improved.
+- Bugfix: Map and menu entry 'Snippets->edit global templates'.
+- 'Run -> make script executable' (\re) is now a toggle.
+- Perl interpreter can be set in ~/.vimrc.
+- Script can be run via shebang (new global variable g:Perl_DirectRun)
+- Fixed problem with system-wide installations and plug-in managers (thanks to Yegor).
+- Added 'Perl_SetMapLeader' and 'Perl_ResetMapLeader'.
+- Bugfix: Resetting maplocalleader in filetype plug-in after setting it to the value of
+  g:Perl_MapLeader.
+- Bugfix: Better compatibility with custom mappings
+  (use "normal!" and "noremap" consistently).
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.2
+---------------------------------------------------------------------------------------
+- New global variable g:Perl_InsertFileHeader (suppress file description comment for new files).
+- Two new ex commands: PerlScriptArguments, PerlSwitches
+- Specifying command line arguments and Perl command line switches improved.
+- Bugfix: g:Perl_LoadMenus now works.
+- Bugfix: g:Perl_MapLeader now works.
+- Bugfix: syntax check under 64-Bit MS-Windows now works.
+- Some settings moved to the filetype plugin.
+- Removed superfluous settings from the filetype plugin.
+- Integration of Make moved into the toolbox.
+- Minor improvements.
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.1
+---------------------------------------------------------------------------------------
+- New menu items: 'choose makefile' (\rcm), 'make clean' (\rmc)
+- Bugfix: g:Perl_LocalTemplateFile ignored if present (thanks to Sébastien Nobili)
+- Bugfix: debugger do not start in console mode
+- Several internal improvements.
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.0.1
+---------------------------------------------------------------------------------------
+- Bugfix: resolve home for linked home directories
+- Bugfix: ":make" and ":!make" no longer affect each other.
+- Bugfix: S-F1 not working for module list.
+- Several internal improvements.
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 5.0
+---------------------------------------------------------------------------------------
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  ++  The plug-in version 5.0+ is a rewriting of version 4.15+.               ++
+  ++  The versions 5.0+ are based on a new and more powerful template system  ++
+  ++  (please see |template-support|for more information).                    ++
+  ++  The template syntax has changed!                                        ++
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- New template system (many thanks to Wolfgang Mehner)
+- A few new hotkeys and menu item.
+- A few hotkeys and menu items renamed.
+
+---------------------------------------------------------------------------------------
+  RELEASE NOTES FOR VERSION 4.15
+---------------------------------------------------------------------------------------
+- Two new plugin tags: LICENCE, ORGANIZATION.
+- System-wide installation: minimal Template file for a user will automatically
+  be added.
+- Hotkeys \lcs, \ucs removed.
+- Minor improvements.
+
+---------------------------------------------------------------------------------------
   RELEASE NOTES FOR VERSION 4.14
 ---------------------------------------------------------------------------------------
 - Plugin loads faster: loading the templates is delayed until the first use.

@@ -8,7 +8,6 @@
 #  DESCRIPTION:  See POD below.
 #
 #      CREATED:  15.06.2004 22:12:41 CEST
-#     REVISION:  $Id: pmdesc3.pl,v 1.4 2007/08/10 16:02:32 mehner Exp $
 #         TODO:  Replace UNIX sort pipe.
 #                 
 #===================================================================================

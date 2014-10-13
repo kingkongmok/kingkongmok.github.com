@@ -1,17 +1,16 @@
 "===============================================================================
 "
 "          File:  perlsupportprofiling.vim
-"
-"   Description:  Plugin perl-support:
-"                 Profiler support
-"
+" 
+"   Description:  Plugin perl-support: Profiler support
+" 
 "   VIM Version:  7.0+
-"        Author:  Dr. Fritz Mehner (mn), mehner@fh-swf.de
-"       Company:  FH Südwestfalen, Iserlohn
+"        Author:  Dr. Fritz Mehner (fgm), mehner.fritz@fh-swf.de
+"  Organization:  FH Südwestfalen, Iserlohn
 "       Version:  1.0
 "       Created:  22.02.2009
-"      Revision:  $Id: perlsupportprofiling.vim,v 1.13 2011/11/19 13:35:26 mehner Exp $
-"       License:  Copyright 2009-2011 Dr. Fritz Mehner
+"      Revision:  ---
+"       License:  Copyright (c) 2009-2014, Dr. Fritz Mehner
 "===============================================================================
 "
 " Exit quickly when:
@@ -146,6 +145,27 @@ function! perlsupportprofiling#Perl_SmallProfSortQuickfix ( mode )
 	endif
 	"
 endfunction    " ----------  end of function Perl_SmallProfSortQuickfix  ----------
+"
+function! perlsupportprofiling#Perl_SmallProfSortInput ( )
+		let retval = input( "SmallProf report sort criterion  (tab exp.): ", '', 'customlist,perlsupportprofiling#Perl_SmallProfSortList' )
+		redraw!
+		call perlsupportprofiling#Perl_SmallProfSortQuickfix( retval )
+	return
+endfunction    " ----------  end of function Perl_SmallProfSortInput  ----------
+"
+function! perlsupportprofiling#Perl_FastProfSortInput ( )
+		let retval = input( "FastProf report sort criterion  (tab exp.): ", '', 'customlist,perlsupportprofiling#Perl_FastProfSortList' )
+		redraw!
+		call perlsupportprofiling#Perl_FastProfSortQuickfix( retval )
+	return
+endfunction    " ----------  end of function Perl_FastProfSortInput  ----------
+"
+function! perlsupportprofiling#Perl_NYTProfSortInput ( )
+		let retval = input( "NYTProf report sort criterion  (tab exp.): ", '', 'customlist,perlsupportprofiling#Perl_NYTProfSortList' )
+		redraw!
+		call perlsupportprofiling#Perl_NYTProfSortQuickfix( retval )
+	return
+endfunction    " ----------  end of function Perl_NYTProfSortInput  ----------
 "
 "------------------------------------------------------------------------------
 "  run : Profiler; ex command tab expansion     {{{1
