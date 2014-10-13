@@ -43,6 +43,7 @@ RESTORE_TRIGER=
 WEBINFO_TRIGER=
 TOMCAT_RESTART_TRIGER=
 CAL_TRIGER=
+BACKUP_TRIGER="1"
 CAL_TOMCAT_RESTART_TRIGER=
 ScriptVersion="1.0"
 ECHO=
@@ -62,6 +63,7 @@ function usage ()
     -r|restore     开启还原模式，还原最近的备份的状态
     -w|WEB-INF     同步前删除原WEB-INF文件夹
     -t|test        生成bash script，只做测试,不执行
+    -b|backup      不进行备份，直接更新,当天二次更新的时候使用
     -c|cal_local   只针对calendar的，即升级定时服务，默认不执行
     -h|help        Display this message
     -v|version     Display script version
@@ -105,13 +107,14 @@ showerror ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "wrtcm:hv" opt
+while getopts "wrtcbm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
     w|WEB-INF      )   WEBINFO_TRIGER="1" ;;   
     m|module       )   MODULE=$OPTARG ;;   
     t|test         )   TEST_TRIGER="1" ;;
+    b|backup       )   BACKUP_TRIGER="0" ;;
     c|cal_local    )   CAL_TRIGER="1" ;;
     h|help     )  usage; showerror   ;;
     v|version  )  echo "$0 -- Version $ScriptVersion"; exit 0   ;;
@@ -514,7 +517,9 @@ if [ "$RESTORE_TRIGER" ] ; then
     restartTomcat
 else
     if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-        backupModule 
+        if [ "$BACKUP_TRIGER" ] ; then
+            backupModule 
+        fi
         if [ "$WEBINFO_TRIGER" ] ; then
             if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
                 updateWebInf
@@ -526,7 +531,10 @@ else
     fi
 
     if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
-        backupConfig && updateConfig
+        if [ "$BACKUP_TRIGER" ] ; then
+            backupConfig 
+        fi
+        updateConfig
     else
         echo -e "\n#${MODULE} configs not found."
     fi
@@ -551,7 +559,9 @@ if [ "$CAL_TRIGER" ]  ; then
             cal_restartTomcat
         else
             if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
-                cal_backupModule 
+                if [ "$BACKUP_TRIGER" ] ; then
+                    cal_backupModule 
+                fi
                 if [ "$WEBINFO_TRIGER" ] ; then
                     if [ -d "${LOCAL_TOMCAT_MODULE_LOCATION}/WEB-INF" ] ; then
                         cal_updateWebInf
@@ -562,7 +572,10 @@ if [ "$CAL_TRIGER" ]  ; then
                 echo -e "\n#${MODULE} cal_modules not found."
             fi
             if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
-                cal_backupConfig && cal_updateConfig
+                if [ "$BACKUP_TRIGER" ] ; then
+                    cal_backupConfig 
+                fi
+                cal_updateConfig
             else
                 echo -e "\n#${MODULE} cal_configs not found."
             fi
