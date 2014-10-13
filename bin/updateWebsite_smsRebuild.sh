@@ -76,9 +76,9 @@ function usage ()
                    setting|weather|together|mnote|uec
 
     使用示范：
-    ${0##/*/} -t -m sms         #测试升级sms模块和config
-    ${0##/*/} -t -r -m mms      #还原最近一次mms模块和config
-    ${0##/*/} -m setting -w -b  #不删除WEB-INF文档,不备份，用于临时的二次的升级,
+    ${0##/*/} -t -m sms         #测试，升级sms模块和config
+    ${0##/*/} -t -r -m mms      #测试，还原最近一次mms模块和config
+    ${0##/*/} -m setting -w -b  #升级而不删除WEB-INF文档,不备份，用于临时的二次的升级,
     ${0##/*/} -c -m calendar    #升级calendar模块和配置，并升级本地的定时服务
 
 	EOT
