@@ -52,7 +52,7 @@ rm_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \; >>$TFILE
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 

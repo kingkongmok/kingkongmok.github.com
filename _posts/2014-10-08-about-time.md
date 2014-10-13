@@ -8,7 +8,15 @@ tags: [time, find, touch, date]
 
 有多个时间相关的设置，其中比较常用的是find和date，对于日志应用较多。
 
-`find`的例子, 其中find -mtime +0是昨天以前的文件，不包含昨天。
+## `find`的例子
+ 其中find -mtime +0是昨天以前的文件，不包含昨天。
+
+```
+       -atime n
+              File  was  last accessed n*24 hours ago.  When find figures out how many 24-hour periods ago the
+              file was last accessed, any fractional part is ignored, so to match -atime +1,  a  file  has  to
+              have been accessed at least two days ago.
+```
 
 ```bash
 kk@ins14 /var/log $ ls -l | sort -k 6 | cat -n
@@ -61,7 +69,7 @@ kk@ins14 /var/log $ find -maxdepth 1 -type f -mtime +0 | xargs ls --time-style=l
 ```
 
 
-`date`的例子
+## `date`的例子
 
 ```bash
 kk@ins14 /var/log $ date
@@ -74,18 +82,22 @@ kk@ins14 /var/log $ date -d 3week
 Wed Oct 29 13:47:02 CST 2014
 ```
 
-`touch`的例子
+## `touch`的例子
 
 ```bash
-kk@ins14 /tmp/Pictures $ ls -l Misa\ Campo\ 1\ 1280x1024\ Sexy\ Wallpaper.jpg.gz
--rw-r--r-- 1 kk kk 344510 2013-11-11 11:11 Misa Campo 1 1280x1024 Sexy Wallpaper.jpg.gz
-kk@ins14 /tmp/Pictures $ stat Misa\ Campo\ 1\ 1280x1024\ Sexy\ Wallpaper.jpg.gz
-  File: ‘Misa Campo 1 1280x1024 Sexy Wallpaper.jpg.gz’
-  Size: 344510      Blocks: 680        IO Block: 4096   regular file
-Device: 801h/2049d  Inode: 935505      Links: 1
-Access: (0644/-rw-r--r--)  Uid: ( 1000/      kk)   Gid: ( 1000/      kk)
-Access: 2013-11-11 11:11:11.000000000 +0800
-Modify: 2013-11-11 11:11:11.000000000 +0800
-Change: 2014-10-08 13:37:41.620258450 +0800
- Birth: -
+kk@ins14 /tmp $ ls -l hp1000_linux.txt 
+-rw-r--r-- 1 kk kk 1223 2014-10-13 09:25 hp1000_linux.txt
+kk@ins14 /tmp $ touch -t 11111111.11 hp1000_linux.txt 
+kk@ins14 /tmp $ ls -l hp1000_linux.txt 
+-rw-r--r-- 1 kk kk 1223 2014-11-11 11:11 hp1000_linux.txt
+kk@ins14 /tmp $ touch -t 201111111111.11 hp1000_linux.txt 
+kk@ins14 /tmp $ ls -l hp1000_linux.txt 
+-rw-r--r-- 1 kk kk 1223 2011-11-11 11:11 hp1000_linux.txt
+ ```
+
+ man一下touch的用法可以知道
+ 
+ ```
+       -t STAMP
+              use [[CC]YY]MMDDhhmm[.ss] instead of current time
  ```
