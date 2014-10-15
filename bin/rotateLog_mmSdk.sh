@@ -3,7 +3,8 @@
 #
 #          FILE: rotateLog_mmSdk.sh
 # 
-#         USAGE: ./rotateLog_mmSdk.sh 
+#         USAGE: crontab like this:
+# 2 2 * * *   /opt/mmSdk/sbin/rotateLog_mmSdk.sh > /mmsdk/crontabLog/rotateLog_mmSdk_`date +%F`.log 2>&1
 # 
 #   DESCRIPTION: 删除昨天的mmlog，删除1天以前的log，压缩log文件
 # 
@@ -38,8 +39,8 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm "{}" \; 2>>$TFILE
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm -v "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm -v "{}" \; 2>>$TFILE
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -52,7 +53,7 @@ rm_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \; >>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip -v "{}" \; >>$TFILE
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -65,7 +66,7 @@ gzip_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 rm_yesterday_mmlog ()
 {
-    rm -r ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d` 2>>$TFILE
+    rm -rv ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d` 2>>$TFILE
 }	# ----------  end of function rm_yesterday_mmlog  ----------
 
 
@@ -90,7 +91,9 @@ errorMail ()
 #-------------------------------------------------------------------------------
 rm_weblog ()
 {
-    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +3 | xargs -i  nice -n 19 tar czf {}.tar {} --remove-files >> $TFILE
+    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 2>>$TFILE ;
+    #find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +3 | xargs -i  nice -n 19 tar czf {}.tar.gz {} --remove-files 
+    #find ${LOG_LOCATION}/weblog_77*/*/* -type d -empty -exec rm "{}" \;
 }	# ----------  end of function rm_weblog  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -110,8 +113,9 @@ gzip_old_tomcatlog
 rm_weblog
 rm_yesterday_mmlog
 tomcat_restart
-if [ -x "$TFILE" ] ; then
+if [ -r "$TFILE" ] ; then
     errorMail
+fi
+if [ -w "$TFILE" ] ; then
     rm $TFILE
 fi
-
