@@ -41,3 +41,11 @@ next if no exist, no warnning.
 ## rotate 48
 一共会rotate48份。
 
+## crontab
+
+```bash
+33 *    * * *   nice /usr/sbin/logrotate -f logrotate.stat_tomcat_7711
+48 *    * * *   nice /usr/sbin/logrotate -f logrotate.stat_tomcat_7722
+3 * * * *   nice /usr/sbin/logrotate -f logrotate.stat_tomcat_7733
+18 *    * * *   nice /usr/sbin/logrotate -f logrotate.stat_tomcat_7744
+```
