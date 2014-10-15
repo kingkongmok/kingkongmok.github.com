@@ -41,8 +41,23 @@ rm_old_tomcatlog ()
 {
     nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm -v "{}" \; 2>>$TFILE
     nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm -v "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -exec rm -v "{}" \; 2>>$TFILE
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  empty_catalina.out
+#   DESCRIPTION:  empty the catalina.out
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+empty_catalina.out ()
+{
+    for i in 11 22 33 44 ; do
+        echo "" >  /mmsdk/tomcat_77${i}/catalina.out 2>>$TFILE
+    done
+}	# ----------  end of function empty_catalina.out  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -113,6 +128,7 @@ gzip_old_tomcatlog
 rm_weblog
 rm_yesterday_mmlog
 tomcat_restart
+empty_catalina.out
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
