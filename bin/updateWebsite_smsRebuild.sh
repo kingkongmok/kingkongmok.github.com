@@ -30,7 +30,7 @@ set -o nounset                              # Treat unset variables as an error
 #-------------------------------------------------------------------------------
 #  模块名称，可以添加删除，但须配合 case $MODULE in 处进行模块声明
 #-------------------------------------------------------------------------------
-MODULES_ARRAY=( sms mms disk calendar bmail card setting weather together mnote uec )
+MODULES_ARRAY=( sms mms disk file calendar bmail card setting weather together mnote uec )
 
 
 #-------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ function usage ()
     -v|version     Display script version
 
     ModuleName: 
-                   sms|mms|disk|calendar|bmail|card|
+                   sms|mms|disk|file|calendar|bmail|card|
                    setting|weather|together|mnote|uec
 
     使用示范：
@@ -97,7 +97,7 @@ showerror ()
 	cat <<- EOT
        
     无法检测所需文件，如果是测试，请生成多个虚假文件夹，请勿在生产机上运行以下命令！
-    for i in sms mms disk calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_\${i}/\${i}/WEB-INF,local_\${i}/\${i}cfg}; mkdir -p /home/appBackup/\${i}_`date +%Y%m%d`/\${i}{,cfg};  done
+    for i in sms mms disk file calendar bmail card setting weather together mnote uec; do mkdir -p /home/appSys/smsRebuild/sbin/update/{local_\${i}/\${i}/WEB-INF,local_\${i}/\${i}cfg}; mkdir -p /home/appBackup/\${i}_`date +%Y%m%d`/\${i}{,cfg};  done
 
     删除上面的虚假文件夹，请勿在生产机上运行以下命令！
     find /home/appSys/ -type d -empty -delete && find /home/appBackup/ -type d -empty -delete
@@ -460,11 +460,11 @@ case $MODULE in
         TOMCAT_SCRIPT_NAME="tomcat_disk_bmail_calendar.sh";
         CAL_TOMCAT_SCRIPT_NAME="tomcat_calendarTimer.sh"
         ;;
-#    file)
-#        HOST_ARRAY=(172.16.210.52 172.16.210.53 172.16.210.54) ;
-#        TOMCAT_NAME="tomcat_7.0.20_A";
-#        TOMCAT_SCRIPT_NAME="tomcat_sms_mms_card.sh";
-#        ;;
+    file)
+        HOST_ARRAY=(172.16.210.52 172.16.210.53 172.16.210.54) ;
+        TOMCAT_NAME="tomcat_7.0.20_B";
+        TOMCAT_SCRIPT_NAME="tomcat_disk_bmail_calendar.sh";
+        ;;
     setting)
         HOST_ARRAY=(172.16.200.2 172.16.200.8 172.16.200.9) ;
         TOMCAT_NAME="tomcat_7.0.20_C";
