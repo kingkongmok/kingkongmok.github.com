@@ -106,7 +106,7 @@ errorMail ()
 #-------------------------------------------------------------------------------
 rm_weblog ()
 {
-    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 2>>$TFILE ;
+    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 
     #find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +3 | xargs -i  nice -n 19 tar czf {}.tar.gz {} --remove-files 
     #find ${LOG_LOCATION}/weblog_77*/*/* -type d -empty -exec rm "{}" \;
 }	# ----------  end of function rm_weblog  ----------
