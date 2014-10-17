@@ -507,12 +507,12 @@ fi
 
 # actions
 if [ "$RESTORE_TRIGER" ] ; then
-    if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
+    if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
         restoreModules
     else
         echo -e "\n#${MODULE} backup_modules not found."
     fi
-    if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
+    if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
         restoreConfig
     else
         echo -e "\n#${MODULE} backup_configs not found."
@@ -549,12 +549,12 @@ if [ "$CAL_TRIGER" ]  ; then
     if [ "$MODULE" == "calendar" ] ; then
         cal_setVariables ;
         if [ "$RESTORE_TRIGER" ] ; then
-            if [ -d "$RESTORE_BAKCUP_MODULE_LOCATION" ]  ; then
+            if [ -d "$LOCAL_TOMCAT_MODULE_LOCATION" ]  ; then
                 cal_restoreModules
             else
                 echo -e "\n#${MODULE} cal_backup_modules not found."
             fi
-            if [ -d "$RESTORE_BAKCUP_CONFIG_LOCATION" ] ; then
+            if [ -d "$LOCAL_TOMCAT_CONFIG_LOCATION" ] ; then
                 cal_restoreConfig
             else
                 echo -e "\n#${MODULE} cal_backup_configs not found."
