@@ -39,9 +39,9 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm -v "{}" \; 2>>$TFILE
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm -v "{}" \; 2>>$TFILE
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -exec rm -v "{}" \; 2>>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm -v "{}" \;
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm -v "{}" \;
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -exec rm -v "{}" \;
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -55,7 +55,7 @@ rm_old_tomcatlog ()
 empty_catalina.out ()
 {
     for i in 11 22 33 44 ; do
-        echo "" >  /mmsdk/tomcat_77${i}/catalina.out 2>>$TFILE
+        echo "" >  /mmsdk/tomcat_77${i}/catalina.out
     done
 }	# ----------  end of function empty_catalina.out  ----------
 
@@ -68,7 +68,7 @@ empty_catalina.out ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip -v "{}" \; >>$TFILE
+    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip -v "{}" \;
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -81,7 +81,7 @@ gzip_old_tomcatlog ()
 #-------------------------------------------------------------------------------
 rm_yesterday_mmlog ()
 {
-    rm -rv ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d` 2>>$TFILE
+    rm -rv ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d`
 }	# ----------  end of function rm_yesterday_mmlog  ----------
 
 
