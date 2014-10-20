@@ -70,3 +70,26 @@ next if no exist, no warnning.
 ```bash
 33 *    * * *   nice /usr/sbin/logrotate -f -s logrotate.stat logrotate.stat_tomcat_7711
 ```
+
+### tomcat的日志自分
+
+如下，通过修改server.xml里面的org.apache.catalina.valves.AccessLogValve, 添加fileDateFormat即可。
+
+```bash
+$ cat logformat.txt
+<Valve
+    className="org.apache.catalina.valves.AccessLogValve"
+    directory="${catalina.base}/logs"
+    prefix="access_log"
+    fileDateFormat="yyyy-MM-dd.HH"
+    suffix=".log"
+    pattern="%t %H cookie:%{SESSIONID}c request:%{SESSIONID}r  %m %U %s %q %r"
+
+/>
+
+$ diff ~/tomcat-7711/conf/server.xml*
+139c139
+<              directory="logs"  prefix="access." fileDateFormat="yyyy-MM-dd.HH" suffix=".log"
+---
+>              directory="logs"  prefix="access." suffix=".log"
+```
