@@ -55,7 +55,7 @@ rm_old_tomcatlog ()
 empty_catalina.out ()
 {
     for i in 11 22 33 44 ; do
-        echo "" >  /mmsdk/tomcat_77${i}/catalina.out
+        echo "" >  ${LOG_LOCATION}/tomcat_77${i}/catalina.out
     done
 }	# ----------  end of function empty_catalina.out  ----------
 
