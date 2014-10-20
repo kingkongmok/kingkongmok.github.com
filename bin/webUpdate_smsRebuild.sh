@@ -39,6 +39,7 @@ MODULE=
 TEST_TRIGER=
 RESTORE_TRIGER=
 WEBINFO_TRIGER=1
+TOMCAT_MANUAL_RESTART_TRIGER=1
 TOMCAT_RESTART_TRIGER=
 CAL_TRIGER=
 BACKUP_TRIGER=1
@@ -63,6 +64,7 @@ function usage ()
                    在richinfo中，一般已经约好一定删除WEB-INF，此选项用于
                    非常特殊的临时更新（只有一两个文件）
     -t|test        生成bash script，只做测试,不执行,推荐先用此选项测试
+    -j|java        只更新*不重启tomcat*，不推荐
     -b|backup      *不备份*,不推荐
                    在richinfo中，一般都应该先备份然后再更新,此选项用于
                    非常特殊的临时更新（只有一两个文件）
@@ -77,6 +79,7 @@ function usage ()
     使用示范：
     ${0##/*/} -t -m sms         #测试，升级sms模块和config
     ${0##/*/} -t -r -m mms      #测试，还原最近一次mms模块和config
+    ${0##/*/} -t -j -w -m mms   #测试，更新部分mms文件，不重启tomcat，不删除WEB-INF文件夹
     ${0##/*/} -m setting -w -b  #升级而不删除WEB-INF文档,不备份，用于临时的二次的升级,
     ${0##/*/} -c -m calendar    #升级calendar模块和配置，并升级本地的定时服务
 
@@ -109,13 +112,14 @@ showerror ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "wrtcbm:hv" opt
+while getopts "jwrtcbm:hv" opt
 do
   case $opt in
     r|restore      )   RESTORE_TRIGER="1" ;;   
     w|WEB-INF      )   WEBINFO_TRIGER="0" ;;   
     m|module       )   MODULE=$OPTARG ;;   
     t|test         )   TEST_TRIGER="1" ;;
+    j|java         )   TOMCAT_MANUAL_RESTART_TRIGER="0" ;;
     b|backup       )   BACKUP_TRIGER="0" ;;
     c|cal_local    )   CAL_TRIGER="1" ;;
     h|help     )  usage; showerror   ;;
@@ -287,12 +291,17 @@ restoreConfig ()
 #-------------------------------------------------------------------------------
 restartTomcat ()
 {
-    if [ "$TOMCAT_RESTART_TRIGER" ] ; then
-        echo -e "\n#restarting the tomcat."
-        for host in ${HOST_ARRAY[@]}; do
-            $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
-        done
+    if [ "$TOMCAT_MANUAL_RESTART_TRIGER" == 0 ] ; then
+        echo -e "\n#Do not restart tomcat for argument specify."
+    else
+        if [ "$TOMCAT_RESTART_TRIGER" ] ; then
+            echo -e "\n#restarting the tomcat."
+            for host in ${HOST_ARRAY[@]}; do
+                $ECHO ssh $host /home/appSys/smsRebuild/sbin/${TOMCAT_SCRIPT_NAME} restart
+            done
+        fi
     fi
+
 }	# ----------  end of function restartTomcat  ----------
 
 
@@ -402,9 +411,13 @@ cal_restoreConfig ()
 #-------------------------------------------------------------------------------
 cal_restartTomcat ()
 {
-    if [ "$CAL_TOMCAT_RESTART_TRIGER" ] ; then
-        echo -e "\n#restarting the local tomcat."
-        $ECHO /home/appSys/smsRebuild/sbin/${CAL_TOMCAT_SCRIPT_NAME} restart
+    if [ "$TOMCAT_MANUAL_RESTART_TRIGER" == 0 ] ; then
+        echo -e "\n#Do not restart tomcat for argument specify."
+    else
+        if [ "$CAL_TOMCAT_RESTART_TRIGER" ] ; then
+            echo -e "\n#restarting the local tomcat."
+            $ECHO /home/appSys/smsRebuild/sbin/${CAL_TOMCAT_SCRIPT_NAME} restart
+        fi
     fi
 }	# ----------  end of function cal_restartTomcat  ----------
 
