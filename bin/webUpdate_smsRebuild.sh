@@ -1,9 +1,9 @@
 #!/bin/bash - 
 #===============================================================================
 #
-#          FILE: updateWebsite_smsRebuild.sh
+#          FILE: webUpdate_smsRebuild.sh
 # 
-#         USAGE: ./updateWebsite_smsRebuild.sh [options] -m <ModulesName>
+#         USAGE: ./webUpdate_smsRebuild.sh [options] -m <ModulesName>
 # 
 #   DESCRIPTION: 升级smsRebuild各个模块使用,请务必先使用-t参数来测试
 #       OPTIONS: ---
@@ -17,9 +17,8 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
-[ -r /etc/default/locale ] && . /etc/default/locale
-[ -n "$LANG" ] && export LANG
-
+#[ -r /etc/default/locale ] && . /etc/default/locale
+#[ -n "$LANG" ] && export LANG
 
 
 #-------------------------------------------------------------------------------
