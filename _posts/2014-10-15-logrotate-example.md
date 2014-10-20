@@ -71,7 +71,7 @@ next if no exist, no warnning.
 33 *    * * *   nice /usr/sbin/logrotate -f -s logrotate.stat logrotate.stat_tomcat_7711
 ```
 
-### tomcat的日志自分
+## tomcat的日志自分
 
 如下，通过修改server.xml里面的org.apache.catalina.valves.AccessLogValve, 添加fileDateFormat即可。
 
