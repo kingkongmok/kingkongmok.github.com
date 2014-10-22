@@ -11,9 +11,12 @@ tags: [tcpdump, http]
 
 ## 参数和重要信息解析：
 
-***-A*** 使用ascii打印，基本是为http服务的，
+***-A*** 使用ascii打印，基本是为http服务的
+
 ***-n*** 不解析DNS
-***-s*** 设置取每数据包的字节大小，其实这个一般默认65535就ok了，不必另外设置。
+
+***-s*** 设置取每数据包的字节大小，其实这个一般默认65535就ok了，不必另外设置
+
 ***-l*** Make stdout line buffered. 用于grep或者tee使用
 
 
@@ -33,9 +36,11 @@ Flags are some combination of S (SYN), F (FIN), P (PUSH),  R  (RST),  U
 
 
 ### PTR
+
 一个ssh的登录时候反向DNS查找10网段PTR的过程
 
-```bashkk@ins14 ~ $ sudo tcpdump -i enp0s3 -A -n -s 0 not port 22 -l  
+```bash
+kk@ins14 ~ $ sudo tcpdump -i enp0s3 -A -n -s 0 not port 22 -l  
 error : ret -1
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on enp0s3, link-type EN10MB (Ethernet), capture size 65535 bytes
