@@ -57,3 +57,9 @@ INFO: Server startup in 24544 ms
         ...
     }
 ```
+
+### iptables nat forward
+
+```bash
+$ sudo iptables -t nat -A PREROUTING -d 10.0.2.15 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+```
