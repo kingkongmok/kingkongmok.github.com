@@ -16,52 +16,11 @@ Perhaps iptables or your kernel needs to be upgraded.
 
 查找[解决方法](https://forums.gentoo.org/viewtopic-t-718964-start-0.html),帖子中需要的是***CONFIG_NF_CONNTRACK CONFIG_NF_CONNTRACK_IPV4  CONFIG_NF_NAT***
 
-我自己的情况需要新添加***CONFIG_NF_NAT_IPV4***和***CONFIG_NF_NAT_IPV6***
+我自己的情况需要新添加***CONFIG_NF_NAT_IPV4***和***CONFIG_NF_NAT_IPV6***依然出错
 
-```bash
-kk@ins14 /usr/src/linux $ diff  /usr/src/linux/.config <(zcat /proc/config.gz) 
-752,760d751
-< CONFIG_NF_NAT=m
-< CONFIG_NF_NAT_NEEDED=y
-< CONFIG_NF_NAT_PROTO_UDPLITE=m
-< CONFIG_NF_NAT_PROTO_SCTP=m
-< CONFIG_NF_NAT_AMANDA=m
-< CONFIG_NF_NAT_FTP=m
-< CONFIG_NF_NAT_IRC=m
-< CONFIG_NF_NAT_SIP=m
-< CONFIG_NF_NAT_TFTP=m
-786d776
-< CONFIG_NETFILTER_XT_TARGET_NETMAP=m
-791d780
-< CONFIG_NETFILTER_XT_TARGET_REDIRECT=m
-865,871c854
-< CONFIG_NF_NAT_IPV4=m
-< CONFIG_IP_NF_TARGET_MASQUERADE=m
-< CONFIG_IP_NF_TARGET_NETMAP=m
-< CONFIG_IP_NF_TARGET_REDIRECT=m
-< CONFIG_NF_NAT_PROTO_GRE=m
-< CONFIG_NF_NAT_PPTP=m
-< CONFIG_NF_NAT_H323=m
----
-> # CONFIG_NF_NAT_IPV4 is not set
-902,904c885
-< CONFIG_NF_NAT_IPV6=m
-< CONFIG_IP6_NF_TARGET_MASQUERADE=m
-< CONFIG_IP6_NF_TARGET_NPT=m
----
-> # CONFIG_NF_NAT_IPV6 is not set
-4061,4063c4042,4044
-< CONFIG_CRYPTO_SHA1_SSSE3=m
-< CONFIG_CRYPTO_SHA256_SSSE3=m
-< CONFIG_CRYPTO_SHA512_SSSE3=m
----
-> # CONFIG_CRYPTO_SHA1_SSSE3 is not set
-> # CONFIG_CRYPTO_SHA256_SSSE3 is not set
-> # CONFIG_CRYPTO_SHA512_SSSE3 is not set
-```
+最后是添加以下两个并重新编译内核后成功，不清楚到底是内核问题还是模块问题，一般来说编译上面应该就可以了.
+***CONFIG_NF_TABLES CONFIG_IP_SET***
 
-重新编译内核模块
-出错，重新make和编译
 
 ```bash
 kk@ins14 /usr/src/linux $ diff .config .config--2014-08-31--20-11-35.bak 
