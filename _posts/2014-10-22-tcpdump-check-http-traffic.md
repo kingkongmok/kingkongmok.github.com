@@ -39,7 +39,7 @@ Flags are some combination of S (SYN), F (FIN), P (PUSH),  R  (RST),  U
 
 一个ssh的登录时候反向DNS查找10网段PTR的过程
 
-```bash
+```
 kk@ins14 ~ $ sudo tcpdump -i enp0s3 -A -n -s 0 not port 22 -l  
 error : ret -1
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
@@ -62,7 +62,7 @@ E..~....@.d.....
 ### http 过程
 一个使用iptables nat 8080 -> 80 的访问过程
 
-```bash
+```
 kk@ins14 ~ $ sudo tcpdump -i enp0s3 -A -n -s 0 not port 22 -l  
 error : ret -1
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
