@@ -20,7 +20,52 @@
 set -o nounset                              # Treat unset variables as an error
 [ -r /etc/default/locale ] && . /etc/default/locale
 [ -n "$LANG" ] && export LANG
-set -x
+#set -x
+
+SMS_TRIGER=
+MMS_TRIGER=
+
+ScriptVersion="1.0"
+
+#===  FUNCTION  ================================================================
+#         NAME:  usage
+#  DESCRIPTION:  Display usage information.
+#===============================================================================
+function usage ()
+{
+	cat <<- EOT
+
+  Usage :  ${0##/*/} [options] [--] 
+
+  Options: 
+  -s|sms        sms test
+  -m|mms        mms test
+  -h|help       Display this message
+  -v|version    Display script version
+
+	EOT
+}    # ----------  end of function usage  ----------
+
+#-----------------------------------------------------------------------
+#  Handle command line arguments
+#-----------------------------------------------------------------------
+
+while getopts ":hvms" opt
+do
+  case $opt in
+
+    h|help     )  usage; exit 0   ;;
+    m|mms     )  MMS_TRIGER=1   ;;
+    s|sms     )  SMS_TRIGER=1   ;;
+    v|version  )  echo "$0 -- Version $ScriptVersion"; exit 0   ;;
+
+    \? )  echo -e "\n  Option does not exist : $OPTARG\n"
+          usage; exit 1   ;;
+
+  esac    # --- end of case ---
+done
+shift $(($OPTIND-1))
+
 
 KK_VAR=/home/kk/.kk_var
 [ -f $KK_VAR ] && . $KK_VAR
@@ -39,7 +84,7 @@ SID=`grep -oP '(?<=Os_SSo_Sid\s)\w+' /tmp/139_$$_cookie`
 #-------------------------------------------------------------------------------
 mailTest ()
 {
-echo "mailing 163..."
+echo "mailTest processing..."
 echo '<object>
   <object name="attrs">
     <string name="id">0.2619911884889007</string>
@@ -72,6 +117,33 @@ echo '<object>
 
 
 #---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  smsTest
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+smsTest ()
+{
+echo "smsTest processing..."
+echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string name="smsContent">sms testing...</string><string name="receiverNumber">8613725269365</string><string name="comeFrom">104</string><int name="sendType">0</int><int name="smsType">1</int><int name="serialId">-1</int><int name="isShareSms">0</int><string name="sendTime"></string><string name="validImg"></string><int name="groupLength">10</int><int name="isSaveRecord">1</int></object>' | curl -s "http://smsrebuild1.mail.10086.cn/sms/sms?func=sms:sendSms&sid=${SID}&rnd=0.8170706790406257&cguid=1521425490499" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function smsTest  ----------
+
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  mmsTest
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+mmsTest ()
+{
+echo "mmsTest processing..."
+echo '<object>  <int name="style">0</int>  <int name="size">2</int>  <string name="content">helloThere.</string>  <string name="validate" />  <string name="title">mmsTesting</string>  <string name="receiverNumber">13725269365</string>  <int name="sendType">0</int>  <string name="sendTime" />
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/mms/s?func=mms:mmsWord&sid=${SID}&cguid=1602172305686" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset:utf-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function mmsTest  ----------
+
+#---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  cardTo139
 #   DESCRIPTION:  
 #    PARAMETERS:  
@@ -79,6 +151,7 @@ echo '<object>
 #------------------------------------------------------------------------------
 cardTest ()
 {
+echo "cardTest processing..."
 echo '<object>
   <object name="attrs">
     <string name="to">kk_richinfo@163.com</string>
@@ -110,6 +183,7 @@ echo '<object>
 #-------------------------------------------------------------------------------
 calenderTest ()
 {
+echo "calenderTest processing..."
 echo '<object>
   <int name="labelId">10</int>
   <int name="seqNo">0</int>
@@ -133,19 +207,152 @@ echo '<object>
   <int name="isNotify">0</int>
   <null name="inviteInfo" />
   <int name="comeFrom">0</int>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/calendar/s?func=calendar:addCalendar&sid=${SID}&&comefrom=54&cguid=1056517650283" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie
-
-
-
-
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/calendar/s?func=calendar:addCalendar&sid=${SID}&&comefrom=54&cguid=1056517650283" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie > /dev/null
 }	# ----------  end of function calenderTest  ----------
 
 
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  listMessages
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+listMessages ()
+{
+echo "listMessages processing..."
+echo '<object>
+  <int name="fid">1</int>
+  <string name="order">receiveDate</string>
+  <string name="desc">1</string>
+  <int name="start">1</int>
+  <int name="total">100</int>
+  <string name="topFlag">top</string>
+  <int name="sessionEnable">2</int>
+</object>' | curl -s "http://appmail.mail.10086.cn/s?func=mbox:listMessages&sid=${SID}&&comefrom=54&cguid=1143113376506" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=989&tab=mailbox_1&comefrom=54&cguid=1014154934399&mtime=51" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function listMessages  ----------
+
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  together_getFetionLoginInfo
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+together_getFetionLoginInfo ()
+{
+echo "together_getFetionLoginInfo processing..."
+   echo '<object>
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/together/s?func=user:getFetionLoginInfo&sid=${SID}&&comefrom=54&cguid=1400523550372" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed  -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function together_getFetionLoginInfo  ----------
+
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  setting_getArtifact
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+setting_getArtifact ()
+{
+echo "setting_getArtifact processing..."
+echo '<object>
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/setting/s?func=umc:getArtifact&sid=${SID}&&comefrom=54&cguid=1400410898845" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed  > /dev/null
+}	# ----------  end of function setting_getArtifact  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  mnote_updateNote
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+mnote_updateNote ()
+{
+echo '<object>
+  <string name="title">testNode</string>
+  <string name="content">hereIsATest.</string>
+  <string name="attachmentDirId" />
+  <string name="noteId">fe4d9c0df9656c1c0e34f479296007e2</string>
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/mnote?func=mnote:updateNote&sid=${SID}&&comefrom=54&cguid=1609280424672" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function mnote_updateNote  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  bmail_searchMessages
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+bmail_searchMessages ()
+{
+echo '<object>
+  <int name="fid">0</int>
+  <int name="recursive">0</int>
+  <int name="ignoreCase">0</int>
+  <int name="isSearch">1</int>
+  <int name="isFullSearch">1</int>
+  <int name="start">1</int>
+  <int name="total">100</int>
+  <int name="limit">1000</int>
+  <string name="order">receiveDate</string>
+  <string name="desc">1</string>
+  <array name="condictions">
+    <object>
+      <string name="field">from</string>
+      <string name="operator">contains</string>
+      <string name="value">ex</string>
+    </object>
+  </array>
+  <int name="statType">1</int>
+</object>' | curl -s "http://appmail.mail.10086.cn/bmail/s?func=mbox:searchMessages&sid=${SID}&&comefrom=54&cguid=1727319858459" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=101&tab=mailbox_1&comefrom=54&cguid=1436200773470&mtime=60" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function bmail_searchMessages  ----------
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  file_getFiles
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+file_getFiles ()
+{
+echo "file_getFiles processing..." 
+echo '<object>
+  <int name="actionId">0</int>
+  <string name="imageSize">80*90</string>
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/disk?func=file:getFiles&sid=${SID}&&comefrom=54&cguid=1439320460586" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed > /dev/null
+}	# ----------  end of function file_getFiles  ----------
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  logout
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+logout139 ()
+{
+echo "logout139 processing..."
+   curl -s "http://mail.10086.cn/login/Logout.aspx?sid=${SID}&redirect=http"%"3A"%"2F"%"2Fmail.10086.cn"%"2Flogout.htm"%"3Fcode"%"3D1_22" -H "Pragma: no-cache" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=347&tab=mailbox_1&comefrom=54&cguid=1418084572390&mtime=46" -H "Connection: keep-alive" -H "Cache-Control: no-cache" --compressed -b /tmp/139_$$_cookie > /dev/null
+}	# ----------  end of function logout  ----------
+
+listMessages 
+if [ "$SMS_TRIGER" ] ; then
+    smsTest
+fi
+
+if [ "$MMS_TRIGER" ]  ; then
+    mmsTest
+fi
 mailTest
 cardTest
 calenderTest
+together_getFetionLoginInfo
+setting_getArtifact
+mnote_updateNote
+bmail_searchMessages
+file_getFiles
+logout139
+
 
 [ -w /tmp/139_$$_cookie ] && rm /tmp/139_$$_cookie 
-
-
-
