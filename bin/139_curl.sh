@@ -24,6 +24,7 @@ set -o nounset                              # Treat unset variables as an error
 
 SMS_TRIGER=
 MMS_TRIGER=
+VERBOSE=
 
 ScriptVersion="1.0"
 
@@ -71,9 +72,23 @@ KK_VAR=/home/kk/.kk_var
 [ -f $KK_VAR ] && . $KK_VAR
 TIMESTAMP=`date -d +1day +"%F %T"`
 
-curl -s "https://mail.10086.cn/Login/Login.ashx?_fv=4&cguid=1432293382119&_=0b0d02c33d2a0c5678b2a943a6e46f3fdc379a9f" --data "UserName=13725269365&Password=${COMMON_PASSWORD}" -c /tmp/139_$$_cookie
 
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  Login139
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+Login139 ()
+{
+curl -s "https://mail.10086.cn/Login/Login.ashx?_fv=4&cguid=1010337360142&_=9f2d37c2a18a0537387efb0370d352b4f710a07f" -H "Origin: http://mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Cache-Control: max-age=0" -H "Referer: http://mail.10086.cn/" -H "Connection: keep-alive" --data "UserName=kingkongmok&Password=${COMMON_PASSWORD}&VerifyCode=" --compressed -c /tmp/139_$$_cookie 
 SID=`grep -oP '(?<=Os_SSo_Sid\s)\w+' /tmp/139_$$_cookie`
+echo 'sid = '$SID
+}	# ----------  end of function Login139  ----------
+
+#curl -s "https://mail.10086.cn/Login/Login.ashx?_fv=4&cguid=1432293382119&_=0b0d02c33d2a0c5678b2a943a6e46f3fdc379a9f" --data "UserName=13725269365&Password=${COMMON_PASSWORD}" -c /tmp/139_$$_cookie
+#SID=`grep -oP '(?<=Os_SSo_Sid\s)\w+' /tmp/139_$$_cookie`
+#echo 'sid = '$SID
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -112,7 +127,7 @@ echo '<object>
   <string name="action">deliver</string>
   <int name="replyNotify">0</int>
   <int name="returnInfo">1</int>
-</object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&categroyId=103000000&sid=${SID}&&comefrom=54&guid=05a451b98&cguid=1529366541514" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Referer: http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&categroyId=103000000&sid=${SID}&&comefrom=54&guid=05a451b98&cguid=1529366541514" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Referer: http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie 
 }	# ----------  end of function mailTest  ----------
 
 
@@ -125,7 +140,7 @@ echo '<object>
 smsTest ()
 {
 echo "smsTest processing..."
-echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string name="smsContent">sms testing...</string><string name="receiverNumber">8613725269365</string><string name="comeFrom">104</string><int name="sendType">0</int><int name="smsType">1</int><int name="serialId">-1</int><int name="isShareSms">0</int><string name="sendTime"></string><string name="validImg"></string><int name="groupLength">10</int><int name="isSaveRecord">1</int></object>' | curl -s "http://smsrebuild1.mail.10086.cn/sms/sms?func=sms:sendSms&sid=${SID}&rnd=0.8170706790406257&cguid=1521425490499" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string name="smsContent">sms testing...</string><string name="receiverNumber">8613725269365</string><string name="comeFrom">104</string><int name="sendType">0</int><int name="smsType">1</int><int name="serialId">-1</int><int name="isShareSms">0</int><string name="sendTime"></string><string name="validImg"></string><int name="groupLength">10</int><int name="isSaveRecord">1</int></object>' | curl -s "http://smsrebuild1.mail.10086.cn/sms/sms?func=sms:sendSms&sid=${SID}&rnd=0.8170706790406257&cguid=1521425490499" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie 
 }	# ----------  end of function smsTest  ----------
 
 
@@ -140,7 +155,7 @@ mmsTest ()
 {
 echo "mmsTest processing..."
 echo '<object>  <int name="style">0</int>  <int name="size">2</int>  <string name="content">helloThere.</string>  <string name="validate" />  <string name="title">mmsTesting</string>  <string name="receiverNumber">13725269365</string>  <int name="sendType">0</int>  <string name="sendTime" />
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/mms/s?func=mms:mmsWord&sid=${SID}&cguid=1602172305686" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset:utf-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/mms/s?func=mms:mmsWord&sid=${SID}&cguid=1602172305686" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset:utf-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie 
 }	# ----------  end of function mmsTest  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -171,7 +186,7 @@ echo '<object>
   </object>
   <string name="action">deliver</string>
   <int name="returnInfo">1</int>
-</object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&comefrom=5&categroyId=102000000&sid=${SID}&&comefrom=54&cguid=1037220992747" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=989&tab=mailbox_1&comefrom=54&cguid=1014154934399&mtime=51" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&comefrom=5&categroyId=102000000&sid=${SID}&&comefrom=54&cguid=1037220992747" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=989&tab=mailbox_1&comefrom=54&cguid=1014154934399&mtime=51" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie 
 }	# ----------  end of function cardTo139  ----------
 
 
@@ -207,7 +222,7 @@ echo '<object>
   <int name="isNotify">0</int>
   <null name="inviteInfo" />
   <int name="comeFrom">0</int>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/calendar/s?func=calendar:addCalendar&sid=${SID}&&comefrom=54&cguid=1056517650283" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/calendar/s?func=calendar:addCalendar&sid=${SID}&&comefrom=54&cguid=1056517650283" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie 
 }	# ----------  end of function calenderTest  ----------
 
 
@@ -228,7 +243,7 @@ echo '<object>
   <int name="total">100</int>
   <string name="topFlag">top</string>
   <int name="sessionEnable">2</int>
-</object>' | curl -s "http://appmail.mail.10086.cn/s?func=mbox:listMessages&sid=${SID}&&comefrom=54&cguid=1143113376506" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=989&tab=mailbox_1&comefrom=54&cguid=1014154934399&mtime=51" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://appmail.mail.10086.cn/s?func=mbox:listMessages&sid=${SID}&&comefrom=54&cguid=1143113376506" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=989&tab=mailbox_1&comefrom=54&cguid=1014154934399&mtime=51" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie 
 }	# ----------  end of function listMessages  ----------
 
 
@@ -243,7 +258,7 @@ together_getFetionLoginInfo ()
 {
 echo "together_getFetionLoginInfo processing..."
    echo '<object>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/together/s?func=user:getFetionLoginInfo&sid=${SID}&&comefrom=54&cguid=1400523550372" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed  -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/together/s?func=user:getFetionLoginInfo&sid=${SID}&&comefrom=54&cguid=1400523550372" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed  -b /tmp/139_$$_cookie 
 }	# ----------  end of function together_getFetionLoginInfo  ----------
 
 
@@ -258,7 +273,7 @@ setting_getArtifact ()
 {
 echo "setting_getArtifact processing..."
 echo '<object>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/setting/s?func=umc:getArtifact&sid=${SID}&&comefrom=54&cguid=1400410898845" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed  > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/setting/s?func=umc:getArtifact&sid=${SID}&&comefrom=54&cguid=1400410898845" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed  
 }	# ----------  end of function setting_getArtifact  ----------
 
 
@@ -275,7 +290,7 @@ echo '<object>
   <string name="content">hereIsATest.</string>
   <string name="attachmentDirId" />
   <string name="noteId">fe4d9c0df9656c1c0e34f479296007e2</string>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/mnote?func=mnote:updateNote&sid=${SID}&&comefrom=54&cguid=1609280424672" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/mnote?func=mnote:updateNote&sid=${SID}&&comefrom=54&cguid=1609280424672" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie 
 }	# ----------  end of function mnote_updateNote  ----------
 
 
@@ -306,7 +321,7 @@ echo '<object>
     </object>
   </array>
   <int name="statType">1</int>
-</object>' | curl -s "http://appmail.mail.10086.cn/bmail/s?func=mbox:searchMessages&sid=${SID}&&comefrom=54&cguid=1727319858459" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=101&tab=mailbox_1&comefrom=54&cguid=1436200773470&mtime=60" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie > /dev/null
+</object>' | curl -s "http://appmail.mail.10086.cn/bmail/s?func=mbox:searchMessages&sid=${SID}&&comefrom=54&cguid=1727319858459" -H "Pragma: no-cache" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=101&tab=mailbox_1&comefrom=54&cguid=1436200773470&mtime=60" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie 
 }	# ----------  end of function bmail_searchMessages  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -321,8 +336,20 @@ echo "file_getFiles processing..."
 echo '<object>
   <int name="actionId">0</int>
   <string name="imageSize">80*90</string>
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/disk?func=file:getFiles&sid=${SID}&&comefrom=54&cguid=1439320460586" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed > /dev/null
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/file/disk?func=file:getFiles&sid=${SID}&&comefrom=54&cguid=1439320460586" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- -b /tmp/139_$$_cookie --compressed 
 }	# ----------  end of function file_getFiles  ----------
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  uec_index
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+uec_index ()
+{
+    curl -s "http://uec.mail.10086.cn/uec/indexLoadNoLogin.do" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Referer: http://uec.mail.10086.cn/uec/" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" --compressed 
+}	# ----------  end of function uec_index  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  logout
@@ -333,9 +360,10 @@ echo '<object>
 logout139 ()
 {
 echo "logout139 processing..."
-   curl -s "http://mail.10086.cn/login/Logout.aspx?sid=${SID}&redirect=http"%"3A"%"2F"%"2Fmail.10086.cn"%"2Flogout.htm"%"3Fcode"%"3D1_22" -H "Pragma: no-cache" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=347&tab=mailbox_1&comefrom=54&cguid=1418084572390&mtime=46" -H "Connection: keep-alive" -H "Cache-Control: no-cache" --compressed -b /tmp/139_$$_cookie > /dev/null
+   curl -s "http://mail.10086.cn/login/Logout.aspx?sid=${SID}&redirect=http"%"3A"%"2F"%"2Fmail.10086.cn"%"2Flogout.htm"%"3Fcode"%"3D1_22" -H "Pragma: no-cache" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=347&tab=mailbox_1&comefrom=54&cguid=1418084572390&mtime=46" -H "Connection: keep-alive" -H "Cache-Control: no-cache" --compressed -b /tmp/139_$$_cookie 
 }	# ----------  end of function logout  ----------
 
+Login139
 listMessages 
 if [ "$SMS_TRIGER" ] ; then
     smsTest
@@ -352,6 +380,7 @@ setting_getArtifact
 mnote_updateNote
 bmail_searchMessages
 file_getFiles
+uec_index
 logout139
 
 
