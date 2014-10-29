@@ -28,3 +28,5 @@ kk@ins14 ~ $ sudo gcc-config -l
 
       *   . /etc/profile
 ```
+
+终结来说，需要手册上perl和python两个升级后的处理脚本遇到GCC升级，还得设置gcc-config
