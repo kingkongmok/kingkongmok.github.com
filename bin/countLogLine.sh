@@ -3,9 +3,9 @@
 #
 #          FILE: countLogLine.sh
 # 
-#         USAGE: ./countLogLine.sh [-o ${*:-outputfile] LOGFILE
+#         USAGE: ./countLogLine.sh LOGFILE
 # 
-#   DESCRIPTION: 用于记录日志各个时段的自增行数，不受隔天影响。
+#   DESCRIPTION: 用于记录日志各个时段的自增行数。
 # 
 #       OPTIONS: ---
 #  REQUIREMENTS: ---
