@@ -8,22 +8,43 @@ tags: [centos, settings, local]
 
 centos的一些配置和常用环境稍稍不同，需要注意。
 
+## color shell
 
 可以先设置一下colorshell。这个是绿色的
 {% highlight bash %}
-echo "PS1='\[\033[02;32m\]\u@\H:\[\033[02;34m\]\w\$\[\033[00m\] '" > ~/.bashrc
+echo "PS1='\[\033[02;32m\]\u@\H:\[\033[02;34m\]\w\$\[\033[00m\] '" >> ~/.bashrc
 {% endhighlight %}
 
 如果需要设置一下前面为红色,参考[arch](https://wiki.archlinux.org/index.php/Color_Bash_Prompt)的设置
 history也设置一下
 {% highlight bash %}
 PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+{% endhighlight %}
+
+### ~/.bashrc
+
+```bash
+$ cat ~/.bashrc 
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+
+# User specific aliases and functions
+#PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
 HISTFILESIZE=30000
 HISTTIMEFORMAT="%F %T "
-{% endhighlight %}
+
+LANG="en_US.utf8"
+LC_ALL="en_US.utf8"
+export EDITOR="vim"
+```
 
 如果需要设置用户后面有主机名，很简单修改一下\u@\h
 history也设置一下
