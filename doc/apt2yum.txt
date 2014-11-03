@@ -1,0 +1,111 @@
+= Some yum usage for people who know "apt" =
+
+If you are familiar with the apt package manager on Debian/Ubuntu this page should help you transfer your knowledge to working with yum on Fedora/RHEL/CentOS/etc.
+
+Note that this page as currently written is by non-apt experts, so there may be some mistakes.
+
+== General points ==
+
+ * Speed: 
+    * data/CPU: apt on Debian deals with roughly ~37,000 packages[1] and an extra 6,500 "provides"[2]. yum on Fedora deals with roughly 24,000 packages, 143,000 provides and 3,100,000 file provides.
+    * data/Download: apt on Debian/Ubuntu tends to have three repos. "main", "updates" and "security". Download size is roughly 2MB, 0.5MB and 0.25MB. yum on Fedora tends to have "main" and "updates". Download size is roughly 15MB+(filelists~=22MB + changelog~=9MB) and 6MB+(filelists~=8MB + changelog~=3MB + updateinfo~=0.5MB). this is then just used uncompressed (). Also the Fedora "updates" repo. tends to change a lot more often. So roughly 2.75MB with 0.75MB changing for apt, and 44MB-52MB with with 6.5MB-14.5MB changing for yum.
+    * data/IO: The apt data is combined into a ~18MB single file. The yum data is just uncompressed and used directly, 65MB+(filelists~=113MB + changelog~=40MB) and 25MB+(filelists~=47MB + changelog~=14MB). The dpkg DB is also significantly smaller than the rpm DB (~50MB vs. 221MB). So roughly 68MB of possible IO for apt, and 312MB-472MB of possible IO for yum.
+
+ * Caching: apt uses manual caching and yum uses automatic caching. In the configuration section below we explain how you can convert to manual caching.
+
+ * Packaging: apt is packaged in the "apt-get" package, and extended through a number of "apt-*" packages (like apt-file). yum is packages as "yum" and extended via. "yum-utils" and a number of plugins "yum-plugin-*" and "yum-*-plugin" and also a number of packages that use the yum API (like mock or rhn-check).
+
+== Simple conversion ==
+
+For some of the basic packaging operations, apt and yum are basically identical.
+
+ * apt-get install
+   * yum install
+ * apt-get upgrade
+   * yum upgrade
+ * apt-get remove
+   * yum remove
+ * apt-get --reinstall install
+   * yum reinstall
+ * apt-get install foo=1.0 (to downgrade to version 1.0)
+   * yum downgrade foo-1.0
+ * apt-get clean
+   * yum clean
+ * apt-get build-dep
+   * yum-builddep
+ * dpkg -l
+   * yum list installed
+ * apt-cache search
+   * yum search
+ * apt-cache search --names-only
+   * yum list
+   * repoquery
+ * dpkg -L
+   * rpm -ql
+ * apt-file list
+   * repoquery -l
+
+== Not so simple conversions ==
+
+These are "similar" operations, but there are some differences in how they act.
+
+ * apt-cache show
+   * yum info
+   * repoquery -i
+ * apt-get purge
+   * yum remove
+ * apt-get dist-upgrade
+   * yum upgrade
+   * yum distro-sync
+ * apt-get source
+   * yumdownloader --source
+ * dpkg --get-selections
+   * yum-debug-dump
+ * dpkg --set-selections
+   * yum-debug-restore
+ * dpkg -S
+   * repoquery --installed -f
+   * rpm -qf 
+ * apt-file search
+   * repoquery -f
+   * yum provides
+   * rpm -qf 
+ * apt-get --simulate upgrade
+   * yum check-update
+   * yum --assumeno upgrade
+ * apt-get --simulate install
+   * yum --assumeno install
+ * sbuild
+   * mock
+
+== Groups of packages ==
+
+In apt there is no concept of "groups", where as yum has this concept via. "yum group".
+
+In both apt and yum you can create/use a "metapackage", which is a package which contains no data but has dependency information (normally requires on other packages). These metapackages are used in both apt and yum managed distributions to make installation simpler (Eg. xorg-x11-drivers and xserver-xorg-video-all).
+
+Due to the lack of groups in apt metapackages are sometimes created/used with apt where a group is used in yum (Eg. @buildsys-build and build-essential). yum has specific commands which can operate on a "group id" or a translated "group name", "yum group install" "yum group remove" etc. Also the main commands can operate on groups via. the @ prefix "yum install @core" etc.
+
+== Apt "pinning" ==
+
+There is a concept in apt calling "pinning" which means to keep a specific package at a specific version. In yum this would generally be done via. one of a number of methods:
+
+  * yum versionlock (from the yum-plugin-versionlock package)
+  * yum-plugin-priorities configuration.
+  * excluding
+
+== General configuration ==
+
+While there are a lot of differences between apt and yum, this tries to list the options that will make yum behave more like apt.
+
+  * Apt uses manual caching. In yum you can set metadata_expire=never and manually run "yum makecache", note that this is rarely a good idea.
+
+  * Apt asks for confirmation much less than yum. In yum you can set alwaysprompt=false, at which point anything that doesn't require a dependency will happen without a user confrimation.
+
+
+----
+{{{
+[1] apt-cache dump | egrep "^Package" | wc -l
+
+[2] apt-cache show ".*" | fgrep "^Provides" | tr , '\n' | wc -l
+}}}
