@@ -104,3 +104,69 @@ kk@fileserver:~$ sudo iptables -A PREROUTING -s 192.1.6.0/24 ! -d 192.0.0.0/8 -i
 {% endhighlight %}
 
 
+无意中找到在clifford的时候偷偷搭建的二次代理，很青涩的年代
+
+```
+http_port 14725
+cache_peer 192.168.99.100       parent    80  3130  proxy-only
+acl apache rep_header Server ^Apache
+broken_vary_encoding allow apache
+cache_dir ufs /var/spool/squid 100 16 256
+access_log /var/log/squid/access.log squid
+hosts_file /etc/hosts
+refresh_pattern ^ftp:       1440    20% 10080
+refresh_pattern ^gopher:    1440    0%  1440
+refresh_pattern .       0   20% 4320
+acl all src 0.0.0.0/0.0.0.0
+acl manager proto cache_object
+acl localhost src 127.0.0.1/255.255.255.255
+acl to_localhost dst 127.0.0.0/8
+acl SSL_ports port 80       # https
+acl SSL_ports port 80       # snews
+acl SSL_ports port 80       # rsync
+acl Safe_ports port 80      # http
+acl Safe_ports port 80      # ftp
+acl Safe_ports port 80      # https
+acl Safe_ports port 80      # gopher
+acl Safe_ports port 80      # wais
+acl Safe_ports port 80  # unregistered ports
+acl Safe_ports port 80      # http-mgmt
+acl Safe_ports port 80      # gss-http
+acl Safe_ports port 80      # filemaker
+acl Safe_ports port 80      # multiling http
+acl Safe_ports port 80      # cups
+acl Safe_ports port 80      # rsync
+acl Safe_ports port 80      # SWAT
+acl purge method PURGE
+acl CONNECT method CONNECT
+http_access allow manager localhost
+http_access deny manager
+http_access allow purge localhost
+http_access deny purge
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+acl our_networks src 192.168.85.61 192.168.85.68 192.168.113.132 192.168.113.95
+http_access allow our_networks
+http_access allow localhost
+http_access deny all
+icp_access allow all
+visible_hostname CE.org
+never_direct allow all
+coredump_dir /var/spool/squid
+extension_methods REPORT MERGE MKACTIVITY CHECKOUT
+```
+
+### [Clean Re-build Squid cache](http://linuxpoison.blogspot.com/2008/03/howto-clean-and-re-build-squid-cache.html#ixzz25f20RKt1)
+
+```
+0) Check you squid.conf file and locate the location of you cache directory, you should have line starting with ***cache_dir***
+
+1) Shutdown your squid server
+squid -k shutdown
+
+2) Remove the cache directory
+rm -r /squid/cache/*
+
+3) Re-Create the squid cache directory
+squid -z
+```
