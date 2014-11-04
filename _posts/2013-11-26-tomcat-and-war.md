@@ -11,13 +11,12 @@ tags: [tomcat, war]
 * 查看tomcat目录的RUNNING.txt。
 * install jre ，其实可以直接下载JRE，解压即可，不必设置环境。
 * install Apache Tomcat， 解压即可。
-* 设置${CATALINA_HOME}/bin/setenv.sh设置`JRE_HOME`,`CATALINA_HOME`
+* 设置${CATALINA_HOME}/bin/setenv.sh设置***JRE_HOME*** , ***CATALINA_HOME***
 
 ```bash
 $ cat /usr/local/tomcat1/bin/setenv.sh 
 #!/bin/bash - 
 JRE_HOME=/opt/jre1.7.0_21
-#CATALINA_BASE=/usr/local/tomcat2
 CATALINA_HOME=/opt/apache-tomcat-7.0.56
 ```
 
@@ -25,7 +24,7 @@ CATALINA_HOME=/opt/apache-tomcat-7.0.56
 
 在gentoo的`/usr/share/tomcat-7/gentoo/tomcat-instance-manager.bash中`，可以直接创建instances，根据这个方法和刚刚的RUNNING.txt，可以得到方法如下：
 
-* 拷贝相应的文件夹到$CATALINA_BASE处， {conf,temp,logs,webapps,work,bin}
+* 拷贝相应的文件夹到$CATALINA_BASE处， ***conf,temp,logs,webapps,work,bin***
 * 修改 `${CATALINA_BASE}/bin/setenv.sh`，在这里除了JRE_HOME, CATALINA_HOME，还需要`CATALINA_BASE`
 * 修改 `${CATALINA_BASE}/conf/server.xml`，　主要是修改有关端口的设置，一般包括server, http connector, AJP 等。
 * 最好设置一下 `${CATALINA_BASE}/webapps/ROOT`到相应的app即可
