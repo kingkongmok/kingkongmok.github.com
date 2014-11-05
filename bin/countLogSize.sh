@@ -51,7 +51,8 @@ mail_user="13725269365@139.com"
 
 INPUT_FILE=
 OUTPUT_FILE=
-ERRORMAIL_TRIGER=
+ERRORMAIL_TRIGGER=
+WARN_TRIGGER=
 
 ScriptVersion="1.0"
 
@@ -68,6 +69,7 @@ function usage ()
   Options: 
   -o|output     Output result file.
   -i|input      Input Logfile.
+  -w|warnning   witch Warnning.
 
   -h|help       Display this message
   -v|version    Display script version
@@ -79,12 +81,13 @@ function usage ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "i:o:hv" opt
+while getopts "i:o:whv" opt
 do
   case $opt in
 
     o|output   ) OUTPUT_FILE="$OPTARG"   ;;
     i|input   )  INPUT_FILE="$OPTARG"   ;;
+    w|warn   )   WARN_TRIGGER=1   ;;
 
     h|help     )  usage; exit 0   ;;
 
@@ -146,9 +149,11 @@ compareSizeWithOldfiles ()
 {
     THISHOURE=`date +%H`
     GREPRESULT=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz`
-    AVERRAGE_INCRE_SIZE=`zgrep "$THISHOURE" ${OUTPUT_FILE}*gz | perl -lane '$s+=$F[-1]}{print $s/$.'`
-    RATE=`perl -le 'print $ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-    ERRORMAIL_TRIGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
+    if [ "$GREPRESULT" ] ; then
+        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -lane '$s+=$F[-1]; $c++ if $F[-1]}{print $s/$c'`
+        RATE=`perl -le 'print $ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
+        ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
+    fi
 }	# ----------  end of function compareSizeWithOldfiles  ----------
 
 
@@ -161,7 +166,7 @@ compareSizeWithOldfiles ()
 #-------------------------------------------------------------------------------
 errorMail ()
 {
-    errMsg="$IP_ADDR $INPUT_FILE increase is $INCREASE_LINE_SIZE, averAge is $AVERRAGE_INCRE_SIZE"
+    errMsg="$IP_ADDR $INPUT_FILE increase is rate is $RATE , $INCREASE_LINE_SIZE , $AVERRAGE_INCRE_SIZE"
     sendSMS "$mobile" "$errMsg" "$mail_user" 
 }	# ----------  end of function errorMail  ----------
 
@@ -228,6 +233,8 @@ countNewSize
 if [ -f ${OUTPUT_FILE}.gz ]  ; then
     compareSizeWithOldfiles
 fi
-if [ "$ERRORMAIL_TRIGER" ] ; then
-    errorMail
+if [ "$ERRORMAIL_TRIGGER" ] ; then
+    if [ "$WARN_TRIGGER" ]  ; then
+        errorMail
+    fi
 fi
