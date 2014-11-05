@@ -72,14 +72,23 @@ kk@ins14 /var/log $ find -maxdepth 1 -type f -mtime +0 | xargs ls --time-style=l
 ## `date`的例子
 
 ```bash
-kk@ins14 /var/log $ date
+$ date
 Wed Oct  8 13:46:45 CST 2014
-kk@ins14 /var/log $ date -d -1day
+
+$ date -d -1day
 Tue Oct  7 13:46:52 CST 2014
-kk@ins14 /var/log $ date -d 1day
+
+$ date -d 1day
 Thu Oct  9 13:46:55 CST 2014
-kk@ins14 /var/log $ date -d 3week
+
+$ date -d 3week
 Wed Oct 29 13:47:02 CST 2014
+
+$ date -d @1315167865
+Mon Sep  5 04:24:25 CST 2011
+
+$ date +%s
+1415168070
 ```
 
 ## `touch`的例子
