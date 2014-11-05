@@ -106,7 +106,7 @@ if [ -z "$OUTPUT_FILE" -o "$OUTPUT_FILE" = " " ]; then
 fi
 
 TIMESTAMP=`date +"%F %T"`
-#IP_ADDR=`/sbin/ip addr | grep --only-matching --perl-regexp "(?<=inet )\S+(?=\/.*global)"`
+IP_ADDR=`/sbin/ip addr | grep --only-matching --perl-regexp "(?<=inet )\S+(?=\/.*global)"`
 
 
 #---  FUNCTION  ----------------------------------------------------------------
