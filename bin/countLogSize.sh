@@ -125,7 +125,7 @@ countNewSize ()
     #-------------------------------------------------------------------------------
     #NEW_LINE_SIZE=`nice wc -l $INPUT_FILE | awk '{print $1}'`
     NEW_LINE_SIZE=`ls -l "$INPUT_FILE" | perl -lane 'print $F[4]'`
-    if [ -f "$OUTPUT_FILE" ] ; then
+    if [ "`wc -l $OUTPUT_FILE`" ] ; then
         OLD_LINE_SIZE=`tail -n1 $OUTPUT_FILE | awk '{print $(NF-1)}'`
         if [ "$NEW_LINE_SIZE" -ge "$OLD_LINE_SIZE" ] ; then
             INCREASE_LINE_SIZE=$(($NEW_LINE_SIZE - $OLD_LINE_SIZE))
@@ -150,10 +150,10 @@ compareSizeWithOldfiles ()
     THISHOURE=`date +%H`
     GREPRESULT=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz`
     if [ "$GREPRESULT" ] ; then
-        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -lane '$s+=$F[-1]; $c++ if $F[-1]}{print $s/$c if $c'`
+        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
         if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
-            INCRE_RATE=`perl -le 'print $ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-            echo "$INPUT_FILE $INCRE_RATE this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE ."
+            INCRE_RATE=`perl -e 'printf "%.2f\n",$ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
+            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE"
             ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
         fi
     fi

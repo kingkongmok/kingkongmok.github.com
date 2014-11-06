@@ -68,6 +68,18 @@ EOF
 
 通过检查~/count/*size来判断是否执行成功
 
+```
+$ head ~/count/access.log.size
+
+2014-11-05 18:32:01 4318082190  31870775
+2014-11-05 18:42:01 4346143636  28061446
+2014-11-05 18:52:01 4372117654  25974018
+```
+
+* 第一项运行countLogSize.sh的时间
+* 第二项是accesslog的大小字节数
+* 第三项是和上次比较（10分钟前）增加的字节大小数
+
 ## 报警
 
 隔天后观察~/count/crontab.log，看有RATE字样，该值为当前增长量和过往增长量的比值，我们通过设置 `bin/countLogSize.sh` 的 `RATE_THRESHOLD` 来控制报警值
@@ -81,7 +93,7 @@ MAX_RATE_THRESHOLD="2"
 
 然后修改crontab里的`~/bin/countLogSize.sh` 添加 `-w` 参数来执行报警。
 
-```bash
+```
 0-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/kern.log -o ~/count/kern.log.size >> ~/count/crontab.log 2>&1
 1-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/cron.log -o ~/count/cron.log.size >> ~/count/crontab.log 2>&1
 2-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/lastlog -o ~/count/lastlog.size >> ~/count/crontab.log 2>&1
