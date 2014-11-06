@@ -30,16 +30,6 @@ set -o nounset                              # Treat unset variables as an error
 OUTPUT_SUFFIX=size
 
 
-#-------------------------------------------------------------------------------
-#  日志自增值小于过往平均自增值的阀值 (自增值/平均自增值)
-#-------------------------------------------------------------------------------
-MIN_RATE_THRESHOLD="0.5"
-
-#-------------------------------------------------------------------------------
-#  日志自增值大于过往平均自增值的阀值 (自增值/平均自增值)
-#-------------------------------------------------------------------------------
-MAX_RATE_THRESHOLD="2"
-
 mobile=13725269365
 mail_user="13725269365@139.com"
 
@@ -47,6 +37,16 @@ mail_user="13725269365@139.com"
 #-------------------------------------------------------------------------------
 #  don't edit below
 #-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#  默认值，可以通过 “-n”设置，日志自增值小于过往平均自增值的阀值 (自增值/平均自增值)
+#-------------------------------------------------------------------------------
+MIN_RATE_THRESHOLD="0.5"
+
+#-------------------------------------------------------------------------------
+#  默认值，可以通过 “-m”设置，日志自增值大`于过往平均自增值的阀值 (自增值/平均自增值)
+#-------------------------------------------------------------------------------
+MAX_RATE_THRESHOLD="2"
 
 
 INPUT_FILE=
@@ -67,6 +67,8 @@ function usage ()
   Usage :  ${0##/*/} [options] [--] 
 
   Options: 
+  -n|min        miNinum thishoure.
+  -m|max        Maximum thishoure.
   -o|output     Output result file.
   -i|input      Input Logfile.
   -w|warnning   witch Warnning.
@@ -81,13 +83,15 @@ function usage ()
 #  Handle command line arguments
 #-----------------------------------------------------------------------
 
-while getopts "i:o:whv" opt
+while getopts "n:m:i:o:whv" opt
 do
   case $opt in
 
     o|output   ) OUTPUT_FILE="$OPTARG"   ;;
     i|input   )  INPUT_FILE="$OPTARG"   ;;
     w|warn   )   WARN_TRIGGER=1   ;;
+    n|min    )   MIN_RATE_THRESHOLD="$OPTARG" ;;
+    m|max    )   MAX_RATE_THRESHOLD="$OPTARG" ;;
 
     h|help     )  usage; exit 0   ;;
 
@@ -109,7 +113,7 @@ if [ -z "$OUTPUT_FILE" -o "$OUTPUT_FILE" = " " ]; then
 fi
 
 TIMESTAMP=`date +"%F %T"`
-IP_ADDR=`/sbin/ip addr | grep --only-matching --perl-regexp "(?<=inet )\S+(?=\/.*global)"`
+IP_ADDR=`/sbin/ip addr | grep --only-matching --perl-regexp "(?<=inet )\S+(?=\/.*bond)"`
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -153,7 +157,7 @@ compareSizeWithOldfiles ()
         AVERRAGE_INCRE_SIZE=`grep " ${THISHOURE}:" ${OUTPUT_FILE}\.* | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
         if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
             INCRE_RATE=`perl -e 'printf "%.2f\n",$ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE at $TIMESTAMP"
+            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE . at $TIMESTAMP"
             ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
         fi
     fi
