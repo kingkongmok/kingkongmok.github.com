@@ -5,8 +5,8 @@
 # 
 #         USAGE: ./countLogSize.sh -i LOGFILE -o LOGFILE.size
 # 
-#   DESCRIPTION: 用于记录日志各个时段的自增行数。并比较旧文件 （记录文件.gz, 
-#                记录文件.1.gz ... ）的平均数量,
+#   DESCRIPTION: 用于记录日志各个时段的自增行数。并比较旧文件 （记录文件.1, 
+#                记录文件.2 ... ）的平均数量,
 # 
 #       OPTIONS: ---
 #  REQUIREMENTS: 需配合logrotate对记录文件进行压缩，轮换删除
@@ -25,7 +25,7 @@ set -o nounset                              # Treat unset variables as an error
 #  OUTPUT_SUFFIX 所产生记录文件的扩展名，默认应该为size，这里需配合crontab标明
 #       输出
 #  例如accesslog文件的记录文件为accesslog.size
-#  而配合logrotate，历史记录文件为accesslog.size.*.gz
+#  而配合logrotate，历史记录文件为accesslog.size.*
 #-------------------------------------------------------------------------------
 OUTPUT_SUFFIX=size
 
@@ -141,16 +141,16 @@ countNewSize ()
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  compareSizeWithOldfiles
-#   DESCRIPTION:  比较旧文件（记录文件.gz, 记录文件.1.gz ... ）的平均数量,
+#   DESCRIPTION:  比较旧文件（ 记录文件.1, 记录文件.2 ... ）的平均数量,
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
 compareSizeWithOldfiles ()
 {
     THISHOURE=`date +%H`
-    GREPRESULT=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz`
+    GREPRESULT=`grep " ${THISHOURE}:" ${OUTPUT_FILE}\.*`
     if [ "$GREPRESULT" ] ; then
-        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
+        AVERRAGE_INCRE_SIZE=`grep " ${THISHOURE}:" ${OUTPUT_FILE}\.* | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
         if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
             INCRE_RATE=`perl -e 'printf "%.2f\n",$ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
             echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE"
@@ -233,7 +233,7 @@ function sendSMS(){
 #-------------------------------------------------------------------------------
 
 countNewSize
-if [ -f ${OUTPUT_FILE}.1.gz ]  ; then
+if [ -f ${OUTPUT_FILE}.1 ]  ; then
     compareSizeWithOldfiles
 fi
 if [ "$ERRORMAIL_TRIGGER" ] ; then

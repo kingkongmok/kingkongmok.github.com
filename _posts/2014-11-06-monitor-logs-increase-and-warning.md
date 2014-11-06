@@ -46,12 +46,11 @@ $ nice sudo  find -L /var/log -type f -name \*log -mtime -1 | perl -MFile::Basen
 
 ```
 $ cat > ~/bin/count_logrotate.conf << EOF
-/home/kk/*size
-/home/kk/*log
+/home/kk/count/*size
+/home/kk/count/*log
 {
     size 1
-    rotate 56 
-    compress
+    rotate 14
     missingok
     copytruncate
     notifempty
