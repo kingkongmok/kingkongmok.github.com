@@ -52,7 +52,7 @@ Log files are rotated only if they grow bigger then size bytes.
 压缩
 
 ### -d
-非常有用的一个选项，用来测试，看看到底运行什么
+非常有用的一个选项，用来测试，看看到底运行什么, test， dry run。
 
 ### notifempty
 期望解决空文件继续被覆盖的情况
