@@ -81,16 +81,7 @@ $ head ~/count/access.log.size
 
 ## 报警
 
-隔天后观察~/count/crontab.log，看有RATE字样，该值为当前增长量和过往增长量的比值，我们通过设置 `bin/countLogSize.sh` 的 `RATE_THRESHOLD` 来控制报警值
-
-```bash
-$ grep RATE_THRESHOLD= ~/bin/countLogSize.sh 
-
-MIN_RATE_THRESHOLD="0.5"
-MAX_RATE_THRESHOLD="2"
-```
-
-然后修改crontab里的`~/bin/countLogSize.sh` 添加 `-w` 参数来执行报警。
+修改crontab里的`~/bin/countLogSize.sh` 添加 `-w` 参数来执行报警。
 
 ```
 0-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/kern.log -o ~/count/kern.log.size >> ~/count/crontab.log 2>&1
@@ -107,4 +98,19 @@ MAX_RATE_THRESHOLD="2"
 1-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/auth.log -o ~/count/auth.log.size >> ~/count/crontab.log 2>&1
 2-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/rc.log -o ~/count/rc.log.size >> ~/count/crontab.log 2>&1
 3-59/10 * * * * ~/bin/countLogSize.sh -w -i /var/log/debug.log -o ~/count/debug.log.size >> ~/count/crontab.log 2>&1
+```
+
+隔天后观察~/count/crontab.log，看有RATE字样，该值为当前增长量和过往增长量的比值，我们通过-n 和 -m参数进行报警值的设置
+
+```
+1-59/10 * * * * ~/bin/countLogSize.sh -w -m 2.5 -n 0.3 -i /var/log/access.log -o ~/count/access.log.size >> ~/count/crontab.log 2>&1
+```
+
+当然也可以通过设置 `bin/countLogSize.sh` 的 `RATE_THRESHOLD` 来控制默认报警值
+
+```bash
+$ grep RATE_THRESHOLD= ~/bin/countLogSize.sh 
+
+MIN_RATE_THRESHOLD="0.5"
+MAX_RATE_THRESHOLD="2"
 ```
