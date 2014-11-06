@@ -11,7 +11,7 @@
 #       OPTIONS: ---
 #  REQUIREMENTS: 需配合logrotate对记录文件进行压缩，轮换删除
 #          BUGS: ---
-#         NOTES: ---
+#         NOTES: http://www.datlet.com/linux/2014/11/06/monitor-logs-increase-and-warning/
 #        AUTHOR: kk (Kingkong Mok), kingkongmok AT gmail DOT com
 #  ORGANIZATION: 
 #       CREATED: 10/30/2014 03:58:19 PM CST
@@ -150,9 +150,12 @@ compareSizeWithOldfiles ()
     THISHOURE=`date +%H`
     GREPRESULT=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz`
     if [ "$GREPRESULT" ] ; then
-        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -lane '$s+=$F[-1]; $c++ if $F[-1]}{print $s/$c'`
-        RATE=`perl -le 'print $ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-        ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
+        AVERRAGE_INCRE_SIZE=`zgrep " ${THISHOURE}:" ${OUTPUT_FILE}*gz | perl -lane '$s+=$F[-1]; $c++ if $F[-1]}{print $s/$c if $c'`
+        if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
+            INCRE_RATE=`perl -le 'print $ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
+            echo "$INPUT_FILE $INCRE_RATE this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE ."
+            ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
+        fi
     fi
 }	# ----------  end of function compareSizeWithOldfiles  ----------
 
@@ -166,7 +169,7 @@ compareSizeWithOldfiles ()
 #-------------------------------------------------------------------------------
 errorMail ()
 {
-    errMsg="$IP_ADDR $INPUT_FILE increase is rate is $RATE , $INCREASE_LINE_SIZE , $AVERRAGE_INCRE_SIZE"
+    errMsg="$IP_ADDR $INPUT_FILE increase is rate is $INCRE_RATE , $INCREASE_LINE_SIZE , $AVERRAGE_INCRE_SIZE"
     sendSMS "$mobile" "$errMsg" "$mail_user" 
 }	# ----------  end of function errorMail  ----------
 
@@ -230,7 +233,7 @@ function sendSMS(){
 #-------------------------------------------------------------------------------
 
 countNewSize
-if [ -f ${OUTPUT_FILE}.gz ]  ; then
+if [ -f ${OUTPUT_FILE}.1.gz ]  ; then
     compareSizeWithOldfiles
 fi
 if [ "$ERRORMAIL_TRIGGER" ] ; then
