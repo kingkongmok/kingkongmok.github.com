@@ -14,12 +14,15 @@ tags: [logs, increase, monitor, logrotate]
 * 可以设置报警人手机和邮箱，并设置对比往日阀值
 * 记录文件可以回滚并自行删除
 
-## 前期脚本存放
+### 前期脚本存放
 
 ```
 $ mkdir ~/bin/ ~/count
 $ cp countLogSize.sh ~/bin/
+$ cp count_logrotate.conf ~/bin/
 ```
+
+### 找你需要监控的log文件，让cronie帮你将这些文件生成size文件。
 
 观察需要监控的accesslog, 这里我们对 ***/var/log*** 进行处理， 这个步骤后添加到cronie，让其自动执行 ***countLogSize.sh*** ，让其分析各log文件。
 
