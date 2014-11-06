@@ -153,7 +153,7 @@ compareSizeWithOldfiles ()
         AVERRAGE_INCRE_SIZE=`grep " ${THISHOURE}:" ${OUTPUT_FILE}\.* | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
         if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
             INCRE_RATE=`perl -e 'printf "%.2f\n",$ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE"
+            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE at $TIMESTAMP"
             ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
         fi
     fi
