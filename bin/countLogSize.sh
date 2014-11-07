@@ -157,7 +157,7 @@ compareSizeWithOldfiles ()
         AVERRAGE_INCRE_SIZE=`grep " ${THISHOURE}:" ${OUTPUT_FILE}\.* | perl -ane '$s+=$F[-1]; $c++ if $F[-1]}{printf "%.2f\n",$s/$c if $c'`
         if [ "$AVERRAGE_INCRE_SIZE" ]  ; then
             INCRE_RATE=`perl -e 'printf "%.2f\n",$ARGV[0]/$ARGV[1]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE`
-            echo "$INPUT_FILE increase rate $INCRE_RATE , this time $INCREASE_LINE_SIZE , average is $AVERRAGE_INCRE_SIZE . at $TIMESTAMP"
+            echo "$INPUT_FILE increase rate $INCRE_RATE , this time `echo $INCREASE_LINE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'` , average is `echo $AVERRAGE_INCRE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'` . at $TIMESTAMP"
             ERRORMAIL_TRIGGER=`perl -le 'print 1 if $ARGV[0]/$ARGV[1] < $ARGV[2] || $ARGV[0]/$ARGV[1] > $ARGV[3]' $INCREASE_LINE_SIZE $AVERRAGE_INCRE_SIZE $MIN_RATE_THRESHOLD $MAX_RATE_THRESHOLD` 
         fi
     fi
@@ -173,7 +173,7 @@ compareSizeWithOldfiles ()
 #-------------------------------------------------------------------------------
 errorMail ()
 {
-    errMsg="$IP_ADDR $INPUT_FILE increase is rate is $INCRE_RATE , $INCREASE_LINE_SIZE , $AVERRAGE_INCRE_SIZE"
+    errMsg="$IP_ADDR $INPUT_FILE increase percent is $INCRE_RATE , now is `echo $INCREASE_LINE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'` , average is `echo $AVERRAGE_INCRE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'`"
     sendSMS "$mobile" "$errMsg" "$mail_user" 
 }	# ----------  end of function errorMail  ----------
 
