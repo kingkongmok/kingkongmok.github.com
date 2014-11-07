@@ -2,7 +2,7 @@
 layout: post
 title: "sort file with it's column"
 category: perl
-tags: [perl sort cmp column]
+tags: [perl, sort, cmp, column]
 ---
 {% include JB/setup %}
 
