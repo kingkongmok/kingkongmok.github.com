@@ -31,3 +31,9 @@ print $size ;
 {% endhighlight %}
 
 另外，s///e这个用法也需要注意，如果不加e，不能使用sprint获得新值。
+
+## size --human-readable
+
+```bash
+echo 12345678 |perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'
+```
