@@ -240,7 +240,7 @@ globalkeys = awful.util.table.join(
 
     -- Standard program
     awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end),
-     awful.key({ modkey, "Control" }, "n", function () awful.util.spawn("/usr/bin/google-chrome-stable --proxy-server=:::3128") end),
+     awful.key({ modkey, "Control" }, "n", function () awful.util.spawn("/usr/bin/google-chrome-stable --proxy-server=127.0.0.1:3128") end),
     -- awful.key({ modkey, "Control" }, "n", function () awful.util.spawn("/usr/bin/google-chrome-stable" ) end),
     awful.key({ modkey, "Control" }, "e", function () awful.util.spawn("/usr/bin/pcmanfm") end),
     awful.key({ modkey, "Control" }, "u", function () awful.util.spawn('/usr/bin/google-chrome-stable --proxy-server="socks://127.0.0.1:7070" --user-data-dir="/home/kk/.config/usproxy/"') end),
