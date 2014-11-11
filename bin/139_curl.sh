@@ -106,7 +106,7 @@ echo '<object>
     <string name="mid" />
     <string name="messageId" />
     <string name="account">&quot;莫庆强&quot;&lt;kingkongmok@139.com&gt;</string>
-    <string name="to">&quot;kk_richinfo&quot;&lt;kk_richinfo@163.com&gt;</string>
+    <string name="to">&quot;ayanami_0&quot;&lt;ayanami_0@163.com&gt;</string>
     <string name="cc" />
     <string name="bcc" />
     <int name="showOneRcpt">0</int>
@@ -169,7 +169,7 @@ cardTest ()
 echo "cardTest processing..."
 echo '<object>
   <object name="attrs">
-    <string name="to">kk_richinfo@163.com</string>
+    <string name="to">ayanami_0@163.com</string>
     <string name="cc" />
     <string name="bcc" />
     <int name="showOneRcpt">1</int>
