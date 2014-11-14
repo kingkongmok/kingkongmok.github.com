@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "example for sprintf and printf"
+title: "sprintf and printf"
 category: perl
 tags: [printf, sprintf]
 ---

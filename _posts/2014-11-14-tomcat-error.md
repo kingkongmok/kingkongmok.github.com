@@ -1,10 +1,12 @@
 ---
 layout: post
-title: "tomcat error"
+title: "tomcat errors"
 category: linux
 tags: [tomcat, jstack, ps]
 ---
 {% include JB/setup %}
+
+## Fri Nov 14 15:46:02 CST 2014 on ins14
 
 ### errors 
 在测试nginx-tomcat{upstreams}的时候，发现tomcat出现`Java heap space`的报错

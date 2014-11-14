@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "tcpdump check http traffic"
+title: "tcpdump"
 category: linux
 tags: [tcpdump, http]
 ---

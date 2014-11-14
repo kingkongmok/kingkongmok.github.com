@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "apache MPMs' difference"
+title: "apache MPM"
 category: linux
 tags: [apache, mpm, worker, event]
 ---

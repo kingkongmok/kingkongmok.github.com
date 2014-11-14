@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "compare two strings and display the common"
+title: "compare two strings and display the common 比较两个字段获取相同部分"
 category: perl
 tags: [regex, perl, common]
 ---

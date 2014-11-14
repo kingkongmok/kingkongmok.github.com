@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "debian font config"
+title: "debian font config 在Debian的X下的config设置"
 category: linux
 tags: [debian, font, config]
 ---

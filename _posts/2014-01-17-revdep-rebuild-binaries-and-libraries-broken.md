@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "revdep rebuild binaries and libraries broken"
+title: "revdep-rebuild in gentoo"
 category: linux
 tags: [gentoo, revdep-rebuild, libraries, broken]
 ---

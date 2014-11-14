@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "bash command column"
+title: "column example"
 category: linux
-tags: [command, column, sort]
+tags: [command, column]
 ---
 {% include JB/setup %}
 

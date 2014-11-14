@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "install a jekyll serve on debian"
+title: "install a jekyll serve on debian Debian使用JekyllServer"
 category: web
 tags: [debian, jekyll]
 ---

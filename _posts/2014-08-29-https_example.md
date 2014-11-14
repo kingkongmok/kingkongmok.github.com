@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "https_example"
+title: "https howto"
 category: linux
 tags: [https, ssl, rsa, csr, pem, crt]
 ---

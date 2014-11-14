@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "smbpasswd script to add samba user"
+title: "smbpasswd script"
 category: linux
 tags: [samba, smbuser]
 ---

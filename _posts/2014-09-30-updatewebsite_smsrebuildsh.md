@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "updateWebsite_smsRebuild.sh"
+title: "updateWebsite_smsRebuild.sh 升级脚本"
 category: linux
 tags: [rsync, smsRebuild, update]
 ---

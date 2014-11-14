@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "linux command line using fortune"
+title: "forumn command"
 category: linux
-tags: [linux, command line, fortune]
+tags: [command, fortune]
 ---
 {% include JB/setup %}
 

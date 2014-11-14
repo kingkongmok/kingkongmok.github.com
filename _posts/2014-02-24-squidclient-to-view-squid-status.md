@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "squidclient to view squid status"
+title: "squidclient"
 category: linux
 tags: [squid, squidclient, status]
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "sort file with it's column"
+title: "perl sort"
 category: perl
 tags: [perl, sort, cmp, column]
 ---

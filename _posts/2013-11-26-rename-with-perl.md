@@ -6,6 +6,9 @@ tags: [rename, perl]
 ---
 {% include JB/setup %}
 
+
+### numeric
+
 {% highlight bash %}
 perl -e 'rename$_,sprintf("%03d.pdf",++$a)for@ARGV' *.pdf
 {% endhighlight %}
@@ -30,4 +33,14 @@ kk@debian:/tmp/test$ rename -n 's/\d+ //; s/\s+/_/g' *
 另外需要222.jpg改名为22200000.jpg这样的需求
 {% highlight bash %}
 ls |perl -pe 'while(length$_<20){s/(?=\.[^.]+$|$)/0/}'
+{% endhighlight %}
+
+### subfolder prefix
+
+http://bpaste.net/show/244959/
+
+{% highlight bash %}
+find -maxdepth 2 -type f -print0  | xargs -r0n1 | perl-rename -n 's#\b/##'
+find . -type f | sed -r 's@([^/])/([^/]+)/(.*)@mv & \1/\2\3@'
+find -maxdepth 2 -type f |perl -lne '$file=$_;s/\b\///g;rename $file,$_'
 {% endhighlight %}

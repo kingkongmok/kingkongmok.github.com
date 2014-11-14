@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "centos_setting_local"
+title: "centos_setting_local Centos用户的环境配置"
 category: linux
 tags: [centos, settings, local]
 ---

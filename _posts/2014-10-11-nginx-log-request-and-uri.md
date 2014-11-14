@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "nginx log request and uri"
+title: "nginx log"
 category: linux
 tags: [nginx, log, uri]
 ---

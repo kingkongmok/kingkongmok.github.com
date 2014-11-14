@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "ic sensors at home"
+title: "lm_sensors"
 category: linux
 tags: [lm_sensors, sensors, kernel, modules]
 ---

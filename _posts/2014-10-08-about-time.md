@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "about time"
+title: "date and time"
 category: linux
 tags: [time, find, touch, date]
 ---

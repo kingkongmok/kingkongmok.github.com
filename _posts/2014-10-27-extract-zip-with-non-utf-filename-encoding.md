@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "extract ZIP with non UTF filename encoding"
+title: "extract ZIP with non UTF filename encoding 解压非UTF压制的zip文件"
 category: linux
 tags: [unzip, utf8, gbk, 7z, convmv]
 ---

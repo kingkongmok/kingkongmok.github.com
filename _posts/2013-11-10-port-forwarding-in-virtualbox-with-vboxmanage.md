@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Port Forwarding in Virtualbox with VBoxManage"
+title: "Port Forwarding in Virtualbox with VBoxManage, Vbox的端口映射"
 category: linux
 tags: [virtualbox, windows, port, forward]
 ---

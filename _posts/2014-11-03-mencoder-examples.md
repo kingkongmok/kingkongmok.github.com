@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "mencoder examples"
+title: "mencoder"
 category: linux
 tags: [mencoder]
 ---

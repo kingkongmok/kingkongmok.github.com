@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "crontab every 10min and seperate them"
+title: "crontab "
 category: linux
 tags: [crontab, seperate, every, minute]
 ---

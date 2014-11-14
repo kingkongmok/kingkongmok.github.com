@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "cron.d jobs at reboot"
+title: "cron.d"
 category: linux
 tags: [cron, reboot]
 ---

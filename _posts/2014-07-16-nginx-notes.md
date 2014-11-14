@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "nginx notes 小记"
+title: "nginx"
 category: linux
 tags: [nginx, limit_rate, install]
 ---

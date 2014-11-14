@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "how do i find the window dimensions and position accurately"
+title: "how do i find the window dimensions and position accurately 获取X窗口的位置和大小"
 category: linux
 tags: [X, location, demensions]
 ---

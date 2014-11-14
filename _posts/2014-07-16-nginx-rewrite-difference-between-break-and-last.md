@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "nginx rewrite difference between break and last"
+title: "nginx rewrite"
 category: linux
 tags: [nginx, rewrite, last, break]
 ---

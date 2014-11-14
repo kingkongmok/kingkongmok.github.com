@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "perl get array from %3"
+title: "perl get array from %3 每3个中获取"
 category: perl
 tags: [perl, array, '%3']
 ---

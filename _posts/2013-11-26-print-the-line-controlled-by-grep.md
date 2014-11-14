@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "print the line controlled by grep"
+title: "print the line controlled by grep Grep命令"
 category: perl
 tags: [line, grep, number]
 ---

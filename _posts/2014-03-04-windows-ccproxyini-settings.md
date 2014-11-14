@@ -6,7 +6,7 @@ tags: [windows, ccproxy.ini]
 ---
 {% include JB/setup %}
 
-这里是windows的ccproxy设置
+这里是在祈福使用二次代理上网时候的windows ccproxy设置
 
 {% highlight bash %}
 [System]

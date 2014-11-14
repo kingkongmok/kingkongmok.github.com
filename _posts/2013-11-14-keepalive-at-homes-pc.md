@@ -1,16 +1,17 @@
 ---
 layout: post
-title: "keepalive at home's pc"
+title: "keepalive at home's pc 家里使用的Keepalive"
 category: linux
 tags: [port, forward, linux, keepalived, home]
 ---
 {% include JB/setup %}
 
-##keepalived就是电脑使用vrrpd
+keepalived就是电脑使用vrrpd
+
 家里添加一台笔记本后，台式电脑的运行时间就少了。但是不能让白白运行啊，要善于下载！所以mldonkey也拷贝到笔记本上了。
 但是之前的port forward做在了台式机上了，没有port forward当然下载会慢，所以用keepalived的方法来解决。让台式机和笔记本共用一个virtual ip。
 
-##安装方法
+### 安装方法
 
 
 {% highlight bash %}
@@ -47,7 +48,7 @@ vrrp_instance VI_1 {
 
 **台式机上使用的是100**
 
-##查看
+### 查看
 
 **除了syslog外，可以使用ip a来查看**
 

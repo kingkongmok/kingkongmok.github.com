@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "rsync的 i功能,rsync   itemize changes"
+title: "rsync"
 category: linux
-tags: [rsync]
+tags: [rsync, command]
 ---
 {% include JB/setup %}
 

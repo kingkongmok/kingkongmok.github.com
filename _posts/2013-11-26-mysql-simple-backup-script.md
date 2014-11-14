@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "mysql simple backup script"
+title: "mysql backup "
 category: linux
-tags: [mysql, backup, script, bash]
+tags: [mysql, backup]
 ---
 {% include JB/setup %}
 

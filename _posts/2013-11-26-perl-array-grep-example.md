@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "perl array grep example"
+title: "perl grep example"
 category: perl
-tags: [perl, array, grep]
+tags: [perl, command, grep]
 ---
 {% include JB/setup %}
 

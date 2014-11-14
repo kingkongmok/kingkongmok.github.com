@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "perl1line escape doller signs using ENV"
+title: "perl1line escape doller signs using ENV 利用ENV声明来实现单引号双引号的转义"
 category: perl
 tags: [perl, perl1line, escape, signs, env]
 ---

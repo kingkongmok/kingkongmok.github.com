@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Opening and Reading line by line from 2 files"
+title: "Opening and Reading line by line from 2 files 两文本各行读取文件"
 category: perl
 tags: [open, 2files, line by line]
 ---

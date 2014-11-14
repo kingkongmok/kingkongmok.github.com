@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "gcc config update profile"
+title: "gcc-config on gentoo"
 category: linux
 tags: [gcc, profile, update, emerge]
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "slice by paragraph"
+title: "slice by paragraph Perl的行截取"
 category: perl
 tags: [slice, paragraph]
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "xiaomi_2s android config"
+title: "adb xiaomi_2s"
 category: android
 tags: [xiaomi, android, adb, recovery, fastboot]
 ---

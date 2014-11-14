@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "lvm practise"
+title: "lvm"
 category: linux
 tags: [lvm]
 ---

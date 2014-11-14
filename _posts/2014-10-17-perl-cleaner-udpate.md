@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "perl cleaner udpate"
+title: "perl-cleaner on gentoo"
 category: linux
 tags: [perl, update]
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "fix record bug from xiaomi"
+title: "fix record bug from xiaomi 小米2S的3秒录音bug修复"
 category: android
 tags: [record]
 ---
