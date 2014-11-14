@@ -26,7 +26,8 @@ Exception in thread "http-bio-8082-exec-5" java.lang.OutOfMemoryError: Java heap
 ### setting
 在用的tomcat是下载于apache-tomcat的官网。和默认的没过多区别
 
-``$ sudo diff -u tomcat2/conf/server.xml /opt/apache-tomcat-7.0.56/conf/server.xml 
+```
+$ sudo diff -u tomcat2/conf/server.xml /opt/apache-tomcat-7.0.56/conf/server.xml 
 --- tomcat2/conf/server.xml 2014-11-13 14:19:39.440211126 +0800
 +++ /opt/apache-tomcat-7.0.56/conf/server.xml   2014-09-26 17:15:38.000000000 +0800
 @@ -19,7 +19,7 @@
