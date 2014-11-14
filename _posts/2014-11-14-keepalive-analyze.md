@@ -6,7 +6,7 @@ tags: [keepalive, nginx, tomcat]
 ---
 {% include JB/setup %}
 
-## 架构
+## structure
 目前使用的架构是tomcat-tomcat{0,1,2,3}，研究一下nginx和upstreams之间的keepalive。以下配置为测试机上的设置
 
 ### nginx setting
@@ -102,20 +102,7 @@ server {
                redirectPort="8443" />
 ```
 
-```
-$ diff -u backup_files/server.xml server.xml
---- backup_files/server.xml 2014-10-17 23:04:54.000000000 +0800
-+++ server.xml 2014-11-12 16:52:54.000000000 +0800
-@@ -70,7 +70,7 @@
-     -->
-     <Connector port="7711" protocol="HTTP/1.1" 
-                 acceptCount="6000" executor="tomcatThreadPool"
--                connectionTimeout="20000" disableUploadTimeout="true" maxKeepAliveRequests="256"  keepAliveTimeout="120000"
-+                connectionTimeout="20000" disableUploadTimeout="true" 
-                 URIEncoding="UTF-8" enableLookups="false"
-                 redirectPort="8443" server="t-http"/>
-     <!-- A "Connector" using the shared thread pool-->
-```
+
 
 ### testing
 使用httperf和tcpdump来观察情况,如果F比较少证明keepalive运行成功。
@@ -133,8 +120,35 @@ listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
 2 [F.],
 ```
 
+### client - nginx
 
-使用[tcpdump](http://danielmiessler.com/study/tcpdump/)来检查keepalive的情况，判断方法如果keepalive生效应当减少tcp握手情况，socks增加，我修改tomcat7711后的情况如下：
+
+* 究竟http有没有实现keepalive，明显的需要查看多页面访问时，是否使用一个[connect](http://serverfault.com/questions/199434/how-do-i-make-curl-use-keepalive-from-the-command-line)
+* 当然可以用httperf
+
+```
+httperf --hog --server=localhost --num-conns=100000
+```
+
+### 生产机调优
+尝试调整，但效果失败。
+
+```
+$ diff -u backup_files/server.xml server.xml
+--- backup_files/server.xml 2014-10-17 23:04:54.000000000 +0800
++++ server.xml 2014-11-12 16:52:54.000000000 +0800
+@@ -70,7 +70,7 @@
+     -->
+     <Connector port="7711" protocol="HTTP/1.1" 
+                 acceptCount="6000" executor="tomcatThreadPool"
+-                connectionTimeout="20000" disableUploadTimeout="true" maxKeepAliveRequests="256"  keepAliveTimeout="120000"
++                connectionTimeout="20000" disableUploadTimeout="true" 
+                 URIEncoding="UTF-8" enableLookups="false"
+                 redirectPort="8443" server="t-http"/>
+     <!-- A "Connector" using the shared thread pool-->
+```
+
+在生产机，我调整参数以调优，使用[tcpdump](http://danielmiessler.com/study/tcpdump/)来检查keepalive的情况，判断方法如果keepalive生效应当减少tcp握手情况，socks增加，我修改tomcat7711后的情况如下：
 
 ```
 $ for i in 11 22 33 44; do sudo nice /usr/sbin/tcpdump -n -i lo tcp port 77${i} -c 10000 | perl -nae '$h{$F[5]}++ if $F[5]=~/F/}{printf "%s %s\n\n",$h{$_},$_ for keys%h'; done
@@ -200,8 +214,5 @@ listening on lo, link-type EN10MB (Ethernet), capture size 96 bytes
 22 F
 ```
 
-结论如果在upstreams中不声明的话会增加握手发生。
+结论：失败。
 
-### curl
-
-究竟http有没有实现keepalive，明显的需要查看多页面访问时，是否使用一个[connect](http://serverfault.com/questions/199434/how-do-i-make-curl-use-keepalive-from-the-command-line)
