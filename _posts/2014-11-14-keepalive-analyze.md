@@ -214,5 +214,5 @@ listening on lo, link-type EN10MB (Ethernet), capture size 96 bytes
 22 F
 ```
 
-结论：失败。
+结论：原配置较优
 
