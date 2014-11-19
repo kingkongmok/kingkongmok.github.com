@@ -45,6 +45,7 @@ libssl.so.6
 
 #### msmtp config
 
+```
 # cat > ~/.msmtprc << EOF
 account default
 host smtp.163.com
