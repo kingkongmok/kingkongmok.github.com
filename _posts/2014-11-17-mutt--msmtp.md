@@ -9,6 +9,9 @@ tags: [mutt, msmtp, centos]
 #### packages
 
 ```
+http://colocrossing.dl.sourceforge.net/project/msmtp/msmtp/1.4.18/msmtp-1.4.18.tar.bz2
+http://softlayer-dal.dl.sourceforge.net/project/mutt/mutt/mutt-1.5.23.tar.gz
+
 $ md5sum /usr/local/src/*
 
 11f5b6a3eeba1afa1257fe93c9f26bff  /usr/local/src/mutt-1.5.23.tar.gz
