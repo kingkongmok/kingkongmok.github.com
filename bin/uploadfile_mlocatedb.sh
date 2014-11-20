@@ -22,7 +22,7 @@ set -o nounset                              # Treat unset variables as an error
 [ -n "$LANG" ] && export LANG
 
 MLOCATEFILE=/var/lib/mlocate/mlocate.db
-LOCALFILE=/home/kk/Documents/personal/mlocate.db
+LOCALFILE=/home/kk/Documents/sensitive/mlocate.db
 TRANSFER=/home/kk/bin/transfterDropboxGPG.pl
 
 
