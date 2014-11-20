@@ -63,4 +63,21 @@ sendmail ()
     echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
 }   # ----------  end of function sendmail  ----------
 
-errorMail
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  muttMail
+#   DESCRIPTION:  使用mutt和msmtp发送邮件
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+muttMail ()
+{
+    PRIV_IP="${IP_ADDR:-`/sbin/ip -f inet addr | grep -oP "(?<=inet )\S+(?=\/.*global)"`}"
+    SUBJECT="`hostname`_`basename $0`_${PRIV_IP}_${PUB_IP}"
+    FROM="sys.alert@139.com"
+    MAIL_CONTENT=`cat "$TFILE"`;
+    MAIL="subject:$SUBJECT\nfrom:$FROM\n${MAIL_CONTENT:-"error"}"
+    echo $MAIL | /usr/local/bin/mutt $MAILUSER
+}	# ----------  end of function muttMail  ----------
+
+muttMail

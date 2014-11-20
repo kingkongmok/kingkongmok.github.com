@@ -71,7 +71,7 @@ sub mlocateSearch {
 sub md5FileSearch {
     my %md5Result;
     my	( $keyword )	= @_;
-    my $md5File= '/home/kk/Dropbox/Downloads/mldonkey/torrent_done_before.md5';
+    my $md5File= '/home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5';
     if ( -r $md5File ) {
         foreach my $word ( @{$keyword} ) {
             my @md5Result;
