@@ -6,7 +6,7 @@ tags: [java, gc, tomcat]
 ---
 {% include JB/setup %}
 
-### tomcat启动后没有访问
+### tomcat启动后没有访问的情况
 
 * tomcat启动后，`没有访问`的情况，gc不做变化
 
@@ -19,7 +19,7 @@ $ sudo jstat -gcutil `pgrep java` 2000 0
  23.07   0.00  62.39  77.33  68.89     16    0.070     0    0.000    0.070
 ```
 
-### 客户端访问
+### 客户端访问的情况
 使用curl模拟访问，当然也可以httperf，但我还不知道如何设置uri，所以笨点。
 
 ```bash
@@ -31,6 +31,8 @@ kk@ins14 ~ $ for i in `seq 10000`; do curl localhost:8080/${i} -s > /dev/null ; 
 ```
 kk@ins14 ~ $ for i in `seq 1000000`; do curl localhost:8080/docs/${i} -s > /dev/null ; done
 ```
+
+* 访问的话，如果内存设置不对会导致很多fgc
 
 ```
   S0     S1     E      O      P     YGC     YGCT    FGC    FGCT     GCT   
@@ -100,16 +102,16 @@ kk@ins14 ~ $ for i in `seq 1000000`; do curl localhost:8080/docs/${i} -s > /dev/
 * TMD P居然可大可小
 
 
-### 访问停止后
+### 访问停止后的情况
 
 * tomcat启动后，`没有访问`的情况，gc不做变化
 
 
-### 关闭tomcat
+### 关闭tomcat的情况
 
 * jstat 返回退出
 
-### 启动tomcat
+### 启动tomcat的情况
 
 ```
   S0     S1     E      O      P     YGC     YGCT    FGC    FGCT     GCT   
@@ -160,17 +162,18 @@ kk@ins14 ~ $ for i in `seq 1000000`; do curl localhost:8080/docs/${i} -s > /dev/
 
 * 启动完毕后趋向静止
 
-### catalina的参数
+### catalina的参数修改后的对比
 
-* gentoo测试中居然找不到……,已经搜索catalina home和catalina base。这个需要落实。在其他设置里面一般在base上做的。
-* 那就看看默认情况
+#### 小内存
+
+* 刚刚上面的都是小内存的情况, 1G.
 
 ```
 kk@ins14 /usr/share/tomcat-7/conf $ ps -ef | grep java | grep catalin.*home
 tomcat   20691     1  0 11:43 ?        00:00:05 /opt/icedtea-bin-6.1.13.3/bin/java -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djava.util.logging.config.file=/var/lib/tomcat-7-testing/conf/logging.properties -Dcatalina.base=/var/lib/tomcat-7-testing -Dcatalina.home=/usr/share/tomcat-7 -Djava.io.tmpdir=/var/tmp/tomcat-7-testing -classpath /usr/share/tomcat-7/bin/bootstrap.jar:/usr/share/tomcat-7/bin/tomcat-juli.jar:/usr/share/tomcat-7/lib/annotations-api.jar:/usr/share/tomcat-7/lib/catalina-ant.jar:/usr/share/tomcat-7/lib/catalina-ha.jar:/usr/share/tomcat-7/lib/catalina.jar:/usr/share/tomcat-7/lib/catalina-tribes.jar:/usr/share/tomcat-7/lib/jasper-el.jar:/usr/share/tomcat-7/lib/jasper.jar:/usr/share/tomcat-7/lib/tomcat-api.jar:/usr/share/tomcat-7/lib/tomcat-coyote.jar:/usr/share/tomcat-7/lib/tomcat-i18n-es.jar:/usr/share/tomcat-7/lib/tomcat-i18n-fr.jar:/usr/share/tomcat-7/lib/tomcat-i18n-ja.jar:/usr/share/tomcat-7/lib/tomcat-jdbc.jar:/usr/share/tomcat-7/lib/tomcat-util.jar:/usr/share/eclipse-ecj-4.4/lib/eclipse-ecj.jar:/usr/share/eclipse-ecj-4.4/lib/ecj.jar:/usr/share/tomcat-servlet-api-3.0/lib/el-api.jar:/usr/share/tomcat-servlet-api-3.0/lib/jsp-api.jar:/usr/share/tomcat-servlet-api-3.0/lib/servlet-api.jar org.apache.catalina.startup.Bootstrap start
 ```
 
-*** 比较大的内存情况
+#### 大内存
 
 ```
 $ ps -ef | grep [j]ava
@@ -198,6 +201,8 @@ $ jstat -gcutil 22510 2000 5
 居然没有gc，霸气。
 
 ### tomcat开启天数不同的gc情况
+
+* 时间开久了，GC还是很多的。
 
 ```
 $ ps -C java -o pid,pcpu,rss,etime
