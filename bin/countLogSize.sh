@@ -30,8 +30,7 @@ set -o nounset                              # Treat unset variables as an error
 OUTPUT_SUFFIX=size
 
 
-mobile=13725269365
-mail_user="13725269365@139.com"
+mail_user="moqingqiang@richinfo.cn"
 
 
 #-------------------------------------------------------------------------------
@@ -164,7 +163,6 @@ compareSizeWithOldfiles ()
 }	# ----------  end of function compareSizeWithOldfiles  ----------
 
 
-
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  errorMail
 #   DESCRIPTION:  报警
@@ -174,63 +172,9 @@ compareSizeWithOldfiles ()
 errorMail ()
 {
     errMsg="$IP_ADDR $INPUT_FILE increase percent is $INCRE_RATE , now is `echo $INCREASE_LINE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'` , average is `echo $AVERRAGE_INCRE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'`"
-    sendSMS "$mobile" "$errMsg" "$mail_user" 
+    echo errMsg | mutt -s log_increase_rate $mail_user ;
 }	# ----------  end of function errorMail  ----------
 
-
-#---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  sendSMS
-#   DESCRIPTION:  报警
-#    PARAMETERS:  
-#       RETURNS:  
-#-------------------------------------------------------------------------------
-#报警短信函数
-function sendSMS(){
-    mobileCount="0"
-    receive_mobile_num=" "
-    usernumbers=`echo $1|sed 's/,/ /g'`
-    spsId="gd10658139"
-    spNumber="06139"
-    Msg=`echo $2 |cut -c 1-350`
-    mailAddr="$3"
-    send_time=`date '+%Y-%m-%d %H:%M:%S'`        
-    for usernumber in $usernumbers
-        do
-        mobileCount=$((${mobileCount}+1))
-        receive_mobile_num="<Mobile>86$usernumber</Mobile>"${receive_mobile_num}
-    done
-    pa="<OperCode>SMS101</OperCode>
-        <AppId>SMSMsgSendReq</AppId>
-        <Req>
-        <UserNumber>86$usernumber</UserNumber>
-        <UserMobile>86$usernumber</UserMobile>
-        <SpsId>$spsId</SpsId>
-        <SpNumber>$spNumber</SpNumber>
-        <SendMsg>$Msg</SendMsg>
-        <ComeFrom>102</ComeFrom>
-        <SendType>1</SendType>
-        <Priority>0</Priority>
-        <OperType>401</OperType>
-        <SendFlag>0</SendFlag>
-        <StartSendTime>$send_time</StartSendTime>
-        <StartTime>0</StartTime>
-        <EndTime>1440</EndTime>
-        <FeeType>1</FeeType>
-        <FeeValue>0</FeeValue>
-        <GroupId></GroupId>
-        <CreateOperator></CreateOperator>
-        <ServiceType>10000</ServiceType>
-        <Mobiles>
-        <Number>$mobileCount</Number>
-        $receive_mobile_num
-        </Mobiles>
-        </Req>"
-    smsResultCode=`echo $pa| curl -s -X  POST -H 'Content-Type: text/xml;charset=gbk' -d @- http://sms.api.localdomain:8139/send`
-    if [ `echo $smsResultCode |grep -c '<ResultCode>000</ResultCode>'` -eq 0 ]; then
-        echo $smsResultCode
-        echo |bsmtp -h smtp.api.localdomain -f sys.alert@139.com -s "$Msg" $mailAddr
-    fi
-}
 
 #-------------------------------------------------------------------------------
 #  actioins
