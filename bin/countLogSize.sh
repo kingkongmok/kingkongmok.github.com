@@ -172,7 +172,7 @@ compareSizeWithOldfiles ()
 errorMail ()
 {
     errMsg="$IP_ADDR $INPUT_FILE increase percent is $INCRE_RATE , now is `echo $INCREASE_LINE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'` , average is `echo $AVERRAGE_INCRE_SIZE|perl -ne 'foreach$f(qw/B KB MB GB/){if($_<1024){printf"%.2f%s\n",$_,$f; last} $_=$_/1024}'`"
-    echo errMsg | mutt -s log_increase_rate $mail_user ;
+    echo errMsg | ~/bin/mutt -s log_increase_rate $mail_user ;
 }	# ----------  end of function errorMail  ----------
 
 
