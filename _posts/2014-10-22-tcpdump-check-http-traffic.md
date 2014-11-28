@@ -6,6 +6,24 @@ tags: [tcpdump, http]
 ---
 {% include JB/setup %}
 
+先放松下看看图
+
+* works
+
+![](/Pictures/work.gif)
+
+* busy
+
+![](/Pictures/busy.gif)
+
+* down 
+
+![](/Pictures/down.gif)
+
+* connect timeout
+
+![](/Pictures/timeout.gif)
+
 
 使用tcpdump可以用-w的参数将包记录下来，当然也可以直接-A来现场查看简单分析
 

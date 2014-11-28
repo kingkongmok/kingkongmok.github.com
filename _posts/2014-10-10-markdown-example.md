@@ -46,7 +46,7 @@ index 2d9be07..3be93ca 100644
 使用以下语法可以贴图，记得设置相应路径即可。图是`蓝风一梦`，谢谢。
 
 ```
-![](/Pictures/20141010_markdown.jpg
+![](/Pictures/20141010_markdown.jpg)
 ```
 
 ## 例子
