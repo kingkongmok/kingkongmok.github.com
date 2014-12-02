@@ -19,7 +19,7 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
-MAILUSER='13725269365@139.com'
+MAILUSER='moqingqiang@richinfo.cn'
 
 
 #-------------------------------------------------------------------------------
@@ -145,15 +145,18 @@ tomcat_restart ()
 }	# ----------  end of function tomcat_restart  ----------
 
 
-rm_old_tomcatlog >> $TFILE
-gzip_old_tomcatlog >> $TFILE
-rm_weblog >> $TFILE
-#rm_temp_logs 
-rm_mmlog >> $TFILE
-rm_gamelog >> $TFILE
-tomcat_restart 2>> $TFILE
-rm_crontab_log 2>> $TFILE
-empty_catalina.out >> $TFILE
+action() {
+    rm_old_tomcatlog 
+    gzip_old_tomcatlog 
+    rm_weblog 
+    rm_mmlog 
+    rm_gamelog 
+    tomcat_restart 
+    rm_crontab_log 
+    empty_catalina.out 
+}
+
+action > $TFILE 
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
