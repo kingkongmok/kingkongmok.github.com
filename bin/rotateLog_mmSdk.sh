@@ -39,9 +39,9 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -exec rm -v "{}" \;
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -exec rm -v "{}" \;
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -exec rm -v "{}" \;
+    nice find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -delete
+    nice find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -delete 
+    nice find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -delete 
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -68,22 +68,35 @@ empty_catalina.out ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice -n 19 find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip -v "{}" \;
+    nice find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \;
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
 
-#---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  rm_yesterday_mmlog
-#   DESCRIPTION:  
+#---  FUNCTION  ---------------------------------------------------------------- 
+#          NAME:  remove mmlog
+#   DESCRIPTION: /mmsdk/mmlog_77* 
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-rm_yesterday_mmlog ()
+rm_mmlog ()
 {
-    rm -rv ${LOG_LOCATION}/mmlog_77*/*/`date -d"yesterday" +%Y%m%d`
-}	# ----------  end of function rm_yesterday_mmlog  ----------
+    nice find ${LOG_LOCATION}/mmlog_77*/* -type f -mtime +0 -delete
+    nice find ${LOG_LOCATION}/mmlog_77*/* -type d -mtime +0 -empty -delete
+}	# ----------  end of function rm_mmlog  ----------
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  remove gamedatalog
+#   DESCRIPTION:  /mmsdk/gamelog_77*
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+rm_gamelog ()
+{
+    nice find ${LOG_LOCATION}/gamelog_77*/* -type f -mtime +0 -delete
+    nice find ${LOG_LOCATION}/gamelog_77*/* -type d -mtime +0 -empty -delete
+}	# ----------  end of function rm_gamelog  ---------- 
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  errorMail
@@ -107,9 +120,18 @@ errorMail ()
 rm_weblog ()
 {
     find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 
-    #find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +3 | xargs -i  nice -n 19 tar czf {}.tar.gz {} --remove-files 
-    #find ${LOG_LOCATION}/weblog_77*/*/* -type d -empty -exec rm "{}" \;
 }	# ----------  end of function rm_weblog  ----------
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  rm_crontab_log
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+rm_crontab_log ()
+{
+    nice /usr/sbin/logrotate -s /mmsdk/crontabLog/logrotate.stat.log -f /opt/mmSdk/sbin/logrotate.conf_logs 
+}	# ----------  end of function rm_crontab_log  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  tomcat_restart
@@ -123,12 +145,15 @@ tomcat_restart ()
 }	# ----------  end of function tomcat_restart  ----------
 
 
-rm_old_tomcatlog
-gzip_old_tomcatlog
-rm_weblog
-rm_yesterday_mmlog
-tomcat_restart
-empty_catalina.out
+rm_old_tomcatlog >> $TFILE
+gzip_old_tomcatlog >> $TFILE
+rm_weblog >> $TFILE
+#rm_temp_logs 
+rm_mmlog >> $TFILE
+rm_gamelog >> $TFILE
+tomcat_restart 2>> $TFILE
+rm_crontab_log 2>> $TFILE
+empty_catalina.out >> $TFILE
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
