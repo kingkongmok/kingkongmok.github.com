@@ -141,8 +141,9 @@ mailTest ()
 #-------------------------------------------------------------------------------
 smsTest ()
 {
-echo "smsTest processing..."
-echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string name="smsContent">sms testing...</string><string name="receiverNumber">8613725269365</string><string name="comeFrom">104</string><int name="sendType">0</int><int name="smsType">1</int><int name="serialId">-1</int><int name="isShareSms">0</int><string name="sendTime"></string><string name="validImg"></string><int name="groupLength">10</int><int name="isSaveRecord">1</int></object>' | curl -s "http://smsrebuild1.mail.10086.cn/sms/sms?func=sms:sendSms&sid=${SID}&rnd=0.8170706790406257&cguid=1521425490499" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie 
+if [ "` echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string name="smsContent">sms testing...</string><string name="receiverNumber">8613725269365</string><string name="comeFrom">104</string><int name="sendType">0</int><int name="smsType">1</int><int name="serialId">-1</int><int name="isShareSms">0</int><string name="sendTime"></string><string name="validImg"></string><int name="groupLength">10</int><int name="isSaveRecord">1</int></object>' | curl -s "http://smsrebuild1.mail.10086.cn/sms/sms?func=sms:sendSms&sid=${SID}&rnd=0.8170706790406257&cguid=1521425490499" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --data-binary @- --compressed -b /tmp/139_$$_cookie | grep S_OK `" ] ; then
+    echo smsTest success
+    fi
 }	# ----------  end of function smsTest  ----------
 
 
@@ -155,9 +156,10 @@ echo '<object><int name="doubleMsg">0</int><int name="submitType">1</int><string
 #-------------------------------------------------------------------------------
 mmsTest ()
 {
-echo "mmsTest processing..."
-echo '<object>  <int name="style">0</int>  <int name="size">2</int>  <string name="content">helloThere.</string>  <string name="validate" />  <string name="title">mmsTesting</string>  <string name="receiverNumber">13725269365</string>  <int name="sendType">0</int>  <string name="sendTime" />
-</object>' | curl -s "http://smsrebuild1.mail.10086.cn/mms/s?func=mms:mmsWord&sid=${SID}&cguid=1602172305686" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset:utf-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie 
+if [ "` echo '<object>  <int name="style">0</int>  <int name="size">2</int>  <string name="content">helloThere.</string>  <string name="validate" />  <string name="title">mmsTesting</string>  <string name="receiverNumber">13725269365</string>  <int name="sendType">0</int>  <string name="sendTime" />
+</object>' | curl -s "http://smsrebuild1.mail.10086.cn/mms/s?func=mms:mmsWord&sid=${SID}&cguid=1602172305686" -H "Pragma: no-cache" -H "Origin: http://smsrebuild1.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml;charset:utf-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://smsrebuild1.mail.10086.cn//proxy.htm" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie | grep S_OK `" ] ; then
+    echo mmsTest success
+    fi
 }	# ----------  end of function mmsTest  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
