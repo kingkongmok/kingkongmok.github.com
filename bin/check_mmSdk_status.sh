@@ -38,7 +38,7 @@ recordSpaceUsage ()
 {
     USAGE_PERCENT=`df | perl -lnae 'print $F[-2] if /\/mmsd/'`
     USAGE_PERCENT_INT=`df | perl -lnae 'print int($F[-2]) if /\/mmsd/'`
-    echo $USAGE_PERCENT $TIMESTAMP >> ${MOUNTPOINT}/crontabLog/gzip_accesslog.log 2>&1
+    echo $USAGE_PERCENT $TIMESTAMP >> ${MOUNTPOINT}/crontabLog/space_usage.log 2>&1
 }	# ----------  end of function recordSpaceUsage  ----------
 
 
