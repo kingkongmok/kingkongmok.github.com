@@ -156,7 +156,7 @@ action() {
     empty_catalina.out 
 }
 
-action > $TFILE 
+action > $TFILE 2>&1
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
