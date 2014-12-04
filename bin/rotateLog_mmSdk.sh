@@ -152,11 +152,12 @@ action() {
     rm_mmlog 
     rm_gamelog 
     tomcat_restart 
-    rm_crontab_log 
     empty_catalina.out 
 }
 
-action > $TFILE 2>&1
+action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
+rm_crontab_log >> $TFILE 2>&1
+
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
