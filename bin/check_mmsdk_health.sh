@@ -18,18 +18,15 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
-[ -r /etc/default/locale ] && . /etc/default/locale
-[ -n "$LANG" ] && export LANG
-#set -x 
 
 #  接受报警邮件邮箱
 MAILUSER='13725269365@139.com'
 
 # 15分钟内负载的报警阀
-LOADAVERAGE_TRIGER=50
+LOADAVERAGE_TRIGER=15
 
 # 各个分区的用量报警阀
-DF_USAGE_TRIGER=80
+DF_USAGE_TRIGER=85
 
 # 监控文件夹的名称，数组
 #WATCH_DIR=/mmsdk01/mmlog_7711/self/$(date "+%Y%m%d")
@@ -45,7 +42,7 @@ INCREASEFILENUMB_TRIGER=1
 PORT_LIST=(7711 7722 7733 7744)
 
 # 挂载点
-MOUNTPORT="mmsdk"
+MOUNTPORT=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
 
 
 
@@ -57,41 +54,16 @@ MOUNTPORT="mmsdk"
 TFILE="/tmp/$(basename $0).$$.tmp"
 IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
-
 #---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  sendmail
+#          NAME:  senderrormail
 #   DESCRIPTION:  以固定名称，发送$TFILE的内容到$MAILUSER邮箱
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-sendmail ()
+senderrormail ()
 {
-    #echo "Subject: `hostname`_"$IP_ADDR"_error" | cat - "$TFILE" | /usr/sbin/sendmail -f sys.alert@139.com -t "$MAILUSER" -s smtp.163.com -xu kk_richinfo -xp 1q2w3e4r 
-    #echo "Subject: `hostname`_"$IP_ADDR"_error" | cat - "$TFILE" | /usr/sbin/sendmail  -t "$MAILUSER" -f "kk_richinfo@163.com" -s smtp.163.com -xu kk_richinfo -xp 1q2w3e4r
-    echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
-}   # ----------  end of function sendmail  ----------
-
-
-#---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  errorMail
-#   DESCRIPTION:  mail the $MAILUSER with $TFILE.
-#    PARAMETERS:  
-#       RETURNS:  
-#-------------------------------------------------------------------------------
-errorMail ()
-{
-    IP=${IP:-"/sbin/ip"}
-    SENDMAIL=${SENDMAIL:-"/usr/sbin/sendmail"}
-    CURL=${CURL:-"/usr/bin/curl"}
-    PRIV_IP="${IP_ADDR:-`$IP -f inet addr | grep -oP "(?<=inet )\S+(?=\/.*global)"`}"
-    [ -x $CURL ] && PUB_IP=`$CURL --silent ip.datlet.com`
-    SUBJECT="`hostname`_`basename $0`_${PRIV_IP}_${PUB_IP}"
-    FROM="sys.alert@139.com"
-    MAIL_CONTENT=`cat "$TFILE"`;
-    MAIL="subject:$SUBJECT\nfrom:$FROM\n${MAIL_CONTENT:-"error"}"
-    echo -e $MAIL | $SENDMAIL "$MAILUSER"
-}	# ----------  end of function errorMail  ----------
-
+	echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
+}	# ----------  end of function senderrormail  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -185,14 +157,15 @@ checkIncreaseFileNumb ()
     done
 }	# ----------  end of function checkIncreaseFileNumb  ----------
 
-checkIncreaseFileNumb
+
+#checkIncreaseFileNumb
 checkFileStat
 checkLoadAverage; 
 checkSpace;
 checkTomcat;
 
+
 if [ -r "$TFILE" ] ; then
-    sendmail;
-    #errorMail ;
+    senderrormail;
     rm $TFILE;
 fi
