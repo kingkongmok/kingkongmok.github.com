@@ -62,7 +62,7 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 #-------------------------------------------------------------------------------
 senderrormail ()
 {
-	echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
+	echo "Subject: ${IP_ADDR}_$(basename $0)" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
 }	# ----------  end of function senderrormail  ----------
 
 
@@ -166,6 +166,8 @@ checkTomcat;
 
 
 if [ -r "$TFILE" ] ; then
-    senderrormail;
+    if [ -s "$TFILE" ] ; then
+        senderrormail;
+    fi
     rm $TFILE;
 fi
