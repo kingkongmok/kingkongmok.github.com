@@ -39,9 +39,9 @@ IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 #-------------------------------------------------------------------------------
 rm_old_tomcatlog ()
 {
-    nice find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -delete
+    #nice find ${LOG_LOCATION}/tomcat_77* -type f -mtime +0 -delete
+    nice find ${LOG_LOCATION}/tomcat_77* -type f -mmin +1600 -delete
     nice find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name catalina.20* -delete 
-    nice find ${LOG_LOCATION}/tomcat_77* -type f -mmin +60 -name access*log -empty -delete 
 }	# ----------  end of function rm_old_tomcatlog  ----------
 
 
@@ -98,6 +98,7 @@ rm_gamelog ()
     nice find ${LOG_LOCATION}/gamelog_77*/* -type d -mtime +0 -empty -delete
 }	# ----------  end of function rm_gamelog  ---------- 
 
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  errorMail
 #   DESCRIPTION:  mail the $MAILUSER with $TFILE
@@ -109,6 +110,18 @@ errorMail ()
     echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
 }   # ----------  end of function errorMail  ----------
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  count_visits
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+count_visits ()
+{
+    #for i in seq -w 24 ; do zcat ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.${i}.log.gz ; done | perl -nae ' if(/(?<=\s)\S+?(?=&)/){$h{$&}++;$S++}}{printf"%12i\t%s\n",$h{$_},$_ for keys%h;printf"%12i\ttotal\n",$S' > ${LOG_LOCATION}/crontabLog/pv.`date -d -1day +%F`.log
+    zcat ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.*.gz | perl -nae ' if(/(?<=\s)\S+?(?=&)/){$h{$&}++;$S++}}{printf"%12i\t%s\n",$h{$_},$_ for sort{$h{$a}<=>$h{$b}}keys%h;printf"%12i\ttotal\n",$S' > ${LOG_LOCATION}/crontabLog/pv.log
+}	# ----------  end of function count_visits  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -122,6 +135,7 @@ rm_weblog ()
     find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 
 }	# ----------  end of function rm_weblog  ----------
 
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  rm_crontab_log
 #   DESCRIPTION:  
@@ -132,6 +146,7 @@ rm_crontab_log ()
 {
     nice /usr/sbin/logrotate -s /mmsdk/crontabLog/logrotate.stat.log -f /opt/mmSdk/sbin/logrotate.conf_logs 
 }	# ----------  end of function rm_crontab_log  ----------
+
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  tomcat_restart
@@ -152,11 +167,13 @@ action() {
     rm_mmlog 
     rm_gamelog 
     tomcat_restart 
-    rm_crontab_log 
     empty_catalina.out 
+    count_visits
 }
 
-action > $TFILE 2>&1
+action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
+rm_crontab_log >> $TFILE 2>&1
+
 if [ -r "$TFILE" ] ; then
     errorMail
 fi
