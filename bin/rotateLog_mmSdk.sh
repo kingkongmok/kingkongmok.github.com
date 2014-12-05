@@ -120,7 +120,7 @@ errorMail ()
 count_visits ()
 {
     #for i in seq -w 24 ; do zcat ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.${i}.log.gz ; done | perl -nae ' if(/(?<=\s)\S+?(?=&)/){$h{$&}++;$S++}}{printf"%12i\t%s\n",$h{$_},$_ for keys%h;printf"%12i\ttotal\n",$S' > ${LOG_LOCATION}/crontabLog/pv.`date -d -1day +%F`.log
-    zcat ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.*.gz | perl -nae ' if(/(?<=\s)\S+?(?=&)/){$h{$&}++;$S++}}{printf"%12i\t%s\n",$h{$_},$_ for keys%h;printf"%12i\ttotal\n",$S' > ${LOG_LOCATION}/crontabLog/pv.`date -d -1day +%F`.log
+    zcat ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.*.gz | perl -nae ' if(/(?<=\s)\S+?(?=&)/){$h{$&}++;$S++}}{printf"%12i\t%s\n",$h{$_},$_ for sort{$h{$a}<=>$h{$b}}keys%h;printf"%12i\ttotal\n",$S' > ${LOG_LOCATION}/crontabLog/pv.log
 }	# ----------  end of function count_visits  ----------
 
 
