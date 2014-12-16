@@ -92,13 +92,73 @@ Login139 ()
 #echo 'sid = '$SID
 
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  composeHtml
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+composeHtml ()
+{
+    if [ "`curl -s "http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Pragma: no-cache" -b /tmp/139_$$_cookie -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/index.html?sid=${SID}&rnd=134&tab=mailbox_1&comefrom=54&cguid=0926122164703&mtime=137" -H "Proxy-Connection: keep-alive" --compressed | grep contenteditable`" ] ; then
+    echo compose:html success
+    fi
+}	# ----------  end of function composeHtml  ----------
+
+
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  mbox_compose
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+mbox_compose ()
+{
+    
+    if [ "`echo '<object>
+  <object name="attrs">
+    <string name="id">0.509468958247453</string>
+    <string name="mid" />
+    <string name="messageId" />
+    <string name="account">&quot;莫庆强&quot;&lt;kingkongmok@139.com&gt;</string>
+    <string name="to">&quot;ayanami_0&quot;&lt;ayanami_0@163.com&gt;</string>
+    <string name="cc" />
+    <string name="bcc" />
+    <int name="showOneRcpt">0</int>
+    <int name="isHtml">1</int>
+    <string name="subject">testmail</string>
+    <string name="content">&lt;div style=&quot;font-family: 宋体; font-size: 13px; color: rgb(0, 0, 0); line-height: 1.5;&quot;&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;/div&gt;&lt;div id=&quot;signContainer&quot;&gt;&lt;table border=&quot;0&quot; style=&quot;width:auto;font-family:'宋体';font-size:12px;border:1px solid #b5cbdd;-webkit-border-radius:5px;line-height:21px;background-color:#f8fcff;flaot:left;&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;vertical-align:top;padding:5px;&quot;&gt;&lt;img rel=&quot;signImg&quot; width=&quot;96&quot; height=&quot;96&quot; src=&quot;http://172.16.172.171:2080/Upload/Photo/137252/137252693/13725269365/111120140813153246slg6.jpg&quot; data-mark=&quot;empty&quot; id=&quot;img_0.541015864117071&quot;&gt;&lt;/td&gt;&lt;td style=&quot;padding:5px;&quot;&gt;&lt;table style=&quot;font-size:12px;line-height:19px;table-layout:auto;&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td colspan=&quot;2&quot;&gt;&lt;strong id=&quot;dzmp_unm&quot; style=&quot;font-size:14px;&quot;&gt;莫庆强&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan=&quot;2&quot; style=&quot;padding-bottom:5px;&quot;&gt;个性签名&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;职务：&lt;/td&gt;&lt;td&gt;系统维护工程师&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;公司：&lt;/td&gt;&lt;td&gt;深圳市彩讯科技有限公司&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;邮箱：&lt;/td&gt;&lt;td&gt;13725269365@139.com&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;手机：&lt;/td&gt;&lt;td&gt;13725269365&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;</string>
+    <int name="priority">3</int>
+    <int name="signatureId">0</int>
+    <int name="stationeryId">0</int>
+    <int name="saveSentCopy">1</int>
+    <int name="requestReadReceipt">0</int>
+    <int name="inlineResources">1</int>
+    <int name="scheduleDate">0</int>
+    <int name="normalizeRfc822">0</int>
+    <array name="remoteAttachment">
+      <string>http://172.16.172.171:2080/Upload/Photo/137252/137252693/13725269365/111120140813153246slg6.jpg</string>
+    </array>
+    <array name="attachments">
+    </array>
+  </object>
+  <string name="action">deliver</string>
+  <int name="replyNotify">0</int>
+  <int name="returnInfo">1</int>
+</object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&categroyId=103000000&sid=${SID}&&comefrom=54&guid=057104879&cguid=1122537396519" -H "Pragma: no-cache"  -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Proxy-Connection: keep-alive" -b /tmp/139_$$_cookie --data-binary @- --compressed | grep S_OK`" ] ; then
+    echo mbox_compose success
+    fi
+}	# ----------  end of function mbox_compose  ----------
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  mailTest
 #   DESCRIPTION:  
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-mailTest ()
+mboxCompose ()
 {
     if [ " `echo '<object>
   <object name="attrs">
@@ -128,7 +188,7 @@ mailTest ()
   <int name="replyNotify">0</int>
   <int name="returnInfo">1</int>
 </object>' | curl -s "http://appmail.mail.10086.cn/RmWeb/mail?func=mbox:compose&categroyId=103000000&sid=${SID}&&comefrom=54&guid=05a451b98&cguid=1529366541514" -H "Origin: http://appmail.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/xml" -H "Accept: */*" -H "Referer: http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Connection: keep-alive" --compressed --data-binary @- -b /tmp/139_$$_cookie  | grep S_OK` " ] ; then
-    echo sendmail success
+    echo mbox:compose success
     fi
 }	# ----------  end of function mailTest  ----------
 
@@ -339,6 +399,20 @@ echo bmail_searchMessages success
 fi
 }	# ----------  end of function bmail_searchMessages  ----------
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  writeOK
+#   DESCRIPTION:  
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+writeOK ()
+{
+    if [ "`curl -s "http://appmail.mail.10086.cn/m2012/html/write_ok_new.html?sid=${SID}&inputData=0.6573257776908576&tid=2b04548f8a3555e-00009" -H "Pragma: no-cache" -b /tmp/139_$$_cookie -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Cache-Control: no-cache" -H "Referer: http://appmail.mail.10086.cn/m2012/html/compose.html?sid=${SID}" -H "Proxy-Connection: keep-alive" --compressed | grep writeOk_box`" ] ; then
+    echo writeOK success
+    fi
+}	# ----------  end of function writeOK  ----------
+
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  file_getFiles
 #   DESCRIPTION:  
@@ -390,13 +464,16 @@ fi
 if [ "$MMS_TRIGER" ]  ; then
     mmsTest
 fi
-mailTest
+composeHtml
+mbox_compose
+#mboxCompose
+writeOK
 cardTest
 calenderTest
 together_getFetionLoginInfo
 setting_getArtifact
 mnote_updateNote
-bmail_searchMessages
+#bmail_searchMessages
 file_getFiles
 uec_index
 logout139
