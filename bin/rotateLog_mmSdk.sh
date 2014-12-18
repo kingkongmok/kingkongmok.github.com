@@ -107,7 +107,7 @@ rm_gamelog ()
 #-------------------------------------------------------------------------------
 errorMail ()
 {
-    echo "Subject: `hostname`_"$IP_ADDR"" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
+    echo -e "Subject: ${IP_ADDR}_`basename $0`\n" | cat - $TFILE | /usr/local/bin/msmtp $MAILUSER
 }   # ----------  end of function errorMail  ----------
 
 
@@ -164,7 +164,6 @@ action() {
     rm_old_tomcatlog 
     gzip_old_tomcatlog 
     rm_weblog 
-    rm_mmlog 
     rm_gamelog 
     tomcat_restart 
     empty_catalina.out 
@@ -172,7 +171,8 @@ action() {
 }
 
 action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
-rm_crontab_log >> $TFILE 2>&1
+rm_mmlog  >> $TFILE 2>/dev/null
+rm_crontab_log >> $TFILE 2>/dev/null
 
 if [ -r "$TFILE" ] ; then
     errorMail

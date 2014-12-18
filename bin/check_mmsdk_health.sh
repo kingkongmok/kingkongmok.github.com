@@ -54,17 +54,17 @@ MOUNTPORT=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
 TFILE="/tmp/$(basename $0).$$.tmp"
 IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
+
 #---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  senderrormail
-#   DESCRIPTION:  以固定名称，发送$TFILE的内容到$MAILUSER邮箱
+#          NAME:  errorMail
+#   DESCRIPTION:  mail the $MAILUSER with $TFILE
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-senderrormail ()
+errorMail ()
 {
-	echo "Subject: ${IP_ADDR}_$(basename $0)" | cat - $TFILE | /usr/sbin/sendmail -f kk_richinfo@163.com -t $MAILUSER -s smtp.163.com -u nicemail -xu kk_richinfo -xp 1q2w3e4r -m happy
-}	# ----------  end of function senderrormail  ----------
-
+    echo -e "Subject: ${IP_ADDR}_`basename $0`\n" | cat - $TFILE | /usr/local/bin/msmtp $MAILUSER 
+}   # ----------  end of function errorMail  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  checkLoadAverage
@@ -166,8 +166,8 @@ checkTomcat;
 
 
 if [ -r "$TFILE" ] ; then
-    if [ -s "$TFILE" ] ; then
-        senderrormail;
-    fi
-    rm $TFILE;
+    errorMail
+fi
+if [ -w "$TFILE" ] ; then
+    rm $TFILE
 fi
