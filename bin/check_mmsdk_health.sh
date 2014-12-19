@@ -53,6 +53,7 @@ MOUNTPORT=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
 
 TFILE="/tmp/$(basename $0).$$.tmp"
 IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
+CURL=/usr/bin/curl
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -83,15 +84,28 @@ checkLoadAverage ()
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  checkTomcat
-#   DESCRIPTION:  查看各个端口的tomcat是否正常
+#   DESCRIPTION:  查看各个端口的tomcat是否正常, 否则重启
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
 checkTomcat ()
 {
     for port in ${PORT_LIST[@]} ; do
-        if [ ! "$(curl -is http://127.0.0.1:${port}/healthcheck.jsp | grep 'HTTP/1.1 200 OK')" ] ; then
-            echo "tomcat error" >> $TFILE
+#        if [ ! "$(curl -is http://127.0.0.1:${port}/healthcheck.jsp | grep 'HTTP/1.1 200 OK')" ] ; then
+#            echo "tomcat error" >> $TFILE
+#        fi
+        j=0
+        for i  in `seq 10` ; do
+            if [ "$($CURL --connect-timeout 5 --max-time 5 -i -s --retry 1  http://127.0.0.1:${port}/healthcheck.jsp  | grep '200 OK')" ]  ; then
+                break ; 
+            else
+                j=$(($j+1))
+		sleep 3 ;
+            fi
+        done
+        if [ $j == 10 ] ; then
+            /opt/mmSdk/sbin/tomcat_${port}.sh restart
+	    echo "tomcat_${port} restarted" >> $TFILE
         fi
     done
 }	# ----------  end of function checkTomcat  ----------
