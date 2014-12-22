@@ -34,7 +34,7 @@
 #
 #        USAGE: ./|FILENAME|  
 #
-#  DESCRIPTION: <CURSOR>
+#  DESCRIPTION: 
 #
 #      OPTIONS: ---
 # REQUIREMENTS: ---
@@ -49,8 +49,8 @@
 
 use strict;
 use warnings;
-use utf8;
 
+<CURSOR>
 == Comments.file description pm == map:chpm, sc:d, start, noindent ==
 #
 #===============================================================================
