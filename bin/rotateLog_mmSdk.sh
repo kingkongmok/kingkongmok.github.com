@@ -163,7 +163,6 @@ tomcat_restart ()
 action() {
     rm_old_tomcatlog 
     gzip_old_tomcatlog 
-    rm_weblog 
     rm_gamelog 
     tomcat_restart 
     empty_catalina.out 
@@ -171,6 +170,7 @@ action() {
 }
 
 action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
+rm_weblog >> $TFILE 2>/dev/null
 rm_mmlog  >> $TFILE 2>/dev/null
 rm_crontab_log >> $TFILE 2>/dev/null
 
