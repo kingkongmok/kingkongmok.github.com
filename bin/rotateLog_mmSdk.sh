@@ -47,17 +47,22 @@ rm_old_tomcatlog ()
 
 
 #---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  empty_catalina.out
+#          NAME:  empty_catalina
 #   DESCRIPTION:  empty the catalina.out
 #    PARAMETERS:  
 #       RETURNS:  
 #-------------------------------------------------------------------------------
-empty_catalina.out ()
+empty_catalina ()
 {
+    
     for i in 11 22 33 44 ; do
-        echo "" >  ${LOG_LOCATION}/tomcat_77${i}/catalina.out
+        if [ -w "${LOG_LOCATION}/tomcat_77${i}/catalina.out" ] ; then
+            echo "" >  ${LOG_LOCATION}/tomcat_77${i}/catalina.out
+        else
+            echo "${LOG_LOCATION}/tomcat_77${i}/catalina.out" CAN NOT be flushed
+        fi
     done
-}	# ----------  end of function empty_catalina.out  ----------
+}	# ----------  end of function empty_catalina  ----------
 
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -165,7 +170,7 @@ action() {
     gzip_old_tomcatlog 
     rm_gamelog 
     tomcat_restart 
-    empty_catalina.out 
+    empty_catalina 
     count_visits
 }
 
