@@ -96,11 +96,11 @@ checkTomcat ()
 #        fi
         j=0
         for i  in `seq 10` ; do
-            if [ "$($CURL --connect-timeout 5 --max-time 5 -i -s --retry 1  http://127.0.0.1:${port}/healthcheck.jsp  | grep '200 OK')" ]  ; then
+            if [ "$($CURL -i -s http://127.0.0.1:${port}/healthcheck.jsp  | grep '200 OK')" ]  ; then
                 break ; 
             else
                 j=$(($j+1))
-		sleep 3 ;
+		sleep 2 ;
             fi
         done
         if [ $j == 10 ] ; then
