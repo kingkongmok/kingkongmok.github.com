@@ -171,7 +171,7 @@ action() {
 
 action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
 rm_weblog >> $TFILE 2>/dev/null
-rm_mmlog  >> $TFILE 2>/dev/null
+rm_mmlog  >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>&1
 rm_crontab_log >> $TFILE 2>/dev/null
 
 if [ -r "$TFILE" ] ; then
