@@ -100,12 +100,13 @@ checkTomcat ()
                 break ; 
             else
                 j=$(($j+1))
-		sleep 2 ;
+                sleep 2 ;
             fi
         done
         if [ $j == 10 ] ; then
             /opt/mmSdk/sbin/tomcat_${port}.sh restart
-	    echo "tomcat_${port} restarted" >> $TFILE
+            echo "tomcat_${port} restarted" >> $TFILE
+            sleep 3 ;
         fi
     done
 }	# ----------  end of function checkTomcat  ----------
