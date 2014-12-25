@@ -25,7 +25,7 @@ TRUNCATE_MINUTES=900
 #  don't edit below
 #-------------------------------------------------------------------------------
 
-MOUNTPOINT=`df | grep \/mmsdk | awk '{print $NF}'`
+MOUNTPOINT=`df | perl -nae 'print "$F[-1]\n" if $F[-1] =~ /\/mmsdk/i'`
 TIMESTAMP=`date +%F_%T`
 
 #---  FUNCTION  ----------------------------------------------------------------

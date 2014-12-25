@@ -42,7 +42,7 @@ INCREASEFILENUMB_TRIGER=1
 PORT_LIST=(7711 7722 7733 7744)
 
 # 挂载点
-MOUNTPORT=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
+MOUNTPORT=`df | perl -nae 'print "$F[-1]\n" if $F[-1] =~ /\/mmsdk/i'`
 
 
 
