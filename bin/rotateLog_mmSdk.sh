@@ -27,7 +27,7 @@ MAILUSER='moqingqiang@richinfo.cn'
 #-------------------------------------------------------------------------------
 
 TFILE="/tmp/$(basename $0).$$.tmp"
-LOG_LOCATION=`df | perl -lane 'print $F[-1] if /mmsdk/ && !/dev/'`
+LOG_LOCATION=`df | perl -nae 'print "$F[-1]\n" if $F[-1] =~ /\/mmsdk/i'`
 IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
 
