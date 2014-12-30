@@ -139,41 +139,17 @@ checkSpace ()
 checkFileStat ()
 {
     for dir in ${WATCH_DIR_LIST[@]}; do
-        WATCH_DIR=/${MOUNTPORT}/mmlog_${dir}/self/$(date "+%Y%m%d")
-        TIMESTAMPDELAY_MINS=$(((`date "+%s"`-`stat -c "%Y" "$WATCH_DIR"`)/60))
-        if [ "$TIMESTAMPDELAY_MINS" -gt "$WATCH_DIR_NOTCHANG_TRIGER" ] ; then
-            echo "$WATCH_DIR is not changed more than $WATCH_DIR_NOTCHANG_TRIGER minuts" >> $TFILE 
+        WATCH_DIR=${MOUNTPORT}/mmlog_${dir}/self/$(date "+%Y%m%d")
+        if [ -d "WATCH_DIR" ] ; then 
+            TIMESTAMPDELAY_MINS=$(((`date "+%s"`-`stat -c "%Y" "$WATCH_DIR"`)/60))
+            if [ "$TIMESTAMPDELAY_MINS" -gt "$WATCH_DIR_NOTCHANG_TRIGER" ] ; then
+                echo "$WATCH_DIR is not changed more than $WATCH_DIR_NOTCHANG_TRIGER minuts" >> $TFILE 
+            fi
         fi
     done
 }	# ----------  end of function checkFileStat  ----------
 
 
-
-#---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  checkIncreaseFileNumb
-#   DESCRIPTION:  查看所在文件夹的硬链接个数增加情况，对比$INCREASEFILENUMB_TRIGER
-#    PARAMETERS:  
-#       RETURNS:  
-#-------------------------------------------------------------------------------
-checkIncreaseFileNumb ()
-{
-    for dir in ${WATCH_DIR_LIST[@]}; do
-        WATCH_DIR=/${MOUNTPORT}/mmlog_${dir}/self/$(date "+%Y%m%d")
-    LAST_FILENUMB_LOC="/tmp/$(basename $0).${dir}.filenumb"
-    FILENUMB=`stat "$WATCH_DIR" | grep Links | awk '{print $NF}'`
-    INCREASENUMB=`echo $FILENUMB-$(grep -oP '^\d+(?=\s)' $LAST_FILENUMB_LOC) | bc`
-    INCREASELOCATENAME=$(grep -oP '(?<=\s)\S+$' $LAST_FILENUMB_LOC)
-    if [ "$INCREASELOCATENAME" == "$WATCH_DIR" ] ; then
-        if [ "$INCREASENUMB" -lt "$INCREASEFILENUMB_TRIGER" ] ; then
-            echo "the increase for $WATCH_DIR is less than $INCREASEFILENUMB_TRIGER" >> $TFILE 
-        fi
-    fi
-    echo "${FILENUMB}   ${WATCH_DIR}" > "$LAST_FILENUMB_LOC"
-    done
-}	# ----------  end of function checkIncreaseFileNumb  ----------
-
-
-#checkIncreaseFileNumb
 checkFileStat
 checkLoadAverage; 
 checkSpace;
