@@ -174,7 +174,7 @@ action() {
     count_visits
 }
 
-action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>$TFILE
+action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>>$TFILE
 rm_weblog >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>/dev/null
 rm_mmlog  >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>/dev/null
 rm_crontab_log >> $TFILE 2>/dev/null
