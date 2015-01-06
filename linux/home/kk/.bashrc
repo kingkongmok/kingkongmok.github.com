@@ -83,9 +83,9 @@ shopt -s checkwinsize
 #-------------------------------------------------------------------------------
 #  edit by kk here
 #-------------------------------------------------------------------------------
-MAIL=~/.mail/mbox
+MAIL=~/.maildir/mbox
 MAILCHECK=30
-MAILPATH=~/.mail/mbox?"You have mail"
+MAILPATH=~/.maildir/mbox?"You have mail"
 export PATH=$PATH:~/bin/
 
 
