@@ -1,6 +1,0 @@
-PATH=/bin:/usr/bin:/usr/local/bin
-VERBOSE=off
-MAILDIR=$HOME/.mail
-DEFAULT=$MAILDIR/mbox
-LOGFILE=/dev/null
-# Recipes below this comment:
