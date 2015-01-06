@@ -5,7 +5,7 @@
 # For common configuration examples, see BASIC_CONFIGURATION_README
 # and STANDARD_CONFIGURATION_README. To find these documents, use
 # the command "postconf html_directory readme_directory", or go to
-# http://www.postfix.org/.
+# http://www.postfix.org/BASIC_CONFIGURATION_README.html etc.
 #
 # For best results, change no more than 2-3 parameters at a time,
 # and test if Postfix still works after every change.
@@ -20,6 +20,7 @@
 # is no cure for address rewriting mistakes or mail routing mistakes.
 #
 #soft_bounce = no
+soft_bounce = yes
 
 # LOCAL PATHNAME INFORMATION
 #
@@ -74,14 +75,15 @@ mail_owner = postfix
 #
 #myhostname = host.domain.tld
 #myhostname = virtual.domain.tld
-myhostname = gentoo.kk.igb
+myhostname = ins14.datlet.com
 
 # The mydomain parameter specifies the local internet domain name.
 # The default is to use $myhostname minus the first component.
 # $mydomain is used as a default value for many other configuration
 # parameters.
 #
-mydomain = kk.igb
+#mydomain = domain.tld
+mydomain = datlet.com
 
 # SENDING MAIL
 # 
@@ -96,7 +98,7 @@ mydomain = kk.igb
 # myorigin also specifies the default domain name that is appended
 # to recipient addresses that have no @domain part.
 #
-myorigin = $myhostname
+#myorigin = $myhostname
 #myorigin = $mydomain
 
 # RECEIVING MAIL
@@ -111,7 +113,7 @@ myorigin = $myhostname
 #
 # Note: you need to stop/start Postfix when this parameter changes.
 #
-inet_interfaces = all
+#inet_interfaces = all
 #inet_interfaces = $myhostname
 #inet_interfaces = $myhostname, localhost
 
@@ -158,7 +160,7 @@ inet_interfaces = all
 #
 # See also below, section "REJECTING MAIL FOR UNKNOWN LOCAL USERS".
 #
-mydestination = $myhostname, localhost.$mydomain, localhost
+#mydestination = $myhostname, localhost.$mydomain, localhost
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
@@ -202,7 +204,7 @@ mydestination = $myhostname, localhost.$mydomain, localhost
 # In the left-hand side, specify a bare username, an @domain.tld
 # wild-card, or specify a user@domain.tld address.
 # 
-local_recipient_maps = unix:passwd.byname $alias_maps
+#local_recipient_maps = unix:passwd.byname $alias_maps
 #local_recipient_maps = proxy:unix:passwd.byname $alias_maps
 #local_recipient_maps =
 
@@ -244,8 +246,8 @@ unknown_local_recipient_reject_code = 550
 # only the local machine.
 # 
 #mynetworks_style = class
-mynetworks_style = subnet
-#mynetworks_style = host
+#mynetworks_style = subnet
+mynetworks_style = host
 
 # Alternatively, you can specify the mynetworks list by hand, in
 # which case Postfix ignores the mynetworks_style setting.
@@ -258,7 +260,7 @@ mynetworks_style = subnet
 # of listing the patterns here. Specify type:table for table-based lookups
 # (the value on the table right-hand side is not used).
 #
-mynetworks = 192.1.6.0/24, 127.0.0.0/8
+#mynetworks = 168.100.189.0/28, 127.0.0.0/8
 #mynetworks = $config_directory/mynetworks
 #mynetworks = hash:/etc/postfix/network_table
 
@@ -380,7 +382,7 @@ mynetworks = 192.1.6.0/24, 127.0.0.0/8
 # "postfix reload" to eliminate the delay.
 #
 #alias_maps = dbm:/etc/aliases
-alias_maps = hash:/etc/aliases
+#alias_maps = hash:/etc/aliases
 #alias_maps = hash:/etc/aliases, nis:mail.aliases
 #alias_maps = netinfo:/aliases
 
@@ -391,7 +393,7 @@ alias_maps = hash:/etc/aliases
 #
 #alias_database = dbm:/etc/aliases
 #alias_database = dbm:/etc/mail/aliases
-alias_database = hash:/etc/aliases
+#alias_database = hash:/etc/aliases
 #alias_database = hash:/etc/aliases, hash:/opt/majordomo/aliases
 
 # ADDRESS EXTENSIONS (e.g., user+foo)
@@ -403,6 +405,7 @@ alias_database = hash:/etc/aliases
 # Basically, the software tries user+foo and .forward+foo before
 # trying user and .forward.
 #
+#recipient_delimiter = +
 recipient_delimiter = +
 
 # DELIVERY TO MAILBOX
@@ -412,7 +415,7 @@ recipient_delimiter = +
 # mailbox file is /var/spool/mail/user or /var/mail/user.  Specify
 # "Maildir/" for qmail-style delivery (the / is required).
 #
-home_mailbox = Mailbox
+#home_mailbox = Mailbox
 #home_mailbox = Maildir/
  
 # The mail_spool_directory parameter specifies the directory where
@@ -420,7 +423,7 @@ home_mailbox = Mailbox
 # system type.
 #
 #mail_spool_directory = /var/mail
-mail_spool_directory = /var/spool/mail
+#mail_spool_directory = /var/spool/mail
 
 # The mailbox_command parameter specifies the optional external
 # command to use instead of mailbox delivery. The command is run as
@@ -441,8 +444,9 @@ mail_spool_directory = /var/spool/mail
 # IF YOU USE THIS TO DELIVER MAIL SYSTEM-WIDE, YOU MUST SET UP AN
 # ALIAS THAT FORWARDS MAIL FOR ROOT TO A REAL USER.
 #
-mailbox_command = /some/where/procmail
+#mailbox_command = /some/where/procmail
 #mailbox_command = /some/where/procmail -a "$EXTENSION"
+mailbox_command = /usr/bin/procmail -a "$EXTENSION"
 
 # The mailbox_transport specifies the optional transport in master.cf
 # to use after processing aliases and .forward files. This parameter
