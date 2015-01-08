@@ -22,5 +22,4 @@ use strict;
 use warnings;
 use URI::Encode qw/uri_decode/;
 
-print uri_decode(@ARGV);
-
+print uri_decode(<>);
