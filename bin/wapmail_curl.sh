@@ -78,7 +78,7 @@ shift $(($OPTIND-1))
 #-------------------------------------------------------------------------------
 login_wap ()
 {
-    SID=`curl -s "https://wapmail.10086.cn/index.htm" -H "Origin: http://wapmail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Cache-Control: max-age=0" -H "Referer: http://wapmail.10086.cn/" -H "Connection: keep-alive" --data "ur=kingkongmok&pw=${COMMON_PASSWORD}&apc=0&_swv=4&switch_ver=3"%"2C4&adapt_ver=3&client_type=3&_fv=3&clt=3" -w %{redirect_url} --compressed -c $COOKIE | grep -oP '(?<=sid=).*?(?=&)'`
+    SID=`curl -s "https://wapmail.10086.cn/index.htm" -H "Origin: http://wapmail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" -H "Cache-Control: max-age=0" -H "Referer: http://wapmail.10086.cn/" -H "Connection: keep-alive" --data "ur=kingkongmok&pw=${COMMON_PASSWORD}&apc=0&_swv=4&switch_ver=3"%"2C4&adapt_ver=3&client_type=3&_fv=3&clt=3" -w %{redirect_url} --compressed -c $COOKIE | grep -oP '(?<=sid=).*?(?=&)'`
 echo "sid = $SID"
 }	# ----------  end of function login_wap  ----------
 
@@ -91,7 +91,9 @@ echo "sid = $SID"
 #-------------------------------------------------------------------------------
 mailfolder ()
 {
-   curl -s "http://m.mail.10086.cn/wp12/w3/mailfolder" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/folder.html?&sid=MTQxNDU2MjkyNDAwMDkwNjYwNzcxMgAA000004&vn=306&vid=&into=1&cmd=40" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&into=1&cmd=40&r=0.07340442086569965&__randomNumber=1414562928280" --compressed -b $COOKIE
+    if [ "`curl -s "http://m.mail.10086.cn/wp12/w3/mailfolder" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/folder.html?&sid=MTQxNDU2MjkyNDAwMDkwNjYwNzcxMgAA000004&vn=306&vid=&into=1&cmd=40" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&into=1&cmd=40&r=0.07340442086569965&__randomNumber=1414562928280" --compressed -b $COOKIE | uriDecode.pl | grep 13725269365`" ] ; then
+        echo mailfolder succeed.
+    fi
 }	# ----------  end of function mailfolder  ----------
 
 
@@ -103,7 +105,9 @@ mailfolder ()
 #-------------------------------------------------------------------------------
 sendmail ()
 {
-    curl -s "http://m.mail.10086.cn/wp12/w3/sendmail?rnd=0.42626322829164565" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/sendmail.html?&sid=${SID}&vn=306" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=2&subject=testMailFromWapmail&content=testmailFromWapMail&reciever=kk_richinfo@163.com,&cc=&bcc=&year=&month=&date=&hour=&minute=&showOneRcpt=0&priority=0&requestReadReceipt=0&isHtml=0&timing=false&__randomNumber=1414566302076" --compressed -b $COOKIE 
+    if [ "`curl -s "http://m.mail.10086.cn/wp12/w3/sendmail?rnd=0.42626322829164565" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/sendmail.html?&sid=${SID}&vn=306" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=2&subject=testMailFromWapmail&content=testmailFromWapMail&reciever=ayanami_0@163.com,&cc=&bcc=&year=&month=&date=&hour=&minute=&showOneRcpt=0&priority=0&requestReadReceipt=0&isHtml=0&timing=false&__randomNumber=1414566302076" --compressed -b $COOKIE  | uriDecode.pl | grep 'eroerCode":0,'`" ] ; then
+    echo sendmail modules succeed.
+    fi
 }	# ----------  end of function sendmail  ----------
 
 
@@ -116,7 +120,9 @@ sendmail ()
 #-------------------------------------------------------------------------------
 sendCard ()
 {
-    curl -s "http://m.mail.10086.cn/ws12/w3/w3cardsend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/cardsend.html?cmd=0&csid=10590&gid=1&sid=${SID}&vn=306&t=" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=1&csid=10590&title=PVZ_card_testing&content=content_for_PVZ_card_testing&dest=kk_richinfo@163.com&__randomNumber=1414574072275" --compressed -b $COOKIE
+    if [ "`curl -s "http://m.mail.10086.cn/ws12/w3/w3cardsend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/cardsend.html?cmd=0&csid=10590&gid=1&sid=${SID}&vn=306&t=" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=1&csid=10590&title=PVZ_card_testing&content=content_for_PVZ_card_testing&dest=ayanami_0@163.com&__randomNumber=1414574072275" --compressed -b $COOKIE | uriDecode.pl | grep 'eroerCode":0,' `" ] ; then
+    echo w3cardsend sendcard succeed.
+    fi
 }	# ----------  end of function sendCard  ----------
 
 
@@ -128,7 +134,9 @@ sendCard ()
 #-------------------------------------------------------------------------------
 sendSMS ()
 {
-    curl -s "http://m.mail.10086.cn/ws12/w3/w3smsend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/sendsms.html?&sid=${SID}&vn=306&vid=&cmd=40" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=2&content=testSMSFromWapmail&reciever=13725269365&__randomNumber=1414574885099" --compressed -b $COOKIE
+    if [ "`curl -s "http://m.mail.10086.cn/ws12/w3/w3smsend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/sendsms.html?&sid=${SID}&vn=306&vid=&cmd=40" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=2&content=testSMSFromWapmail&reciever=13725269365&__randomNumber=1414574885099" --compressed -b $COOKIE | uriDecode.pl | grep 'eroerCode":0,'`" ] ; then
+        echo w3smsend smssend succeed.
+    fi
 }	# ----------  end of function sendSMS  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -139,7 +147,9 @@ sendSMS ()
 #-------------------------------------------------------------------------------
 sendMMS ()
 {
-   curl -s "http://m.mail.10086.cn/ws12/w3/w3mmssend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/mmssend.html?&sid=${SID}&vn=306&cmd=3&hasswitchtab=undefined" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=1&content=Content_mmsTestFromWapmail&destnumber=13725269365&title=mmsTestFromWapmail&__randomNumber=1414574358407" --compressed -b $COOKIE
+    if [ "`curl -s "http://m.mail.10086.cn/ws12/w3/w3mmssend" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/mmssend.html?&sid=${SID}&vn=306&cmd=3&hasswitchtab=undefined" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=1&content=Content_mmsTestFromWapmail&destnumber=13725269365&title=mmsTestFromWapmail&__randomNumber=1414574358407" --compressed -b $COOKIE | uriDecode.pl | grep 'eroerCode":0,' `" ] ; then
+        echo w3mmssend succeed.
+    fi
 }	# ----------  end of function sendMMS  ----------
 
 #---  FUNCTION  ----------------------------------------------------------------
@@ -150,34 +160,25 @@ sendMMS ()
 #-------------------------------------------------------------------------------
 logoutWap ()
 {
-    curl -s "http://m.mail.10086.cn/wp12/w3/logout" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/home.html?&sid=${SID}&vn=306" -H "Connection: keep-alive" --data "&sid=${SID}&vn=306&vid=&__randomNumber=1414566524022" --compressed -b $COOKIE
+    if [ "`curl -s "http://m.mail.10086.cn/wp12/w3/logout" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Linux; Android 4.4.4; MI 3 Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/home.html?&sid=${SID}&vn=306" -H "Connection: keep-alive" --data "&sid=${SID}&vn=306&vid=&__randomNumber=1414566524022" --compressed -b $COOKIE | grep 'eroerCode":1000,' `" ] ; then
+    echo logout succeed.
+    fi
 }	# ----------  end of function logoutWap  ----------
 
-
-#---  FUNCTION  ----------------------------------------------------------------
-#          NAME:  searchWapmail
-#   DESCRIPTION:  
-#    PARAMETERS:  
-#       RETURNS:  
-#-------------------------------------------------------------------------------
-searchWapmail ()
-{
-    curl -s "http://m.mail.10086.cn/wp12/w3/search" -H "Pragma: no-cache" -H "Origin: http://m.mail.10086.cn" -H "Accept-Encoding: gzip, deflate" -H "Accept-Language: en-US,en;q=0.8,zh-TW;q=0.6,zh;q=0.4,zh-CN;q=0.2" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -H "Accept: */*" -H "Cache-Control: no-cache" -H "Referer: http://m.mail.10086.cn/bv12/folder.html?&sid=${SID}&vn=306&vid=&into=8&cmd=40" -H "Connection: keep-alive" --data "&&sid=${SID}&vn=306&cmd=40&word=ex&__randomNumber=1414575136802" --compressed -b $COOKIE
-}	# ----------  end of function searchWapmail  ----------
-
 login_wap 
-if [ "$SMS_TRIGER" ] ; then
-    sendSMS
-fi
-if [ "$MMS_TRIGER" ]  ; then
-    sendMMS
-fi
-sendmail
-sendCard
-mailfolder
-searchWapmail
-logoutWap
+if [ "$SID" ] ; then
+    if [ "$SMS_TRIGER" ] ; then
+        sendSMS
+    fi
+    if [ "$MMS_TRIGER" ]  ; then
+        sendMMS
+    fi
+    sendmail
+    sendCard
+    mailfolder
+    logoutWap
 
-if [ -w "$COOKIE" ]  ; then
-    rm "$COOKIE"
+    if [ -w "$COOKIE" ]  ; then
+        rm "$COOKIE"
+    fi
 fi
