@@ -84,6 +84,7 @@ tcp_nodelay     on;
 #### 修改条目
 
 有建议修改以下项,  参考[这里](http://blog.chinaunix.net/uid-10915175-id-3589455.html)修改
+关于[tcp time wait](http://vincent.bernat.im/en/blog/2014-tcp-time-wait-state-linux.html)的简单描述，特别留意下net.ipv4.tcp_tw_reuse和net.ipv4.tcp_tw_recycle的使用
 
 ```
 net.ipv4.tcp_fin_timeout = 3
