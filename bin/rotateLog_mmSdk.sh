@@ -28,6 +28,7 @@ MAILUSER='moqingqiang@richinfo.cn'
 
 TFILE="/tmp/$(basename $0).$$.tmp"
 LOG_LOCATION=`df | perl -nae 'print "$F[-1]\n" if $F[-1] =~ /\/mmsdk/i'`
+exec 1>>${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>>$TFILE
 IP_ADDR=`/sbin/ip a | grep -oP "(?<=inet )\S+(?=\/.*bond)"`
 
 
@@ -138,7 +139,7 @@ count_visits ()
 #-------------------------------------------------------------------------------
 rm_weblog ()
 {
-    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -rv "{}" \; 
+    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -r "{}" \; 
 }	# ----------  end of function rm_weblog  ----------
 
 
@@ -166,23 +167,19 @@ tomcat_restart ()
 }	# ----------  end of function tomcat_restart  ----------
 
 
-action() {
-    count_visits
-    rm_old_tomcatlog 
-    gzip_old_tomcatlog 
-    rm_gamelog 
-    tomcat_restart 
-    empty_catalina 
-}
-
-action >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>>$TFILE
-rm_weblog >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>/dev/null
-rm_mmlog  >> ${LOG_LOCATION}/crontabLog/rotateLog_mmSdk.log 2>/dev/null
-rm_crontab_log >> $TFILE 2>/dev/null
+rm_crontab_log 
+count_visits
+rm_old_tomcatlog 
+gzip_old_tomcatlog 
+rm_gamelog 
+tomcat_restart 
+empty_catalina 
+rm_weblog 
+rm_mmlog 
 
 if [ -r "$TFILE" ] ; then
-    errorMail
-fi
-if [ -w "$TFILE" ] ; then
+    if [ "`cat $TFILE`" ] ; then
+        errorMail
+    fi
     rm $TFILE
 fi
