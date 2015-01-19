@@ -139,7 +139,7 @@ count_visits ()
 #-------------------------------------------------------------------------------
 rm_weblog ()
 {
-    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -r "{}" \; 
+    find ${LOG_LOCATION}/weblog_77*/*/* -type d -mtime +2 -exec rm -r "{}" \; 2>/dev/null
 }	# ----------  end of function rm_weblog  ----------
 
 
