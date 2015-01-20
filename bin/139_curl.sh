@@ -473,7 +473,7 @@ calenderTest
 together_getFetionLoginInfo
 setting_getArtifact
 mnote_updateNote
-#bmail_searchMessages
+bmail_searchMessages
 file_getFiles
 uec_index
 logout139
