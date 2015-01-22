@@ -150,10 +150,23 @@ checkFileStat ()
 }	# ----------  end of function checkFileStat  ----------
 
 
+
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  checkBondInterface
+#   DESCRIPTION:  check bonding interface
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+checkBondInterface ()
+{
+    perl -00ne 'print if /MII Status: (?!up)/m' /proc/net/bonding/bond0 >> $TFILE
+}	# ----------  end of function checkBondInterface  ----------
+
 checkFileStat
 checkLoadAverage; 
 checkSpace;
 checkTomcat;
+checkBondInterface;
 
 
 if [ -r "$TFILE" ] ; then
