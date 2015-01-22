@@ -30,7 +30,8 @@ AttributeError: 'NoneType' object has no attribute 'group'
 ```
 if re.search(r'RequestTime',requestTime):
     #interfaceName = actionUrl.split('=')[2]
-                    match = re.search(r'(?<=func=)\S+?(?=\&)',actionUrl)
+                    #match = re.search(r'(?<=func=)\S+?(?=\&)',actionUrl)
+                    match = re.search(r'(?<=func=)[^&]+',actionUrl)
                     if match:
                         interfaceName = match.group(0)
 ```
