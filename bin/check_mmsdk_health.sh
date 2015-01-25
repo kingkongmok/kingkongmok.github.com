@@ -170,8 +170,8 @@ checkBondInterface;
 
 
 if [ -r "$TFILE" ] ; then
-    errorMail
-fi
-if [ -w "$TFILE" ] ; then
+    if [ "`cat $TFILE`" ] ; then
+        errorMail
+    fi
     rm $TFILE
 fi
