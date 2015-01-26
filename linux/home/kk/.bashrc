@@ -102,4 +102,4 @@ alias cp='cp -i'
 #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
 #    exec startx
 #fi
-[[ $(tty) = "/dev/tty1" ]] && exec startx
+[[ ${DISPLAY} && $(tty) = "/dev/tty6" ]] && exec startx
