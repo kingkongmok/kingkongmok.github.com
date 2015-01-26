@@ -97,3 +97,9 @@ alias grep='grep --perl-regexp --color=auto'
 alias g='grep --perl-regexp --color=auto'
 alias mv='mv -i'
 alias cp='cp -i'
+
+#Starting X11 on console login
+#if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
+#    exec startx
+#fi
+[[ $(tty) = "/dev/tty1" ]] && exec startx
