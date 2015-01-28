@@ -4,9 +4,10 @@
 import os,sys,re
 import time
 logTime = time.strftime('%Y-%m-%d',time.localtime(time.time()-24*60*60))
-logName = ['/home/logs/smsmw/172.16.210.52/bmail/monitoring.log.'+logTime,'/home/logs/smsmw/172.16.210.52/bmail/monitoring.log.'+logTime,\
-		  '/home/logs/smsmw/172.16.210.52/bmail/monitoring.log.'+logTime]
+logName = ['/home/logs/smsmw/172.16.210.52/bmail/monitoring.log.'+logTime,'/home/logs/smsmw/172.16.210.53/bmail/monitoring.log.'+logTime,\
+		  '/home/logs/smsmw/172.16.210.54/bmail/monitoring.log.'+logTime]
 #logName = ['/home/logs/smsmw/172.16.210.52/bmail/monitoring.log.'+logTime]
+#logName = ['/tmp/bmail_monitoring.log']
 setDic = {'mbox:searchMessages':'总搜索接口'}
 infoDic = {'SearchContacts':'通信录接口','rm SearchMessages':'RM调用接口'}
 #psDic = {'callPSMainUserInfo':'查询邮箱属性','callPSPersonal':'查询个人信息','callPS1003':'查询配置表','callPS6201':'修改配置表',\
@@ -29,60 +30,60 @@ for log in logName:
 		for line in lines:
 			fields = line.split('|')
 			if len(fields) > 12:
-					requestTime = fields[8]
-					actionUrl = fields[11]
-					mergeInfo = fields[12]
-					mergeInfoName = fields[11]
-					mergeRunTime = fields[7]
-					profiles = fields[11]
-					profilesName = fields[12]
-					psRunTime = fields[7]
-					#处理常用setting接口统计
-					if re.search(r'RequestTime',requestTime):
-						#interfaceName = actionUrl.split('=')[2]
-						match = re.search(r'(?<=func=)[^&]+',actionUrl)
-						if match:
-								interfaceName = match.group(0)
-								time = int(requestTime.split('=')[1].strip())
-								if interfaceName in setDic.keys():
-									statisDic.setdefault(interfaceName,{'explain':setDic[interfaceName],\
-									'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
-									if time < 50 :
-										statisDic[interfaceName]['lt50'] += 1
-									elif time >50 and time <= 100:
-										statisDic[interfaceName]['lt100'] += 1
-									elif time >100 and time <= 150:
-										statisDic[interfaceName]['lt150'] += 1
-									elif time >150 and time <= 200:
-										statisDic[interfaceName]['lt200'] += 1
-									elif time >200 and time <= 300:
-										statisDic[interfaceName]['lt300'] += 1
-									elif time >300 and time <= 500:
-										statisDic[interfaceName]['lt500'] += 1
-									elif time >500 and time <= 1000:
-										statisDic[interfaceName]['lt1000'] += 1
-			#处理mergeInfo接口统计
-			elif re.search(r'RunTime',mergeRunTime):
-				interfaceName = mergeInfoName.split('=')[1]
-				time = int(mergeRunTime.split('=')[1].strip())
-				if interfaceName in infoDic.keys():
-					statisDic1.setdefault(interfaceName,{'explain':infoDic[interfaceName],\
-	                'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
-					if time < 50 :
-						statisDic1[interfaceName]['lt50'] += 1
-					elif time >50 and time <= 100:
-						statisDic1[interfaceName]['lt100'] += 1
-					elif time >100 and time <= 150:
-						statisDic1[interfaceName]['lt150'] += 1
-					elif time >150 and time <= 200:
-						statisDic1[interfaceName]['lt200'] += 1
-					elif time >200 and time <= 300:
-						statisDic1[interfaceName]['lt300'] += 1
-					elif time >300 and time <= 500:
-						statisDic1[interfaceName]['lt500'] += 1
-					elif time >500 and time <= 1000:
-						statisDic1[interfaceName]['lt1000'] += 1
-			#处理常用PS接口统计
+                            requestTime = fields[8]
+                            actionUrl = fields[11]
+                            mergeInfo = fields[12]
+                            mergeInfoName = fields[11]
+                            mergeRunTime = fields[7]
+                            profiles = fields[11]
+                            profilesName = fields[12]
+                            psRunTime = fields[7]
+                            #处理常用setting接口统计
+                            if re.search(r'RequestTime',requestTime):
+                                #interfaceName = actionUrl.split('=')[2]
+                                match = re.search(r'(?<=func=)[^&]+',actionUrl)
+                                if match:
+                                    interfaceName = match.group(0)
+                                    time = int(requestTime.split('=')[1].strip())
+                                    if interfaceName in setDic.keys():
+                                        statisDic.setdefault(interfaceName,{'explain':setDic[interfaceName],\
+                                        'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
+                                        if time < 50 :
+                                                statisDic[interfaceName]['lt50'] += 1
+                                        elif time >50 and time <= 100:
+                                                statisDic[interfaceName]['lt100'] += 1
+                                        elif time >100 and time <= 150:
+                                                statisDic[interfaceName]['lt150'] += 1
+                                        elif time >150 and time <= 200:
+                                                statisDic[interfaceName]['lt200'] += 1
+                                        elif time >200 and time <= 300:
+                                                statisDic[interfaceName]['lt300'] += 1
+                                        elif time >300 and time <= 500:
+                                                statisDic[interfaceName]['lt500'] += 1
+                                        elif time >500 and time <= 1000:
+                                                statisDic[interfaceName]['lt1000'] += 1
+                            #处理mergeInfo接口统计
+                            elif re.search(r'RunTime',mergeRunTime):
+                                interfaceName = mergeInfoName.split('=')[1]
+                                time = int(mergeRunTime.split('=')[1].strip())
+                                if interfaceName in infoDic.keys():
+                                    statisDic1.setdefault(interfaceName,{'explain':infoDic[interfaceName],\
+                    'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
+                                    if time < 50 :
+                                            statisDic1[interfaceName]['lt50'] += 1
+                                    elif time >50 and time <= 100:
+                                            statisDic1[interfaceName]['lt100'] += 1
+                                    elif time >100 and time <= 150:
+                                            statisDic1[interfaceName]['lt150'] += 1
+                                    elif time >150 and time <= 200:
+                                            statisDic1[interfaceName]['lt200'] += 1
+                                    elif time >200 and time <= 300:
+                                            statisDic1[interfaceName]['lt300'] += 1
+                                    elif time >300 and time <= 500:
+                                            statisDic1[interfaceName]['lt500'] += 1
+                                    elif time >500 and time <= 1000:
+                                            statisDic1[interfaceName]['lt1000'] += 1
+                            #处理常用PS接口统计
 #			elif re.search(r'ProfilesService',profiles):
 #				interfaceName = profilesName.split('=')[1]
 #				time = int(psRunTime.split('=')[1].strip())
