@@ -7,6 +7,7 @@ logTime = time.strftime('%Y-%m-%d',time.localtime(time.time()-24*60*60))
 logName = ['/home/logs/smsmw/172.16.210.52/diskmw/diskMonitor.log.'+logTime,'/home/logs/smsmw/172.16.210.53/diskmw/diskMonitor.log.'+logTime,\
 		  '/home/logs/smsmw/172.16.210.54/diskmw/diskMonitor.log.'+logTime]
 #logName = ['/home/logs/smsmw/172.16.210.52/diskmw/diskMonitor.log.'+logTime]
+#logName = ['/tmp/disk_monitoring.log']
 
 setDic = {'getWholeCatalog':'获取整个目录结构信息','getDisk':'查询文件和子目录信息','creatCatalog':'创建彩云子目录',\
 		  'copyContentCatalog':'复制内容目录','updateCatalogInfo':'用户修改彩云目录名称','moveContentCatalog':'移动内容目录',\
@@ -45,60 +46,60 @@ for log in logName:
 		for line in lines:
 			fields = line.split('|')
 			if len(fields) > 12:
-					requestTime = fields[7]
-					actionUrl = fields[11]
-					diskTime = fields[8]
-					mergeInfo = fields[12]
-					mergeInfoName = fields[11]
-					mergeRunTime = fields[7]
-					profiles = fields[11]
-					profilesName = fields[12]
-					psRunTime = fields[7]
-					#
-					if re.search(r'RunTime',requestTime):
-						interfaceName = actionUrl.split('=')[1]
-						time = int(requestTime.split('=')[1].strip())
-						if interfaceName in setDic.keys():
-							statisDic.setdefault(interfaceName,{'explain':setDic[interfaceName],\
-							'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
-							if time < 50 :
-								statisDic[interfaceName]['lt50'] += 1
-							elif time >50 and time <= 100:
-								statisDic[interfaceName]['lt100'] += 1
-							elif time >100 and time <= 150:
-								statisDic[interfaceName]['lt150'] += 1
-							elif time >150 and time <= 200:
-								statisDic[interfaceName]['lt200'] += 1
-							elif time >200 and time <= 300:
-								statisDic[interfaceName]['lt300'] += 1
-							elif time >300 and time <= 500:
-								statisDic[interfaceName]['lt500'] += 1
-							elif time >500 and time <= 1000:
-								statisDic[interfaceName]['lt1000'] += 1
-			#
-			elif re.search(r'RequestTime',diskTime):
-				#interfaceName = actionUrl.split('=')[2]
-				match = re.search(r'(?<=func=)[^&]+',actionUrl)
-				if match:
-						interfaceName = match.group(0)
-						time = int(diskTime.split('=')[1].strip())
-						if interfaceName in infoDic.keys():
-							statisDic1.setdefault(interfaceName,{'explain':infoDic[interfaceName],\
-							'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
-							if time < 50 :
-								statisDic1[interfaceName]['lt50'] += 1
-							elif time >50 and time <= 100:
-								statisDic1[interfaceName]['lt100'] += 1
-							elif time >100 and time <= 150:
-								statisDic1[interfaceName]['lt150'] += 1
-							elif time >150 and time <= 200:
-								statisDic1[interfaceName]['lt200'] += 1
-							elif time >200 and time <= 300:
-								statisDic1[interfaceName]['lt300'] += 1
-							elif time >300 and time <= 500:
-								statisDic1[interfaceName]['lt500'] += 1
-							elif time >500 and time <= 1000:
-								statisDic1[interfaceName]['lt1000'] += 1
+                            requestTime = fields[7]
+                            actionUrl = fields[11]
+                            diskTime = fields[8]
+                            mergeInfo = fields[12]
+                            mergeInfoName = fields[11]
+                            mergeRunTime = fields[7]
+                            profiles = fields[11]
+                            profilesName = fields[12]
+                            psRunTime = fields[7]
+                            #
+                            if re.search(r'RunTime',requestTime):
+                                interfaceName = actionUrl.split('=')[1]
+                                time = int(requestTime.split('=')[1].strip())
+                                if interfaceName in setDic.keys():
+                                    statisDic.setdefault(interfaceName,{'explain':setDic[interfaceName],\
+                                    'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
+                                    if time < 50 :
+                                        statisDic[interfaceName]['lt50'] += 1
+                                    elif time >50 and time <= 100:
+                                        statisDic[interfaceName]['lt100'] += 1
+                                    elif time >100 and time <= 150:
+                                        statisDic[interfaceName]['lt150'] += 1
+                                    elif time >150 and time <= 200:
+                                        statisDic[interfaceName]['lt200'] += 1
+                                    elif time >200 and time <= 300:
+                                        statisDic[interfaceName]['lt300'] += 1
+                                    elif time >300 and time <= 500:
+                                        statisDic[interfaceName]['lt500'] += 1
+                                    elif time >500 and time <= 1000:
+                                        statisDic[interfaceName]['lt1000'] += 1
+                                #
+                            elif re.search(r'RequestTime',diskTime):
+                                #interfaceName = actionUrl.split('=')[2]
+                                match = re.search(r'(?<=func=)[^&]+',actionUrl)
+                                if match:
+                                    interfaceName = match.group(0)
+                                    time = int(diskTime.split('=')[1].strip())
+                                    if interfaceName in infoDic.keys():
+                                        statisDic1.setdefault(interfaceName,{'explain':infoDic[interfaceName],\
+                                        'total':0,'lt50':0,'lt100':0,'lt150':0,'lt200':0,'lt300':0,'lt500':0,'lt1000':0})['total'] += 1
+                                        if time < 50 :
+                                                statisDic1[interfaceName]['lt50'] += 1
+                                        elif time >50 and time <= 100:
+                                                statisDic1[interfaceName]['lt100'] += 1
+                                        elif time >100 and time <= 150:
+                                                statisDic1[interfaceName]['lt150'] += 1
+                                        elif time >150 and time <= 200:
+                                                statisDic1[interfaceName]['lt200'] += 1
+                                        elif time >200 and time <= 300:
+                                                statisDic1[interfaceName]['lt300'] += 1
+                                        elif time >300 and time <= 500:
+                                                statisDic1[interfaceName]['lt500'] += 1
+                                        elif time >500 and time <= 1000:
+                                                statisDic1[interfaceName]['lt1000'] += 1
 	monitLog.close()
 
 #格式化输出
