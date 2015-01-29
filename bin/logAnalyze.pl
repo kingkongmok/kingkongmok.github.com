@@ -19,16 +19,15 @@
 #===============================================================================
 
 use strict;
-use warnings;
+#use warnings;
 use Data::Dumper;
-use DDP;
+use CGI::Pretty qw(:standard);
 
 my @logFiles = qw#
     /tmp/calendar_monitoring.log 
     /tmp/setting_monitoring.log
     #;
 
-my $tempFileDir = "/tmp/testfolder";
 
 my %interfaceField = (
         "RequestTime" =>  [ 
@@ -39,12 +38,28 @@ my %interfaceField = (
             8, '(?<=RequestTime=)(\d+)' ] ,
     );
 
+
+
+
+#-------------------------------------------------------------------------------
+#  Don't edit below
+#-------------------------------------------------------------------------------
+
 my @countTime = (50, 100, 150, 200, 300, 500, 1000, 120000);
-
-
+my ($dirname, $filename) = ($1,$3) if $0 =~ m/^(.*)(\\|\/)(.*)\.([0-9a-z]*)/;
+my($day, $month, $year) = (localtime)[3,4,5];
+my $nowdate =  $year+1900 . sprintf"%02d",$month+1 . sprintf"%02d",$day;
+my $NUM_DAYS = 7;
+my $time = time();
+my ($oldday,$oldmonth,$oldyear)=+(localtime (time() - (60*60*24*7)))[3,4,5];
+my $olddate =  $oldyear+1900 . sprintf"%02d",$oldmonth+1 . sprintf"%02d",$oldday;
+my $tempFileDir = "$dirname/logAnalyzeTemp";
+unless ( -d $tempFileDir ) {
+    mkdir $tempFileDir;
+}
 
 #===  FUNCTION  ================================================================
-#         NAME: dumpResult
+#         NAME: calcHashs
 #      PURPOSE: 
 #   PARAMETERS: ????
 #      RETURNS: ????
@@ -53,54 +68,63 @@ my @countTime = (50, 100, 150, 200, 300, 500, 1000, 120000);
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #==============================================================================
-sub dumpResult {
-    my	( $interfaceDescRef )	= @_;
-    my($day, $month, $year) = (localtime)[3,4,5];
-    $month = sprintf '%02d', $month+1;
-    $day   = sprintf '%02d', $day;
-    my $date =  $year+1900 . $month . $day;
+sub calcHashs {
+    my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
+    my @printArray = (["name", "desc", "pv", "LW", "CMP", "|", "resp", "LW", "CMP", "|", "0~50ms(%)", "LW", "CMP", "|", "50~100ms(%)", "LW", "CMP", "|", "100~150ms(%)", "LW", "CMP", "|", "150~200ms(%)", "LW", "CMP", "|", "200~300ms(%)", "LW", "CMP", "|", "300~500ms(%)", "LW", "CMP", "|", "500ms~1000ms(%)", "LW", "CMP", "|", ">1000ms(%)", "LW", "CMP"]);
     foreach my $intName (keys%$interfaceDescRef) {
         foreach my $modName ( keys${$interfaceDescRef}{$intName}{mod} ) {
-#            my @append ;
-#            foreach my $time ( @countTime ) {
-#                if ( ${$interfaceDescRef}{$intName}{mod}{$modName}{time}{$time} ){
-#                #print "$intName|$modName|${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}|${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}|$time|${$interfaceDescRef}{$intName}{mod}{$modName}{time}{$time}\n";
-#                push @append,"${$interfaceDescRef}{$intName}{mod}{$modName}{time}{$time}";
-#                }
-#                my @printArray = ( $intName,
-#                                $modName,
-#                                ${$interfaceField{$intName}[1]}{$modName}[1],
-#                                ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount},
-#                                ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime},
-##                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{$time}
-#                                @append
-#                );
-#                print join"\t",@printArray;
-#                print "\n"
-#            }
-                my @printArray = ( $intName,
-                                $modName,
-                                ${$interfaceField{$intName}[1]}{$modName}[1],
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"50%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"100%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"150%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"200%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"300%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"500%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"1000%"},
-                                ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"120000%"},
-
-                );
-                print join"\t",@printArray;
-                print "\n"
+            my @contentArray = ();
+            push @contentArray,$modName;
+            push @contentArray, ${$interfaceField{$intName}[1]}{$modName}[1];
+            # pv
+            push @contentArray, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount};
+            push @contentArray, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount};
+            my $contentTemp =  (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}*100:0;
+            if ($contentTemp == 100) {
+                push @contentArray, '==';
+            }
+            elsif ($contentTemp == 0) {
+                push @contentArray, 'n/a';
+            }
+            else {
+                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+            }
+            push @contentArray,"|";
+            # response
+            push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
+            push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
+            $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}*100:0;
+            if ($contentTemp == 100) {
+                push @contentArray, '==';
+            }
+            elsif ($contentTemp == 0) {
+                push @contentArray, 'n/a';
+            }
+            else {
+                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+            }
+            push @contentArray,"|";
+            # percents
+            foreach ( @countTime ) {
+                push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+                push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+                $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"})?${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}*100:0;
+                if ($contentTemp == 100) {
+                    push @contentArray, '==';
+                }
+                elsif ($contentTemp == 0) {
+                    push @contentArray, 'n/a';
+                }
+                else {
+                    push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+                }
+                push @contentArray,"|";
+            }
+            push @printArray,([@contentArray]);
         }
-#        print "$intName|count|${$interfaceDescRef}{$intName}{intCount}\n";
-#        print "$intName|averagetime|${$interfaceDescRef}{$intName}{intAverageTime}\n"
     }
-    return ;
-} ## --- end sub dumpResult
+    return \@printArray;
+} ## --- end sub calcHashs
 
 
 #===  FUNCTION  ================================================================
@@ -114,7 +138,6 @@ sub dumpResult {
 #     SEE ALSO: n/a
 #===============================================================================
 sub getLogArray {
-    #my $files = shift;
     my @lines;
     foreach my $file (@_) {
         open my $fh , "<", $file;
@@ -146,10 +169,10 @@ sub analyze {
             my $timeNumb = $interfaceField{$intName}[2] ;
             my $intNumb = $interfaceField{$intName}[0]; 
             if ($F[$intNumb] =~ /\b$intName\b/) {
-                $interfaceDesc{$intName}{intCount}++;
-                $interfaceDesc{$intName}{intTotalTime}+= $& if $F[$timeNumb] =~ /$timeRegex/;
-                if ( $interfaceDesc{$intName}{intTotalTime} && $interfaceDesc{$intName}{intCount}) {
-                    $interfaceDesc{$intName}{intAverageTime}=sprintf"%.2f",($interfaceDesc{$intName}{intTotalTime}/$interfaceDesc{$intName}{intCount});
+                $interfaceDesc{$intName}{stat}{intCount}++;
+                $interfaceDesc{$intName}{stat}{intTotalTime}+= $& if $F[$timeNumb] =~ /$timeRegex/;
+                if ( $interfaceDesc{$intName}{stat}{intTotalTime} && $interfaceDesc{$intName}{stat}{intCount}) {
+                    $interfaceDesc{$intName}{stat}{intAverageTime}=$interfaceDesc{$intName}{stat}{intTotalTime}/$interfaceDesc{$intName}{stat}{intCount};
                 foreach my $modName ( keys %{$interfaceField{$intName}[1]} ) {
                     my $modNumb = ${$interfaceField{$intName}[1]}{$modName}[0]; 
                     if ( $F[$modNumb] =~ /\b$modName\b/  ) {
@@ -165,7 +188,7 @@ sub analyze {
                             $interfaceDesc{$intName}{mod}{$modName}{count}{modCount}++;
                             foreach ( @countTime ) {
                                 if ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} && $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} ){
-                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}= sprintf"%.2f",($interfaceDesc{$intName}{mod}{$modName}{time}{$_} / $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} * 100);
+                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}= $interfaceDesc{$intName}{mod}{$modName}{time}{$_} / $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} * 100;
                                 }
                                 else {
                                     $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}="0";
@@ -175,7 +198,7 @@ sub analyze {
                                 }
                             }
                         }
-                    $interfaceDesc{$intName}{mod}{$modName}{count}{modAverageTime}=sprintf"%.2f",($interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}/$interfaceDesc{$intName}{mod}{$modName}{count}{modCount});
+                    $interfaceDesc{$intName}{mod}{$modName}{count}{modAverageTime}=$interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}/$interfaceDesc{$intName}{mod}{$modName}{count}{modCount};
                     }
                 }
             }
@@ -198,38 +221,73 @@ sub analyze {
 #===============================================================================
 sub mergeRusult {
     my	( $interfaceDescRef, $tempFileDir )	= @_;
-    chdir $tempFileDir;
-    &dumpResult($interfaceDescRef);
-    use File::Basename;
-    my $filename = $& if $0 =~ /\w+(?=\.)/;
-    foreach my $tempfile ( glob("$filename*") ) {
-        open my $fh , "< $tempfile";
-        #print <$fh>;
-        close $fh;
+    use Storable qw(store retrieve);
+    my $newhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$nowdate";
+    store($interfaceDescRef, "$newhashfile") or die "Can't store %interfaceDescRef in $newhashfile!\n";
+    my $interfaceDescRefOLD = ();
+    my $oldhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$olddate";
+    if ( -r $oldhashfile ) {
+        $interfaceDescRefOLD = retrieve("$oldhashfile"); 
     }
-    return ;
+    return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
 } ## --- end sub mergeRusult
 
 
 #===  FUNCTION  ================================================================
-#         NAME: printTable
-#      PURPOSE: print out table 
-#   PARAMETERS: @printArray
-#      RETURNS: print out ayalyze file and record file for counting increase 
+#         NAME: make_table_from_Aoa
+#      PURPOSE: 
+#   PARAMETERS: ????
+#      RETURNS: ????
 #  DESCRIPTION: ????
 #       THROWS: no exceptions
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub printTable {
-    my	( $par1 )	= @_;
-    return ;
-} ## --- end sub printTable
+####################
+#
+#   make_table_from_Aoa
+#
+#   parameters
+#   1)  $use_th : if this is true, the first line of the passed array will be used
+#                   as an HTML header.
+#   2)  $transpose : swap axis of array
+#   3)  $check_array_size : if true, make sure each array has same # of elements
+#   4)  $border : size of border to put around table.
+#   5)  @l_array : holding tank for passed array.
+#
+####################
+sub make_table_from_AoA {
+    my $use_th = shift;
+    my $transpose = shift;
+    my $check_array_size = shift;
+    my $border = shift;
+    my @l_array = @_;
+    my $fileoutName = "$tempFileDir/$filename" . "_data_" . "$nowdate" . ".html";
+    open my $fileout, "> $fileoutName" ;
+    #Make sure arrays are the same size. if not, die.
+    if ($check_array_size){
+        my $size =scalar(@{$l_array[0]});
+        map  {die "funky arrays : First array is $size, found one of ".scalar(@{$_}) if scalar(@{$_}) != $size}@l_array;
+    }
+    if ($transpose) {
+        my @tary;
+        map {my $x=0;
+            map {push @{$tary[$x]}, $_;$x++;} @$_;
+        } @l_array;
+        @l_array=@tary;
+    }
+    print $fileout h3("$filename" . "分析");
+    print $fileout table( {-border=>$border},
+        $use_th?th([@{shift @l_array}]):undef,
+        map{Tr(map{td($_)}@$_)}@l_array
+    );
+    print $fileout h5("pv是只该模块访问的数量，resp是指相应毫秒数，LW是上周数据，CMP是对比上周的增长率");
+}
 
 
-my $linesRef = getLogArray(@logFiles);
+my $linesRef = &getLogArray(@logFiles);
 my %interfaceDesc = %{&analyze($linesRef)};
-print Dumper \%interfaceDesc;
-my @printArray = mergeRusult(\%interfaceDesc, $tempFileDir);
-
+#print Dumper \%interfaceDesc;
+my @printArray = &mergeRusult(\%interfaceDesc, $tempFileDir);
+&make_table_from_AoA(0,1,1,1,@printArray);
 
