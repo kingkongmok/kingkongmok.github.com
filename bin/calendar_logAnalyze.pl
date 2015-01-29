@@ -25,46 +25,72 @@ use CGI::Pretty qw(:standard);
 
 my @logFiles = qw#
     /tmp/calendar_monitoring.log 
-    /tmp/setting_monitoring.log
     #;
 
 
 my %interfaceField = (
         "RequestTime" =>  [ 
             8, {
-                "unified:getUnifiedPositionContent"    =>  [ 11, "同一位置" ],
-                "user:getInfoCenter"    =>  [ 11, "信息中心" ],
-                "user:getMailNotify"    =>  [ 11, "邮件到达提醒" ],
-                "user:getMainData"    =>  [ 11, "邮箱属性" ],
-                "umc:getArtifact"     =>  [ 11, "用管中心凭证" ],
-                "bill:getTypeList"    =>  [ 11, "账单信息" ],
-                "user:setUserConfigInfo"    =>  [ 11, "用户配置信息" ],
-                "info:getInfoSet"    =>  [ 11, "欢迎页信息" ],
+                "calendar:addLabel"    =>  [ 11, "添加日历" ],
+                "calendar:updateLabel"    =>  [ 11, "更新日历" ],
+                "calendar:deleteLabel"    =>  [ 11, "删除日历" ],
+                "calendar:getLabelById"    =>  [ 11, "根据日历ID查询日历" ],
+                "calendar:subscribeLabel"     =>  [ 11, "订阅公共日历" ],
+                "calendar:cancelSubscribeLabel"    =>  [ 11, "取消订阅公共日历" ],
+                "calendar:getLabels"    =>  [ 11, "查询用户日历列表" ],
+                "calendar:listTopLabels"    =>  [ 11, "查询前十个公共日历" ],
+                "calendar:getCalendarListView"    =>  [ 11, "查询活动列表视图" ],
+                "calendar:getCalendarView"    =>  [ 11, "查询用户活动列表" ],
+                "calendar:getCalendar"    =>  [ 11, "查询用户某个活动" ],
+                "calendar:addCalendar"    =>  [ 11, "添加活动" ],
+                "calendar:updateCalendar"    =>  [ 11, "更新活动" ],
+                "calendar:deleteCalendar"    =>  [ 11, "取消活动" ],
+                "api:getCalendarListView"    =>  [ 11, "运营-查询活动列表视图" ],
+                "api:addCalendar"    =>  [ 11, "运营-添加活动" ],
+                "api:updateCalendar"    =>  [ 11, "运营-更新活动" ],
+                "api:getCalendar"    =>  [ 11, "运营-查询某个活动" ],
+                "api:deleteCalendar"    =>  [ 11, "运营-删除活动" ],
+                "api:subscribeLabel"    =>  [ 11, "运营-订阅公共日历" ],
+                "calendar:searchPublicLabel"    =>  [ 11, "搜索公共日历" ],
+                "calendar:getPublishedLabelByOper"    =>  [ 11, "得到公共日历详情" ],
+                "api:publishLabelByOper"    =>  [ 11, "发布公共日历" ],
+                "api:updatePublishedLabelByOper"    =>  [ 11, "修改公共日历" ],
+                "calendar:copyCalendar"    =>  [ 11, "复制活动" ],
+                "calendar:getCalendarList"    =>  [ 11, "酷版时间轴接口" ],
+                "calendar:setCalendarRemind"    =>  [ 11, "设置自定义提醒" ],
+                "calendar:shareCalendar"    =>  [ 11, "活动分享接口" ],
+                "calendar:getCalendarsByLabel"    =>  [ 11, "通过labelID获取所有活动详情" ],
+                "calendar:getHuangliData"    =>  [ 11, "黄历查询接口" ],
+                "calendar:getMessageCount"    =>  [ 11, "未读消息数量" ],
+                "calendar:getMessageList"    =>  [ 11, "得到消息列表" ],
+                "calendar:getMessageById"    =>  [ 11, "单个消息详情" ],
+                "calendar:delMessage"    =>  [ 11, "删除消息" ],
+                "calendar:getCalendarView"    =>  [ 11, "查询用户活动视图" ],
             }, 
             8, '(?<=RequestTime=)(\d+)' ] ,
 
-        "mergeInfo" =>  [ 
-            12, {
-                "mealInfo"    =>  [ 11, "套餐信息" ],
-                "mailInfo"    =>  [ 11, "邮箱属性" ],
-                "whoAddMe"    =>  [ 11, "谁加了我" ],
-                "dynamicInfo"    =>  [ 11, "动态信息" ],
-                "checkinInfo"    =>  [ 11, "签到信息" ],
-                "personalInfo"    =>  [ 11, "个人信息" ],
-                "weatherInfo"    =>  [ 11, "天气预报" ],
-                "birthdayInfo"    =>  [ 11, "好友生日提醒" ],
-            }, 
-            7, '(?<=RunTime=)(\d+)' ] ,
-
-        "ProfilesService" =>  [ 
-            11, {
-                "callPSMainUserInfo"    =>  [ 12, "查询邮箱属性" ],
-                "callPSPersonal"    =>  [ 12, "查询个人信息" ],
-                "callPS1003"    =>  [ 12, "查询配置表" ],
-                "callPS6201"    =>  [ 12, "修改配置表" ],
-            }, 
-            7, '(?<=RunTime=)(\d+)' ] ,
-    );
+#        "mergeInfo" =>  [ 
+#            12, {
+#                "mealInfo"    =>  [ 11, "套餐信息" ],
+#                "mailInfo"    =>  [ 11, "邮箱属性" ],
+#                "whoAddMe"    =>  [ 11, "谁加了我" ],
+#                "dynamicInfo"    =>  [ 11, "动态信息" ],
+#                "checkinInfo"    =>  [ 11, "签到信息" ],
+#                "personalInfo"    =>  [ 11, "个人信息" ],
+#                "weatherInfo"    =>  [ 11, "天气预报" ],
+#                "birthdayInfo"    =>  [ 11, "好友生日提醒" ],
+#            }, 
+#            7, '(?<=RunTime=)(\d+)' ] ,
+#
+#        "ProfilesService" =>  [ 
+#            11, {
+#                "callPSMainUserInfo"    =>  [ 12, "查询邮箱属性" ],
+#                "callPSPersonal"    =>  [ 12, "查询个人信息" ],
+#                "callPS1003"    =>  [ 12, "查询配置表" ],
+#                "callPS6201"    =>  [ 12, "修改配置表" ],
+#            }, 
+#            7, '(?<=RunTime=)(\d+)' ] ,
+   );
 
 
 #-------------------------------------------------------------------------------
@@ -98,8 +124,42 @@ sub calcHashs {
     my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
     my @printArray ;
     foreach my $intName (keys%$interfaceDescRef) {
-        push @printArray,("$intName");
-    push @printArray, (["名称", "Description", "访问", "LWeek", "CMP", "", "响应", "LWeek", "CMP", "", "0~50ms", "LWeek", "CMP", "", "50~100ms", "LWeek", "CMP", "", "100~150ms", "LWeek", "CMP", "", "150~200ms", "LWeek", "CMP", "", "200~300ms", "LWeek", "CMP", "", "300~500ms", "LWeek", "CMP", "", "500ms~1s", "LWeek", "CMP", "", ">1000ms", "LWeek", "CMP"]) ;
+        push @printArray, (["名称", "Description", "访问", "LWeek", "CMP", "", "响应", "LWeek", "CMP", "", "0~50ms", "LWeek", "CMP", "", "50~100ms", "LWeek", "CMP", "", "100~150ms", "LWeek", "CMP", "", "150~200ms", "LWeek", "CMP", "", "200~300ms", "LWeek", "CMP", "", "300~500ms", "LWeek", "CMP", "", "500ms~1s", "LWeek", "CMP", "", ">1000ms", "LWeek", "CMP"]) ;
+        my $contentTemp =  (${$interfaceDescRef}{$intName}{stat}{intCount} && ${$interfaceDescRefOLD}{$intName}{stat}{intCount})?${$interfaceDescRef}{$intName}{stat}{intCount}/${$interfaceDescRefOLD}{$intName}{stat}{intCount}*100:0;
+            my $tempComp ;
+            if ($contentTemp == 100) {
+                $tempComp = '==';
+            }
+            elsif ($contentTemp == 0) {
+                $tempComp = 'n/a';
+            }
+            else {
+                $tempComp = sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+                if ( abs($contentTemp-100) > 30 ) {
+                    $tempComp =~ s/$tempComp/<font color=red>$&<\/font>/;
+                }
+                if ( abs($contentTemp-100) > 50 ) {
+                    $tempComp =~ s/$tempComp/<b>$&<\/b>/;
+                }
+            }
+            my $contentTemp2 =  (${$interfaceDescRef}{$intName}{stat}{intAverageTime} && ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime})?${$interfaceDescRef}{$intName}{stat}{intAverageTime}/${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}*100:0;
+            my $tempComp2 ;
+            if ($contentTemp2 == 100) {
+                $tempComp2 = '==';
+            }
+            elsif ($contentTemp2 == 0) {
+                $tempComp2 = 'n/a';
+            }
+            else {
+                $tempComp2 = sprintf("%s",$contentTemp2>100?"+":"-") . sprintf("%.1f",abs($contentTemp2-100)) . "%";
+                if ( abs($contentTemp2-100) > 30 ) {
+                    $tempComp2 =~ s/$tempComp2/<font color=red>$&<\/font>/;
+                }
+                if ( abs($contentTemp2-100) > 50 ) {
+                    $tempComp2 =~ s/$tempComp2/<b>$&<\/b>/;
+                }
+            }
+        push @printArray,(["<b>模块$intName</b>", "all", ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount}, $tempComp, "", sprintf("%.2f",${$interfaceDescRef}{$intName}{stat}{intAverageTime}), sprintf("%.2f",${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}), "$tempComp2"]);
         foreach my $modName ( keys${$interfaceDescRef}{$intName}{mod} ) {
             my @contentArray = ();
             push @contentArray,$modName;
@@ -107,7 +167,7 @@ sub calcHashs {
             # pv
             push @contentArray, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount};
             push @contentArray, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount};
-            my $contentTemp =  (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}*100:0;
+            $contentTemp =  (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}*100:0;
             if ($contentTemp == 100) {
                 push @contentArray, '==';
             }
