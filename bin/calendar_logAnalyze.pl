@@ -110,6 +110,58 @@ unless ( -d $tempFileDir ) {
     mkdir $tempFileDir;
 }
 
+
+#===  FUNCTION  ================================================================
+#         NAME: getElemDetail
+#      PURPOSE: get @Element = ( suffix, interfaceValue, oldinterfaceValue, new/old )
+#   PARAMETERS: 
+#      RETURNS: @ElemDetail
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub getElemDetail {
+    my	( $suffix, $newVal, $oldVal, $wishUp, )	= @_;
+    my ($prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark);
+    my @ElemDetail ;
+    if ( $suffix ) {
+        $newVal .= "$suffix";
+        $oldVal .= "$suffix";
+        $newVal = sprintf"%.2f",$newVal;
+        $oldVal = sprintf"%.2f",$oldVal;
+    }
+    if ( $newVal && $oldVal ) {
+        $thirdElem = $newVal/$oldVal*100;
+        if ( $thirdElem == 100 ) {
+            $thirdElem = "==";
+        } elsif ($thirdElem == 0) {
+            $thirdElem = "n/a"
+        } else {
+            if ( $thirdElem > 100 ) {
+                $prefix = '+';
+                $color = $wishUp?"green":"red";
+            } elsif ($thirdElem>0 && $thirdElem<100){
+                $prefix = '-';
+                $color = $wishUp?"red":"green";
+            }
+            $thirdElem = sprintf"%.2f",abs($thirdElem-100) ;
+            if ( $thirdElem > 50) {
+                $fontprefix = "<b>";
+                $fontsuffix = "<\/b>";
+            } elsif ($thirdElem > 30 ) {
+                $fontprefix = "<font color='$color'>";
+                $fontsuffix = "<\/font>";
+            }
+        }
+    } else {
+        $thirdElem = "0";
+    }
+    $thirdElem = "$fontprefix" . "$prefix" . "$thirdElem" . "$suffix" . "$percentMark" . "$fontsuffix";
+    return ($newVal, $oldVal, $thirdElem);
+} ## --- end sub getElemDetail
+
+
 #===  FUNCTION  ================================================================
 #         NAME: calcHashs
 #      PURPOSE: 
@@ -125,102 +177,112 @@ sub calcHashs {
     my @printArray ;
     foreach my $intName (keys%$interfaceDescRef) {
         push @printArray, (["名称", "Description", "访问", "LWeek", "CMP", "", "响应", "LWeek", "CMP", "", "0~50ms", "LWeek", "CMP", "", "50~100ms", "LWeek", "CMP", "", "100~150ms", "LWeek", "CMP", "", "150~200ms", "LWeek", "CMP", "", "200~300ms", "LWeek", "CMP", "", "300~500ms", "LWeek", "CMP", "", "500ms~1s", "LWeek", "CMP", "", ">1000ms", "LWeek", "CMP"]) ;
-        my $contentTemp =  (${$interfaceDescRef}{$intName}{stat}{intCount} && ${$interfaceDescRefOLD}{$intName}{stat}{intCount})?${$interfaceDescRef}{$intName}{stat}{intCount}/${$interfaceDescRefOLD}{$intName}{stat}{intCount}*100:0;
-            my $tempComp ;
-            if ($contentTemp == 100) {
-                $tempComp = '==';
-            }
-            elsif ($contentTemp == 0) {
-                $tempComp = 'n/a';
-            }
-            else {
-                $tempComp = sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
-                if ( abs($contentTemp-100) > 30 ) {
-                    $tempComp =~ s/$tempComp/<font color=red>$&<\/font>/;
-                }
-                if ( abs($contentTemp-100) > 50 ) {
-                    $tempComp =~ s/$tempComp/<b>$&<\/b>/;
-                }
-            }
-            my $contentTemp2 =  (${$interfaceDescRef}{$intName}{stat}{intAverageTime} && ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime})?${$interfaceDescRef}{$intName}{stat}{intAverageTime}/${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}*100:0;
-            my $tempComp2 ;
-            if ($contentTemp2 == 100) {
-                $tempComp2 = '==';
-            }
-            elsif ($contentTemp2 == 0) {
-                $tempComp2 = 'n/a';
-            }
-            else {
-                $tempComp2 = sprintf("%s",$contentTemp2>100?"+":"-") . sprintf("%.1f",abs($contentTemp2-100)) . "%";
-                if ( abs($contentTemp2-100) > 30 ) {
-                    $tempComp2 =~ s/$tempComp2/<font color=red>$&<\/font>/;
-                }
-                if ( abs($contentTemp2-100) > 50 ) {
-                    $tempComp2 =~ s/$tempComp2/<b>$&<\/b>/;
-                }
-            }
-        push @printArray,(["<b>模块$intName</b>", "all", ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount}, $tempComp, "", sprintf("%.2f",${$interfaceDescRef}{$intName}{stat}{intAverageTime}), sprintf("%.2f",${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}), "$tempComp2"]);
+#        my $contentTemp =  (${$interfaceDescRef}{$intName}{stat}{intCount} && ${$interfaceDescRefOLD}{$intName}{stat}{intCount})?${$interfaceDescRef}{$intName}{stat}{intCount}/${$interfaceDescRefOLD}{$intName}{stat}{intCount}*100:0;
+#            my $tempComp ;
+#            if ($contentTemp == 100) {
+#                $tempComp = '==';
+#            }
+#            elsif ($contentTemp == 0) {
+#                $tempComp = 'n/a';
+#            }
+#            else {
+#                $tempComp = sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+#                if ( abs($contentTemp-100) > 30 ) {
+#                    $tempComp =~ s/$tempComp/<font color=red>$&<\/font>/;
+#                }
+#                if ( abs($contentTemp-100) > 50 ) {
+#                    $tempComp =~ s/$tempComp/<b>$&<\/b>/;
+#                }
+#            }
+#            my $contentTemp2 =  (${$interfaceDescRef}{$intName}{stat}{intAverageTime} && ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime})?${$interfaceDescRef}{$intName}{stat}{intAverageTime}/${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}*100:0;
+#            my $tempComp2 ;
+#            if ($contentTemp2 == 100) {
+#                $tempComp2 = '==';
+#            }
+#            elsif ($contentTemp2 == 0) {
+#                $tempComp2 = 'n/a';
+#            }
+#            else {
+#                $tempComp2 = sprintf("%s",$contentTemp2>100?"+":"-") . sprintf("%.1f",abs($contentTemp2-100)) . "%";
+#                if ( abs($contentTemp2-100) > 30 ) {
+#                    $tempComp2 =~ s/$tempComp2/<font color=red>$&<\/font>/;
+#                }
+#                if ( abs($contentTemp2-100) > 50 ) {
+#                    $tempComp2 =~ s/$tempComp2/<b>$&<\/b>/;
+#                }
+#            }
+#        push @printArray,(["<b>模块$intName</b>", "all", ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount}, $tempComp, "", sprintf("%.2f",${$interfaceDescRef}{$intName}{stat}{intAverageTime}), sprintf("%.2f",${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime}), "$tempComp2"]);
+        my @line = ( "<b>模块$intName</b>", "all" );
+        push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "1" );
+        push @line, "";
+        push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "0" );
+        push @printArray,[ @line ] ;
         foreach my $modName ( keys${$interfaceDescRef}{$intName}{mod} ) {
-            my @contentArray = ();
-            push @contentArray,$modName;
-            push @contentArray, ${$interfaceField{$intName}[1]}{$modName}[1];
-            # pv
-            push @contentArray, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount};
-            push @contentArray, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount};
-            $contentTemp =  (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}*100:0;
-            if ($contentTemp == 100) {
-                push @contentArray, '==';
-            }
-            elsif ($contentTemp == 0) {
-                push @contentArray, 'n/a';
-            }
-            else {
-                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
-            }
-            push @contentArray,"";
-            # response
-            push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
-            push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
-            $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}*100:0;
-            if ($contentTemp == 100) {
-                push @contentArray, '==';
-            }
-            elsif ($contentTemp == 0) {
-                push @contentArray, 'n/a';
-            }
-            else {
-                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
-            }
-            push @contentArray,"";
-            # percents
-            foreach ( @countTime ) {
-                #push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
-                if ( ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"} ) {
-                    push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
-                } else {
-                    push @contentArray, "0";
-                }
-
-                
-                #push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
-                if ( ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"} ) {
-                    push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
-                } else {
-                    push @contentArray, "0";
-                }
-                $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"})?${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}*100:0;
-                if ($contentTemp == 100) {
-                    push @contentArray, '==';
-                }
-                elsif ($contentTemp == 0) {
-                    push @contentArray, 'n/a';
-                }
-                else {
-                    push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
-                }
-                push @contentArray,"";
-            }
-            push @printArray,([@contentArray]);
+            @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
+            push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "1" );
+            push @line, "";
+            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, "1" ); 
+            push @printArray,([@line]);
+#            my @contentArray = ();
+#            push @contentArray,$modName;
+#            push @contentArray, ${$interfaceField{$intName}[1]}{$modName}[1];
+#            # pv
+#            push @contentArray, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount};
+#            push @contentArray, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount};
+#            my $contentTemp =  (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}*100:0;
+#            if ($contentTemp == 100) {
+#                push @contentArray, '==';
+#            }
+#            elsif ($contentTemp == 0) {
+#                push @contentArray, 'n/a';
+#            }
+#            else {
+#                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+#            }
+#            push @contentArray,"";
+#            # response
+#            push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
+#            push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}) . "ms";
+#            $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime})?${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}*100:0;
+#            if ($contentTemp == 100) {
+#                push @contentArray, '==';
+#            }
+#            elsif ($contentTemp == 0) {
+#                push @contentArray, 'n/a';
+#            }
+#            else {
+#                push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+#            }
+#            push @contentArray,"";
+#            # percents
+#            foreach ( @countTime ) {
+#                #push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+#                if ( ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"} ) {
+#                    push @contentArray, sprintf ("%.2f",${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+#                } else {
+#                    push @contentArray, "0";
+#                }
+#
+#                
+#                #push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+#                if ( ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"} ) {
+#                    push @contentArray, sprintf ("%.2f",${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}) . "%";
+#                } else {
+#                    push @contentArray, "0";
+#                }
+#                $contentTemp = (${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"} && ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"})?${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}/${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}*100:0;
+#                if ($contentTemp == 100) {
+#                    push @contentArray, '==';
+#                }
+#                elsif ($contentTemp == 0) {
+#                    push @contentArray, 'n/a';
+#                }
+#                else {
+#                    push @contentArray, sprintf("%s",$contentTemp>100?"+":"-") . sprintf("%.1f",abs($contentTemp-100)) . "%";
+#                }
+#                push @contentArray,"";
+#            }
+#            push @printArray,([@contentArray]);
         }
     }
     return \@printArray;
