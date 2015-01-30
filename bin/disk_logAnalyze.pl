@@ -23,10 +23,15 @@ use strict;
 use Data::Dumper;
 use CGI::Pretty qw(:standard);
 
-my @logFiles = qw#
-    /tmp/disk_monitoring.log
-    #;
+chomp(my $nowdate = `date +%F -d -1day`);
+chomp(my $olddate = `date +%F -d -8day`);
 
+my @logFiles = (
+        "/home/logs/smsmw/172.16.210.52/diskmw/diskMonitor.log.$nowdate", 
+        "/home/logs/smsmw/172.16.210.53/diskmw/diskMonitor.log.$nowdate", 
+        "/home/logs/smsmw/172.16.210.54/diskmw/diskMonitor.log.$nowdate"
+    );
+#my @logFiles = ("/tmp/disk_monitoring.log");
 
 my %interfaceField = (
         "RequestTime" =>  [ 
@@ -103,12 +108,6 @@ my %interfaceField = (
 #-------------------------------------------------------------------------------
 my @countTime = (50, 100, 150, 200, 300, 500, 1000, 120000);
 my ($dirname, $filename) = ($1,$3) if $0 =~ m/^(.*)(\\|\/)(.*)\.([0-9a-z]*)/;
-my($day, $month, $year) = (localtime)[3,4,5];
-my $nowdate =  $year+1900 . sprintf"%02d",$month+1 . sprintf"%02d",$day;
-my $NUM_DAYS = 7;
-my $time = time();
-my ($oldday,$oldmonth,$oldyear)=+(localtime (time() - (60*60*24*7)))[3,4,5];
-my $olddate =  $oldyear+1900 . sprintf"%02d",$oldmonth+1 . sprintf"%02d",$oldday;
 my $tempFileDir = "$dirname/logAnalyzeTemp";
 unless ( -d $tempFileDir ) {
     mkdir $tempFileDir;

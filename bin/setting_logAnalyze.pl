@@ -26,7 +26,7 @@ use CGI::Pretty qw(:standard);
 chomp(my $nowdate = `date +%F -d -1day`);
 chomp(my $olddate = `date +%F -d -8day`);
 
-my @logFiles = ( 
+my @logFiles = (
         "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
         "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
         "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
