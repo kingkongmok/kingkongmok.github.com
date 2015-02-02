@@ -19,19 +19,18 @@
 #===============================================================================
 
 use strict;
-#use warnings;
+use warnings;
 use Data::Dumper;
-use CGI::Pretty qw(:standard);
 
 chomp(my $nowdate = `date +%F -d -1day`);
 chomp(my $olddate = `date +%F -d -8day`);
 
-my @logFiles = (
-        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
-        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
-        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
-    );
-#my @logFiles = ("/tmp/setting_monitoring.log");
+#my @logFiles = (
+#        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
+#        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
+#        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
+#    );
+my @logFiles = ("/tmp/setting_monitoring.log");
 
 my %interfaceField = (
         "RequestTime" =>  [ 
@@ -94,7 +93,7 @@ unless ( -d $tempFileDir ) {
 #===============================================================================
 sub getElemDetail {
     my	( $suffix, $newVal, $oldVal, $wishUp, $average)	= @_;
-    my ($percent, $prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark);
+    my ($percent, $prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark) = ("")x7;
     my @ElemDetail ;
     # if both are exist
     if ( $newVal && $oldVal ) {
@@ -183,7 +182,7 @@ sub calcHashs {
         push @line, "";
         push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "0" );
         push @printArray,[ @line ] ;
-        foreach my $modName ( keys${$interfaceDescRef}{$intName}{mod} ) {
+        foreach my $modName ( keys %{${$interfaceDescRef}{$intName}{mod}} ) {
             @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
             push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "1" );
             push @line, "";
@@ -215,6 +214,10 @@ sub getLogArray {
         open my $fh , "<", $file;
         push @lines, <$fh>;
         close $fh ;
+    }
+    unless (@lines) {
+        die "there's NO content in log." ;
+        exit 23 ;
     }
     return \@lines;
 } ## --- end sub getLogArray
@@ -281,7 +284,7 @@ sub analyze {
 
 
 #===  FUNCTION  ================================================================
-#         NAME: mergeRusult
+#         NAME: mergeResult
 #      PURPOSE: get @printArray
 #   PARAMETERS: %interfaceDesc, $tempFileDir, 
 #      RETURNS: ????
@@ -290,7 +293,7 @@ sub analyze {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub mergeRusult {
+sub mergeResult {
     my	( $interfaceDescRef, $tempFileDir )	= @_;
     use Storable qw(store retrieve);
     my $newhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$nowdate";
@@ -304,7 +307,7 @@ sub mergeRusult {
     open my $txtFH, "> $txtfileoutName" ;
     print $txtFH Dumper $interfaceDescRef ;
     return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
-} ## --- end sub mergeRusult
+} ## --- end sub mergeResult
 
 
 #===  FUNCTION  ================================================================
@@ -331,6 +334,8 @@ sub mergeRusult {
 #
 ####################
 sub make_table_from_AoA {
+    use CGI;
+    my $cgi = new CGI;
     my $use_th = shift;
     my $transpose = shift;
     my $check_array_size = shift;
@@ -350,16 +355,16 @@ sub make_table_from_AoA {
         } @l_array;
         @l_array=@tary;
     }
-    print $htmlFH h3("$filename" . "分析");
-    print $htmlFH table( {-border=>$border},
-        $use_th?th([@{shift @l_array}]):undef,
-        map{Tr(map{td($_)}@$_)}@l_array
+    print $htmlFH $cgi->h3("$filename" . "分析");
+    print $htmlFH $cgi->table( {-border=>$border},
+        $use_th?$cgi->th([@{shift @l_array}]):undef,
+        map{$cgi->Tr(map{$cgi->td($_)}@$_)}@l_array
     );
-    print $htmlFH h5("LWeek是上周数据，CMP是对比上周的增长率");
+    print $htmlFH $cgi->h5("LWeek是上周数据，CMP是对比上周的增长率");
 }
 
 
 my $linesRef = &getLogArray(@logFiles);
 my %interfaceDesc = %{&analyze($linesRef)};
-my @printArray = &mergeRusult(\%interfaceDesc, $tempFileDir);
+my @printArray = &mergeResult(\%interfaceDesc, $tempFileDir);
 &make_table_from_AoA(0,1,1,1,@printArray);
