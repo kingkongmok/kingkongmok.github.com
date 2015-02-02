@@ -19,9 +19,8 @@
 #===============================================================================
 
 use strict;
-#use warnings;
+use warnings;
 use Data::Dumper;
-use CGI::Pretty qw(:standard);
 
 chomp(my $nowdate = `date +%F -d -1day`);
 chomp(my $olddate = `date +%F -d -8day`);
@@ -73,29 +72,7 @@ my %interfaceField = (
                 "calendar:getCalendarView"    =>  [ 11, "查询用户活动视图" ],
             }, 
             8, '(?<=RequestTime=)(\d+)' ] ,
-
-#        "mergeInfo" =>  [ 
-#            12, {
-#                "mealInfo"    =>  [ 11, "套餐信息" ],
-#                "mailInfo"    =>  [ 11, "邮箱属性" ],
-#                "whoAddMe"    =>  [ 11, "谁加了我" ],
-#                "dynamicInfo"    =>  [ 11, "动态信息" ],
-#                "checkinInfo"    =>  [ 11, "签到信息" ],
-#                "personalInfo"    =>  [ 11, "个人信息" ],
-#                "weatherInfo"    =>  [ 11, "天气预报" ],
-#                "birthdayInfo"    =>  [ 11, "好友生日提醒" ],
-#            }, 
-#            7, '(?<=RunTime=)(\d+)' ] ,
-#
-#        "ProfilesService" =>  [ 
-#            11, {
-#                "callPSMainUserInfo"    =>  [ 12, "查询邮箱属性" ],
-#                "callPSPersonal"    =>  [ 12, "查询个人信息" ],
-#                "callPS1003"    =>  [ 12, "查询配置表" ],
-#                "callPS6201"    =>  [ 12, "修改配置表" ],
-#            }, 
-#            7, '(?<=RunTime=)(\d+)' ] ,
-   );
+    );
 
 
 #-------------------------------------------------------------------------------
@@ -121,7 +98,7 @@ unless ( -d $tempFileDir ) {
 #===============================================================================
 sub getElemDetail {
     my	( $suffix, $newVal, $oldVal, $wishUp, $average)	= @_;
-    my ($percent, $prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark);
+    my ($percent, $prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark) = ("")x7;
     my @ElemDetail ;
     # if both are exist
     if ( $newVal && $oldVal ) {
@@ -204,13 +181,13 @@ sub calcHashs {
     my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
     my @printArray ;
     foreach my $intName (keys%$interfaceDescRef) {
-        push @printArray, (["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
-        my @line = ( "<b>模块$intName</b>", "all" );
+        push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
+        my @line = ( "整个接口信息", "all" );
         push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "1" );
         push @line, "";
         push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "0" );
         push @printArray,[ @line ] ;
-        foreach my $modName ( keys${$interfaceDescRef}{$intName}{mod} ) {
+        foreach my $modName ( keys %{${$interfaceDescRef}{$intName}{mod}} ) {
             @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
             push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "1" );
             push @line, "";
@@ -242,6 +219,10 @@ sub getLogArray {
         open my $fh , "<", $file;
         push @lines, <$fh>;
         close $fh ;
+    }
+    unless (@lines) {
+        die "there's NO content in log." ;
+        exit 23 ;
     }
     return \@lines;
 } ## --- end sub getLogArray
@@ -308,7 +289,7 @@ sub analyze {
 
 
 #===  FUNCTION  ================================================================
-#         NAME: mergeRusult
+#         NAME: mergeResult
 #      PURPOSE: get @printArray
 #   PARAMETERS: %interfaceDesc, $tempFileDir, 
 #      RETURNS: ????
@@ -317,7 +298,7 @@ sub analyze {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub mergeRusult {
+sub mergeResult {
     my	( $interfaceDescRef, $tempFileDir )	= @_;
     use Storable qw(store retrieve);
     my $newhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$nowdate";
@@ -331,7 +312,7 @@ sub mergeRusult {
     open my $txtFH, "> $txtfileoutName" ;
     print $txtFH Dumper $interfaceDescRef ;
     return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
-} ## --- end sub mergeRusult
+} ## --- end sub mergeResult
 
 
 #===  FUNCTION  ================================================================
@@ -358,6 +339,8 @@ sub mergeRusult {
 #
 ####################
 sub make_table_from_AoA {
+    use CGI;
+    my $cgi = new CGI;
     my $use_th = shift;
     my $transpose = shift;
     my $check_array_size = shift;
@@ -377,16 +360,16 @@ sub make_table_from_AoA {
         } @l_array;
         @l_array=@tary;
     }
-    print $htmlFH h3("$filename" . "分析");
-    print $htmlFH table( {-border=>$border},
-        $use_th?th([@{shift @l_array}]):undef,
-        map{Tr(map{td($_)}@$_)}@l_array
+    print $htmlFH $cgi->h3("$filename" . "分析");
+    print $htmlFH $cgi->table( {-border=>$border},
+        $use_th?$cgi->th([@{shift @l_array}]):undef,
+        map{$cgi->Tr(map{$cgi->td($_)}@$_)}@l_array
     );
-    print $htmlFH h5("LWeek是上周数据，CMP是对比上周的增长率");
+    print $htmlFH $cgi->h5("LWeek是上周数据，CMP是对比上周的增长率");
 }
 
 
 my $linesRef = &getLogArray(@logFiles);
 my %interfaceDesc = %{&analyze($linesRef)};
-my @printArray = &mergeRusult(\%interfaceDesc, $tempFileDir);
+my @printArray = &mergeResult(\%interfaceDesc, $tempFileDir);
 &make_table_from_AoA(0,1,1,1,@printArray);
