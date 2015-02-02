@@ -25,12 +25,12 @@ use Data::Dumper;
 chomp(my $nowdate = `date +%F -d -1day`);
 chomp(my $olddate = `date +%F -d -8day`);
 
-#my @logFiles = (
-#        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
-#        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
-#        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
-#    );
-my @logFiles = ("/tmp/setting_monitoring.log");
+my @logFiles = (
+        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
+        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
+        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
+    );
+#my @logFiles = ("/tmp/setting_monitoring.log");
 
 my %interfaceField = (
         "RequestTime" =>  [ 
@@ -176,8 +176,8 @@ sub calcHashs {
     my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
     my @printArray ;
     foreach my $intName (keys%$interfaceDescRef) {
-        push @printArray, (["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
-        my @line = ( "<b>模块$intName</b>", "all" );
+        push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
+        my @line = ( "整个接口信息", "all" );
         push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "1" );
         push @line, "";
         push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "0" );
