@@ -105,21 +105,45 @@ sub getElemDetail {
         # if both are not zero
         if ( $newVal != 0 && $oldVal != 0 ) {
             $percent = $newVal/$oldVal*100;
-            if ( $percent > 100 ) {
-                $prefix = '+';
-                if ( $wishUp ) {
-                    $color = $wishUp?"lightgreen":"red";
+            if ( $average ) {
+                
+                if ( $percent > 100 ) {
+                    $prefix = '+';
+                    if ( $newVal > $average ) {
+                        $color = "green" ;
+                    } else {
+                        $color = "red" ;
+                    }
                 }
-                if ( $average ) {
-                    $color = $newVal>$average?"lightgreen":"red";
+                elsif ($percent>0 && $percent<100){
+                    $prefix = '-';
+                    if ( $newVal > $average ) {
+                        $color = "red" ;
+                    } else {
+                        $color = "green" ;
+                    }
                 }
-            } elsif ($percent>0 && $percent<100){
-                $prefix = '-';
-                if ( $wishUp ) {
-                    $color = $wishUp?"red":"green";
+            }
+            elsif ( $wishUp ) {
+                if ( $wishUp eq "yes" ) {
+                    if ( $percent > 100 ) {
+                        $prefix = '+';
+                        $color = "green";
+                    }
+                    elsif ($percent>0 && $percent<100) {
+                        $prefix = '-';
+                        $color = "red";
+                    }
                 }
-                if ( $average ) {
-                    $color = $newVal>$average?"red":"green";
+                if ( $wishUp eq "no" ) {
+                    if ( $percent > 100 ) {
+                        $prefix = '-';
+                        $color = "red";
+                    }
+                    elsif ($percent>0 && $percent<100) {
+                        $prefix = '+';
+                        $color = "green";
+                    }
                 }
             }
             $percent = sprintf"%.1f",abs($percent-100) ;
@@ -183,15 +207,15 @@ sub calcHashs {
     foreach my $intName (keys%$interfaceDescRef) {
         push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
         my @line = ( "整个接口信息", "all" );
-        push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "1" );
+        push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "yes" , "");
         push @line, "";
-        push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "0" );
+        push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "no" , "");
         push @printArray,[ @line ] ;
         foreach my $modName ( keys %{${$interfaceDescRef}{$intName}{mod}} ) {
             @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
-            push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "1" );
+            push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "yes", "" );
             push @line, "";
-            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, "1" ); 
+            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, "yes" , ""); 
             foreach ( @countTime ) {
             push @line, "";
             push @line, &getElemDetail("%", ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}, "" , ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime});
@@ -373,3 +397,5 @@ my $linesRef = &getLogArray(@logFiles);
 my %interfaceDesc = %{&analyze($linesRef)};
 my @printArray = &mergeResult(\%interfaceDesc, $tempFileDir);
 &make_table_from_AoA(0,1,1,1,@printArray);
+$filename =~ s/_.*//;
+`/home/operator/moqingqiang/bin/sendUserMail.sh -m $filename -d yesterday`
