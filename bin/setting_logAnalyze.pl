@@ -20,6 +20,7 @@
 
 use strict;
 use warnings;
+use lib '/home/operator/moqingqiang/bin';
 use LogAnalyze;
 chomp(my $nowdate = `date +%F -d -1day`);
 

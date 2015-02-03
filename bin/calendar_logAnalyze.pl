@@ -20,6 +20,7 @@
 
 use strict;
 use warnings;
+use lib '/home/operator/moqingqiang/bin';
 use LogAnalyze;
 chomp(my $nowdate = `date +%F -d -1day`);
 
@@ -27,18 +28,18 @@ chomp(my $nowdate = `date +%F -d -1day`);
 #-------------------------------------------------------------------------------
 #  需要分析的日志地址
 #-------------------------------------------------------------------------------
-#my @logFiles = (
-#        "/home/logs/smsmw/172.16.210.52/calendar/monitor.log.$nowdate",
-#        "/home/logs/smsmw/172.16.210.53/calendar/monitor.log.$nowdate",
-#        "/home/logs/smsmw/172.16.210.54/calendar/monitor.log.$nowdate",
-#    );
-my @logFiles = ("/tmp/calendar_monitoring.log");
+my @logFiles = (
+        "/home/logs/smsmw/172.16.210.52/calendar/monitor.log.$nowdate",
+        "/home/logs/smsmw/172.16.210.53/calendar/monitor.log.$nowdate",
+        "/home/logs/smsmw/172.16.210.54/calendar/monitor.log.$nowdate",
+    );
+#my @logFiles = ("/tmp/calendar_monitoring.log");
 
 
 #-------------------------------------------------------------------------------
 # 需要和几天前的日志进行对比 
 #-------------------------------------------------------------------------------
-my $datesCompareWith = 3 ;
+my $datesCompareWith = 1 ;
 
 
 #-------------------------------------------------------------------------------

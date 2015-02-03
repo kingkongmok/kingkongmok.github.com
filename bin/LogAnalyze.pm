@@ -73,11 +73,11 @@ sub getElemDetail {
                 }
                 if ( $wishUp eq "no" ) {
                     if ( $percent > 100 ) {
-                        $prefix = '-';
+                        $prefix = '+';
                         $color = "red";
                     }
                     elsif ($percent>0 && $percent<100) {
-                        $prefix = '+';
+                        $prefix = '-';
                         $color = "green";
                     }
                 }
@@ -338,7 +338,7 @@ sub make_table_from_AoA {
         $use_th?$cgi->th([@{shift @l_array}]):undef,
         map{$cgi->Tr(map{$cgi->td($_)}@$_)}@l_array
     );
-    print $htmlFH $cgi->h5("Last是<b>$datesCompareWith日前</b>数据，CMP是对比<b>$datesCompareWith日前</b>的增长率");
+    print $htmlFH $cgi->h5("Last是昨天算起<font color=red>$datesCompareWith日</font>前的数据，CMP是昨天对比<font color=red>$datesCompareWith日</font>前的增长率");
 }
 
 
