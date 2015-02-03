@@ -1,9 +1,9 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: logAnalyze.pl
+#         FILE: setting_logAnalyze.pl
 #
-#        USAGE: ./logAnalyze.pl  
+#        USAGE: ./setting_logAnalyze.pl  
 #
 #  DESCRIPTION: 
 #
@@ -20,19 +20,31 @@
 
 use strict;
 use warnings;
-use Data::Dumper;
-
+use LogAnalyze;
 chomp(my $nowdate = `date +%F -d -1day`);
-chomp(my $olddate = `date +%F -d -8day`);
 
-my @logFiles = (
-        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
-        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
-        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
-    );
+
+#-------------------------------------------------------------------------------
+#  需要分析的日志地址
+#-------------------------------------------------------------------------------
+#my @logFiles = (
+#        "/home/logs/smsmw/172.16.200.2/setting/monitoring.log.$nowdate",
+#        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
+#        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
+#    );
 #my @logFiles = ("/tmp/setting_monitoring.log");
-#my @logFiles = ("/home/operator/moqingqiang/bin/setting_monitoring.log");
+my @logFiles = ("/home/operator/moqingqiang/bin/setting_monitoring.log");
 
+
+#-------------------------------------------------------------------------------
+# 需要和几天前的日志进行对比 
+#-------------------------------------------------------------------------------
+my $datesCompareWith = 1 ;
+
+
+#-------------------------------------------------------------------------------
+#  接口和模块的定义
+#-------------------------------------------------------------------------------
 my %interfaceField = (
         "RequestTime" =>  [ 
             8, {
@@ -72,326 +84,27 @@ my %interfaceField = (
 
 
 #-------------------------------------------------------------------------------
-#  Don't edit below
+#  各个时间点(ms)的百分比数
 #-------------------------------------------------------------------------------
 my @countTime = (50, 100, 150, 200, 300, 500, 1000, 120000);
+
+
+#-------------------------------------------------------------------------------
+#  Don't edit below
+#-------------------------------------------------------------------------------
+my $olddateCommand = 'date +%F -d ' . int(-1 - $datesCompareWith) . 'day' ;
+chomp(my $olddate = `$olddateCommand`);
 my ($dirname, $filename) = ($1,$3) if $0 =~ m/^(.*)(\\|\/)(.*)\.([0-9a-z]*)/;
 my $tempFileDir = "$dirname/logAnalyzeTemp";
 unless ( -d $tempFileDir ) {
     mkdir $tempFileDir;
 }
-
-
-#===  FUNCTION  ================================================================
-#         NAME: getElemDetail
-#      PURPOSE: get @Element = ( suffix, interfaceValue, oldinterfaceValue, new/old )
-#   PARAMETERS: 
-#      RETURNS: @ElemDetail
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub getElemDetail {
-    my	( $suffix, $newVal, $oldVal, $wishUp, $average)	= @_;
-    my ($percent, $prefix, $thirdElem, $color, $fontsuffix, $fontprefix, $percentMark) = ("")x7;
-    my @ElemDetail ;
-    # if both are exist
-    if ( $newVal && $oldVal ) {
-        # if both are not zero
-        if ( $newVal != 0 && $oldVal != 0 ) {
-            $percent = $newVal/$oldVal*100;
-            if ( $average ) {
-                
-                if ( $percent > 100 ) {
-                    $prefix = '+';
-                    if ( $newVal > $average ) {
-                        $color = "green" ;
-                    } else {
-                        $color = "red" ;
-                    }
-                }
-                elsif ($percent>0 && $percent<100){
-                    $prefix = '-';
-                    if ( $newVal > $average ) {
-                        $color = "red" ;
-                    } else {
-                        $color = "green" ;
-                    }
-                }
-            }
-            elsif ( $wishUp ) {
-                if ( $wishUp eq "yes" ) {
-                    if ( $percent > 100 ) {
-                        $prefix = '+';
-                        $color = "green";
-                    }
-                    elsif ($percent>0 && $percent<100) {
-                        $prefix = '-';
-                        $color = "red";
-                    }
-                }
-                if ( $wishUp eq "no" ) {
-                    if ( $percent > 100 ) {
-                        $prefix = '-';
-                        $color = "red";
-                    }
-                    elsif ($percent>0 && $percent<100) {
-                        $prefix = '+';
-                        $color = "green";
-                    }
-                }
-            }
-            $percent = sprintf"%.1f",abs($percent-100) ;
-            if ( $percent > 40) {
-                $fontprefix .= "<b>";
-                $fontsuffix .= "<\/b>";
-            } 
-            if ($percent > 20 ) {
-                $fontprefix .= "<font color='$color'>";
-                $fontsuffix .= "<\/font>";
-            }
-            if ( $suffix ) {
-                $newVal = sprintf"%.1f",$newVal;
-                $oldVal = sprintf"%.1f",$oldVal;
-            }
-            $newVal .= $suffix ;
-            $oldVal .= $suffix ;
-            $thirdElem = "$fontprefix" . "$prefix" . "$percent" . "%" . "$fontsuffix";
-            if ($percent == 0) {
-                $thirdElem = "=="
-            } 
-        } 
-        # if there is a zeror
-        else {
-            if ( $suffix ) {
-                    $newVal = sprintf"%.1f",$newVal if $newVal;
-                    $oldVal = sprintf"%.1f",$oldVal if $oldVal;
-                }
-            $newVal .= $suffix if $newVal;
-            $oldVal .= $suffix if $oldVal;
-            $thirdElem = "n/a";
-        }
-    } 
-    # if there is a undef.
-    else {
-        if ( $suffix ) {
-                $newVal = sprintf"%.1f",$newVal if $newVal;
-                $oldVal = sprintf"%.1f",$oldVal if $oldVal;
-            }
-        $newVal .= $suffix if $newVal;
-        $oldVal .= $suffix if $oldVal;
-        $thirdElem = "n/a";
-    }
-    return ($newVal, $oldVal, $thirdElem);
-} ## --- end sub getElemDetail
-
-
-#===  FUNCTION  ================================================================
-#         NAME: calcHashs
-#      PURPOSE: 
-#   PARAMETERS: ????
-#      RETURNS: ????
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#==============================================================================
-sub calcHashs {
-    my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
-    my @printArray ;
-    foreach my $intName (keys%$interfaceDescRef) {
-        push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
-        my @line = ( "整个接口信息", "all" );
-        push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "yes" , "");
-        push @line, "";
-        push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "no" , "");
-        push @printArray,[ @line ] ;
-        foreach my $modName ( keys %{${$interfaceDescRef}{$intName}{mod}} ) {
-            @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
-            push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "yes", "" );
-            push @line, "";
-            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, "yes" , ""); 
-            foreach ( @countTime ) {
-            push @line, "";
-            push @line, &getElemDetail("%", ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}, "" , ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime});
-            }
-            push @printArray,([@line]);
-        }
-    }
-    return \@printArray;
-} ## --- end sub calcHashs
-
-
-#===  FUNCTION  ================================================================
-#         NAME: getLogArray
-#      PURPOSE: input filename and get log's @lines
-#   PARAMETERS: $filenames
-#      RETURNS: @lines
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub getLogArray {
-    my @lines;
-    foreach my $file (@_) {
-        open my $fh , "<", $file;
-        push @lines, <$fh>;
-        close $fh ;
-    }
-    unless (@lines) {
-        die "there's NO content in log." ;
-        exit 23 ;
-    }
-    return \@lines;
-} ## --- end sub getLogArray
-
-
-#===  FUNCTION  ================================================================
-#         NAME: analyze
-#      PURPOSE: input @lines and get @printArray
-#   PARAMETERS: log's content @lines
-#      RETURNS: \%interfaceDesc
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub analyze {
-    my %interfaceDesc;
-    my $linesRef = shift;
-    for my $line ( @{$linesRef} ) {
-        foreach my $intName ( keys %interfaceField ) {
-            my @F = split /\|/,$line;
-            my $timeRegex = $interfaceField{$intName}[3] ;
-            my $timeNumb = $interfaceField{$intName}[2] ;
-            my $intNumb = $interfaceField{$intName}[0]; 
-            if ($F[$intNumb] =~ /$intName/) {
-                $interfaceDesc{$intName}{stat}{intCount}++;
-                $interfaceDesc{$intName}{stat}{intTotalTime}+= $& if $F[$timeNumb] =~ /$timeRegex/;
-                if ( $interfaceDesc{$intName}{stat}{intTotalTime} && $interfaceDesc{$intName}{stat}{intCount}) {
-                    $interfaceDesc{$intName}{stat}{intAverageTime}=$interfaceDesc{$intName}{stat}{intTotalTime}/$interfaceDesc{$intName}{stat}{intCount};
-                foreach my $modName ( keys %{$interfaceField{$intName}[1]} ) {
-                    my $modNumb = ${$interfaceField{$intName}[1]}{$modName}[0]; 
-                    if ( $F[$modNumb] =~ /$modName/  ) {
-                        if ($F[$timeNumb] =~ /$timeRegex/){
-                            my $requesttime = $&;
-                            foreach ( @countTime ) {
-                                if ($requesttime < $_) {
-                                    $interfaceDesc{$intName}{mod}{$modName}{time}{$_}++;
-                                    last;
-                                }
-                            }
-                            $interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}+=$requesttime;
-                            $interfaceDesc{$intName}{mod}{$modName}{count}{modCount}++;
-                            foreach ( @countTime ) {
-                                if ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} && $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} ){
-                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}= $interfaceDesc{$intName}{mod}{$modName}{time}{$_} / $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} * 100;
-                                }
-                                else {
-                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}="0";
-                                }
-                                unless ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} ){
-                                    $interfaceDesc{$intName}{mod}{$modName}{time}{$_}=0
-                                }
-                            }
-                        }
-                    $interfaceDesc{$intName}{mod}{$modName}{count}{modAverageTime}=$interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}/$interfaceDesc{$intName}{mod}{$modName}{count}{modCount};
-                    }
-                }
-            }
-            }
-        }
-    }
-    return \%interfaceDesc;
-} ## --- end sub analyze
-
-
-#===  FUNCTION  ================================================================
-#         NAME: mergeResult
-#      PURPOSE: get @printArray
-#   PARAMETERS: %interfaceDesc, $tempFileDir, 
-#      RETURNS: ????
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub mergeResult {
-    my	( $interfaceDescRef, $tempFileDir )	= @_;
-    use Storable qw(store retrieve);
-    my $newhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$nowdate";
-    store($interfaceDescRef, "$newhashfile") or die "Can't store %interfaceDescRef in $newhashfile!\n";
-    my $interfaceDescRefOLD = ();
-    my $oldhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$olddate";
-    if ( -r $oldhashfile ) {
-        $interfaceDescRefOLD = retrieve("$oldhashfile"); 
-    }
-    my $txtfileoutName = "$tempFileDir/$filename" . "_data_" . "$nowdate" . ".txt";
-    open my $txtFH, "> $txtfileoutName" ;
-    print $txtFH Dumper $interfaceDescRef ;
-    return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
-} ## --- end sub mergeResult
-
-
-#===  FUNCTION  ================================================================
-#         NAME: make_table_from_Aoa
-#      PURPOSE: 
-#   PARAMETERS: ????
-#      RETURNS: ????
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-####################
-#
-#   make_table_from_Aoa
-#
-#   parameters
-#   1)  $use_th : if this is true, the first line of the passed array will be used
-#                   as an HTML header.
-#   2)  $transpose : swap axis of array
-#   3)  $check_array_size : if true, make sure each array has same # of elements
-#   4)  $border : size of border to put around table.
-#   5)  @l_array : holding tank for passed array.
-#
-####################
-sub make_table_from_AoA {
-    use CGI;
-    my $cgi = new CGI;
-    my $use_th = shift;
-    my $transpose = shift;
-    my $check_array_size = shift;
-    my $border = shift;
-    my @l_array = @_;
-    my $htmlfileoutName = "$tempFileDir/$filename" . "_data_" . "$nowdate" . ".html";
-    open my $htmlFH, "> $htmlfileoutName" ;
-    #Make sure arrays are the same size. if not, die.
-    if ($check_array_size){
-        my $size =scalar(@{$l_array[0]});
-        map  {die "funky arrays : First array is $size, found one of ".scalar(@{$_}) if scalar(@{$_}) != $size}@l_array;
-    }
-    if ($transpose) {
-        my @tary;
-        map {my $x=0;
-            map {push @{$tary[$x]}, $_;$x++;} @$_;
-        } @l_array;
-        @l_array=@tary;
-    }
-    print $htmlFH $cgi->h3("$filename" . "分析");
-    print $htmlFH $cgi->table( {-border=>$border},
-        $use_th?$cgi->th([@{shift @l_array}]):undef,
-        map{$cgi->Tr(map{$cgi->td($_)}@$_)}@l_array
-    );
-    print $htmlFH $cgi->h5("LWeek是上周数据，CMP是对比上周的增长率");
-}
-
-
 my $linesRef = &getLogArray(@logFiles);
-my %interfaceDesc = %{&analyze($linesRef)};
-my @printArray = &mergeResult(\%interfaceDesc, $tempFileDir);
-&make_table_from_AoA(0,1,1,1,@printArray);
+my %interfaceDesc = %{&analyze($linesRef, \%interfaceField, \@countTime)};
+my ($interfaceDescRef, $interfaceDescRefOLD) = &mergeResult(\%interfaceDesc, $tempFileDir, $filename, $nowdate, $olddate);
+my @printArray = &calcHashs($interfaceDescRef, $interfaceDescRefOLD, \%interfaceField, \@countTime);
+&make_table_from_AoA(0,1,1,1,\@printArray, $tempFileDir, $filename, $nowdate, $datesCompareWith);
 $filename =~ s/_.*//;
-`/home/operator/moqingqiang/bin/sendUserMail.sh -m $filename -d yesterday`
+if ( -e "/home/operator/moqingqiang/bin/sendUserMail.sh" ) {
+    `/home/operator/moqingqiang/bin/sendUserMail.sh -m $filename -d yesterday -c $datesCompareWith`
+}

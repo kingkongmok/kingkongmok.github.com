@@ -20,7 +20,6 @@
 
 use strict;
 use warnings;
-use Data::Dumper;
 
 
 #===  FUNCTION  ================================================================
@@ -139,10 +138,12 @@ sub getElemDetail {
 #     SEE ALSO: n/a
 #==============================================================================
 sub calcHashs {
-    my	( $interfaceDescRef , $interfaceDescRefOLD)	= @_;
+    my	( $interfaceDescRef , $interfaceDescRefOLD, $interfaceFieldREF, $countTimeREF)	= @_;
+    my @countTime = @{$countTimeREF};
+    my %interfaceField = %{$interfaceFieldREF};
     my @printArray ;
     foreach my $intName (keys%$interfaceDescRef) {
-        push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "LWeek", "CMP", "", "<b>响应</b>", "LWeek", "CMP", "", "<b>0~50ms</b>", "LWeek", "CMP", "", "<b>50~100ms</b>", "LWeek", "CMP", "", "<b>100~150ms</b>", "LWeek", "CMP", "", "<b>150~200ms</b>", "LWeek", "CMP", "", "<b>200~300ms</b>", "LWeek", "CMP", "", "<b>300~500ms</b>", "LWeek", "CMP", "", "<b>500ms~1s</b>", "LWeek", "CMP", "", "<b>>1000ms</b>", "LWeek", "CMP"]) ;
+        push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "Last", "CMP", "", "<b>响应</b>", "Last", "CMP", "", "<b>0~50ms</b>", "Last", "CMP", "", "<b>50~100ms</b>", "Last", "CMP", "", "<b>100~150ms</b>", "Last", "CMP", "", "<b>150~200ms</b>", "Last", "CMP", "", "<b>200~300ms</b>", "Last", "CMP", "", "<b>300~500ms</b>", "Last", "CMP", "", "<b>500ms~1s</b>", "Last", "CMP", "", "<b>>1000ms</b>", "Last", "CMP"]) ;
         my @line = ( "整个接口信息", "all" );
         push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "yes" , "");
         push @line, "";
@@ -202,6 +203,10 @@ sub getLogArray {
 sub analyze {
     my %interfaceDesc;
     my $linesRef = shift;
+    my $interfaceFieldREF  = shift ;
+    my $countTimeREF  = shift ;
+    my @countTime = @{$countTimeREF};
+    my %interfaceField = %{$interfaceFieldREF};
     for my $line ( @{$linesRef} ) {
         foreach my $intName ( keys %interfaceField ) {
             my @F = split /\|/,$line;
@@ -260,7 +265,8 @@ sub analyze {
 #     SEE ALSO: n/a
 #===============================================================================
 sub mergeResult {
-    my	( $interfaceDescRef, $tempFileDir )	= @_;
+    use Data::Dumper;
+    my	( $interfaceDescRef, $tempFileDir, $filename, $nowdate, $olddate)	= @_;
     use Storable qw(store retrieve);
     my $newhashfile = "$tempFileDir/$filename" . "_hashdump_" . "$nowdate";
     store($interfaceDescRef, "$newhashfile") or die "Can't store %interfaceDescRef in $newhashfile!\n";
@@ -272,7 +278,8 @@ sub mergeResult {
     my $txtfileoutName = "$tempFileDir/$filename" . "_data_" . "$nowdate" . ".txt";
     open my $txtFH, "> $txtfileoutName" ;
     print $txtFH Dumper $interfaceDescRef ;
-    return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
+    return ($interfaceDescRef, $interfaceDescRefOLD);
+    #return &calcHashs($interfaceDescRef, $interfaceDescRefOLD);
 } ## --- end sub mergeResult
 
 
@@ -306,7 +313,12 @@ sub make_table_from_AoA {
     my $transpose = shift;
     my $check_array_size = shift;
     my $border = shift;
-    my @l_array = @_;
+    my $l_arrayREF = shift;
+    my @l_array = @{$l_arrayREF};
+    my $tempFileDir = shift;
+    my $filename = shift;
+    my $nowdate = shift;
+    my $datesCompareWith = shift;
     my $htmlfileoutName = "$tempFileDir/$filename" . "_data_" . "$nowdate" . ".html";
     open my $htmlFH, "> $htmlfileoutName" ;
     #Make sure arrays are the same size. if not, die.
@@ -326,7 +338,7 @@ sub make_table_from_AoA {
         $use_th?$cgi->th([@{shift @l_array}]):undef,
         map{$cgi->Tr(map{$cgi->td($_)}@$_)}@l_array
     );
-    print $htmlFH $cgi->h5("LWeek是上周数据，CMP是对比上周的增长率");
+    print $htmlFH $cgi->h5("Last是<b>$datesCompareWith日前</b>数据，CMP是对比<b>$datesCompareWith日前</b>的增长率");
 }
 
 
