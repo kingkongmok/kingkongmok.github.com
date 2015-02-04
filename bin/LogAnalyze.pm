@@ -175,19 +175,19 @@ sub calcHashs {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub getLogArray {
-    my @lines;
-    foreach my $file (@_) {
-        open my $fh , "<", $file;
-        push @lines, <$fh>;
-        close $fh ;
-    }
-    unless (@lines) {
-        die "there's NO content in log." ;
-        exit 23 ;
-    }
-    return \@lines;
-} ## --- end sub getLogArray
+#sub getLogArray {
+#    my @lines;
+#    foreach my $file (@_) {
+#        open my $fh , "<", $file;
+#        push @lines, <$fh>;
+#        close $fh ;
+#    }
+#    unless (@lines) {
+#        die "there's NO content in log." ;
+#        exit 23 ;
+#    }
+#    return \@lines;
+#} ## --- end sub getLogArray
 
 
 #===  FUNCTION  ================================================================
@@ -202,54 +202,60 @@ sub getLogArray {
 #===============================================================================
 sub analyze {
     my %interfaceDesc;
-    my $linesRef = shift;
+    my $logFilesRef = shift ;
     my $interfaceFieldREF  = shift ;
     my $countTimeREF  = shift ;
     my @countTime = @{$countTimeREF};
     my %interfaceField = %{$interfaceFieldREF};
-    for my $line ( @{$linesRef} ) {
-        foreach my $intName ( keys %interfaceField ) {
-            my @F = split /\|/,$line;
-            my $timeRegex = $interfaceField{$intName}[3] ;
-            my $timeNumb = $interfaceField{$intName}[2] ;
-            my $intNumb = $interfaceField{$intName}[0]; 
-            if ($F[$intNumb] =~ /$intName/) {
-                $interfaceDesc{$intName}{stat}{intCount}++;
-                $interfaceDesc{$intName}{stat}{intTotalTime}+= $& if $F[$timeNumb] =~ /$timeRegex/;
-                if ( $interfaceDesc{$intName}{stat}{intTotalTime} && $interfaceDesc{$intName}{stat}{intCount}) {
-                    $interfaceDesc{$intName}{stat}{intAverageTime}=$interfaceDesc{$intName}{stat}{intTotalTime}/$interfaceDesc{$intName}{stat}{intCount};
-                foreach my $modName ( keys %{$interfaceField{$intName}[1]} ) {
-                    my $modNumb = ${$interfaceField{$intName}[1]}{$modName}[0]; 
-                    if ( $F[$modNumb] =~ /$modName/  ) {
-                        if ($F[$timeNumb] =~ /$timeRegex/){
-                            my $requesttime = $&;
-                            foreach ( @countTime ) {
-                                if ($requesttime < $_) {
-                                    $interfaceDesc{$intName}{mod}{$modName}{time}{$_}++;
-                                    last;
+    my @logFiles = @{$logFilesRef} ; 
+    foreach my $log ( @logFiles ) {
+        open my $logfh , "< $log";
+        while ( <$logfh> ) {
+            foreach my $intName ( keys %interfaceField ) {
+                my @F = split /\|/,$_;
+                my $timeRegex = $interfaceField{$intName}[3] ;
+                my $timeNumb = $interfaceField{$intName}[2] ;
+                my $intNumb = $interfaceField{$intName}[0]; 
+                if ($F[$intNumb] =~ /$intName/) {
+                    $interfaceDesc{$intName}{stat}{intCount}++;
+                    $interfaceDesc{$intName}{stat}{intTotalTime}+= $& if $F[$timeNumb] =~ /$timeRegex/;
+                    if ( $interfaceDesc{$intName}{stat}{intTotalTime} && $interfaceDesc{$intName}{stat}{intCount}) {
+                        $interfaceDesc{$intName}{stat}{intAverageTime}=$interfaceDesc{$intName}{stat}{intTotalTime}/$interfaceDesc{$intName}{stat}{intCount};
+                    foreach my $modName ( keys %{$interfaceField{$intName}[1]} ) {
+                        my $modNumb = ${$interfaceField{$intName}[1]}{$modName}[0]; 
+                        if ( $F[$modNumb] =~ /$modName/  ) {
+                            if ($F[$timeNumb] =~ /$timeRegex/){
+                                my $requesttime = $&;
+                                foreach ( @countTime ) {
+                                    if ($requesttime < $_) {
+                                        $interfaceDesc{$intName}{mod}{$modName}{time}{$_}++;
+                                        last;
+                                    }
+                                }
+                                $interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}+=$requesttime;
+                                $interfaceDesc{$intName}{mod}{$modName}{count}{modCount}++;
+                                foreach ( @countTime ) {
+                                    if ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} && $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} ){
+                                        $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}= $interfaceDesc{$intName}{mod}{$modName}{time}{$_} / $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} * 100;
+                                    }
+                                    else {
+                                        $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}="0";
+                                    }
+                                    unless ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} ){
+                                        $interfaceDesc{$intName}{mod}{$modName}{time}{$_}=0
+                                    }
                                 }
                             }
-                            $interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}+=$requesttime;
-                            $interfaceDesc{$intName}{mod}{$modName}{count}{modCount}++;
-                            foreach ( @countTime ) {
-                                if ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} && $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} ){
-                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}= $interfaceDesc{$intName}{mod}{$modName}{time}{$_} / $interfaceDesc{$intName}{mod}{$modName}{count}{modCount} * 100;
-                                }
-                                else {
-                                    $interfaceDesc{$intName}{mod}{$modName}{percent}{$_."%"}="0";
-                                }
-                                unless ($interfaceDesc{$intName}{mod}{$modName}{time}{$_} ){
-                                    $interfaceDesc{$intName}{mod}{$modName}{time}{$_}=0
-                                }
-                            }
+                        $interfaceDesc{$intName}{mod}{$modName}{count}{modAverageTime}=$interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}/$interfaceDesc{$intName}{mod}{$modName}{count}{modCount};
                         }
-                    $interfaceDesc{$intName}{mod}{$modName}{count}{modAverageTime}=$interfaceDesc{$intName}{mod}{$modName}{count}{modTotalTime}/$interfaceDesc{$intName}{mod}{$modName}{count}{modCount};
                     }
                 }
-            }
+                }
             }
         }
+        close $logfh;
     }
+
     return \%interfaceDesc;
 } ## --- end sub analyze
 
