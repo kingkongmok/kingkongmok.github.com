@@ -42,7 +42,6 @@ sub getElemDetail {
         if ( $newVal != 0 && $oldVal != 0 ) {
             $percent = $newVal/$oldVal*100;
             if ( $average ) {
-                
                 if ( $percent > 100 ) {
                     $prefix = '+';
                     if ( $newVal > $average ) {
@@ -86,7 +85,7 @@ sub getElemDetail {
             if ( $percent > 40) {
                 $fontprefix .= "<b>";
                 $fontsuffix .= "<\/b>";
-            } 
+            }
             if ($percent > 20 ) {
                 $fontprefix .= "<font color='$color'>";
                 $fontsuffix .= "<\/font>";
@@ -153,7 +152,7 @@ sub calcHashs {
             @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
             push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "yes", "" );
             push @line, "";
-            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, "yes" , ""); 
+            push @line, &getElemDetail("ms" ,${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modAverageTime}, "yes" , ""); 
             foreach ( @countTime ) {
             push @line, "";
             push @line, &getElemDetail("%", ${$interfaceDescRef}{$intName}{mod}{$modName}{percent}{"$_"."%"}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{percent}{"$_"."%"}, "" , ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modAverageTime});
