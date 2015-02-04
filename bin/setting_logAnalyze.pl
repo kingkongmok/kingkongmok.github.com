@@ -33,8 +33,8 @@ chomp(my $nowdate = `date +%F -d -1day`);
 #        "/home/logs/smsmw/172.16.200.8/setting/monitoring.log.$nowdate",
 #        "/home/logs/smsmw/172.16.200.9/setting/monitoring.log.$nowdate",
 #    );
-#my @logFiles = ("/tmp/setting_monitoring.log");
-my @logFiles = ("/home/operator/moqingqiang/bin/setting_monitoring.log");
+my @logFiles = ("/tmp/setting_monitoring.log");
+#my @logFiles = ("/home/operator/moqingqiang/bin/setting_monitoring.log");
 
 
 #-------------------------------------------------------------------------------
@@ -100,8 +100,7 @@ my $tempFileDir = "$dirname/logAnalyzeTemp";
 unless ( -d $tempFileDir ) {
     mkdir $tempFileDir;
 }
-my $linesRef = &getLogArray(@logFiles);
-my %interfaceDesc = %{&analyze($linesRef, \%interfaceField, \@countTime)};
+my %interfaceDesc = %{&analyze( \@logFiles, \%interfaceField, \@countTime)};
 my ($interfaceDescRef, $interfaceDescRefOLD) = &mergeResult(\%interfaceDesc, $tempFileDir, $filename, $nowdate, $olddate);
 my @printArray = &calcHashs($interfaceDescRef, $interfaceDescRefOLD, \%interfaceField, \@countTime);
 &make_table_from_AoA(0,1,1,1,\@printArray, $tempFileDir, $filename, $nowdate, $datesCompareWith);
