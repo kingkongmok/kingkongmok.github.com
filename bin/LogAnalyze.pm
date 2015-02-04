@@ -142,14 +142,14 @@ sub calcHashs {
     my @countTime = @{$countTimeREF};
     my %interfaceField = %{$interfaceFieldREF};
     my @printArray ;
-    foreach my $intName (keys%$interfaceDescRef) {
+    foreach my $intName (sort keys %$interfaceDescRef) {
         push @printArray, (["<b><font color=blue>模块$intName</font></b>"], ["", "Description", "<b>访问</b>", "Last", "CMP", "", "<b>响应</b>", "Last", "CMP", "", "<b>0~50ms</b>", "Last", "CMP", "", "<b>50~100ms</b>", "Last", "CMP", "", "<b>100~150ms</b>", "Last", "CMP", "", "<b>150~200ms</b>", "Last", "CMP", "", "<b>200~300ms</b>", "Last", "CMP", "", "<b>300~500ms</b>", "Last", "CMP", "", "<b>500ms~1s</b>", "Last", "CMP", "", "<b>>1000ms</b>", "Last", "CMP"]) ;
         my @line = ( "整个接口信息", "all" );
         push @line, &getElemDetail("" , ${$interfaceDescRef}{$intName}{stat}{intCount}, ${$interfaceDescRefOLD}{$intName}{stat}{intCount} , "yes" , "");
         push @line, "";
         push @line, &getElemDetail("ms" , ${$interfaceDescRef}{$intName}{stat}{intAverageTime}, ${$interfaceDescRefOLD}{$intName}{stat}{intAverageTime} , "no" , "");
         push @printArray,[ @line ] ;
-        foreach my $modName ( keys %{${$interfaceDescRef}{$intName}{mod}} ) {
+        foreach my $modName ( sort keys %{${$interfaceDescRef}{$intName}{mod}} ) {
             @line = ($modName, ${$interfaceField{$intName}[1]}{$modName}[1],);
             push @line, &getElemDetail("", ${$interfaceDescRef}{$intName}{mod}{$modName}{count}{modCount}, ${$interfaceDescRefOLD}{$intName}{mod}{$modName}{count}{modCount}, "yes", "" );
             push @line, "";
@@ -163,31 +163,6 @@ sub calcHashs {
     }
     return \@printArray;
 } ## --- end sub calcHashs
-
-
-#===  FUNCTION  ================================================================
-#         NAME: getLogArray
-#      PURPOSE: input filename and get log's @lines
-#   PARAMETERS: $filenames
-#      RETURNS: @lines
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-#sub getLogArray {
-#    my @lines;
-#    foreach my $file (@_) {
-#        open my $fh , "<", $file;
-#        push @lines, <$fh>;
-#        close $fh ;
-#    }
-#    unless (@lines) {
-#        die "there's NO content in log." ;
-#        exit 23 ;
-#    }
-#    return \@lines;
-#} ## --- end sub getLogArray
 
 
 #===  FUNCTION  ================================================================
@@ -255,7 +230,6 @@ sub analyze {
         }
         close $logfh;
     }
-
     return \%interfaceDesc;
 } ## --- end sub analyze
 

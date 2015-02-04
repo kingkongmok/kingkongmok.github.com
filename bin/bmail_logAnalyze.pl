@@ -68,6 +68,12 @@ my @countTime = (50, 100, 150, 200, 300, 500, 1000, 120000);
 
 
 #-------------------------------------------------------------------------------
+#  用于发邮件的脚本，传递文件名让其发邮件
+#-------------------------------------------------------------------------------
+my $emailCommand = "/home/operator/moqingqiang/bin/sendUserMail.sh" ;
+
+
+#-------------------------------------------------------------------------------
 #  Don't edit below
 #-------------------------------------------------------------------------------
 my $olddateCommand = 'date +%F -d ' . int(-1 - $datesCompareWith) . 'day' ;
@@ -77,12 +83,11 @@ my $tempFileDir = "$dirname/logAnalyzeTemp";
 unless ( -d $tempFileDir ) {
     mkdir $tempFileDir;
 }
-my $linesRef = &getLogArray(@logFiles);
-my %interfaceDesc = %{&analyze($linesRef, \%interfaceField, \@countTime)};
+my %interfaceDesc = %{&analyze( \@logFiles, \%interfaceField, \@countTime)};
 my ($interfaceDescRef, $interfaceDescRefOLD) = &mergeResult(\%interfaceDesc, $tempFileDir, $filename, $nowdate, $olddate);
 my @printArray = &calcHashs($interfaceDescRef, $interfaceDescRefOLD, \%interfaceField, \@countTime);
 &make_table_from_AoA(0,1,1,1,\@printArray, $tempFileDir, $filename, $nowdate, $datesCompareWith);
 $filename =~ s/_.*//;
-if ( -e "/home/operator/moqingqiang/bin/sendUserMail.sh" ) {
-    `/home/operator/moqingqiang/bin/sendUserMail.sh -m $filename -d yesterday -c $datesCompareWith`
+if ( -e $emailCommand ) {
+    `$emailCommand -m $filename -d yesterday -c $datesCompareWith`
 }
