@@ -6,6 +6,55 @@ tags: [java, gc, tomcat]
 ---
 {% include JB/setup %}
 
+
+### java gc 介绍
+
+* [JVM系列一：JVM内存组成及分配](http://www.cnblogs.com/redcreen/archive/2011/05/04/2036387.html)
+* [JVM系列二:GC策略&内存申请、对象衰老](http://www.cnblogs.com/redcreen/archive/2011/05/04/2037056.html)
+* [JVM系列三:JVM参数设置、分析](http://www.cnblogs.com/redcreen/archive/2011/05/04/2037057.html)
+* [JVM系列四:生产环境参数实例及分析【生产环境实例增加中】](http://www.cnblogs.com/redcreen/archive/2011/05/05/2038331.html)
+* [JVM系列五:JVM监测&工具【整理中】](http://www.cnblogs.com/redcreen/archive/2011/05/09/2040977.html)
+
+### Web example
+
+说明一下， -XX:SurvivorRatio=65536 -XX:MaxTenuringThreshold=0就是去掉了救助空间； 
+-Xnoclassgc禁用类垃圾回收，性能会高一点； 
+-XX:+DisableExplicitGC禁止System.gc()，免得程序员误调用gc方法影响性能； 
+-XX:+UseParNewGC，对年轻代采用多线程并行回收，这样收得快； 
+
+```
+$JAVA_ARGS
+.=
+"
+-Dresin.home=$SERVER_ROOT
+-server
+-Xms6000M
+-Xmx6000M
+-Xmn500M
+-XX:PermSize=500M
+-XX:MaxPermSize=500M
+-XX:SurvivorRatio=65536
+-XX:MaxTenuringThreshold=0
+-Xnoclassgc
+-XX:+DisableExplicitGC
+-XX:+UseParNewGC
+-XX:+UseConcMarkSweepGC
+-XX:+UseCMSCompactAtFullCollection
+-XX:CMSFullGCsBeforeCompaction=0
+-XX:+CMSClassUnloadingEnabled
+-XX:-CMSParallelRemarkEnabled
+-XX:CMSInitiatingOccupancyFraction=90
+-XX:SoftRefLRUPolicyMSPerMB=0
+-XX:+PrintClassHistogram
+-XX:+PrintGCDetails
+-XX:+PrintGCTimeStamps
+-XX:+PrintHeapAtGC
+-Xloggc:log/gc.log
+";
+```
+
+### 
+
 ### tomcat启动后没有访问的情况
 
 * tomcat启动后，`没有访问`的情况，gc不做变化
