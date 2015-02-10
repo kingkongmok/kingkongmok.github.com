@@ -27,12 +27,12 @@ my ($dirname, $filename, $tmpfile) = ($1,$3,"/tmp/$3-$$.tmp") if $0 =~ m/^(.*)(\
 
 open my $fho , "> $tmpfile";
 chomp(my $timestamp = `date -d -1hour +"%F %T"`);
-$timestamp =~ s/:.*?$//;
+$timestamp =~ s/:.*$//;
 
 foreach my $file ( @files ) {
     open my $fh , "< $file" || die $!;
     while ( <$fh> ) {
-        print $fho if $_ =~ /^$timestamp/ ;
+        print $fho $_ if $_ =~ /^$timestamp/ ;
     }
     close $fh; 
 }
