@@ -42,12 +42,11 @@ errorMail ()
 
 
 #timeout "$TIMEOUTTIME" sudo $TCPDUMP -n -c 10 -i $NETINTERFACE tcp $port -w $TFILE 2>/dev/null 
-( sudo $TCPDUMP -n -i $NETINTERFACE tcp > $TFILE 2>/dev/null ) \
-    & sleep $TIMEOUTTIME ; sudo kill $!
+sudo $TCPDUMP -c 10000 -n -i $NETINTERFACE tcp > $TFILE 2>/dev/null 
 
 for port in ${PORT_LIST[@]} ; do
     COUNTNUMB=`grep "${port}:" -c $TFILE`
-    if [ $COUNTNUMB -lt 10 ] ; then
+    if [ $COUNTNUMB -lt 50 ] ; then
         errorMail
     fi
 done
