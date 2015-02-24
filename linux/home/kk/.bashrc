@@ -76,8 +76,7 @@ HISTTIMEFORMAT="%F %T "
 
 # check the window size after each command and, if necessary,
 # some more ls aliases
-alias ll='ls -ahlF'
-alias la='ls -A'
+alias ll='ls -AhlF'
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
