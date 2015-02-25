@@ -38,7 +38,7 @@ my%password=&getpassword;
 #===============================================================================
 sub checkIfIPDiff {
     my	( $ipAddress )	= @_;
-    chomp(my $currentIP =  qx#/usr/bin/curl -s ip.datlet.com#);
+    chomp(my $currentIP =  qx#/usr/bin/curl -s "ifconfig.me/ip"#);
     if ( $ipAddress eq $currentIP ) {
         return 0 ;
     }
@@ -86,7 +86,7 @@ sub rebootRouter {
 #-------------------------------------------------------------------------------
 #  do reboot the router unless connect to google.com
 #-------------------------------------------------------------------------------
-chomp(my $oldIP =  qx#/usr/bin/curl -s ip.datlet.com#) ;
+chomp(my $oldIP =  qx#/usr/bin/curl -s "ifconfig.me/ip"#) ;
 my $pingtimes = 0 ;
 while ( 1 ) {
 #    print "ping $pingtimes times...\n" ;
@@ -111,9 +111,10 @@ while ( 1 ) {
 #  renew the ddns.
 #-------------------------------------------------------------------------------
 while ( 1 ) {
-    my $htmlresult = qx#curl -q "http://$password{us}{username}:$password{kk}{password}\@members.3322.org/dyndns/update?system=dyndns&hostname=$password{us}{username}.3322.org&mx=$password{us}{username}.3322.org" 2>/dev/null #;
-    if ( $htmlresult =~ /(good|nochg)\s+\d+(\.\d+){3}/ ) {
-#        print "$htmlresult" ;
+    #my $htmlresult = qx#curl -q "http://$password{us}{username}:$password{kk}{password}\@members.3322.org/dyndns/update?system=dyndns&hostname=$password{us}{username}.3322.org&mx=$password{us}{username}.3322.org" 2>/dev/null #;
+    my $htmlresult = qx#curl -s "http://freedns.afraid.org/dynamic/update.php?WGtJdk1zNXlkZ3hPakdGOU5xdTE6MTMwNjA4MzM="#;
+    print "$htmlresult" ;
+    if ( $htmlresult =~ /^Updated 1 host/ ) {
         last ;
     }
     else {

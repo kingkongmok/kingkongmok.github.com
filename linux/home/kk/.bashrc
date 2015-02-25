@@ -62,6 +62,7 @@ trap _exit EXIT
 # don't put duplicate lines in the history. See bash(1) for more options
 # ... or force ignoredups and ignorespace
 HISTCONTROL=ignoredups:ignorespace
+HISTIGNORE='mlstatus.sh'
 
 # append to the history file, don't overwrite it
 shopt -s histappend
@@ -75,8 +76,7 @@ HISTTIMEFORMAT="%F %T "
 
 # check the window size after each command and, if necessary,
 # some more ls aliases
-alias ll='ls -ahlF'
-alias la='ls -A'
+alias ll='ls -AhlF'
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
