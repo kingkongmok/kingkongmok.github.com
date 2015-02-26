@@ -32,9 +32,6 @@ if [ "$(ps -ef | grep [u]pdatedb)" ] ; then
     exit 74;
 fi
 
-set -x
-    sudo updatedb &&\
-    cp -a $MLOCATEFILE $LOCALFILE &&\
-    $TRANSFER $LOCALFILE
-
-
+sudo updatedb &&\
+cp -a $MLOCATEFILE $LOCALFILE &&\
+$TRANSFER $LOCALFILE
