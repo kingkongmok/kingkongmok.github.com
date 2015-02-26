@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "centos can't run cron.daily scripts"
+title: "centos的cron.daily bug"
 category: linux
 tags: [centos, cront]
 ---
