@@ -123,3 +123,16 @@ color markers brightcyan black
 mono bold bold
 mono underline underline
 mono indicator reverse
+
+# Pager Key Bindings ---------------------------------
+bind pager k  previous-line
+bind pager b  previous-page
+bind pager j  next-line
+bind pager f  next-page
+bind pager gg top
+bind pager G  bottom
+
+bind pager R  group-reply
+
+# View attachments properly.
+bind attach <return> view-mailcap
