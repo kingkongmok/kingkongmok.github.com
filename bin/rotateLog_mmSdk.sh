@@ -168,7 +168,7 @@ tomcat_restart ()
 
 
 rm_crontab_log 
-count_visits
+#count_visits
 rm_old_tomcatlog 
 gzip_old_tomcatlog 
 rm_gamelog 
