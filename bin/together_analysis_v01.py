@@ -6,10 +6,10 @@
 import os,sys,re
 import time
 logTime = time.strftime('%Y-%m-%d',time.localtime(time.time()-24*60*60))
-#logName = ['/home/logs/smsmw/172.16.200.2/together/monitoring.log.'+logTime,\
-#           '/home/logs/smsmw/172.16.200.8/together/monitoring.log.'+logTime,\
-#           '/home/logs/smsmw/172.16.200.9/together/monitoring.log.'+logTime]
-logName = ['/tmp/monitoring.log']
+logName = ['/home/logs/smsmw/172.16.200.2/together/monitoring.log.'+logTime,\
+           '/home/logs/smsmw/172.16.200.8/together/monitoring.log.'+logTime,\
+           '/home/logs/smsmw/172.16.200.9/together/monitoring.log.'+logTime]
+#logName = ['/tmp/monitoring.log']
 
 setDic = {'together:noviceTask':'云南掌厅新手任务','user:getFetionLoginInfo':'获取飞信登录凭证','operation:address':'获取短地址对应的长地址'}
 #infoDic = {}
@@ -205,4 +205,4 @@ for name in statisDic.keys():
 #    tempLog.write(table)
 tempLog.write('</table>')
 tempLog.close()
-#os.system('/home/appSys/smsRebuild/sbin/together_analysis_py.sh')
+os.system('/home/appSys/smsRebuild/sbin/together_analysis_py.sh')
