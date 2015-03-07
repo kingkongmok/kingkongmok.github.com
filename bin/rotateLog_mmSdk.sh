@@ -180,8 +180,8 @@ AccessLogSize ()
 }	# ----------  end of function AccessLogSize  ----------
 
 
-AccessLogSize
 rm_crontab_log 
+AccessLogSize
 #count_visits
 rm_old_tomcatlog 
 gzip_old_tomcatlog 
