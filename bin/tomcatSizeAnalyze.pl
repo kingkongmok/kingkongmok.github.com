@@ -81,7 +81,7 @@ for my $k (0 .. 23) {
         print $T $date_str[$k], "\t", $size1->[$k], "\t", $size2->[$k], "\t", $size3->[$k], "\t", $size4->[$k], "\n";
 }
 close $T;
-open my $P, "|-", "gnuplot" or die;
+open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set title "Tomcat AccessLog Size Hourly Report"
         set xdata time
@@ -106,5 +106,3 @@ close $P;
 #-------------------------------------------------------------------------------
 my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogSize" -a "/tmp/tomcatLogSize.png" moqingqiang@richinfo.cn < # . qq#$N# ;
 `$systemCommand`;
-rename $N, "/home/moqingqiang/tmp/$date.log";
-rename "/tmp/tomcatLogSize.png", "/home/moqingqiang/tmp/$date.png";
