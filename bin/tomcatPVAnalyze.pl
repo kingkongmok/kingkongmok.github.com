@@ -1,0 +1,112 @@
+#!/usr/bin/env perl 
+#===============================================================================
+#
+#         FILE: tomcatPVAnalyze.pl
+#
+#        USAGE: ./tomcatPVAnalyze.pl  
+#
+#  DESCRIPTION: 
+#
+#      OPTIONS: ---
+# REQUIREMENTS: ---
+#         BUGS: ---
+#        NOTES: ---
+#       AUTHOR: KK Mok (), kingkongmok@gmail.com
+# ORGANIZATION: 
+#      VERSION: 1.0
+#      CREATED: 03/10/2015 09:48:57 AM
+#     REVISION: ---
+#===============================================================================
+
+use warnings; use strict;
+use IO::Handle;
+use File::Temp "tempfile";
+
+# tomcat yesterday log location
+open my $fh_log1 , "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+open my $fh_log2 , "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+open my $fh_log3 , "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+open my $fh_log4 , "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+#
+# output for png and txt header
+my @serverList = qw( 42.1 42.2 42.3 42.5 );
+#
+#
+#-------------------------------------------------------------------------------
+#  don't edit below
+#-------------------------------------------------------------------------------
+# yesterday output
+chomp(my $date = `date +%F -d -1day`);
+#
+# 24 hour, don't edit
+my @date_str = (0..23);
+
+
+#===  FUNCTION  ================================================================
+#         NAME: getTomcatLineArray
+#      PURPOSE: 
+#   PARAMETERS: log filehandle
+#      RETURNS: tomcat 77{11,22,33,44} pv (10k) array by hourly
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub getTomcatLineArray {
+    my	( $fh )	= @_;
+    my %H;
+    while ( <$fh> ) {
+        if ( /(\d{2})\.log$/ ) {
+            my @F = split ;
+            # show PV, 10k
+            $H{$1}+=int($F[0]/10_000);
+        }
+    }
+    my @dateOut = map{ $H{$_} } sort{$a<=>$b} keys %H;
+    return \@dateOut;
+} ## --- end sub getTomcatLineArray
+
+my $line1 = &getTomcatLineArray($fh_log1);
+my $line2 = &getTomcatLineArray($fh_log2);
+my $line3 = &getTomcatLineArray($fh_log3);
+my $line4 = &getTomcatLineArray($fh_log4);
+
+
+#-------------------------------------------------------------------------------
+# use gnuplot command by shell, not PM
+#-------------------------------------------------------------------------------
+my($T,$N) = tempfile("/tmp/tomcatLineAnalyze-$$-XXXX", "UNLINK", 1);
+print $T "#Time\t", join"\t",@serverList, "\n" ;
+for my $k (0 .. 23) {
+        print $T $date_str[$k], "\t", $line1->[$k], "\t", $line2->[$k], "\t", $line3->[$k], "\t", $line4->[$k], "\n";
+}
+close $T;
+open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
+printflush $P qq[
+        set title "Tomcat AccessLog PV Hourly Report"
+        set xdata time
+        set timefmt "%H"
+        set format x "%H"
+        set xtics rotate
+        set yrange [0:] noreverse
+        set xlabel 'Time: Hourly'
+        set ylabel '10k PageView'
+        set terminal png giant size 1000,500 
+        set output "/tmp/tomcatLogLine.png"
+        plot "$N" using 1:2 title '$serverList[0]' with lines linecolor rgb "red" linewidth 1.5,\\
+             "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
+             "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
+             "$N" using 1:5 title '$serverList[3]' with lines linecolor rgb "green" linewidth 1.5,\\
+];
+close $P;
+
+
+`cp $N "/home/moqingqiang/tmp/$date.txt"` ;
+`cp "/tmp/tomcatLogLine.png" "/home/moqingqiang/tmp/$date.png"` ;
+
+#-------------------------------------------------------------------------------
+# mail -> mutt -> msmtp 
+#-------------------------------------------------------------------------------
+my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogPV" -a "/tmp/tomcatLogLine.png" moqingqiang@richinfo.cn < # . qq#$N# ;
+`$systemCommand`;
+
