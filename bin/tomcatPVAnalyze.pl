@@ -23,10 +23,14 @@ use IO::Handle;
 use File::Temp "tempfile";
 
 # tomcat yesterday log location
-open my $fh_log1 , "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
-open my $fh_log2 , "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
-open my $fh_log3 , "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
-open my $fh_log4 , "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+#open my $fh_log1 , "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+#open my $fh_log2 , "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+#open my $fh_log3 , "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+#open my $fh_log4 , "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
+open my $fh_log1 , '-|', 'gzip', '-dc',  "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+open my $fh_log2 , '-|', 'gzip', '-dc',  "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+open my $fh_log3 , '-|', 'gzip', '-dc',  "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+open my $fh_log4 , '-|', 'gzip', '-dc',  "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
 #
 # output for png and txt header
 my @serverList = qw( 42.1 42.2 42.3 42.5 );
@@ -76,13 +80,23 @@ my $line4 = &getTomcatLineArray($fh_log4);
 # use gnuplot command by shell, not PM
 #-------------------------------------------------------------------------------
 my($T,$N) = tempfile("/tmp/tomcatLineAnalyze-$$-XXXX", "UNLINK", 1);
-print $T "#Time\t", join"\t",@serverList, "\n" ;
+print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
+my $maxValue = 0;
+my $maxTime = 0;
 for my $k (0 .. 23) {
-        print $T $date_str[$k], "\t", $line1->[$k], "\t", $line2->[$k], "\t", $line3->[$k], "\t", $line4->[$k], "\n";
+        if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
+            $maxValue = ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ;
+            $maxTime = $k ;
+        }
+        print $T $date_str[$k], "\t", 
+                $line1->[$k], "\t", $line2->[$k], "\t", 
+                $line3->[$k], "\t", $line4->[$k], "\t",
+                int(($line1->[$k] + $line2->[$k] + $line3->[$k] + $line4->[$k])/4 ), "\n",
 }
 close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
+        set key top left
         set title "Tomcat AccessLog PV Hourly Report"
         set xdata time
         set timefmt "%H"
@@ -96,7 +110,8 @@ printflush $P qq[
         plot "$N" using 1:2 title '$serverList[0]' with lines linecolor rgb "red" linewidth 1.5,\\
              "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
              "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
-             "$N" using 1:5 title '$serverList[3]' with lines linecolor rgb "green" linewidth 1.5,\\
+             "$N" using 1:5 title '$serverList[3]' with lines linecolor rgb "brown" linewidth 1.5,\\
+             "$N" using 1:6 title 'average (Max=$maxValue at $maxTime:00)' with lines linecolor rgb "green" linewidth 2.5,\\
 ];
 close $P;
 
@@ -109,4 +124,3 @@ close $P;
 #-------------------------------------------------------------------------------
 my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogPV" -a "/tmp/tomcatLogLine.png" moqingqiang@richinfo.cn < # . qq#$N# ;
 `$systemCommand`;
-
