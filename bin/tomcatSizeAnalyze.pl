@@ -36,10 +36,10 @@ my @serverList = qw( 42.1 42.2 42.3 42.5 );
 #  don't edit below
 #-------------------------------------------------------------------------------
 # yesterday output
-my $date = `date +%F -d -1day`;
+chomp(my $date = `date +%F -d -1day`);
 #
 # 24 hour, don't edit
-my @date_str = (1..24);
+my @date_str = (0..23);
 
 
 #===  FUNCTION  ================================================================
@@ -100,6 +100,9 @@ printflush $P qq[
 ];
 close $P;
 
+
+`cp $N "/home/moqingqiang/tmp/$date-size.txt"` ;
+`cp "/tmp/tomcatLogLine.png" "/home/moqingqiang/tmp/$date-size.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 

@@ -101,8 +101,8 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$date.txt"` ;
-`cp "/tmp/tomcatLogLine.png" "/home/moqingqiang/tmp/$date.png"` ;
+`cp $N "/home/moqingqiang/tmp/$date-pv.txt"` ;
+`cp "/tmp/tomcatLogLine.png" "/home/moqingqiang/tmp/$date-pv.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 
