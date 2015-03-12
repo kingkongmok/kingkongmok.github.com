@@ -180,8 +180,9 @@ AccessLogSize ()
 }	# ----------  end of function AccessLogSize  ----------
 
 
-rm_crontab_log 
+# get tomcat accesslog filesize first. then gzip this. the logAnaly visit log.1.gz.
 AccessLogSize
+rm_crontab_log 
 #count_visits
 rm_old_tomcatlog 
 gzip_old_tomcatlog 
