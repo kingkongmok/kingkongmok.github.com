@@ -1,9 +1,9 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: tomcatPVAnalyze.pl
+#         FILE: tomcatHistoryAnalyze.pl
 #
-#        USAGE: ./tomcatPVAnalyze.pl  
+#        USAGE: ./tomcatHistoryAnalyze.pl  
 #
 #  DESCRIPTION: 
 #
@@ -42,8 +42,10 @@ my @serverList = qw( 42.1 42.2 42.3 42.5 );
 # yesterday output
 chomp(my $date = `date +%F -d -1day`);
 #
-# 24 hour, don't edit
-my @date_str = (0..23);
+# 48 days, don't edit
+#my @date_str = (0..23);
+my $getDateCommand= q#for i in {48..1}; do date -d -${i}day +%F; done#;
+chomp (my @date_str = `$getDateCommand`);
 
 
 #===  FUNCTION  ================================================================
@@ -58,15 +60,21 @@ my @date_str = (0..23);
 #===============================================================================
 sub getTomcatLineArray {
     my	( $fh )	= @_;
-    my %H;
-    while ( <$fh> ) {
-        if ( /(\d{2})\.log$/ ) {
-            my @F = split ;
-            # show PV, 10k
-            $H{$1}+=int($F[0]/10_000);
+    my @logLine = <$fh> ;
+    
+    my %H ;
+    foreach my $date ( @date_str ) {
+        $H{$date}=0;
+        foreach my $line ( @logLine ) {
+            if ($line =~ /$date.\d{2}\.log$/) {
+                my @F = split " ",$line;
+                 #show PV, 10k
+                 $H{$date}+=int($F[0]/10_000);
+
+            }
         }
     }
-    my @dateOut = map{ $H{$_} } sort{$a<=>$b} keys %H;
+    my @dateOut = map{ $H{$_} } sort{$a cmp $b} keys %H;
     return \@dateOut;
 } ## --- end sub getTomcatLineArray
 
@@ -83,31 +91,31 @@ my($T,$N) = tempfile("/tmp/tomcatLineAnalyze-$$-XXXX", "UNLINK", 1);
 print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
 my $maxTime = 0;
-for my $k (0 .. 23) {
+for my $k (0..(~~@date_str -1)) {
         if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
             $maxValue = ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ;
-            $maxTime = $k ;
+            $maxTime = $date_str[$k] ;
         }
         print $T $date_str[$k], "\t", 
                 $line1->[$k], "\t", $line2->[$k], "\t", 
                 $line3->[$k], "\t", $line4->[$k], "\t",
                 int(($line1->[$k] + $line2->[$k] + $line3->[$k] + $line4->[$k])/4 ), "\n",
 }
-my $TotalValue = $maxValue * 4 ; 
 close $T;
+my $TotalValue = $maxValue * 4 ; 
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
-        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime:00"
-        set title "$date Tomcat AccessLog PV Hourly Report"
+        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime"
+        set title "$date Tomcat AccessLog PV daily Report"
         set xdata time
-        set timefmt "%H"
-        set format x "%H"
+        set timefmt  "%Y-%m-%d"
+        set format x  "%Y-%m-%d"
         set xtics rotate
         set yrange [0:] noreverse
-        set xlabel 'Time: Hourly'
+        set xlabel 'Time: daily'
         set ylabel '10k PageView'
         set terminal png giant size 1000,500 
-        set output "/tmp/tomcatPV.png"
+        set output "/tmp/tomcatHistory.png"
         plot "$N" using 1:2 title '$serverList[0]' with lines linecolor rgb "red" linewidth 1.5,\\
              "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
              "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
@@ -117,11 +125,11 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$date-pv.txt"` ;
-`cp "/tmp/tomcatPV.png" "/home/moqingqiang/tmp/$date-pv.png"` ;
+`cp $N "/home/moqingqiang/tmp/$date-his.txt"` ;
+`cp "/tmp/tomcatHistory.png" "/home/moqingqiang/tmp/$date-his.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 
 #-------------------------------------------------------------------------------
-#my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogPV" -a "/tmp/tomcatLogLine.png" moqingqiang@richinfo.cn < # . qq#$N# ;
+#my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatHistoryPV" -a "/tmp/tomcatHistory.png" moqingqiang@richinfo.cn < # . qq#$N# ;
 #`$systemCommand`;

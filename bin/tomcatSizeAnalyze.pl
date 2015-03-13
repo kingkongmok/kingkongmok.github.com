@@ -117,10 +117,10 @@ close $P;
 
 
 `cp $N "/home/moqingqiang/tmp/$date-size.txt"` ;
-`cp "/tmp/tomcatLogLine.png" "/home/moqingqiang/tmp/$date-size.png"` ;
+`cp "/tmp/tomcatLogSize.png" "/home/moqingqiang/tmp/$date-size.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 
 #-------------------------------------------------------------------------------
-my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogSize" -a "/tmp/tomcatLogSize.png" moqingqiang@richinfo.cn < # . qq#$N# ;
-`$systemCommand`;
+#my $systemCommand=q#mutt -e "my_hdr Content-Type: text/html" -s "# . qq#$date# . q# TomcatLogSize" -a "/tmp/tomcatLogSize.png" moqingqiang@richinfo.cn < # . qq#$N# ;
+#`$systemCommand`;
