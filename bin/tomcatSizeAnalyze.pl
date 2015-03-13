@@ -89,15 +89,16 @@ for my $k (0 .. 23) {
         $maxTime = $k ;
     }
     print $T $date_str[$k], "\t", 
-            $size1->[$k], "\t", $size2->[$k], "\t", 
-            $size3->[$k], "\t", $size4->[$k], "\t",
-            int(($size1->[$k] + $size2->[$k] + $size3->[$k] + $size4->[$k])/4 ), "\n",
+        $size1->[$k], "\t", $size2->[$k], "\t", 
+        $size3->[$k], "\t", $size4->[$k], "\t",
+        int(($size1->[$k] + $size2->[$k] + $size3->[$k] + $size4->[$k])/4 ), "\n",
 }
+my $TotalValue = $maxValue * 4 ; 
 close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
-        set key top left
-        set title "Tomcat AccessLog Size Hourly Report"
+        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime:00"
+        set title "$date Tomcat AccessLog Size Hourly Report"
         set xdata time
         set timefmt "%H"
         set format x "%H"
@@ -111,7 +112,7 @@ printflush $P qq[
              "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
              "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
              "$N" using 1:5 title '$serverList[3]' with lines linecolor rgb "brown" linewidth 1.5,\\
-             "$N" using 1:6 title 'average (Max=$maxValue MB at $maxTime:00)' with lines linecolor rgb "green" linewidth 2.5,\\
+             "$N" using 1:6 title 'average' with lines linecolor rgb "green" linewidth 2.5,\\
 ];
 close $P;
 

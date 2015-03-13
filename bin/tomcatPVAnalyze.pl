@@ -84,14 +84,14 @@ print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
 my $maxTime = 0;
 for my $k (0 .. 23) {
-        if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
-            $maxValue = ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ;
-            $maxTime = $k ;
-        }
-        print $T $date_str[$k], "\t", 
-                $line1->[$k], "\t", $line2->[$k], "\t", 
-                $line3->[$k], "\t", $line4->[$k], "\t",
-                int(($line1->[$k] + $line2->[$k] + $line3->[$k] + $line4->[$k])/4 ), "\n",
+    if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
+        $maxValue = ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ;
+        $maxTime = $k ;
+    }
+    print $T $date_str[$k], "\t", 
+        $line1->[$k], "\t", $line2->[$k], "\t", 
+        $line3->[$k], "\t", $line4->[$k], "\t",
+        int(($line1->[$k] + $line2->[$k] + $line3->[$k] + $line4->[$k])/4 ), "\n",
 }
 my $TotalValue = $maxValue * 4 ; 
 close $T;
