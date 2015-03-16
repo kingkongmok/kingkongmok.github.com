@@ -27,10 +27,14 @@ use File::Temp "tempfile";
 #open my $fh_log2 , "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
 #open my $fh_log3 , "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
 #open my $fh_log4 , "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log" ;
-open my $fh_log1 , '-|', 'gzip', '-dc',  "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
-open my $fh_log2 , '-|', 'gzip', '-dc',  "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
-open my $fh_log3 , '-|', 'gzip', '-dc',  "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
-open my $fh_log4 , '-|', 'gzip', '-dc',  "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+#open my $fh_log1 , '-|', 'gzip', '-dc',  "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+#open my $fh_log2 , '-|', 'gzip', '-dc',  "/home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+#open my $fh_log3 , '-|', 'gzip', '-dc',  "/home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+#open my $fh_log4 , '-|', 'gzip', '-dc',  "/home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log.1.gz" || die $! ;
+open my $fh_log1 , "zcat /home/logs/1_mmlogs/crontabLog/tomcat_accesslog_line.log.*.gz |" || die $! ;
+open my $fh_log2 , "zcat /home/logs/4_mmlogs/crontabLog/tomcat_accesslog_line.log.*.gz |" || die $! ;
+open my $fh_log3 , "zcat /home/logs/3_mmlogs/crontabLog/tomcat_accesslog_line.log.*.gz |" || die $! ;
+open my $fh_log4 , "zcat /home/logs/5_mmlogs/crontabLog/tomcat_accesslog_line.log.*.gz |" || die $! ;
 #
 # output for png and txt header
 my @serverList = qw( 42.1 42.2 42.3 42.5 );
@@ -47,6 +51,8 @@ chomp(my $date = `date +%F -d -1day`);
 my $getDateCommand= q#for i in {48..1}; do date -d -${i}day +%F; done#;
 chomp (my @date_str = `$getDateCommand`);
 
+my %H ;
+
 
 #===  FUNCTION  ================================================================
 #         NAME: getTomcatLineArray
@@ -62,7 +68,6 @@ sub getTomcatLineArray {
     my	( $fh )	= @_;
     my @logLine = <$fh> ;
     
-    my %H ;
     foreach my $date ( @date_str ) {
         $H{$date}=0;
         foreach my $line ( @logLine ) {
@@ -77,6 +82,8 @@ sub getTomcatLineArray {
     my @dateOut = map{ $H{$_} } sort{$a cmp $b} keys %H;
     return \@dateOut;
 } ## --- end sub getTomcatLineArray
+
+
 
 my $line1 = &getTomcatLineArray($fh_log1);
 my $line2 = &getTomcatLineArray($fh_log2);
