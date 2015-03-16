@@ -74,7 +74,7 @@ empty_catalina ()
 #-------------------------------------------------------------------------------
 gzip_old_tomcatlog ()
 {
-    nice find ${LOG_LOCATION}/tomcat_77* -mmin +60 -type f -name \*\.log -exec gzip "{}" \;
+    nice find ${LOG_LOCATION}/tomcat_77* -mmin +5 -type f -name \*\.log -exec gzip "{}" \;
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
@@ -180,8 +180,9 @@ AccessLogSize ()
 }	# ----------  end of function AccessLogSize  ----------
 
 
-rm_crontab_log 
+# get tomcat accesslog filesize first. then gzip this. the logAnaly visit log.1.gz.
 AccessLogSize
+rm_crontab_log 
 #count_visits
 rm_old_tomcatlog 
 gzip_old_tomcatlog 
