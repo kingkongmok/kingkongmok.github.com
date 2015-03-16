@@ -22,14 +22,14 @@ use strict;
 use warnings;
 use Storable qw(store retrieve);
 
-chomp(my $yesterday = `date -d -1day +%F`);
+chomp(my $lastHour = `date +%F.%H -d -1hour`);
+
 #-------------------------------------------------------------------------------
 #  log location
 #-------------------------------------------------------------------------------
-#my @logArray = glob "/mmsdk/tomcat_77*/access.$yesterday.*.log" ;
-my @logArray = glob "/home/kk/log*.txt" ;
-my $outputfilename = "/tmp/http_status_code.txt" ;
-my $hashFileLocation = "/tmp/http_status_code.hash";
+my @logArray = glob "/mmsdk/tomcat_77*/access.$lastHour.log" ;
+my $outputfilename = "/mmsdk/crontabLog/http_status_code.txt" ;
+my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
 
 
 my $httpstatusref ;
