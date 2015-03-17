@@ -28,7 +28,7 @@ chomp(my $lastHour = `date +%F.%H -d -1hour`);
 #  log location
 #-------------------------------------------------------------------------------
 my @logArray = glob "/mmsdk/tomcat_77*/access.$lastHour.log" ;
-my $outputfilename = "/mmsdk/crontabLog/http_status_code.txt" ;
+my $outputfilename = "/mmsdk/crontabLog/http_status_code.log" ;
 my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
 
 
@@ -36,7 +36,7 @@ my $httpstatusref ;
 #-------------------------------------------------------------------------------
 #  restore hash
 #-------------------------------------------------------------------------------
-if ( -r $hashFileLocation ) {
+if ( -s $hashFileLocation ) {
     $httpstatusref = retrieve("$hashFileLocation");
 }
 foreach my $filename ( @logArray ) {
