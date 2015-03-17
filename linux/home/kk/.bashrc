@@ -103,3 +103,8 @@ alias cp='cp -i'
 #    exec startx
 #fi
 [[ $(tty) = "/dev/tty6" ]] && exec startx
+
+# set monitor on
+xset s noblank 
+xset s off 
+xset -dpms 
