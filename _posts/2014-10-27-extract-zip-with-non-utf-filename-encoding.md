@@ -13,3 +13,12 @@ env LANG=GBK 7z x windows_zipped.filename
 ls | xargs -i convmv -f GBK -t utf8 {}
 ls | xargs -i convmv -f GBK -t utf8 {} --notest
 ```
+
+```bash
+perl -MFile::Find  -MEncode -e 'finddepth({postprocess=>sub{my $new=encode("utf8",decode("gbk",$File::Find::dir));print "rename $File::Find::dir to $new " . (rename($File::Find::dir,$new)?"ok\n":"fail: $!\n");},no_chdir=>1,wanted=>sub{my $new=encode("utf8",decode("gbk",$File::Find::name));print "rename $File::Find::name to $new " . (rename($File::Find::name,$new)?"ok\n":"fail: $!\n");} },@ARGV)'   你的目录路径
+
+perl -MFile::Find  -MEncode -e 'finddepth({postprocess=>sub{my $new=encode("utf8",decode("gbk",$File::Find::dir));print "rename $File::Find::dir to $new " . (rename($File::Find::dir,$new)?"ok\n":"fail: $!\n");},no_chdir=>1,wanted=>sub{return if -d $File::Find::name;my $new=encode("utf8",decode("gbk",$File::Find::name));print "rename $File::Find::name to $new " . (rename($File::Find::name,$new)?"ok\n":"fail: $!\n");} },@ARGV)'
+
+perl -MFile::Basename -MFile::Find  -MEncode -e 'finddepth({postprocess=>sub{my $new=dirname($File::Find::dir) . "/". encode("utf8",decode("gbk",basename($File::Find::dir)));print "rename $File::Find::dir to $new " . (rename($File::Find::dir,$new)?"ok\n":"fail: $!\n");},no_chdir=>1,wanted=>sub{return if -d $File::Find::name;my $new=dirname($File::Find::name) . "/".encode("utf8",decode("gbk",basename($File::Find::name)));print "rename $File::Find::name to $new " . (rename($File::Find::name,$new)?"ok\n":"fail: $!\n");} },@ARGV)' 
+
+```
