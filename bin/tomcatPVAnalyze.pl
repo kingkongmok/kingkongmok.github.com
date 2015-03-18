@@ -83,10 +83,12 @@ my($T,$N) = tempfile("/tmp/tomcatLineAnalyze-$$-XXXX", "UNLINK", 1);
 print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
 my $maxTime = 0;
+my $maxTimeNext = 0;
 for my $k (0 .. 23) {
     if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
         $maxValue = ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ;
         $maxTime = $k ;
+        $maxTimeNext = $k + 1 ;
     }
     print $T $date_str[$k], "\t", 
         $line1->[$k], "\t", $line2->[$k], "\t", 
@@ -97,7 +99,7 @@ my $TotalValue = $maxValue * 4 ;
 close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
-        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime:00"
+        set key top left title "MaxAverage=$maxValue(10k PV) with Total=$TotalValue(10k PV) at $maxTime:00 ~ $maxTimeNext:00"
         set title "$date PV Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H"

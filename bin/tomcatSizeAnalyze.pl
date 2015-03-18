@@ -83,10 +83,12 @@ my($T,$N) = tempfile("/tmp/tomcatSizeAnalyze-$$-XXXX", "UNLINK", 1);
 print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
 my $maxTime = 0;
+my $maxTimeNext = 0;
 for my $k (0 .. 23) {
     if ( $maxValue < ($size1->[$k]+$size2->[$k]+$size3->[$k]+$size4->[$k])/4 ) {
         $maxValue = ($size1->[$k]+$size2->[$k]+$size3->[$k]+$size4->[$k])/4 ;
         $maxTime = $k ;
+        $maxTimeNext = $k + 1;
     }
     print $T $date_str[$k], "\t", 
         $size1->[$k], "\t", $size2->[$k], "\t", 
@@ -97,7 +99,7 @@ my $TotalValue = $maxValue * 4 ;
 close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
-        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime:00"
+        set key top left title "MaxAverage=$maxValue(MB logSize) with Total=$TotalValue(MB logSize) at $maxTime:00 ~ $maxTimeNext:00"
         set title "$date Tomcat AccessLog Size Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H"
