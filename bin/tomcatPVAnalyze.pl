@@ -98,7 +98,7 @@ close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime:00"
-        set title "$date Tomcat AccessLog PV Hourly Report"
+        set title "$date PV Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H"
         set format x "%H"

@@ -112,7 +112,7 @@ close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxValue=$maxValue at $maxTime"
-        set title "$yesterday 5XX Minutely Report"
+        set title "$yesterday 5XX minutely" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"

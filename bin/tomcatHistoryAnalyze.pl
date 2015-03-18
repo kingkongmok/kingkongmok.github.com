@@ -97,6 +97,7 @@ my $line4 = &getTomcatLineArray($fh_log4);
 my($T,$N) = tempfile("/tmp/tomcatLineAnalyze-$$-XXXX", "UNLINK", 1);
 print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
+my $yesterdayValue = $line1->[-1]+$line2->[-1]+$line3->[-1]+$line4->[-1];
 my $maxTime = 0;
 for my $k (0..(~~@date_str -1)) {
         if ( $maxValue < ($line1->[$k]+$line2->[$k]+$line3->[$k]+$line4->[$k])/4 ) {
@@ -112,8 +113,8 @@ close $T;
 my $TotalValue = $maxValue * 4 ; 
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
-        set key top left title "MaxAverage=$maxValue with Total=$TotalValue at $maxTime"
-        set title "$date Tomcat AccessLog PV daily Report"
+        set key top left title "TotalMaxAverage=$TotalValue at $maxTime, yesterday is $yesterdayValue"
+        set title "$date PV daily compare" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt  "%Y-%m-%d"
         set format x  "%Y-%m-%d"
