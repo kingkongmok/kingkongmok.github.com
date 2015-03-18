@@ -1,9 +1,9 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: tomcat200.pl
+#         FILE: tomcat500.pl
 #
-#        USAGE: ./tomcat200.pl  
+#        USAGE: ./tomcat500.pl  
 #
 #  DESCRIPTION: 
 #
@@ -75,7 +75,7 @@ sub getTomcatLineArray {
     while ( <$fh> ) {
         if ( /^\d/ ) {
             my @F = split ;
-            $H{$F[0]}=int($F[2]);
+            $H{$F[0]}=int($F[5]);
         }
     }
     my @dateOut = map{ $H{$_} } sort{$a cmp $b} keys %H;
@@ -92,7 +92,7 @@ my $line4 = &getTomcatLineArray($fh_log4);
 #-------------------------------------------------------------------------------
 # use gnuplot command by shell, not PM
 #-------------------------------------------------------------------------------
-my($T,$N) = tempfile("/tmp/tomcat200-$$-XXXX", "UNLINK", 1);
+my($T,$N) = tempfile("/tmp/tomcat500-$$-XXXX", "UNLINK", 1);
 print $T "#Time\t", join"\t",@serverList, "\t", "average", "\n" ;
 my $maxValue = 0;
 my $maxTime = 0;
@@ -112,16 +112,16 @@ close $T;
 open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxValue=$maxValue at $maxTime"
-        set title "$yesterday 2XX Minutely Report"
+        set title "$yesterday 5XX Minutely Report"
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"
         set xtics rotate
         set yrange [0:] noreverse
         set xlabel 'Time: every minute'
-        set ylabel 'Http 2XX stat code'
+        set ylabel 'Http 5XX stat code'
         set terminal png giant size 1000,500 
-        set output "/tmp/tomcat200.png"
+        set output "/tmp/tomcat500.png"
         plot "$N" using 1:2 title '$serverList[0]' with lines linecolor rgb "red" linewidth 1.5,\\
              "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
              "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
@@ -130,5 +130,5 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$yesterday-200.txt"` ;
-`cp "/tmp/tomcat200.png" "/home/moqingqiang/tmp/$yesterday-200.png"` ;
+`cp $N "/home/moqingqiang/tmp/$yesterday-500.txt"` ;
+`cp "/tmp/tomcat500.png" "/home/moqingqiang/tmp/$yesterday-500.png"` ;
