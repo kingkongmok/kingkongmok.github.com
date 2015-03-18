@@ -105,6 +105,4 @@ alias cp='cp -i'
 [[ $(tty) = "/dev/tty6" ]] && exec startx
 
 # set monitor on
-xset s noblank 
-xset s off 
-xset -dpms 
+[[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
