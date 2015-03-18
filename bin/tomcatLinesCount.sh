@@ -25,7 +25,7 @@ PORTS=( 7711 7722 7733 7744 )
 LASTHOUR_DATETIME=`date +%F.%H -d -1hour`
 LOCATION="/mmsdk"
 
-OUTPUTFILE="${LOCATION}/crontabLog/tomcat_accesslog_line.log"
+OUTPUTFILE="${LOCATION}/crontabLog/tomcat_accesslog_line_test.log"
 
 for port in ${PORTS[@]}; do
     LOGFILE=${LOCATION}/tomcat_${port}/access.${LASTHOUR_DATETIME}.log ;

@@ -23,16 +23,19 @@ use warnings;
 use Storable qw(store retrieve);
 
 chomp(my $lastHour = `date +%F.%H -d -1hour`);
+chomp(my $today = `date +%F -d -1hour`);
 
 #-------------------------------------------------------------------------------
 #  log location
 #-------------------------------------------------------------------------------
 my @logArray = glob "/mmsdk/tomcat_77*/access.$lastHour.log" ;
 my $outputfilename = "/mmsdk/crontabLog/http_status_code.log" ;
+my $outputPVline_file = "/mmsdk/crontabLog/tomcat_accesslog_line.log" ;
 my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
 
 
 my $httpstatusref ;
+my %pvCount;
 #-------------------------------------------------------------------------------
 #  restore hash
 #-------------------------------------------------------------------------------
@@ -43,13 +46,14 @@ foreach my $filename ( @logArray ) {
     open my $fh , $filename || die $!;
     while ( <$fh> ) {
         chomp ; 
+            $pvCount{$filename}++;
         if ( /^[^:]+:(\d{2}:\d{2}):\d{2} \+0800\] (\d)\d{2} / ) {
             $httpstatusref->{$1}{$2}++;
         }
     }
 }
 open my $fho, "> $outputfilename" ;
-print $fho "#time\t1xx\t2xx\t3xx\t4xx\t5xx\n" ;
+print $fho "#time\t1xx\t2xx\t3xx\t4xx\t5xx\t$today\n" ;
 foreach my $time ( sort keys %{$httpstatusref} ) {
         printf $fho "%s\t", $time ;
         foreach my $httpCode ( 1..5 ) {
@@ -63,6 +67,12 @@ foreach my $time ( sort keys %{$httpstatusref} ) {
         print $fho "\n";
 }
 close $fho;
+
+open my $fho1, ">> $outputPVline_file" ;
+foreach my $filename ( @logArray ) {
+    printf $fho1 "%i %s\n", $pvCount{$filename}, $filename ;
+}
+close $fho1;
 
 #-------------------------------------------------------------------------------
 #  backup hash
