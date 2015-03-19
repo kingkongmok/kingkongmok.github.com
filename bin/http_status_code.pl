@@ -31,10 +31,13 @@ chomp(my $today = `date +%F -d -1hour`);
 my @logArray = glob "/mmsdk/tomcat_77*/access.$lastHour.log" ;
 my $outputfilename = "/mmsdk/crontabLog/http_status_code.log" ;
 my $outputPVline_file = "/mmsdk/crontabLog/tomcat_accesslog_line.log" ;
+my $outputRespTime_file = "/mmsdk/crontabLog/http_resp_time.log" ;
 my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
+my $hashRespTimeFileLocation = "/mmsdk/crontabLog/http_resp_time.hash.log";
 
 
 my $httpstatusref ;
+my $httpresp ;
 my %pvCount;
 #-------------------------------------------------------------------------------
 #  restore hash
@@ -42,13 +45,18 @@ my %pvCount;
 if ( -s $hashFileLocation ) {
     $httpstatusref = retrieve("$hashFileLocation");
 }
+if ( -s $hashRespTimeFileLocation ) {
+    $httpresp = retrieve("$hashRespTimeFileLocation");
+}
 foreach my $filename ( @logArray ) {
     open my $fh , $filename || die $!;
     while ( <$fh> ) {
         chomp ; 
             $pvCount{$filename}++;
-        if ( /^[^:]+:(\d{2}:\d{2}):\d{2} \+0800\] (\d)\d{2} / ) {
+        if ( /^[^:]+:(\d{2}:\d{2}):\d{2} \+0800\] (\d)\d{2} (\d+\.\d{3}) / ) {
             $httpstatusref->{$1}{$2}++;
+            $httpresp->{time}{$1}+=$3;
+            $httpresp->{count}{$1}++;
         }
     }
 }
@@ -74,7 +82,20 @@ foreach my $filename ( @logArray ) {
 }
 close $fho1;
 
+open my $fho2, "> $outputRespTime_file" ;
+my ($totaltime, $totalcount);
+print $fho2 "#time\taverageResptime\t$today\n" ;
+foreach my $time ( sort keys %{$httpresp->{time}} ) {
+        printf $fho2 "%s %0.4f", $time,  $httpresp->{time}{$time} / $httpresp->{count}{$time};
+        $totaltime+=$httpresp->{time}{$time};
+        $totalcount+=$httpresp->{count}{$time};
+        print $fho2 "\n";
+}
+printf $fho2 "#total Average %0.4f\n", $totaltime / $totalcount ;
+close $fho2;
+
 #-------------------------------------------------------------------------------
 #  backup hash
 #-------------------------------------------------------------------------------
 store($httpstatusref, "$hashFileLocation") or die "Can't store %hash in $hashFileLocation!\n";
+store($httpresp, "$hashRespTimeFileLocation") or die "Can't store %hash in $hashRespTimeFileLocation!\n";
