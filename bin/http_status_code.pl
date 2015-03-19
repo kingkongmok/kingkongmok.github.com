@@ -35,7 +35,6 @@ my $outputRespTime_file = "/mmsdk/crontabLog/http_resp_time.log" ;
 my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
 my $hashRespTimeFileLocation = "/mmsdk/crontabLog/http_resp_time.hash.log";
 
-
 my $httpstatusref ;
 my $httpresp ;
 my %pvCount;
