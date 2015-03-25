@@ -82,15 +82,12 @@ foreach my $filename ( @logArray ) {
             $httpresp->{time}{$1}+=$3;
             $httpresp->{count}{$1}++;
             my $tmptime = $1;
-            $httpMethodCount->{$tmptime}{other}++;
             if ( /(?<=func=)(\S+?)(?=\&)/ ) {
-                foreach my $method ( @methodArray ) {
-                    if ( $1 eq $method ) {
-                        $httpMethodCount->{$tmptime}{$method}++;
-                        $httpMethodCount->{$tmptime}{other}--;
-                        last;
-                    }
-                }
+                $httpMethodCount->{$tmptime}{$1}++;
+            }elsif ( /(udata\.js|u\.gif)/ ) {
+                $httpMethodCount->{$tmptime}{$1}++;
+            } elsif ( /(\S+)$/ ){
+                $httpMethodCount->{$tmptime}{$1}++;
             }
         }
     }
@@ -134,15 +131,18 @@ my ($methodTotalTime, $methodTotalCount);
 print $fho3 "#time\t", join"\t",@methodArray, "\tother\t$today\n" ;
 foreach my $time ( sort keys %{$httpMethodCount} ) {
         printf $fho3 "%s\t", $time ;
+        my $other; 
+        $other += $_ for values %{$httpMethodCount->{$time}};
         foreach my $method ( @methodArray ) {
             if ( $httpMethodCount->{$time}{$method} ) {
                 printf  $fho3 "%s\t", $httpMethodCount->{$time}{$method} ;
+                $other -= $httpMethodCount->{$time}{$method} ;
             }
             else {
                 printf $fho3 "%s\t", 0 ;
             }
         }
-        printf $fho3 "%s\t", $httpMethodCount->{$time}{other} ;
+        printf $fho3 "%s\t", $other ;
         print $fho3 "\n";
 }
 close $fho3;
