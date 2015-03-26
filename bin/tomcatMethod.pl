@@ -18,9 +18,9 @@
 #     REVISION: ---
 #===============================================================================
 
-use warnings FATAL => qw(uninitialized);
+#use warnings FATAL => qw(uninitialized);
 
-#use warnings;
+use warnings;
 use strict;
 use IO::Handle;
 use File::Temp "tempfile";
