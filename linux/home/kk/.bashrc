@@ -86,7 +86,7 @@ shopt -s checkwinsize
 MAIL=~/.maildir/mbox
 MAILCHECK=30
 MAILPATH=~/.maildir/mbox?"You have mail"
-export PATH=$PATH:~/bin/
+export PATH=$PATH:~/bin/:/usr/local/go/bin
 
 
 alias ls='ls --color=auto --time-style=long-iso'
