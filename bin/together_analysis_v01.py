@@ -11,7 +11,12 @@ logName = ['/home/logs/smsmw/172.16.200.2/together/monitoring.log.'+logTime,\
            '/home/logs/smsmw/172.16.200.9/together/monitoring.log.'+logTime]
 #logName = ['/tmp/monitoring.log']
 
-setDic = {'together:noviceTask':'云南掌厅新手任务','user:getFetionLoginInfo':'获取飞信登录凭证','operation:address':'获取短地址对应的长地址'}
+setDic =   {'together:noviceTask':'云南掌厅新手任务',\
+            'user:getFetionLoginInfo':'获取飞信登录凭证',\
+            'operation:address':'获取短地址对应的长地址',\
+            'together:getMobileAppList':'获取移动MM应用列表',\
+            'together:downloadApp':'下载移动MM应用',\
+           }
 #infoDic = {}
 #psDic = {}
 statisDic = {}
