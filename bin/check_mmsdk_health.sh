@@ -162,11 +162,38 @@ checkBondInterface ()
     perl -00ne 'print if /MII Status: (?!up)/m' /proc/net/bonding/bond0 >> $TFILE
 }	# ----------  end of function checkBondInterface  ----------
 
+
+
+checkZombieProcess ()
+{
+   for pid in `ps -e -o pid,stat | awk '$2~/^Z/ { print $1 }'`; do ps -f $pid; done  >> $TFILE
+}	# ----------  end of function checkZombieProcess  ----------
+
+
+checkStorageMultipath ()
+{
+    sudo /sbin/multipath -ll|grep -qP "fault|fail|inactive" && echo "multipath error" >> $TFILE 
+}
+
+
+checkRouter ()
+{
+    if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
+        date +"%F %T" >> /mmsdk/crontabLog/checkRouter.log 
+        /bin/tracepath -n 10.101.13.1 >> /mmsdk/crontabLog/checkRouter.log 
+        echo >> /mmsdk/crontabLog/checkRouter.log 
+    fi
+}
+
+
 checkFileStat
 checkLoadAverage; 
 checkSpace;
 checkTomcat;
 checkBondInterface;
+checkZombieProcess;
+checkStorageMultipath;
+checkRouter;
 
 
 if [ -r "$TFILE" ] ; then
