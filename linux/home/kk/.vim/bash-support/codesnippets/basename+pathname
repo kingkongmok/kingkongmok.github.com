@@ -1,5 +1,0 @@
-BASENAME=${pathname##*/}
-DIRNAME=${pathname%/*}
-FILENAME=${basename%%.*}
-LASTEXTENSION=${basename##*.}
-ALLEXTENSIONS=${basename#*.}

@@ -1,3 +1,0 @@
-KK_VAR=/home/kk/.kk_var
-[ -f $KK_VAR ] && . $KK_VAR
-

@@ -1,3 +1,0 @@
-[ -r /etc/default/locale ] && . /etc/default/locale
-[ -n "$LANG" ] && export LANG
-
