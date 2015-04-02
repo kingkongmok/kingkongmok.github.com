@@ -32,3 +32,13 @@ Resolving deltas: 100% (34/34), done.
 kk@t510:~/workplace/perl$ git remote set-url origin git@github.com:kingkongmok/perl.git
 </pre>
 
+###  同步 git文件夹和home文件夹
+
+实际上git的文件夹是在```~/workspace/kingkongmok.github.com```, 我需要同步的时候先进去，同步除了.vim外的其他文件。
+
+```
+cd workspace/kingkongmok.github.com/linux/home/kk/ && \
+find  . -type f -printf "%P\n" | grep -v ^.vim | xargs -ri ln -fv {} ~/{}
+```
+
+
