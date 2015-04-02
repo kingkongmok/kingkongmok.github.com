@@ -1,6 +1,7 @@
+# Use maildir-style mailbox in user's home directory
 PATH=/bin:/usr/bin:/usr/local/bin
 VERBOSE=off
-MAILDIR=$HOME/.mail
+MAILDIR=$HOME/.maildir
 DEFAULT=$MAILDIR/mbox
 LOGFILE=/dev/null
 # Recipes below this comment:
