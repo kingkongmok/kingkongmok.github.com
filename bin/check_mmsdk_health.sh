@@ -163,10 +163,25 @@ checkBondInterface ()
 }	# ----------  end of function checkBondInterface  ----------
 
 
-
 checkZombieProcess ()
 {
-   for pid in `ps -e -o pid,stat | awk '$2~/^Z/ { print $1 }'`; do ps -f $pid; done  >> $TFILE
+    if  ! grep -w zombie "/mmsdk/crontabLog/checkRouter.log" &> /dev/null  ; then
+        for pid in `ps -e -o pid,stat | awk '$2~/^Z/ { print $1 }'`; do 
+            j=0 
+            for i  in `seq 10` ; do 
+                if [ ! -e /proc/$pid ]  ; then
+                    break ;  
+                else
+                    j=$(($j+1))
+                    sleep 2 ;  
+                fi  
+            done
+            if [ $j == 10 ] ; then
+                echo "zombie founded in ${IP_ADDR} :" | tee -a $TFILE /mmsdk/crontabLog/checkRouter.log
+                ps -p $pid -o pid,stat,cmd | tail -n1 | tee -a $TFILE /mmsdk/crontabLog/checkRouter.log
+            fi  
+        done
+    fi
 }	# ----------  end of function checkZombieProcess  ----------
 
 
