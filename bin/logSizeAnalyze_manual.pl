@@ -1,14 +1,14 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: /tmp/test/getHistoryLogSize.pl
+#         FILE: logSizeAnalyze_manual.pl
 #
-#        USAGE: /tmp/test/getHistoryLogSize.pl tomcat_accesslog_size.log.1.gz
+#        USAGE: logSizeAnalyze_manual.pl tomcat_accesslog_size.log.1.gz
 #
-#  DESCRIPTION: get specified tomcat_accesslog_size.log.1.gz tomcatLogSize report.
+#  DESCRIPTION: analyze tomcat's logSize, output specified logFile's png analyze. 
 #
 #      OPTIONS: ---
-# REQUIREMENTS: ---
+# REQUIREMENTS: /tmp/test fold.
 #         BUGS: ---
 #        NOTES: ---
 #       AUTHOR: KK Mok (), kingkongmok@gmail.com
@@ -22,6 +22,14 @@ use warnings; use strict;
 use IO::Handle;
 use File::Temp "tempfile";
 use POSIX qw(strftime);
+
+if ($#ARGV == -1)
+{
+        print "Error! No input arguments entered!\n";
+        print "please insert logfile's filename e.g.:\n\n";
+        print "\t\"logSizeAnalyze_manual.pl tomcat_accesslog_size.log.1.gz\"\n";
+        exit(-1);
+}
 
 # tomcat yesterday log location
 #open my $fh_log1 , "/home/logs/1_mmlogs/crontabLog/tomcat_accesslog_size.log" ;
@@ -41,6 +49,10 @@ my @serverList = qw( 42.1 42.2 42.3 42.5 );
 #-------------------------------------------------------------------------------
 #  don't edit below
 #-------------------------------------------------------------------------------
+
+unless (-d "/tmp/test") {
+    mkdir "/tmp/test";
+}
 
 my $epoch_timestamp = +(stat("/home/logs/1_mmlogs/crontabLog/$logfileName"))[9];
 # yesterday 
@@ -123,3 +135,5 @@ printflush $P qq[
              "$N" using 1:6 title 'average' with lines linecolor rgb "green" linewidth 2.5,\\
 ];
 close $P;
+
+print "output file: /tmp/test/$date.png\n";
