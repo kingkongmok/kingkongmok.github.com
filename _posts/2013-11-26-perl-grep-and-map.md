@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "perl grep example"
+title: "perl grep and map"
 category: perl
-tags: [perl, command, grep]
+tags: [perl, map, grep]
 ---
 {% include JB/setup %}
 
-##例子如下
+### grep更换数组的值
 
 <pre lang="perl" line="24">
 my      @array = qw/1 2 3 4 5 1a 2b 3c 4d 5e a b c d e /;
@@ -24,3 +24,19 @@ perl test.pl
 1A
 A
 </code>
+
+### 获取10个值的rand 10数组：
+
+```
+my @a =  map {int rand 10} 0..9 ;
+print @a;
+```
+
+### 获取10个值的rand 10的aoa：
+
+```
+use Data::Dumper;
+my @aoa = map {  [ map {int rand 10} 0..9] } 0..9 ;
+print Dumper \@aoa;
+```
+

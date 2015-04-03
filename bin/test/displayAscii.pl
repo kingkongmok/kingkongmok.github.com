@@ -67,3 +67,6 @@ sub printall {
 
 &printall ;
 &display ;
+
+# print "123asd阿萨德哈哈哈sdferjhjhk回家哈" =~ s/[[:ascii:]]//gr 
+
