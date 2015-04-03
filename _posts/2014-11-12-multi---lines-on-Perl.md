@@ -104,3 +104,16 @@ $s =~ /^foot.*root$/gms; # matches foot\nroot
 
 http://perl.active-venture.com/pod/perlfaq6.html
 http://pleac.sourceforge.net/pleac_perl/patternmatching.html
+
+
+### 删除头尾10字节
+
+```
+cat file.txt | perl -0777pe 's/^.{10}//gs; s/.{10}$//gs'
+```
+
+### 统计网卡和ip
+
+```
+ifconfig | perl -MData::Dumper -00ne 'while(/(^\w+):.*inet (\S+)/gsm){$h{$1}=$2}}{print Dumper \%h'
+```
