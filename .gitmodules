@@ -9,16 +9,6 @@
 	path = linux/home/kk/.vim/bundle/bash-support.vim
 	url = https://github.com/vim-scripts/bash-support.vim
     ignore = dirty
-[submodule "linux/home/kk/.vim/bundle/vim-snipmate"]
-	path = linux/home/kk/.vim/bundle/vim-snipmate
-	url = https://github.com/garbas/vim-snipmate
-[submodule "linux/home/kk/.vim/bundle/vim-addon-mw-utils"]
-	path = linux/home/kk/.vim/bundle/vim-addon-mw-utils
-	url = https://github.com/marcweber/vim-addon-mw-utils
-[submodule "linux/home/kk/.vim/bundle/tlib"]
-	path = linux/home/kk/.vim/bundle/tlib
-	url = https://github.com/vim-scripts/tlib
-    ignore = dirty
 [submodule "linux/home/kk/.vim/bundle/vim-surround"]
 	path = linux/home/kk/.vim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround

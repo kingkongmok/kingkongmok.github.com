@@ -5,7 +5,7 @@
 #
 #        USAGE: ./multiplication.pl  
 #
-#  DESCRIPTION: 
+#  DESCRIPTION: 99乘法表
 #
 #      OPTIONS: ---
 # REQUIREMENTS: ---
