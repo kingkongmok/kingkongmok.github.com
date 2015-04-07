@@ -64,9 +64,9 @@ printflush $P qq[
         set xtics rotate
         set yrange [0:] noreverse
         set xlabel 'Time: every minute'
-        set ylabel 'Http 5XX stat code'
+        set ylabel 'Http 2XX stat code'
         set terminal png giant size 1000,500 
-        set output "/tmp/tomcat500.png"
+        set output "/tmp/tomcat200.png"
         plot "$N" using 1:2 title '$serverList[0]' with lines linecolor rgb "red" linewidth 1.5,\\
              "$N" using 1:3 title '$serverList[1]' with lines linecolor rgb "blue" linewidth 1.5,\\
              "$N" using 1:4 title '$serverList[2]' with lines linecolor rgb "orange" linewidth 1.5,\\
