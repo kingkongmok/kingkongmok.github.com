@@ -165,7 +165,7 @@ checkBondInterface ()
 
 checkZombieProcess ()
 {
-    if  ! grep -w zombie "/mmsdk/crontabLog/checkRouter.log" &> /dev/null  ; then
+    if  ! grep -w zombie "/mmsdk/crontabLog/checkZombie.log" &> /dev/null  ; then
         for pid in `ps -e -o pid,stat | awk '$2~/^Z/ { print $1 }'`; do 
             j=0 
             for i  in `seq 10` ; do 
@@ -177,8 +177,8 @@ checkZombieProcess ()
                 fi  
             done
             if [ $j == 10 ] ; then
-                echo "zombie founded in ${IP_ADDR} :" | tee -a $TFILE /mmsdk/crontabLog/checkRouter.log
-                ps -p $pid -o pid,stat,cmd | tail -n1 | tee -a $TFILE /mmsdk/crontabLog/checkRouter.log
+                echo "zombie founded in ${IP_ADDR} :" | tee -a $TFILE /mmsdk/crontabLog/checkZombie.log
+                ps -p $pid -o pid,stat,cmd | tail -n1 | tee -a $TFILE /mmsdk/crontabLog/checkZombie.log
             fi  
         done
     fi
@@ -194,9 +194,13 @@ checkStorageMultipath ()
 checkRouter ()
 {
     if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
+        echo "echo -n tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
         date +"%F %T" >> /mmsdk/crontabLog/checkRouter.log 
+        echo "tracepath to 10.101.13.1" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 10.101.13.1 >> /mmsdk/crontabLog/checkRouter.log 
-        echo >> /mmsdk/crontabLog/checkRouter.log 
+        echo "tracepath to 192.168.63.20" >> /mmsdk/crontabLog/checkRouter.log
+        /bin/tracepath -n 192.168.63.20 >> /mmsdk/crontabLog/checkRouter.log 
+        echo "tracing route end">> /mmsdk/crontabLog/checkRouter.log 
     fi
 }
 
