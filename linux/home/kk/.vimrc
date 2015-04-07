@@ -81,5 +81,7 @@ autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 " http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
 " There are a couple of lines that you should add to your .vimrc file to activate pathogen.
 "call pathogen#runtime_append_all_bundles()
+" for Upgrading all bundled plugins, run following:
+" git submodule foreach git pull origin master
 call pathogen#infect()
 call pathogen#helptags()
