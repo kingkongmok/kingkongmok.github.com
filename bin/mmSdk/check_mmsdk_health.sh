@@ -177,8 +177,10 @@ checkZombieProcess ()
                 fi  
             done
             if [ $j == 10 ] ; then
-                echo "zombie founded in ${IP_ADDR} :" | tee -a $TFILE /mmsdk/crontabLog/checkZombie.log
-                ps -p $pid -o pid,stat,cmd | tail -n1 | tee -a $TFILE /mmsdk/crontabLog/checkZombie.log
+                echo "zombie founded in ${IP_ADDR} :" >> $TFILE
+                echo "zombie founded in ${IP_ADDR} :" >> /mmsdk/crontabLog/checkZombie.log
+                ps -p $pid -o pid,stat,cmd | tail -n1 >> $TFILE
+                ps -p $pid -o pid,stat,cmd | tail -n1 >> /mmsdk/crontabLog/checkZombie.log
             fi  
         done
     fi
@@ -193,14 +195,15 @@ checkStorageMultipath ()
 
 checkRouter ()
 {
+    #if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
     if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
-        echo "echo -n tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
+        echo -n "tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
         date +"%F %T" >> /mmsdk/crontabLog/checkRouter.log 
         echo "tracepath to 10.101.13.1" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 10.101.13.1 >> /mmsdk/crontabLog/checkRouter.log 
         echo "tracepath to 192.168.63.20" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 192.168.63.20 >> /mmsdk/crontabLog/checkRouter.log 
-        echo "tracing route end">> /mmsdk/crontabLog/checkRouter.log 
+        echo -e "tracing route end\n">> /mmsdk/crontabLog/checkRouter.log 
     fi
 }
 
