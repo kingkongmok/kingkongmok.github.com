@@ -107,7 +107,7 @@ foreach my $log ( @logArrays ) {
     my $PV_hist = getHistoryAveragePV(\@logHistArray);
     my $diffValue = abs($PV_now - $PV_hist)/$PV_now || die $!;
     if ( $diffValue > $diffThreshold ) {
-        my $errorOutput = sprintf "host%s:%02i\%,",$serverArray[$serverIterator],$diffValue * 100;
+        my $errorOutput = sprintf "host%s:%02i%%,",$serverArray[$serverIterator],$diffValue * 100;
         $mailSubj.=$errorOutput;
     }
     $serverIterator++;
