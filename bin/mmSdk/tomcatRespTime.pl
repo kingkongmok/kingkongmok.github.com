@@ -109,7 +109,7 @@ for my $k (0..(~~@date_str-1)) {
     }
 }
 close $T;
-open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
+open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 #open my $P, "|-", "gnuplot" or die;
 printflush $P qq[
         set key top left title "AverageMaxValue=$maxValue(second) at $maxTime"
@@ -131,5 +131,5 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$yesterday-resp.txt"` ;
-`cp "/tmp/tomcat-resp.png" "/home/moqingqiang/tmp/$yesterday-resp.png"` ;
+`cp $N "/opt/mmSdk/tmp/$yesterday-resp.txt"` ;
+`cp "/tmp/tomcat-resp.png" "/opt/mmSdk/tmp/$yesterday-resp.png"` ;

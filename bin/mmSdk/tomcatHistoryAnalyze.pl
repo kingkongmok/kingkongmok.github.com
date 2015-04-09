@@ -111,7 +111,7 @@ for my $k (0..(~~@date_str -1)) {
 }
 close $T;
 my $TotalValue = $maxValue * 4 ; 
-open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
+open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxAverage=$TotalValue(10k PV) at $maxTime, yesterday Total=$yesterdayValue(10k PV)"
         set title "$date PV daily compare" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
@@ -133,8 +133,8 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$date-his.txt"` ;
-`cp "/tmp/tomcatHistory.png" "/home/moqingqiang/tmp/$date-his.png"` ;
+`cp $N "/opt/mmSdk/tmp/$date-his.txt"` ;
+`cp "/tmp/tomcatHistory.png" "/opt/mmSdk/tmp/$date-his.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 

@@ -97,7 +97,7 @@ for my $k (0 .. 23) {
 }
 my $TotalValue = $maxValue * 4 ; 
 close $T;
-open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
+open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "MaxAverage=$maxValue(10k PV) with Total=$TotalValue(10k PV) at $maxTime:00 ~ $maxTimeNext:00"
         set title "$date PV Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
@@ -119,8 +119,8 @@ printflush $P qq[
 close $P;
 
 
-`cp $N "/home/moqingqiang/tmp/$date-pv.txt"` ;
-`cp "/tmp/tomcatPV.png" "/home/moqingqiang/tmp/$date-pv.png"` ;
+`cp $N "/opt/mmSdk/tmp/$date-pv.txt"` ;
+`cp "/tmp/tomcatPV.png" "/opt/mmSdk/tmp/$date-pv.png"` ;
 
 #-------------------------------------------------------------------------------
 # mail -> mutt -> msmtp 

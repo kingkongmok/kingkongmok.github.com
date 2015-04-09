@@ -115,6 +115,6 @@ foreach my $log ( @logArrays ) {
 
 
 if ( $mailSubj ) {
-    my $systemCommand=qq#/home/moqingqiang/bin/pvAnalyze_now.sh mmSdk-host-$mailSubj#;
+    my $systemCommand=qq#/opt/mmSdk/bin/pvAnalyze_now.sh mmSdk-host-$mailSubj#;
     `$systemCommand`;
 }

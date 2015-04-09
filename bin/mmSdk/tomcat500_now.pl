@@ -107,7 +107,7 @@ for my $k (0..(~~@date_str-1)) {
     }
 }
 close $T;
-open my $P, "|-", "/home/moqingqiang/local/gnuplot-5.0.0/bin/gnuplot" or die;
+open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxValue=$maxValue(PV) at $maxTime"
         set title "Today 5XX minutely" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
