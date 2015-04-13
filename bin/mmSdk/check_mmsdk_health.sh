@@ -203,6 +203,8 @@ checkRouter ()
         /bin/tracepath -n 10.101.13.1 >> /mmsdk/crontabLog/checkRouter.log 
         echo "tracepath to 192.168.63.20" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 192.168.63.20 >> /mmsdk/crontabLog/checkRouter.log 
+        echo "bond0 info" >> /mmsdk/crontabLog/checkRouter.log
+        cat /proc/net/bonding/bond0 >> /mmsdk/crontabLog/checkRouter.log
         echo -e "tracing route end\n">> /mmsdk/crontabLog/checkRouter.log 
     fi
 }
