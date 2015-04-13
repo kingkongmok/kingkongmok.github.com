@@ -87,7 +87,7 @@ foreach my $filename ( @logArray ) {
             }elsif ( /(udata\.js|u\.gif)/ ) {
                 $httpMethodCount->{$tmptime}{$1}++;
             } elsif ( /(\S+)$/ ){
-                $httpMethodCount->{$tmptime}{$1}++;
+                $httpMethodCount->{$tmptime}{"unknown"}++;
             }
         }
     }
