@@ -22,7 +22,7 @@
 use strict;
 use warnings;
 
-my $diffThreshold = 0.1 ;
+my $diffThreshold = 0.2 ;
 
 
 #-------------------------------------------------------------------------------
