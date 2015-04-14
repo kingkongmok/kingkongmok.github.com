@@ -68,7 +68,5 @@ perl -i -ne 'if(/\S/){s/\r//;print "$_\n"}' $TMPFILE
 perl -i -pe 's/^(?=　)/\<p\>/'  filename.html
 ```
 
-#### 整合上面的修改title和author的自动脚本
-
-
+#### [自动脚本](https://github.com/kingkongmok/kingkongmok.github.com/blob/master/bin/txt2mobi.sh)
 
