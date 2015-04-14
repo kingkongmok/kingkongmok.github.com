@@ -1,1 +1,0 @@
-net time \\10.0.2.2 /set /yes
