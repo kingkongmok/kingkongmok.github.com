@@ -166,7 +166,7 @@ checkBondInterface ()
 checkZombieProcess ()
 {
     if  ! grep -w zombie "/mmsdk/crontabLog/checkZombie.log" &> /dev/null  ; then
-        for pid in `ps -e -o pid,stat | awk '$2~/^Z/ { print $1 }'`; do 
+        for pid in `ps -e -o pid,stat | grep -w Z | awk '{ print $1 }'`; do 
             j=0 
             for i  in `seq 10` ; do 
                 if [ ! -e /proc/$pid ]  ; then
