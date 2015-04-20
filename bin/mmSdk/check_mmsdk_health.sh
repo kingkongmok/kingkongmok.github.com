@@ -195,7 +195,7 @@ checkStorageMultipath ()
 
 checkRouter ()
 {
-    #if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
+    # if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
     if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
         echo -n "tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
         date +"%F %T" >> /mmsdk/crontabLog/checkRouter.log 
