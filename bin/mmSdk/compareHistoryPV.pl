@@ -6,7 +6,7 @@
 #        USAGE: ./compareHistoryPV.pl  
 #
 #  DESCRIPTION: check every host's PV recursively, compare with 
-#                history averarge || alarm
+#                history average || alarm
 #
 #      OPTIONS: ---
 # REQUIREMENTS: ---
@@ -59,7 +59,8 @@ sub getLastHourPV {
     }
     close $fh;
     if ( $count ) {
-        return $sum / $count;
+        my $average = $sum / $count;
+        return $average;
     } else {
         return 0;
     }
@@ -68,8 +69,10 @@ sub getLastHourPV {
 
 sub getHistoryAveragePV {
     my $logHistArray = shift ;
-    my ( $sum, $count) ;
+    my @histAverage;
+    my ( $totalSum, $totalCount) = ( 0, 0 ) ;
     foreach my $logFile ( @{$logHistArray} ) {
+        my ( $sum, $count) = ( 0, 0 ) ;
         if ( -s $logFile ) {
             open my $fh, "zcat $logFile |" || die $!; 
             while ( <$fh> ) {
@@ -83,32 +86,59 @@ sub getHistoryAveragePV {
                  }
             }
         }
+        $totalCount += $count; 
+        $totalSum += $sum;
+        $count ||= 1 ;
+        my $average = $sum/$count; 
+        push @histAverage, $average;  
     }
-    if ( $count ) {
-        return $sum / $count;
-    } else {
-        return 0;
-    }
+        $totalCount ||= 1;
+        my $totalAverage = $totalSum / $totalCount;
+        return ( $totalAverage , \@histAverage );
 } ## --- end sub getHistoryAveragePV
 
 
 my @serverArray = ( 1, 2, 3, 5 );
+my @server_ip = (
+                 "192.168.42.1",
+                 "192.168.42.2",
+                 "192.168.42.3",
+                 "192.168.42.5",
+            );
 my $serverIterator = 0;
 my $mailSubj ;
+my $mailContent ;
+my @days_to_compare = ( 7, 14, 21, 28, 35 );
+my @logDays = map { my ($s, $min, $h, $d, $m, $y) = localtime(time()-$_*24*60*60); 
+                sprintf "%02d-%02d",$m+1,$d}
+                @days_to_compare;
+my ($s, $min, $h, $d, $m, $y) = localtime(time()-60*60);
 foreach my $log ( @logArrays ) {
     my @logHistArray;
 #-------------------------------------------------------------------------------
 #  check last 2 weeks' average
 #-------------------------------------------------------------------------------
-    for ( 7, 14, 21 ) {
+    foreach ( @days_to_compare ) {
         push @logHistArray,"$log.$_.gz";
     }
     my $PV_now = getLastHourPV($log) ;
-    my $PV_hist = getHistoryAveragePV(\@logHistArray);
+    my ( $PV_hist, $PV_hist_array_ref) = getHistoryAveragePV(\@logHistArray);
     my $diffValue = abs($PV_now - $PV_hist)/$PV_now || die $!;
     if ( $diffValue > $diffThreshold ) {
-        my $errorOutput = sprintf "host%s:%02i%%,",$serverArray[$serverIterator],$diffValue * 100;
+        my $diffString = $PV_now > $PV_hist ? "+" : "-";
+        my $errorOutput = sprintf "%s%s%i%%,",$server_ip[ $serverIterator ],$diffString, $diffValue * 100;
         $mailSubj.=$errorOutput;
+        my $iterator = 0;
+        open my $fho, ">> /tmp/pv_mail_now.txt" || $! ;
+        print $fho "<pre>";
+        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\nPV/min last hour's average flow <font color='red'><b>%s%d%%</b></font>:\n\ntoday: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ],$diffString,$diffValue * 100,$PV_now;
+        foreach my $day ( @logDays ) {
+            printf $fho "%s: <font color='green'><b>%.2f</b></font>\n",$day,$PV_hist_array_ref->[$iterator];
+            $iterator++;
+        }
+        print $fho "</pre>";
+        close $fho;
+        
     }
     $serverIterator++;
 }
