@@ -37,7 +37,7 @@ open my $fho , "> $tmpfile" || die $!;
 # $timestamp =~ s/:.*$//;
 
 my ($sec, $min, $hour, $mday, $mon, $year) = localtime();
-chomp (my $timestamp = sprintf "%d-%02d-%d %02d\n", $year+1900, $mon+1, $mday, $hour-1);
+chomp (my $timestamp = sprintf "%d-%02d-%02d %02d\n", $year+1900, $mon+1, $mday, $hour-1);
 my $mailSubj ;
 
 foreach my $file ( @files ) {
