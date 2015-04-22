@@ -131,7 +131,7 @@ foreach my $log ( @logArrays ) {
         my $iterator = 0;
         open my $fho, ">> /tmp/pv_mail_now.txt" || $! ;
         print $fho "<pre>";
-        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\nPV/min last hour's average flow <font color='red'><b>%s%d%%</b></font>:\n\ntoday %02d:00~%02d:00: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ],$diffString,$diffValue * 100, $h, $h+1,$PV_now;
+        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\nPV/min last hour's average flow <font color='red'><b>%s%d%%</b></font>:\ntoday %02d:00~%02d:00: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ],$diffString,$diffValue * 100, $h, $h+1,$PV_now;
         foreach my $day ( @logDays ) {
             printf $fho "%s %02d:00~%02d:00: <font color='green'><b>%.2f</b></font>\n",$day,$h, $h+1,$PV_hist_array_ref->[$iterator];
             $iterator++;
@@ -145,6 +145,6 @@ foreach my $log ( @logArrays ) {
 
 
 if ( $mailSubj ) {
-    my $systemCommand=qq#/opt/mmSdk/bin/pvAnalyze_now.sh mmSdk-host-$mailSubj#;
+    my $systemCommand=qq#/opt/mmSdk/bin/pvAnalyze_now.sh mmSdk-pv-$mailSubj#;
     `$systemCommand`;
 }
