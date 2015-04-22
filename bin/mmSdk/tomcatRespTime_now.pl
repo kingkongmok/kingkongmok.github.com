@@ -43,9 +43,10 @@ my @serverList = qw( 42.1 42.2 42.3 42.5 );
 #  don't edit below
 #-------------------------------------------------------------------------------
 #
-# 24 hour, don't edit
+# last hour, don't edit
 #my @date_str = push @date_str, 
-my @hourArray = map{sprintf"%02i",$_}0..23 ;
+my (undef, undef, $h, undef, undef, undef) = localtime(time()-60*60);
+my @hourArray = map{sprintf"%02i",$_}0..$h ;
 my @minuteArray = map{sprintf"%02i", $_}0..59 ;
 my @date_str ;
 
