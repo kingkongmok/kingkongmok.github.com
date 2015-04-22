@@ -57,7 +57,7 @@ if ( -s "$tmpfile" ) {
     my $systemCommand=q#echo -e "Subject: routeTableErrs\n\n" | cat - # .  "$tmpfile" . q# | /usr/local/bin/msmtp 13725269365@139.com# ;
     `$systemCommand`;
 
-    $systemCommand=qq{echo "<pre style=background:#A9F5E1>" >> /tmp/pv_mail_now.txt &&  cat /home/logs/*_mmlogs/crontabLog/checkRouter.log >> /tmp/pv_mail_now.txt && echo "</pre>" >> /tmp/pv_mail_now.txt && /opt/mmSdk/bin/pvAnalyze_now.sh $mailSubj};
+    $systemCommand=qq{echo "<pre>" >> /tmp/pv_mail_now.txt &&  cat /home/logs/*_mmlogs/crontabLog/checkRouter.log >> /tmp/pv_mail_now.txt && echo "</pre>" >> /tmp/pv_mail_now.txt && /opt/mmSdk/bin/pvAnalyze_now.sh $mailSubj};
     `$systemCommand`;
 }
 
