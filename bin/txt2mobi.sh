@@ -68,13 +68,20 @@ FILENAME=${PATHNAME%%.*}
 TMPFILE="kindlegen_$$"
 
 if [ -r $1 ] ; then
-    enca -x utf8 -L zh < $1 > $TMPFILE
+    #enca -x utf8 -L zh < $1 > $TMPFILE
+    if [ ! "`file $1 | grep UTF-8`" ]  ; then
+        iconv -f gbk -c $1 > $TMPFILE
+    else
+        cp $1 > $TMPFILE
+    fi
+    
     perl -i -ne 'if(/\S/){s/\r//;print "$_\n"}' $TMPFILE
     grutatxt --encoding  utf8 < $TMPFILE > ${TMPFILE}.html 
     perl -i -pe "s#(?<=^\<title\>).*(?=\<\/title\>)#$FILENAME#" ${TMPFILE}.html
     if [ "$AUTHOR" ] ; then
         perl -i -pe "print \"<meta name='author' content='$AUTHOR'>\n\" if $. == 5" ${TMPFILE}.html
     fi
+    perl -i -nae 'print unless /^<\/?pre>$/' ${TMPFILE}.html
     kindlegen ${TMPFILE}.html -o ${FILENAME}.mobi
     if [ -w ${TMPFILE} ] ; then
         rm ${TMPFILE}
