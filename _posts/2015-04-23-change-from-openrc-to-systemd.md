@@ -58,6 +58,7 @@ WantedBy=multi-user.target
 ```
 [Unit]
 Description=showdowsocks
+After=local-fs.target network.target systemd-resolved
 
 [Service]
 User=kk
@@ -88,4 +89,29 @@ User=%I
 
 [Install]
 WantedBy=multi-user.target
+```
+
+### problems
+
+#### CONFIG_FW_LOADER_USER_HELPER
+
+```
+$ sudo emerge  systemd
+...
+...
+ * Messages for package sys-apps/systemd-218-r3:
+
+ *   CONFIG_FW_LOADER_USER_HELPER:   should not be set. But it is.
+ * Please check to make sure these options are set correctly.
+ * Failure to do so may cause unexpected problems.
+
+```
+
+* sudo make menuconfig
+
+```
+Symbol: FW_LOADER_USER_HELPER [=y]                                                                                 x  
+Type  : boolean                                                                                                    x  
+  Defined at drivers/base/Kconfig:151                                                                              x  
+  Selected by: FW_LOADER_USER_HELPER_FALLBACK [=n] && FW_LOADER [=y] || DELL_RBU [=m] && X86 [=y] 
 ```
