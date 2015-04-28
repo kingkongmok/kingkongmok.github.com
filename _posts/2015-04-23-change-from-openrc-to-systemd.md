@@ -118,10 +118,7 @@ Type  : boolean                                                                 
 
 #### solution 
 
-直接修改.config文件，自定义***CONFIG_FW_LOADER_USER_HELPER***，不经过menuconfig进行编译：
+直接修改.config文件，自定义***CONFIG_FW_LOADER_USER_HELPER***，不经过menuconfig进行编译：结果失败，编译前会重置回=y。
 
-```
-$ zgrep CONFIG_FW_LOADER_USER_HELPER /proc/config.gz
-CONFIG_FW_LOADER_USER_HELPER=n
-# CONFIG_FW_LOADER_USER_HELPER_FALLBACK is not set
-```
+根据***[这里](https://forums.gentoo.org/viewtopic-p-7655096.html)***提示，禁止***DELL_RBU***后，不会重置，正常。
+
