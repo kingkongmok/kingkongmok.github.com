@@ -115,3 +115,13 @@ Type  : boolean                                                                 
   Defined at drivers/base/Kconfig:151                                                                              x  
   Selected by: FW_LOADER_USER_HELPER_FALLBACK [=n] && FW_LOADER [=y] || DELL_RBU [=m] && X86 [=y] 
 ```
+
+#### solution 
+
+直接修改.config文件，自定义***CONFIG_FW_LOADER_USER_HELPER***，不经过menuconfig进行编译：
+
+```
+$ zgrep CONFIG_FW_LOADER_USER_HELPER /proc/config.gz
+CONFIG_FW_LOADER_USER_HELPER=n
+# CONFIG_FW_LOADER_USER_HELPER_FALLBACK is not set
+```
