@@ -77,10 +77,10 @@ chomp ( $bestProxy );
 #-------------------------------------------------------------------------------
 #  edit config file
 #-------------------------------------------------------------------------------
-tie my @configArray, 'Tie::File', "/opt/shadowsocks/config.json" or die ;
-if ( $configArray[3] ) {
-    $configArray[3] =~ s/(?<=")(.*?)(?=:)/$bestProxy/;
+tie my @configArray, 'Tie::File', "/etc/shadowsocks.json" or die ;
+if ( $configArray[1] ) {
+    $configArray[1] =~ s/(?<=:\").*?(?=\",*$)/$bestProxy/;
 };
 untie @configArray;
 
-system("sudo /etc/init.d/shadowsocks restart");
+system("sudo systemctl restart ss-local");
