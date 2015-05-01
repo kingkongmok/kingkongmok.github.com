@@ -24,8 +24,6 @@ use warnings;
 use Statistics::Descriptive;
 
 my $diffThreshold = 0.25 ;
-my $tandard_deviationThreshold = 2 ;
-
 
 #-------------------------------------------------------------------------------
 #  don't edit below
@@ -186,16 +184,16 @@ foreach my $log ( @logArrays ) {
    my $mean = $stat->mean();
    my $RSD_Comparation = sprintf "%.2f", ( $RSD - $mean ) / $RSD ;
     if ( $RSD_Comparation > $diffThreshold  ) {
-	 my $errorOutput1 =  sprintf "%sRSD%f,",$server_ip[ $serverIterator ], $RSD;
+	 my $errorOutput1 =  sprintf "%s-RSD+%.2f%%,",$server_ip[ $serverIterator ], $RSD;
 	 $mailSubj.=$errorOutput1;
         my $iterator = 0;
         open my $fho, ">> /tmp/pv_mail_now.txt" || $! ;
         print $fho "<pre>";
-        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\n<b>Relative Standard Deviation</b> in last hour's <font color='red'><b>+%02d%%</b></font>:\ntoday %02d:00~%02d:00 RSD: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ], $RSD_Comparation * 100, $h, $h+1,$RSD;
+        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\n<b>Relative Standard Deviation</b> in last hour's <font color='red'><b>+%02d%%</b></font>:\ntoday %02d:00~%02d:00 RSD: <font color='blue'><b>%.2f%%</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ], $RSD_Comparation * 100, $h, $h+1,$RSD;
         foreach my $day ( @logDays ) {
             my $filed = "";
             $filed = " filtered_data" if $iterator == $filtered_index;
-            printf $fho "%s %02d:00~%02d:00 RSD: <font color='green'><b>%.2f</b></font>%s\n",$day,$h, $h+1,$hist_RSD_ref->[$iterator], $filed;
+            printf $fho "%s %02d:00~%02d:00 RSD: <font color='green'><b>%.2f%%</b></font>%s\n",$day,$h, $h+1,$hist_RSD_ref->[$iterator], $filed;
             $iterator++;
         }
         print $fho "</pre>";
