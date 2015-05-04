@@ -181,8 +181,8 @@ foreach my $log ( @logArrays ) {
 #-------------------------------------------------------------------------------
    $stat = Statistics::Descriptive::Full->new();
    $stat->add_data(\@filtered_data);
-   my $mean = $stat->mean();
-   my $RSD_Comparation = sprintf "%.2f", ( $RSD - $mean ) / $RSD ;
+   my $max=$stat->max();
+   my $RSD_Comparation = sprintf "%.2f", ( $RSD - $max ) / $RSD ;
     if ( $RSD_Comparation > $diffThreshold  ) {
 	 my $errorOutput1 =  sprintf "%s-RSD+%.2f%%,",$server_ip[ $serverIterator ], $RSD;
 	 $mailSubj.=$errorOutput1;
