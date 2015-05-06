@@ -1,0 +1,8 @@
+/home/kk/.irclogs/freenode/*log {
+    size 1
+    rotate 7
+    compress
+    missingok
+    copytruncate
+    notifempty
+}
