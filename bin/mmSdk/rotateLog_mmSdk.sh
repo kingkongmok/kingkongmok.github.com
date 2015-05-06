@@ -180,6 +180,30 @@ AccessLogSize ()
 }	# ----------  end of function AccessLogSize  ----------
 
 
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  backup_sysstat
+#   DESCRIPTION:  backup sar's log files
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+backup_sysstat ()
+{
+    SOURCE_LOCATION="/var/log/sa"
+    DEST_LOCATION="/mmsdk/crontabLog/"
+    SA_HISTORY=50
+
+    YESTERDAY_DD=`date +%d -d -1day`
+    YESTERDAY_YYYYMMDD=`date +%F -d -1day`
+
+    cp ${SOURCE_LOCATION}/sa${YESTERDAY_DD} ${DEST_LOCATION}/sa_${YESTERDAY_YYYYMMDD}
+
+    #-------------------------------------------------------------------------------
+    # remove files older than SA_HISTORY
+    #-------------------------------------------------------------------------------
+    find $DEST_LOCATION -type f -name "sa_*" -mtime +${SA_HISTORY} -delete
+}	# ----------  end of function backup_sysstat  ----------
+
+
 # get tomcat accesslog filesize first. then gzip this. the logAnaly visit log.1.gz.
 AccessLogSize
 rm_crontab_log 
@@ -191,6 +215,7 @@ tomcat_restart
 empty_catalina 
 rm_weblog 
 rm_mmlog 
+backup_sysstat
 
 if [ -r "$TFILE" ] ; then
     if [ "`cat $TFILE`" ] ; then
