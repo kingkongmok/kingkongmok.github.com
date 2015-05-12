@@ -33,6 +33,14 @@ my @methodArray = qw /
                     mmsdk:postactlog
                     mmsdk:posteventlog
                     mmsdk:postsyslog
+                    mmsdk:posterrlog
+                    mmsdk:getappparameter
+                    u.gif
+                    udata.js
+                    gamesdk:postactlog
+                    mmsdk:specposteventlog
+                    gamesdk:postgamelog
+                    gamesdk:postsyslog
                 /;
 
 #-------------------------------------------------------------------------------
