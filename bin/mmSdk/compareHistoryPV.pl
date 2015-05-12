@@ -154,7 +154,7 @@ foreach my $log ( @logArrays ) {
         my $iterator = 0;
         open my $fho, ">> /tmp/pv_mail_now.txt" || $! ;
         print $fho "<pre>";
-        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\nPV/min last hour's average flow <font color='red'><b>%s%d%%</b></font>:\ntoday %02d:00~%02d:00 PV/minute: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ],$diffString,$diffValue * 100, $h, $h+1,$PV_now;
+        printf $fho "今天%02d:00~%02d:00在<font color='red'><b>%s</b></font>可能发生了异常, 对比过往的<b>PV/minute 每分钟访问数</b>过大或者过小<font color='red'><b>%s%d%%</b></font>:\ntoday %02d:00~%02d:00 PV/minute: <font color='blue'><b>%.2f</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ],$diffString,$diffValue * 100, $h, $h+1,$PV_now;
         foreach my $day ( @logDays ) {
             printf $fho "%s %02d:00~%02d:00 PV/minute: <font color='green'><b>%.2f</b></font>\n",$day,$h, $h+1,$PV_hist_array_ref->[$iterator];
             $iterator++;
@@ -189,7 +189,7 @@ foreach my $log ( @logArrays ) {
         my $iterator = 0;
         open my $fho, ">> /tmp/pv_mail_now.txt" || $! ;
         print $fho "<pre>";
-        printf $fho "some errors may occurd today in %02d:00~%02d:00 at <font color='red'><b>%s</b></font>, compare with history\n<b>Relative Standard Deviation</b> in last hour's <font color='red'><b>+%02d%%</b></font>:\ntoday %02d:00~%02d:00 RSD: <font color='blue'><b>%.2f%%</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ], $RSD_Comparation * 100, $h, $h+1,$RSD;
+        printf $fho "今天%02d:00~%02d:00在<font color='red'><b>%s</b></font>可能发生了异常, 对比过往的<b>Relative Standard Deviation 每分钟相对标准偏差</b>，抖动过大<font color='red'><b>+%02d%%</b></font>:\ntoday %02d:00~%02d:00 RSD: <font color='blue'><b>%.2f%%</b></font>\n", $h, $h+1, $server_ip[ $serverIterator ], $RSD_Comparation * 100, $h, $h+1,$RSD;
         foreach my $day ( @logDays ) {
             my $filed = "";
             $filed = " filtered_data" if $iterator == $filtered_index;
