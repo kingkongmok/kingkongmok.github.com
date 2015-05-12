@@ -45,12 +45,14 @@ foreach my $file ( @files ) {
 }
 
 
-open my $fho , "> $tmpfile";
-printf $fho "there's some http errors occored during %s:00~%s:00:\n", $last_hour, $now_hour;
-while ( my( $server, $errortimes ) = each %httperror ) {
-    printf $fho "%s %s times\n", $server, $errortimes;
+if ( %httperror ) {
+    open my $fho , "> $tmpfile";
+    printf $fho "there's some http errors occored during %s:00~%s:00:\n", $last_hour, $now_hour;
+    while ( my( $server, $errortimes ) = each %httperror ) {
+        printf $fho "%s %s times\n", $server, $errortimes;
+    }
+    close $fho ; 
 }
-close $fho ; 
 
 if ( -s "$tmpfile" ) {
     my $systemCommand=q#echo -e "Subject: httpErrs\n\n" | cat - # .  "$tmpfile" . q# | /usr/local/bin/msmtp 13725269365@139.com# ;
