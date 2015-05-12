@@ -22,24 +22,15 @@ use strict;
 use warnings;
 use utf8;
 
-use SettingsGeneral;
+sub slurp {
+    my $count ;
+    open my $fh , "/home/kk/Documents/logs/22.log" || die $!;
 
-use Tie::File;
-use Fcntl 'O_RDWR';
-use strict;
-my $command = $ARGV[0];
-
-sub readonly_test {
-    use Fcntl 'O_RDONLY';
-    my $count;
-    tie my @FILE, 'Tie::File', "/home/kk/Documents/logs/11.log", mode => O_RDONLY, memory => 20_000_000;
-    foreach ( @FILE ) {
+    while ( <$fh> ) {
         $count++ if /mmsdk:postactlog/;
     }
-    untie @FILE;
     return $count ;
-} ## --- end sub readonly_test
+} ## --- end sub readonly
 
 
-
-print &readonly_test;
+print &slurp;
