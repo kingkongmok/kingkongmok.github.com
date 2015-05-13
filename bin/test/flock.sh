@@ -10,7 +10,6 @@
 #-------------------------------------------------------------------------------
 set -e
 
-
 #-------------------------------------------------------------------------------
 # When this option is on, if a simple command fails for any of the reasons
 # listed in Consequences of Shell Errors or returns an exit status value >0,
@@ -18,10 +17,8 @@ set -e
 # and is not a part of an AND or OR list, and is not a pipeline preceded by the
 # ! reserved word, then the shell shall immediately exit.
 #-------------------------------------------------------------------------------
-lock="/tmp/run/test.pid"
+lock="/tmp/`basename $0`.pid"
 exec 200>$lock
-
-
 
 #-------------------------------------------------------------------------------
 # Normally “exec” in a shell script is used to turn over control of the
@@ -32,7 +29,6 @@ exec 200>$lock
 # reading, and assign it file handle 200
 #-------------------------------------------------------------------------------
 flock -n 200 || exit 1
- 
 
 #-------------------------------------------------------------------------------
 # Tells flock to exclusively lock the file referenced by file handle 200 or
@@ -47,9 +43,8 @@ flock -n 200 || exit 1
 pid=$$
 echo $pid 1>&200
 
-
 #-------------------------------------------------------------------------------
-# here my code
+# here my code, or the other codes.
 #-------------------------------------------------------------------------------
 sleep 60
 echo "Hello world"
