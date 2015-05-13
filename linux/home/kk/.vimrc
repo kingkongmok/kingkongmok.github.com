@@ -69,12 +69,16 @@ set shiftwidth=4
 set expandtab
 set visualbell t_vb=
 set t_Co=256
-" You won't usually regret turning this feature on, but if you ever find it annoying—say, you switch from writing a script to writing a letter and a <tab> no longer indicates the beginning of a code block—you can turn it off with this command:
+" You won't usually regret turning this feature on, but if you ever find it
+" annoying—say, you switch from writing a script to writing a letter and a
+" <tab> no longer indicates the beginning of a code block—you can turn it off
+" with this command:
 set autoindent
 " press F8 to disable autoindent http://vim.wikia.com/wiki/How_to_stop_auto_indenting
 ":nnoremap <F8> :setl noai nocin nosi inde=<CR>
 :nnoremap <F8> :setl si paste! si paste?<CR> 
-" (update - add this to your vimrc to block the autoindenting of comments - no other solution on this page works):-
+" (update - add this to your vimrc to block the autoindenting of comments - no
+" other solution on this page works):-
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
 " Pathogen.vim 
@@ -85,3 +89,16 @@ autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 " git submodule foreach git pull origin master
 call pathogen#infect()
 call pathogen#helptags()
+
+
+" set wrap http://vim.wikia.com/wiki/Word_wrap_without_line_breaks
+" wrap tells Vim to word wrap visually (as opposed to changing the text in the
+" buffer)
+set wrap
+"  linebreak tells Vim to only wrap at a character in the breakat option (by
+"  default, this includes " ^I!@*-+;:,./?" (note the inclusion of " " and that
+"  ^I is the control character for Tab)).
+set linebreak
+set nolist  " list disables linebreak
+set tw=78
+set formatoptions+=t
