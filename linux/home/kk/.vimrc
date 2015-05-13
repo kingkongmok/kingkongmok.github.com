@@ -100,5 +100,5 @@ set wrap
 "  ^I is the control character for Tab)).
 set linebreak
 set nolist  " list disables linebreak
-set tw=78
-set formatoptions+=t
+"set tw=78
+"set formatoptions+=t
