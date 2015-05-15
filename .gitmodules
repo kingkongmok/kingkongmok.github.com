@@ -19,3 +19,7 @@
 [submodule "linux/home/kk/.vim/bundle/mru.vim"]
 	path = linux/home/kk/.vim/bundle/mru.vim
 	url = https://github.com/vim-scripts/mru.vim
+[submodule "linux/home/kk/.vim/bundle/c.vim"]
+	path = linux/home/kk/.vim/bundle/c.vim
+	url = https://github.com/vim-scripts/c.vim
+    ignore = dirty
