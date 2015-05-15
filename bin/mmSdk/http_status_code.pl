@@ -26,6 +26,22 @@ use Storable qw(store retrieve);
 chomp(my $lastHour = `date +%F.%H -d -1hour`);
 chomp(my $today = `date +%F -d -1hour`);
 
+
+
+# last hour, don't edit
+#my @date_str = push @date_str, 
+my (undef, undef, $h, undef, undef, undef) = localtime(time()-60*60);
+my @hourArray = map{sprintf"%02i",$_}0..$h ;
+my @minuteArray = map{sprintf"%02i", $_}0..59 ;
+my @date_str ;
+
+
+foreach my $hour ( @hourArray ) {
+    foreach my $minute ( @minuteArray ) {
+        push @date_str ,"$hour:$minute" ;
+    }
+}
+
 #-------------------------------------------------------------------------------
 #  methods to monitor
 #-------------------------------------------------------------------------------
@@ -55,14 +71,14 @@ my $hashFileLocation = "/mmsdk/crontabLog/http_status_code.hash.log";
 my $hashRespTimeFileLocation = "/mmsdk/crontabLog/http_resp_time.hash.log";
 my $hashMethodCountFileLocation = "/mmsdk/crontabLog/http_method_count.hash.log";
 #
-#my @logArray = glob "/tmp/test/*/*log" ;
-#my $outputfilename = "/tmp/http_status_code.log" ;
-#my $outputPVline_file = "/tmp/tomcat_accesslog_line.log" ;
-#my $outputRespTime_file = "/tmp/http_resp_time.log" ;
-#my $outputMethodCount_file = "/tmp/http_method_count.log" ;
-#my $hashFileLocation = "/tmp/http_status_code.hash.log";
-#my $hashRespTimeFileLocation = "/tmp/http_resp_time.hash.log";
-#my $hashMethodCountFileLocation = "/tmp/http_method_count.hash.log";
+# my @logArray = glob "/home/kk/Documents/logs/*.log" ;
+# my $outputfilename = "/tmp/http_status_code.log" ;
+# my $outputPVline_file = "/tmp/tomcat_accesslog_line.log" ;
+# my $outputRespTime_file = "/tmp/http_resp_time.log" ;
+# my $outputMethodCount_file = "/tmp/http_method_count.log" ;
+# my $hashFileLocation = "/tmp/http_status_code.hash.log";
+# my $hashRespTimeFileLocation = "/tmp/http_resp_time.hash.log";
+# my $hashMethodCountFileLocation = "/tmp/http_method_count.hash.log";
 
 my $httpstatusref ;
 my $httpresp ;
@@ -102,17 +118,13 @@ foreach my $filename ( @logArray ) {
 }
 open my $fho, "> $outputfilename" || die $!;
 print $fho "#time\t1xx\t2xx\t3xx\t4xx\t5xx\t$today\n" ;
-foreach my $time ( sort keys %{$httpstatusref} ) {
-        printf $fho "%s\t", $time ;
-        foreach my $httpCode ( 1..5 ) {
-            if ( $httpstatusref->{$time}{$httpCode} ) {
-                printf  $fho "%s\t", $httpstatusref->{$time}{$httpCode} ;
-            }
-            else {
-                printf $fho "%s\t", 0 ;
-            }
-        }
-        print $fho "\n";
+foreach my $time ( @date_str ) {
+    printf $fho "%s\t", $time ;
+    foreach my $httpCode ( 1..5 ) {
+        my $currentColumn = $httpstatusref->{$time}{$httpCode} || 0 ;
+        printf  $fho "%s\t", $currentColumn;
+    }
+    print $fho "\n";
 }
 close $fho;
 
@@ -123,13 +135,24 @@ foreach my $filename ( @logArray ) {
 close $fho1;
 
 open my $fho2, "> $outputRespTime_file" || die $!;
-my ($totaltime, $totalcount);
+my $totalcount = 0 ;
+my $totaltime = 0 ;
 print $fho2 "#time\taverageResptime\t$today\n" ;
-foreach my $time ( sort keys %{$httpresp->{time}} ) {
-        printf $fho2 "%s %0.4f", $time,  $httpresp->{time}{$time} / $httpresp->{count}{$time};
+foreach my $time ( @date_str ) {
+    my $currentColumn ;
+    if ( $httpresp->{count}{$time} ) {
+        $currentColumn = $httpresp->{time}{$time} / $httpresp->{count}{$time} || 0;
+    } else {
+        $currentColumn = 0;
+    }
+    printf $fho2 "%s %0.4f", $time,  $currentColumn ;
+    if ( $httpresp->{time}{$time} ) {
         $totaltime+=$httpresp->{time}{$time};
+    }
+    if ( $httpresp->{time}{$time} ) {
         $totalcount+=$httpresp->{count}{$time};
-        print $fho2 "\n";
+    }
+    print $fho2 "\n";
 }
 printf $fho2 "#total Average %0.4f\n", $totaltime / $totalcount ;
 close $fho2;
@@ -137,21 +160,25 @@ close $fho2;
 open my $fho3, "> $outputMethodCount_file" || die $!;
 my ($methodTotalTime, $methodTotalCount);
 print $fho3 "#time\t", join"\t",@methodArray, "\tother\t$today\n" ;
-foreach my $time ( sort keys %{$httpMethodCount} ) {
-        printf $fho3 "%s\t", $time ;
-        my $other; 
-        $other += $_ for values %{$httpMethodCount->{$time}};
-        foreach my $method ( @methodArray ) {
+foreach my $time ( @date_str ) {
+    printf $fho3 "%s\t", $time ;
+    my $sum = 0;
+    $sum += $_ for values %{$httpMethodCount->{$time}};
+    foreach my $method ( @methodArray ) {
+        if ( $sum == 0 ) {
+            printf $fho3 "%s\t", 0 ;
+        } else {
             if ( $httpMethodCount->{$time}{$method} ) {
                 printf  $fho3 "%s\t", $httpMethodCount->{$time}{$method} ;
-                $other -= $httpMethodCount->{$time}{$method} ;
+                $sum -= $httpMethodCount->{$time}{$method} ;
             }
             else {
-                printf $fho3 "%s\t", 0 ;
+                printf $fho3 "%s\t", 0;
             }
         }
-        printf $fho3 "%s\t", $other ;
-        print $fho3 "\n";
+    }
+    printf $fho3 "%s\t", $sum ;
+    print $fho3 "\n";
 }
 close $fho3;
 
