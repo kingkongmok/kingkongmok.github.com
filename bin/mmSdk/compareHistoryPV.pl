@@ -22,6 +22,8 @@
 use strict;
 use warnings;
 use Statistics::Descriptive;
+use File::stat;
+use POSIX "strftime";
 
 my $diffThreshold = 0.25 ;
 
@@ -30,11 +32,12 @@ my $diffThreshold = 0.25 ;
 #-------------------------------------------------------------------------------
 my $lastHour = `date -d -1hour +%H`;
 #
-#my @logArrays = ("/tmp/test/1/http_status_code.log", 
-#                "/tmp/test/4/http_status_code.log",
-#                "/tmp/test/3/http_status_code.log",
-#                "/tmp/test/5/http_status_code.log",
-#                );
+# my @logArrays = (
+#                     "/home/kk/Documents/logs/http_status_code_1.log",
+#                     "/home/kk/Documents/logs/http_status_code_2.log",
+#                     "/home/kk/Documents/logs/http_status_code_3.log",
+#                     "/home/kk/Documents/logs/http_status_code_5.log",
+#                 );
 my @logArrays = ("/home/logs/1_mmlogs/crontabLog/http_status_code.log", 
                 "/home/logs/4_mmlogs/crontabLog/http_status_code.log",
                 "/home/logs/3_mmlogs/crontabLog/http_status_code.log",
@@ -45,6 +48,16 @@ my @logArrays = ("/home/logs/1_mmlogs/crontabLog/http_status_code.log",
 sub getLastHourPV {
     my $lastHour = shift ;
     my $location = shift ;
+    while (1) {
+        my $nowHour = strftime "%H", localtime(time) ;
+        my $stat_detail = stat $location ; 
+        my $mtime = $stat_detail->[9];
+        my $modifyHour = strftime "%H", localtime($mtime);
+        if ( $nowHour == $modifyHour ) {
+            last ;
+        }
+        sleep 30 ;
+    }
     my $sum = 0;
     my $count;
     my @lastHourPV ;
