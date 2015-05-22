@@ -21,8 +21,8 @@
 use strict;
 use warnings;
 
-use lib '/home/kk/bin' ;
-use password ;
+use lib 'KK' ;
+use Password ;
 my%password=&getpassword;
 
 
