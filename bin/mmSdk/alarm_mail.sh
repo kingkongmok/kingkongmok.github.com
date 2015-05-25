@@ -13,11 +13,11 @@ SUBJ=${*:-"error"}
 MAIL_CONTENT_LOCATION="/tmp/alarm_mail.txt"
 
 if [ -w $MAIL_CONTENT_LOCATION ] ; then
-    /opt/mmSdk/local/mutt-1.5.23/bin/mutt -s "$SUBJ" -- "13725269365@139.com" \
-    <  $MAIL_CONTENT_LOCATION 
+    /opt/mmSdk/local/mutt-1.5.23/bin/mutt -e "set content_type=text/html" -s \
+    "$SUBJ" -- "13725269365@139.com"  <  $MAIL_CONTENT_LOCATION 
     rm $MAIL_CONTENT_LOCATION
     exit 0
 fi
 
-echo "some errors may occured" | /opt/mmSdk/local/mutt-1.5.23/bin/mutt -s \
-"$SUBJ" -- "13725269365@139.com" 
+echo "some errors may occured" | /opt/mmSdk/local/mutt-1.5.23/bin/mutt -e "set \
+content_type=text/html" -s "$SUBJ" -- "13725269365@139.com" 
