@@ -92,3 +92,21 @@ just involves adding the line ignore = dirty to the .gitmodules file for each su
     path = linux/home/kk/.vim/bundle/mru.vim
     url = https://github.com/vim-scripts/mru.vim
 ```
+
+### perl debugger pressing \rd
+
+在vim 的perl-support中，有个bug，不能使用***\rd***来调用debugger，经常出现***xterm: command not found***的错误，原因是vim会查找是否运行gui并调用xterm来debug，但我不需要。所以修改一下:
+
+
+
+```
+perl-support.vim/plugin/perl-support.vim :
+
+diff ~/.vim/bundle/perl-support.vim/plugin/perl-support.vim ~/.vim/bundle/perl-support.vim/plugin/perl-support.vim.bak 
+1243c1243
+<       if has("gui_running") 
+---
+>       if has("gui_running") || &term == "xterm"
+```
+
+
