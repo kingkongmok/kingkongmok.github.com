@@ -196,7 +196,7 @@ foreach my $log ( @logArrays ) {
    $stat->add_data(\@filtered_data);
    my $max=$stat->max();
    my $RSD_Comparation = sprintf "%.2f", ( $RSD - $max ) / $RSD ;
-    if ( $RSD_Comparation > $diffThreshold  ) {
+    if ( $RSD_Comparation > $diffThreshold && $RSD > 5 ) {
 	 my $errorOutput1 =  sprintf "%s-RSD+%.2f%%,",$server_ip[ $serverIterator ], $RSD;
 	 $mailSubj.=$errorOutput1;
         my $iterator = 0;
@@ -218,6 +218,9 @@ foreach my $log ( @logArrays ) {
 
 
 if ( $mailSubj ) {
+    my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-pv-$mailSubj";
+    `cp -f /tmp/pv_mail_now.txt /tmp/alarm_mail.txt` ;
+    `$errorMailCommand` ;
     my $systemCommand=qq#/opt/mmSdk/bin/pvAnalyze_now.sh mmSdk-pv-$mailSubj#;
     `$systemCommand`;
 }
