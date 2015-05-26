@@ -53,7 +53,7 @@ endif
 map <F1> :MRU<CR>
 highlight link MRUFileName LineNr
 let MRU_Max_Entries = 1000
-let MRU_Exclude_Files = '^/tmp/.*\|^/var/tmp/.*'  " For Unix
+" let MRU_Exclude_Files = '^/tmp/.*\|^/var/tmp/.*'  " For Unix
 
 " Uncomment the following to have Vim load indentation rules and plugins
 " according to the detected filetype.
