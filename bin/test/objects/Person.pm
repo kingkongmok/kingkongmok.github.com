@@ -4,16 +4,19 @@ package Person;
 
 sub new
 {
-    my $class = shift;
+    my $invocant = shift;
+    print "invocant is $invocant\n";
+    my $class = ref($invocant) || $invocant;
+    print "class is $class\n" ;
     my $self = {
         _firstName => shift,
         _lastName  => shift,
         _ssn       => shift,
     };
     # Print all the values just for clarification.
-    print "First Name is $self->{_firstName}\n";
-    print "Last Name is $self->{_lastName}\n";
-    print "SSN is $self->{_ssn}\n";
+    # print "First Name is $self->{_firstName}\n";
+    # print "Last Name is $self->{_lastName}\n";
+    # print "SSN is $self->{_ssn}\n";
     bless $self, $class;
     return $self;
 }
