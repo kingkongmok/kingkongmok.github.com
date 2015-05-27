@@ -20,3 +20,12 @@ fi
 if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
+
+# Starting X11 on console login
+#if [[ ! ${DISPLAY} && ${XDG_VTNR} == 2 ]]; then
+#   exec startx
+#fi
+# # set monitor on
+# xset s noblank 
+# xset s off 
+# xset -dpms 

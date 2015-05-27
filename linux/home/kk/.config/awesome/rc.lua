@@ -73,7 +73,8 @@ layouts =
 tags = {}
 for s = 1, screen.count() do
     -- Each screen has its own tag table.
-    tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, s, layouts[1])
+    -- tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, s, layouts[1])
+    tags[s] = awful.tag({ 1, 2, 3 }, s, layouts[1])
 end
 -- }}}
 
@@ -105,6 +106,9 @@ autorun = true
 autorunApps = 
 { 
     "fcitx",
+    "xset s noblank",
+    "xset s off",
+    "xset -dpms",
 }
 
 if autorun then
