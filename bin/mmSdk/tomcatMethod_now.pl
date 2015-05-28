@@ -157,6 +157,7 @@ printflush $P qq[
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"
+        set grid
         set xtics rotate
         set yrange [0:] noreverse
         set xlabel 'Time: every minute'

@@ -104,6 +104,7 @@ printflush $P qq[
         set xdata time
         set timefmt "%H"
         set format x "%H"
+        set grid
         set xtics rotate
         set yrange [0:] noreverse
         set xlabel 'Time: Hourly'

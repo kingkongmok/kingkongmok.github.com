@@ -118,6 +118,7 @@ printflush $P qq[
         set xdata time
         set timefmt  "%Y-%m-%d"
         set format x  "%Y-%m-%d"
+        set grid
         set xtics rotate
         set yrange [0:] noreverse
         set xlabel 'Time: daily'
