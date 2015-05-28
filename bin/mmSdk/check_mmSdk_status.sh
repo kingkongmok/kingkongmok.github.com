@@ -75,5 +75,5 @@ removeTempLogs ()
 #-------------------------------------------------------------------------------
 
 recordSpaceUsage
-recordNginxStatus
+# recordNginxStatus
 removeTempLogs
