@@ -34,6 +34,7 @@ my (undef, undef, $h, undef, undef, undef) = localtime(time()-60*60);
 my @hourArray = map{sprintf"%02i",$_}0..$h ;
 my @minuteArray = map{sprintf"%02i", $_}0..59 ;
 my @date_str ;
+my $backupfileSuffix = sprintf "%02d",$h ;
 
 
 foreach my $hour ( @hourArray ) {
@@ -80,6 +81,12 @@ my $hashMethodCountFileLocation = "/mmsdk/crontabLog/http_method_count.hash.log"
 # my $hashRespTimeFileLocation = "/tmp/http_resp_time.hash.log";
 # my $hashMethodCountFileLocation = "/tmp/http_method_count.hash.log";
 
+
+#-------------------------------------------------------------------------------
+#  backup files before action
+#-------------------------------------------------------------------------------
+backupfile( $backupfileSuffix , $outputfilename, $outputPVline_file, $outputRespTime_file, $outputMethodCount_file, $hashFileLocation, $hashRespTimeFileLocation, $hashMethodCountFileLocation );
+
 my $httpstatusref ;
 my $httpresp ;
 my $httpMethodCount ;
@@ -110,7 +117,7 @@ foreach my $filename ( @logArray ) {
                 $httpMethodCount->{$tmptime}{$1}++;
             }elsif ( /(udata\.js|u\.gif)/ ) {
                 $httpMethodCount->{$tmptime}{$1}++;
-            } elsif ( /(\S+)$/ ){
+            } else {
                 $httpMethodCount->{$tmptime}{"unknown"}++;
             }
         }
@@ -139,12 +146,7 @@ my $totalcount = 0 ;
 my $totaltime = 0 ;
 print $fho2 "#time\taverageResptime\t$today\n" ;
 foreach my $time ( @date_str ) {
-    my $currentColumn ;
-    if ( $httpresp->{count}{$time} ) {
-        $currentColumn = $httpresp->{time}{$time} / $httpresp->{count}{$time} || 0;
-    } else {
-        $currentColumn = 0;
-    }
+    my $currentColumn = eval "$httpresp->{time}{$time} / $httpresp->{count}{$time}" || 0;
     printf $fho2 "%s %0.4f", $time,  $currentColumn ;
     if ( $httpresp->{time}{$time} ) {
         $totaltime+=$httpresp->{time}{$time};
@@ -154,7 +156,8 @@ foreach my $time ( @date_str ) {
     }
     print $fho2 "\n";
 }
-printf $fho2 "#total Average %0.4f\n", $totaltime / $totalcount ;
+my $totalAverage = eval "$totaltime / $totalcount" || 0;    
+printf $fho2 "#total Average %0.4f\n", $totalAverage;
 close $fho2;
 
 open my $fho3, "> $outputMethodCount_file" || die $!;
@@ -182,9 +185,38 @@ foreach my $time ( @date_str ) {
 }
 close $fho3;
 
+
+#-------------------------------------------------------------------------------
+#  backup hash file and logfile
+#-------------------------------------------------------------------------------
+sub backupfile {
+    my $backupfileSuffix = shift ;
+    my @files = @_ ;
+    foreach my $file ( @files ) {
+        my $backupfilename = $file . "_" . $backupfileSuffix;
+        rename $file, $backupfilename;
+    }
+}
+
+
+
 #-------------------------------------------------------------------------------
 #  backup hash
 #-------------------------------------------------------------------------------
 store($httpstatusref, "$hashFileLocation") or die "Can't store %hash in $hashFileLocation!\n";
 store($httpresp, "$hashRespTimeFileLocation") or die "Can't store %hash in $hashRespTimeFileLocation!\n";
 store($httpMethodCount, "$hashMethodCountFileLocation") or die "Can't store %hash in $hashMethodCountFileLocation!\n";
+
+
+# #-------------------------------------------------------------------------------
+# #  zip the tomcat accesslog files.
+# #-------------------------------------------------------------------------------
+# sub zipLogFile {
+#     my @logArray = @_ ;
+#     use IO::Compress::Gzip qw(gzip $GzipError) ;
+#     foreach my $filename ( @logArray ) {
+#         gzip $filename => "$filename.gz" || die "gzip failed: $GzipError\n" ;
+#         unlink $filename ;
+#     }
+# }
+# # zipLogFile( @logArray );
