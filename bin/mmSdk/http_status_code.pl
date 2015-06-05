@@ -27,7 +27,6 @@ chomp(my $lastHour = `date +%F.%H -d -1hour`);
 chomp(my $today = `date +%F -d -1hour`);
 
 
-
 # last hour, don't edit
 #my @date_str = push @date_str, 
 my (undef, undef, $h, undef, undef, undef) = localtime(time()-60*60);
@@ -46,7 +45,7 @@ foreach my $hour ( @hourArray ) {
 #-------------------------------------------------------------------------------
 #  methods to monitor
 #-------------------------------------------------------------------------------
-my @methodArray = qw / 
+my @methodArray = qw/ 
                     mmsdk:postactlog
                     mmsdk:posteventlog
                     mmsdk:postsyslog
@@ -81,18 +80,29 @@ my $hashMethodCountFileLocation = "/mmsdk/crontabLog/http_method_count.hash.log"
 # my $hashRespTimeFileLocation = "/tmp/http_resp_time.hash.log";
 # my $hashMethodCountFileLocation = "/tmp/http_method_count.hash.log";
 
-
-#-------------------------------------------------------------------------------
-#  backup files before action
-#-------------------------------------------------------------------------------
-backupfile( $backupfileSuffix , $outputfilename, $outputPVline_file, $outputRespTime_file, $outputMethodCount_file, $hashFileLocation, $hashRespTimeFileLocation, $hashMethodCountFileLocation );
-
 my $httpstatusref ;
 my $httpresp ;
 my $httpMethodCount ;
 my %pvCount;
+
+
+# #-------------------------------------------------------------------------------
+# #  backup hash file and logfile before actioin
+# #-------------------------------------------------------------------------------
+# sub backupfile {
+#     my $backupfileSuffix = shift ;
+#     my @files = @_ ;
+#     foreach my $file ( @files ) {
+#         my $backupfilename = $file . "_" . $backupfileSuffix;
+#         use File::Copy qw(copy);
+#         copy $file, $backupfilename;
+#     }
+# }
+# backupfile( $backupfileSuffix , $outputfilename, $outputPVline_file, $outputRespTime_file, $outputMethodCount_file, $hashFileLocation, $hashRespTimeFileLocation, $hashMethodCountFileLocation );
+
+
 #-------------------------------------------------------------------------------
-#  restore hash
+#  restore hash from file, which Storable->retrieve
 #-------------------------------------------------------------------------------
 if ( -s $hashFileLocation ) {
     $httpstatusref = retrieve("$hashFileLocation");
@@ -103,6 +113,11 @@ if ( -s $hashRespTimeFileLocation ) {
 if ( -s $hashMethodCountFileLocation ) {
     $httpMethodCount = retrieve("$hashMethodCountFileLocation");
 }
+
+
+#-------------------------------------------------------------------------------
+#  analyze log files, insert hash.
+#-------------------------------------------------------------------------------
 foreach my $filename ( @logArray ) {
     open my $fh , $filename || die $!;
     while ( <$fh> ) {
@@ -123,6 +138,11 @@ foreach my $filename ( @logArray ) {
         }
     }
 }
+
+
+#-------------------------------------------------------------------------------
+#  output http_status_code.log
+#-------------------------------------------------------------------------------
 open my $fho, "> $outputfilename" || die $!;
 print $fho "#time\t1xx\t2xx\t3xx\t4xx\t5xx\t$today\n" ;
 foreach my $time ( @date_str ) {
@@ -135,19 +155,31 @@ foreach my $time ( @date_str ) {
 }
 close $fho;
 
+
+#-------------------------------------------------------------------------------
+#  output tomcat_accesslog_line.log
+#-------------------------------------------------------------------------------
 open my $fho1, ">> $outputPVline_file" || die $!;
 foreach my $filename ( @logArray ) {
     printf $fho1 "%i %s\n", $pvCount{$filename}, $filename ;
 }
 close $fho1;
 
+
+#-------------------------------------------------------------------------------
+#  output http_resp_time.log
+#-------------------------------------------------------------------------------
 open my $fho2, "> $outputRespTime_file" || die $!;
 my $totalcount = 0 ;
 my $totaltime = 0 ;
 print $fho2 "#time\taverageResptime\t$today\n" ;
 foreach my $time ( @date_str ) {
-    my $currentColumn = eval "$httpresp->{time}{$time} / $httpresp->{count}{$time}" || 0;
-    printf $fho2 "%s %0.4f", $time,  $currentColumn ;
+    my $currentColumn = $httpresp->{count}{$time}
+        ?
+            $httpresp->{time}{$time} / $httpresp->{count}{$time}
+        :
+            0 ;
+    printf $fho2 "%s %0.4f", $time, $currentColumn;
     if ( $httpresp->{time}{$time} ) {
         $totaltime+=$httpresp->{time}{$time};
     }
@@ -156,10 +188,14 @@ foreach my $time ( @date_str ) {
     }
     print $fho2 "\n";
 }
-my $totalAverage = eval "$totaltime / $totalcount" || 0;    
+my $totalAverage = $totalcount ? $totaltime / $totalcount : 0;    
 printf $fho2 "#total Average %0.4f\n", $totalAverage;
 close $fho2;
 
+
+#-------------------------------------------------------------------------------
+#  output http_method_count.log
+#-------------------------------------------------------------------------------
 open my $fho3, "> $outputMethodCount_file" || die $!;
 my ($methodTotalTime, $methodTotalCount);
 print $fho3 "#time\t", join"\t",@methodArray, "\tother\t$today\n" ;
@@ -187,21 +223,7 @@ close $fho3;
 
 
 #-------------------------------------------------------------------------------
-#  backup hash file and logfile
-#-------------------------------------------------------------------------------
-sub backupfile {
-    my $backupfileSuffix = shift ;
-    my @files = @_ ;
-    foreach my $file ( @files ) {
-        my $backupfilename = $file . "_" . $backupfileSuffix;
-        rename $file, $backupfilename;
-    }
-}
-
-
-
-#-------------------------------------------------------------------------------
-#  backup hash
+#  backup hash to file, using Storable->store.
 #-------------------------------------------------------------------------------
 store($httpstatusref, "$hashFileLocation") or die "Can't store %hash in $hashFileLocation!\n";
 store($httpresp, "$hashRespTimeFileLocation") or die "Can't store %hash in $hashRespTimeFileLocation!\n";
