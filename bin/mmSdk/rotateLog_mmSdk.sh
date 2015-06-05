@@ -78,6 +78,17 @@ gzip_old_tomcatlog ()
 }	# ----------  end of function gzip_old_tomcatlog  ----------
 
 
+#---  FUNCTION  ----------------------------------------------------------------
+#          NAME:  rm_yesterdayTomcatAccessLog
+#   DESCRIPTION:  remove yesterday's tomcat access log
+#    PARAMETERS:  
+#       RETURNS:  
+#-------------------------------------------------------------------------------
+rm_yesterdayTomcatAccessLog ()
+{
+    nice find ${LOG_LOCATION}/tomcat_77*/access.`date -d -1day +%F`.*log -delete
+}	# ----------  end of function rm_yesterdayTomcatAccessLog  ----------
+
 
 #---  FUNCTION  ---------------------------------------------------------------- 
 #          NAME:  remove mmlog
@@ -209,12 +220,13 @@ AccessLogSize
 rm_crontab_log 
 #count_visits
 rm_old_tomcatlog 
-gzip_old_tomcatlog 
+#gzip_old_tomcatlog 
 rm_gamelog 
 tomcat_restart 
 empty_catalina 
 rm_weblog 
 rm_mmlog 
+rm_yesterdayTomcatAccessLog
 backup_sysstat
 
 if [ -r "$TFILE" ] ; then
