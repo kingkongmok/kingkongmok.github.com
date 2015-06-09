@@ -153,22 +153,18 @@ open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 #open my $P, "|-", "gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxValue=$maxValue(PV) at $maxTime"
-        set title "Today Methods visited yrange2K" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "Today Methods visited SmallView" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"
         set grid
         set xtics rotate
-        set yrange [0:2000] noreverse
+        set yrange [0:] noreverse
         set xlabel 'Time: every minute'
         set ylabel 'Http Method Visited'
         set terminal png giant size 1000,500 
         set output "/tmp/tomcatMethodSmall_now.png"
-        plot "$N" using 1:2 title '$methodArray[0]' with lines linecolor rgb "#FF0000" linewidth 1.5,\\
-             "$N" using 1:3 title '$methodArray[1]' with lines linecolor rgb "#0000FF" linewidth 1.5,\\
-             "$N" using 1:4 title '$methodArray[2]' with lines linecolor rgb "#008000" linewidth 1.5,\\
-             "$N" using 1:5 title '$methodArray[3]' with lines linecolor rgb "#800080" linewidth 1.5,\\
-             "$N" using 1:6 title '$methodArray[4]' with lines linecolor rgb "#DC143C" ,\\
+        plot "$N" using 1:6 title '$methodArray[4]' with lines linecolor rgb "#DC143C" ,\\
              "$N" using 1:7 title '$methodArray[5]' with lines linecolor rgb "#00FF00" ,\\
              "$N" using 1:8 title '$methodArray[6]' with lines linecolor rgb "#00FFFF" ,\\
              "$N" using 1:9 title '$methodArray[7]' with lines linecolor rgb "#8B0000" ,\\
