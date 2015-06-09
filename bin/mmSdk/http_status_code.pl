@@ -33,7 +33,7 @@ my (undef, undef, $h, undef, undef, undef) = localtime(time()-60*60);
 my @hourArray = map{sprintf"%02i",$_}0..$h ;
 my @minuteArray = map{sprintf"%02i", $_}0..59 ;
 my @date_str ;
-my $backupfileSuffix = sprintf "%02d",$h ;
+my $lastHourNumb = sprintf "%02d",$h ;
 
 
 foreach my $hour ( @hourArray ) {
@@ -90,15 +90,15 @@ my %pvCount;
 # #  backup hash file and logfile before actioin
 # #-------------------------------------------------------------------------------
 # sub backupfile {
-#     my $backupfileSuffix = shift ;
+#     my $lastHourNumb = shift ;
 #     my @files = @_ ;
 #     foreach my $file ( @files ) {
-#         my $backupfilename = $file . "_" . $backupfileSuffix;
+#         my $backupfilename = $file . "_" . $lastHourNumb;
 #         use File::Copy qw(copy);
 #         copy $file, $backupfilename;
 #     }
 # }
-# backupfile( $backupfileSuffix , $outputfilename, $outputPVline_file, $outputRespTime_file, $outputMethodCount_file, $hashFileLocation, $hashRespTimeFileLocation, $hashMethodCountFileLocation );
+# backupfile( $lastHourNumb , $outputfilename, $outputPVline_file, $outputRespTime_file, $outputMethodCount_file, $hashFileLocation, $hashRespTimeFileLocation, $hashMethodCountFileLocation );
 
 
 #-------------------------------------------------------------------------------
@@ -123,7 +123,11 @@ foreach my $filename ( @logArray ) {
     while ( <$fh> ) {
         chomp ; 
             $pvCount{$filename}++;
-        if ( /^[^:]+:(\d{2}:\d{2}):\d{2} \+0800\] (\d)\d{2} (\d+\.\d{3}) / ) {
+#-------------------------------------------------------------------------------
+#  count specify hour in logfile. Wihtout counting the last hour 00 minutes.
+#-------------------------------------------------------------------------------
+        # if ( /^[^:]+:(\d{2}:\d{2}):\d{2} \+0800\] (\d)\d{2} (\d+\.\d{3}) / ) {
+        if ( /^[^:]+:($lastHourNumb:\d{2}):\d{2} \+0800\] (\d)\d{2} (\d+\.\d{3}) / ) {
             $httpstatusref->{$1}{$2}++;
             $httpresp->{time}{$1}+=$3;
             $httpresp->{count}{$1}++;
