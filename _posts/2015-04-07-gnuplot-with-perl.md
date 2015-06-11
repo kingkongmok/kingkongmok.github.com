@@ -74,3 +74,20 @@ printflush $P qq[
 ];
 close $P;
 ```
+
+### Chart::Gnuplot
+
+遇到以下错误
+
+```
+Could not find/open font when opening font "arial", using internal non-scalable font
+gdImageStringFT: Could not find/open font while printing string nginx status with font Times-Roman
+```
+
+[解决方法](https://bugzilla.redhat.com/show_bug.cgi?id=537960)
+
+```
+export GDFONTPATH=/usr/share/fonts/liberation
+export GNUPLOT_DEFAULT_GDFONT=LiberationSans-Regular
+```
+
