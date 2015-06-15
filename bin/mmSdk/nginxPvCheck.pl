@@ -38,10 +38,10 @@ use Chart::Gnuplot;
 #-------------------------------------------------------------------------------
 my $line_number = 60 ;   # hourly
 my @logLocations = qw#
-    /home/logs/1_mmlogs/crontabLog/nginx/
-    /home/logs/4_mmlogs/crontabLog/nginx/
-    /home/logs/3_mmlogs/crontabLog/nginx/
-    /home/logs/5_mmlogs/crontabLog/nginx/
+/home/logs/1_mmlogs/crontabLog/nginx/
+/home/logs/4_mmlogs/crontabLog/nginx/
+/home/logs/3_mmlogs/crontabLog/nginx/
+/home/logs/5_mmlogs/crontabLog/nginx/
 #;
 # my @logLocations = (
 #     "/home/kk/Documents/logs/nginx/1/",
@@ -51,7 +51,10 @@ my @logLocations = qw#
 # );
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
+# compare with history ( $nowValue - $history->mean() ) / $history->mean 
 my $threshhold = 0.25;
+# threshhold of RSD now value;
+my $RSDthreshhold = 10;
 
 
 #-------------------------------------------------------------------------------
@@ -77,8 +80,6 @@ sub getRequestsToday (@) {
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
-        # my $displayLine = $#lines - $line_number > 0 ? $#lines - $line_number : 0 ;
-        # my @specifyLines = @lines[ $displayLine ..  $#lines ];
         my @specifyLines = @lines;
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
@@ -254,6 +255,7 @@ sub drawPic {
             %{$timeReq{$dates_toDraw[-1]}}}],
         style   => 'lines',
         width => 3,
+        color => "green",
         title => $dates_toDraw[-1],
         timefmt => '%H:%M',      # input time format
     );
@@ -329,8 +331,6 @@ foreach my $statKey ( qw/mean sum min max/ ) {
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
     if ( abs($comparation)>$threshhold ) {
-        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
-        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
         my %hashValue ;
         my @hashFiltered ;
         my $updown = $comparation > 0 ? "+" : "-";
@@ -355,9 +355,7 @@ foreach my $statKey ( qw/RSD/ ) {
     my $nowdata = $now_hash->{$statKey};
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
-    if ( abs($comparation)>$threshhold ) {
-        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
-        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+    if ( abs($comparation)>$threshhold && $nowdata > $RSDthreshhold) {
         my %hashValue ;
         my @hashFiltered ;
         if ( $comparation > 0 ) {
@@ -365,14 +363,14 @@ foreach my $statKey ( qw/RSD/ ) {
             $comparation = sprintf "%.2f%%", abs$comparation*100;
             $errorStr .= sprintf "%s %s%s\n",$statKey, $updown, $comparation;
             $mailSubj .= sprintf "%s%s%s_",$statKey, $updown, $comparation;
-            $errorStr .= sprintf "  today: %.2f\n",$nowdata;
+            $errorStr .= sprintf "  today: %.2f%%\n",$nowdata;
             @hashValue{sort keys
             %{$requestHistoryHashRef}}=map{s/$_/sprintf"%.2f",$_/eg;
             $_}@$histdata;
             $hashFiltered[$filtered_index]=" (filtered)";
             my $iterator = 0;
             foreach ( sort keys %hashValue ) {
-                $errorStr .= sprintf "  %5s: %s",$_, $hashValue{$_} || "n/a";
+                $errorStr .= sprintf "  %5s: %s%%",$_, $hashValue{$_} || "n/a";
                 $errorStr .= $hashFiltered[$iterator] || "";
                 $errorStr .= "\n";
                 $iterator++;
@@ -397,16 +395,16 @@ outputHtml($errorStr, $mailSubj);
 sub outputHtml {
     my $errorOutput = shift ;
     my $mailSubj = shift;
-    my $outputfilename = '/tmp/nginx_status_now.txt';
-    open my $fho, ">", $outputfilename || die $!;
-    say $fho "<pre>some errors may be occured:";
-    say $fho $errorOutput ;
-    say $fho "</pre>";
-    close $fho ;
     if ( $mailSubj ) {
+        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
+        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+        my $outputfilename = '/tmp/nginx_status_now.txt';
+        open my $fho, ">", $outputfilename || die $!;
+        say $fho "<pre>some errors may be occured:";
+        say $fho $errorOutput ;
+        say $fho "</pre>";
+        close $fho ;
         my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
         `$systemCommand`;
     }
 } ## --- end sub outputHtml
-
-
