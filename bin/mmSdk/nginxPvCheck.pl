@@ -36,25 +36,35 @@ use Chart::Gnuplot;
 #-------------------------------------------------------------------------------
 #  settings
 #-------------------------------------------------------------------------------
+# check the 60 minutes ( 1hour ) history from nginx_status.log.
 my $line_number = 60 ;   # hourly
+
+# nginx status.log location
 my @logLocations = qw#
 /home/logs/1_mmlogs/crontabLog/nginx/
 /home/logs/4_mmlogs/crontabLog/nginx/
 /home/logs/3_mmlogs/crontabLog/nginx/
 /home/logs/5_mmlogs/crontabLog/nginx/
 #;
-# my @logLocations = (
-#     "/home/kk/Documents/logs/nginx/1/",
-#     "/home/kk/Documents/logs/nginx/2/",
-#     "/home/kk/Documents/logs/nginx/3/",
-#     "/home/kk/Documents/logs/nginx/5/",
-# );
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
 my $threshhold = 0.25;
 # threshhold of RSD now value;
 my $RSDthreshhold = 10;
+
+# my @logLocations = (
+#     "/home/kk/Documents/logs/nginx/1/",
+#     "/home/kk/Documents/logs/nginx/2/",
+#     "/home/kk/Documents/logs/nginx/3/",
+#     "/home/kk/Documents/logs/nginx/5/",
+# );
+# my $logfilename = "nginx_status.log";
+# my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
+# # compare with history ( $nowValue - $history->mean() ) / $history->mean 
+# my $threshhold = 0.01;
+# # # threshhold of RSD now value;
+# my $RSDthreshhold = 1;
 
 
 #-------------------------------------------------------------------------------
@@ -64,9 +74,10 @@ my $RSDthreshhold = 10;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
-#      PURPOSE: 
+#      PURPOSE: get today's handling requests by analyzing nginx_status.log with
+#               Tie::File
 #   PARAMETERS: @logs filename
-#      RETURNS: %requestsToday = 
+#      RETURNS: %requestsMinutely = { 
 #                   '14:09' => 951776,
 #               }
 #  DESCRIPTION: ????
@@ -76,27 +87,28 @@ my $RSDthreshhold = 10;
 #===============================================================================
 sub getRequestsToday (@) {
     my	@logFiles	= @_;
-    my %requestsMinutely;
+    my %requestsToday;
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
         my @specifyLines = @lines;
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
-            $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
+            $requestsToday{ substr $specifyLines[$i], -8, 5 } += 
             abs(+(split/\s+/, $specifyLines[$i])[9] - +(split/\s+/,
                     $specifyLines[$i-1])[9]);
         }
         untie @lines;
     }
-    return \%requestsMinutely;
+    return \%requestsToday;
 } ## --- end sub getRequestsToday
 
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsMinutely
-#      PURPOSE: 
+#      PURPOSE: get every minute handling requests by analyzing
+#               nginx_status.log with Tie::File
 #   PARAMETERS: @logs filename
-#      RETURNS: %requestsMinutely = 
+#      RETURNS: %requestsMinutely = {
 #                   '14:09' => 951776,
 #               }
 #  DESCRIPTION: ????
@@ -125,9 +137,13 @@ sub getRequestsMinutely (@) {
 
 #===  FUNCTION  ================================================================
 #         NAME: getStatistics
-#      PURPOSE: get sum, mean, max, maxdex, min, mindex, RSD
-#   PARAMETERS: @pv
-#      RETURNS: %hash
+#      PURPOSE: get sum, mean, max, maxdex, min, mindex, RSD by
+#               Statistics::Descriptive::Full
+#   PARAMETERS: @pv = ( 111, 100, 120 , .. )
+#      RETURNS: %hash = ( 
+#                     sum => 111.25,
+#                     RSD => "2.3%",
+#                 )
 #  DESCRIPTION: ????
 #       THROWS: no exceptions
 #     COMMENTS: none
@@ -155,15 +171,15 @@ sub getStatistics {
 #      PURPOSE: compare 
 #   PARAMETERS: $requestsNowHashRef, $requestHistoryHashRef
 #      RETURNS: alarm if 100*(now->sample - history->mean)/history->mean  
-#  DESCRIPTION: compare RSD, mean
-#       THROWS: no exceptions
+#  DESCRIPTION: pack lasthour data and history data, analyze with
+#               $::getStatistics
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #==============================================================================
 sub getStatusDetail {
     my	( $requestsNowHashRef, $requestHistoryHashRef)	= @_;
     #
-    # history data below
+    # pack history data 
     my ( @hist_sum, @hist_mean, @hist_RSD, @hist_max, @hist_min, @hist_maxdex,
         @hist_mindex);
     for my $date (sort keys%{$requestHistoryHashRef}) {
@@ -194,7 +210,7 @@ sub getStatusDetail {
         RSD => [ @hist_RSD ] ,
     );
     #
-    # today data below
+    # pack today data 
     my @pv = @{$requestsNowHashRef}{sort keys %{$requestsNowHashRef}};
     my %now_hash = %{getStatistics(\@pv)} if @pv;
     #
@@ -204,9 +220,9 @@ sub getStatusDetail {
 
 #===  FUNCTION  ================================================================
 #         NAME: drawPic
-#      PURPOSE: 
+#      PURPOSE: drawpic with Chart::Gnuplot, plot lasthour pv and today's pv. 
 #   PARAMETERS: ????
-#      RETURNS: ????
+#      RETURNS: plot2d return
 #  DESCRIPTION: ????
 #       THROWS: no exceptions
 #     COMMENTS: none
@@ -259,6 +275,8 @@ sub drawPic {
         title => $dates_toDraw[-1],
         timefmt => '%H:%M',      # input time format
     );
+    #
+    # draw history
     my @dataSetArray;
     for ( my $iterator=0; $iterator<$#dates_toDraw; $iterator++ ) {
         $dataSetArray[$iterator] = Chart::Gnuplot::DataSet->new(
@@ -282,13 +300,13 @@ sub outlier_filter { return $_[1] > 0.1; }
 
 #===  FUNCTION  ================================================================
 #         NAME: getComparation
-#      PURPOSE: compare with history's mean record, set history outlier filter
-#      1, 
+#      PURPOSE: compare with last minute and history, 
 #   PARAMETERS: ????
-#      RETURNS: ????
+#      RETURNS: $comparation, $filtered_index,
 #  DESCRIPTION: ????
 #       THROWS: no exceptions
-#     COMMENTS: none
+#     COMMENTS: $comparation = ($lastHourValue -
+#               $historyArray->mean)/$historyArray->mean 
 #     SEE ALSO: n/a
 #===============================================================================
 sub getComparation {
@@ -325,6 +343,9 @@ my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
 #-------------------------------------------------------------------------------
 my $errorStr;
 my $mailSubj;
+#-------------------------------------------------------------------------------
+#  get comparation and filtered_index for mean sum min max
+#-------------------------------------------------------------------------------
 foreach my $statKey ( qw/mean sum min max/ ) {
     my $histdata = $hist_Array_hash->{$statKey};
     my $nowdata = $now_hash->{$statKey};
@@ -350,6 +371,9 @@ foreach my $statKey ( qw/mean sum min max/ ) {
         }
     }
 }
+#-------------------------------------------------------------------------------
+#  get comparation and filtered_index for RSD
+#-------------------------------------------------------------------------------
 foreach my $statKey ( qw/RSD/ ) {
     my $histdata = $hist_Array_hash->{$statKey};
     my $nowdata = $now_hash->{$statKey};
@@ -404,7 +428,9 @@ sub outputHtml {
         say $fho $errorOutput ;
         say $fho "</pre>";
         close $fho ;
-        my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
-        `$systemCommand`;
+        if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
+            my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
+            `$systemCommand`;
+        }
     }
 } ## --- end sub outputHtml

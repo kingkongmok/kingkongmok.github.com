@@ -28,18 +28,21 @@ use Tie::File;
 use Storable qw(store retrieve);
 
 my $line_number = 60 ;
+
 my @logLocations = qw#
     /home/logs/1_mmlogs/crontabLog/nginx/
     /home/logs/4_mmlogs/crontabLog/nginx/
     /home/logs/3_mmlogs/crontabLog/nginx/
     /home/logs/5_mmlogs/crontabLog/nginx/
 #;
+
 # my @logLocations = qw#
 #     /home/kk/Documents/logs/nginx/1/
 #     /home/kk/Documents/logs/nginx/2/
 #     /home/kk/Documents/logs/nginx/3/
 #     /home/kk/Documents/logs/nginx/5/
 # #;
+
 my $logfilename = "nginx_status.log";
 
 my $hashFilename = "/tmp/nginxHistoryPV_backup.hash";
@@ -47,11 +50,14 @@ my $hashFilename = "/tmp/nginxHistoryPV_backup.hash";
 
 #===  FUNCTION  ================================================================
 #         NAME: getHistoryReq
-#      PURPOSE: 
-#   PARAMETERS: @minute
-#      RETURNS: %requestsMinutely = 
-#                   '14:09' => 951776,
-#               }
+#      PURPOSE: get history handling requests by analyzing nginx_status.log.*gz
+#               with Tie::File
+#   PARAMETERS: @logs filename
+#      RETURNS: %requestsMinutely = (
+#                   06-16 => {
+#                       '14:09' => 951776,
+#                   }, 
+#              ) 
 #  DESCRIPTION: ????
 #       THROWS: no exceptions
 #     COMMENTS: none
