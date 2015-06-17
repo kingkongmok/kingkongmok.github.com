@@ -78,8 +78,10 @@ sub getHistoryReq (@) {
             # for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             for ( my $i=1; $i<~~@lines; $i++ ) {
                 $requestsMinutely{substr $lines[$i], -14, 5}{ substr $lines[$i], -8, 5 } += 
-                    abs(+(split/\s+/, $lines[$i])[9] - +(split/\s+/,
-                            $lines[$i-1])[9]);
+                    +(split/\s+/,$lines[$i])[9] > +(split/\s+/,$lines[$i-1])[9]
+                    ? +(split/\s+/,$lines[$i])[9] -
+                    +(split/\s+/,$lines[$i-1])[9] : +(split/\s+/,$lines[$i])[9]
+                    ;
             }
             untie @lines;
         }

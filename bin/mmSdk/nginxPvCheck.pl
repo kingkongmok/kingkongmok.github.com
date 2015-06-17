@@ -94,8 +94,11 @@ sub getRequestsToday (@) {
         my @specifyLines = @lines;
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsToday{ substr $specifyLines[$i], -8, 5 } += 
-            abs(+(split/\s+/, $specifyLines[$i])[9] - +(split/\s+/,
-                    $specifyLines[$i-1])[9]);
+            +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
+                    $specifyLines[$i-1])[9] ? +(split/\s+/,
+                    $specifyLines[$i])[9] - +(split/\s+/,
+                    $specifyLines[$i-1])[9] : +(split/\s+/,
+                    $specifyLines[$i])[9] ;
         }
         untie @lines;
     }
@@ -126,8 +129,11 @@ sub getRequestsMinutely (@) {
         my @specifyLines = @lines[ $displayLine ..  $#lines ];
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
-            abs(+(split/\s+/, $specifyLines[$i])[9] - +(split/\s+/,
-                    $specifyLines[$i-1])[9]);
+            +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
+                    $specifyLines[$i-1])[9] ? +(split/\s+/,
+                    $specifyLines[$i])[9] - +(split/\s+/,
+                    $specifyLines[$i-1])[9] : +(split/\s+/,
+                    $specifyLines[$i])[9] ;
         }
         untie @lines;
     }
