@@ -110,3 +110,20 @@ diff ~/.vim/bundle/perl-support.vim/plugin/perl-support.vim ~/.vim/bundle/perl-s
 ```
 
 
+### perl evn
+
+除了第一句***shebang line***声明perl路径，可以有[其他方法](http://stackoverflow.com/questions/10059806/do-i-need-to-include-usr-bin-perl-line-in-perl-script-on-windows)：
+
+
+有环境变量：
+
+```
+#!/usr/bin/env perl
+```
+
+有eval运行：
+
+```
+#!/usr/bin/perl
+eval 'exec /usr/bin/perl -S $0 ${1+"$@"}' if 0;
+```
