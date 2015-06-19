@@ -46,6 +46,12 @@ my @logLocations = qw#
 /home/logs/3_mmlogs/crontabLog/nginx/
 /home/logs/5_mmlogs/crontabLog/nginx/
 #;
+my %lognameServerMap = (
+    "/home/logs/1_mmlogs/crontabLog/nginx/nginx_status.log" => "42.1",
+    "/home/logs/4_mmlogs/crontabLog/nginx/nginx_status.log" => "42.2",
+    "/home/logs/3_mmlogs/crontabLog/nginx/nginx_status.log" => "42.3",
+    "/home/logs/5_mmlogs/crontabLog/nginx/nginx_status.log" => "42.5",
+);
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
@@ -59,12 +65,18 @@ my $RSDthreshhold = 10;
 #     "/home/kk/Documents/logs/nginx/3/",
 #     "/home/kk/Documents/logs/nginx/5/",
 # );
+# my %lognameServerMap = (
+#     "/home/kk/Documents/logs/nginx/1/nginx_status.log" => "42.1",
+#     "/home/kk/Documents/logs/nginx/2/nginx_status.log" => "42.2",
+#     "/home/kk/Documents/logs/nginx/3/nginx_status.log" => "42.3",
+#     "/home/kk/Documents/logs/nginx/5/nginx_status.log" => "42.5",
+# );
 # my $logfilename = "nginx_status.log";
 # my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
 # # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-# my $threshhold = 0.01;
+# my $threshhold = 0;
 # # # threshhold of RSD now value;
-# my $RSDthreshhold = 1;
+# my $RSDthreshhold = 0;
 
 
 #-------------------------------------------------------------------------------
@@ -85,24 +97,30 @@ my $RSDthreshhold = 10;
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub getRequestsToday (@) {
-    my	@logFiles	= @_;
+sub getRequestsToday {
+    my ($logFilesRef, $lognameServerMapRef) = @_;
+    my	@logFiles	= @{$logFilesRef};
+    my %lognameServerMap = %{$lognameServerMapRef};
     my %requestsToday;
+    my %requestsPerServer;
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
         my @specifyLines = @lines;
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
-            $requestsToday{ substr $specifyLines[$i], -8, 5 } += 
+            #$requestsToday{ substr $specifyLines[$i], -8, 5 } += 
+            my $requestThistMinute =  
             +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
                     $specifyLines[$i-1])[9] ? +(split/\s+/,
                     $specifyLines[$i])[9] - +(split/\s+/,
                     $specifyLines[$i-1])[9] : +(split/\s+/,
                     $specifyLines[$i])[9] ;
+            $requestsToday{ substr $specifyLines[$i], -8, 5 } +=  $requestThistMinute;
+            $requestsPerServer{ $lognameServerMap{$filename} }{substr $specifyLines[$i], -8, 5 } =  $requestThistMinute;
         }
         untie @lines;
     }
-    return \%requestsToday;
+    return (\%requestsToday, \%requestsPerServer);
 } ## --- end sub getRequestsToday
 
 
@@ -225,6 +243,61 @@ sub getStatusDetail {
 
 
 #===  FUNCTION  ================================================================
+#         NAME: drawPicPerServer
+#      PURPOSE: drawpic with Chart::Gnuplot, plot EVERY SERVER's requests
+#   PARAMETERS: ????
+#      RETURNS: plot2d return
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub drawPicPerServer {
+    my ($requestsNowHashRef, $requestsPerServer, $outputname) = @_;
+    my @x = sort keys %{$requestsNowHashRef} ;
+    my %timeReq;
+    #
+    # insert every server's data
+    foreach my $server ( sort keys %{$requestsPerServer}  ) {
+        foreach my $time ( sort keys %{$requestsNowHashRef} ) {
+            $timeReq{$server}{$time} = $requestsPerServer->{$server}{$time} ?
+            $requestsPerServer->{$server}{$time}/10_000 : 0;
+        }
+    }
+    #
+    my @dates_toDraw = sort keys  %timeReq ;
+    # set plot format.
+    my $chart = Chart::Gnuplot->new(
+        output => "/tmp/$outputname.png",
+        terminal => 'png',
+        imagesize => "1000,500", 
+        key => 'top left',
+        title => {
+            text => 'nginx requests',
+            font => "LiberationMono-Regular, 20",
+        },
+        grid => 'on',
+        timeaxis => "x",
+        xlabel => 'Time: every minute',
+        ylabel => 'request(10K)',
+    );
+    # #
+    my @dataSetArray;
+    for ( my $iterator=0; $iterator<$#dates_toDraw+1; $iterator++ ) {
+        $dataSetArray[$iterator] = Chart::Gnuplot::DataSet->new(
+            xdata   => \@x,
+            ydata   => [@{$timeReq{$dates_toDraw[$iterator]}}{sort keys
+                %{$timeReq{$dates_toDraw[$iterator]}}}],
+            style   => 'lines',
+            title => "$dates_toDraw[$iterator]",
+            timefmt => '%H:%M',      # input time format
+        );
+    }
+    $chart->plot2d(@dataSetArray);
+} ## --- end sub drawPicrequestHistoryHashRefPerServer
+
+
+#===  FUNCTION  ================================================================
 #         NAME: drawPic
 #      PURPOSE: drawpic with Chart::Gnuplot, plot lasthour pv and today's pv. 
 #   PARAMETERS: ????
@@ -338,7 +411,7 @@ sub getComparation {
 #-------------------------------------------------------------------------------
 my @logFiles = map { $_ . $logfilename } @logLocations;
 my $requestsNowHashRef = getRequestsMinutely(@logFiles);
-my $requestsToday = getRequestsToday(@logFiles);
+my ($requestsToday, $requestsPerServer) = getRequestsToday(\@logFiles, \%lognameServerMap);
 my $requestHistoryHashRef = retrieve("$hashHistoryFile");
 my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
     $requestHistoryHashRef);
@@ -428,6 +501,9 @@ sub outputHtml {
     if ( $mailSubj ) {
         drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
         drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+        drawPicPerServer($requestsNowHashRef, $requestsPerServer, "nginxPVPerServerHourly");
+        drawPicPerServer($requestsToday, $requestsPerServer, "nginxPVPerServerToday");
+        # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
         my $outputfilename = '/tmp/nginx_status_now.txt';
         open my $fho, ">", $outputfilename || die $!;
         say $fho "<pre>some errors may be occured:";
