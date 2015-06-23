@@ -37,7 +37,7 @@ use Chart::Gnuplot;
 #  settings
 #-------------------------------------------------------------------------------
 # check the 60 minutes ( 1hour ) history from nginx_status.log.
-my $line_number = 60 ;   # hourly
+my $line_number = 60;   # hourly
 
 # nginx status.log location
 my @logLocations = qw#
@@ -111,12 +111,14 @@ sub getRequestsToday {
             #$requestsToday{ substr $specifyLines[$i], -8, 5 } += 
             my $requestThistMinute =  
             +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
-                    $specifyLines[$i-1])[9] ? +(split/\s+/,
-                    $specifyLines[$i])[9] - +(split/\s+/,
-                    $specifyLines[$i-1])[9] : +(split/\s+/,
-                    $specifyLines[$i])[9] ;
-            $requestsToday{ substr $specifyLines[$i], -8, 5 } +=  $requestThistMinute;
-            $requestsPerServer{ $lognameServerMap{$filename} }{substr $specifyLines[$i], -8, 5 } =  $requestThistMinute;
+                $specifyLines[$i-1])[9] ? +(split/\s+/,
+                $specifyLines[$i])[9] - +(split/\s+/,
+                $specifyLines[$i-1])[9] : +(split/\s+/,
+                $specifyLines[$i])[9];
+            $requestsToday{ substr $specifyLines[$i], -8, 5 } +=
+            $requestThistMinute;
+            $requestsPerServer{ $lognameServerMap{$filename} }{substr
+            $specifyLines[$i], -8, 5 } =  $requestThistMinute;
         }
         untie @lines;
     }
@@ -143,15 +145,16 @@ sub getRequestsMinutely (@) {
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
-        my $displayLine = $#lines - $line_number > 0 ? $#lines - $line_number : 0 ;
+        my $displayLine = $#lines - $line_number > 0 ? $#lines - $line_number :
+        0;
         my @specifyLines = @lines[ $displayLine ..  $#lines ];
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
             +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
-                    $specifyLines[$i-1])[9] ? +(split/\s+/,
-                    $specifyLines[$i])[9] - +(split/\s+/,
-                    $specifyLines[$i-1])[9] : +(split/\s+/,
-                    $specifyLines[$i])[9] ;
+                $specifyLines[$i-1])[9] ? +(split/\s+/,
+                $specifyLines[$i])[9] - +(split/\s+/,
+                $specifyLines[$i-1])[9] : +(split/\s+/,
+                $specifyLines[$i])[9];
         }
         untie @lines;
     }
@@ -177,10 +180,10 @@ sub getStatistics {
     my $requestValue = shift;
     my $stat = Statistics::Descriptive::Full->new();
     $stat->add_data( $requestValue );
-    my %hash ;
-    my $standard_deviation=$stat->standard_deviation();#标准差
+    my %hash;
+    my $standard_deviation=$stat->standard_deviation();
     $hash{sum} = $stat->sum();
-    $hash{mean} = $stat->mean();#平均值
+    $hash{mean} = $stat->mean();
     $hash{max} = $stat->max();
     $hash{maxdex} = $stat->maxdex();
     $hash{min} = $stat->min();
@@ -254,7 +257,7 @@ sub getStatusDetail {
 #===============================================================================
 sub drawPicPerServer {
     my ($requestsNowHashRef, $requestsPerServer, $outputname) = @_;
-    my @x = sort keys %{$requestsNowHashRef} ;
+    my @x = sort keys %{$requestsNowHashRef};
     my %timeReq;
     #
     # insert every server's data
@@ -265,7 +268,7 @@ sub drawPicPerServer {
         }
     }
     #
-    my @dates_toDraw = sort keys  %timeReq ;
+    my @dates_toDraw = sort keys  %timeReq;
     # set plot format.
     my $chart = Chart::Gnuplot->new(
         output => "/tmp/$outputname.png",
@@ -309,7 +312,7 @@ sub drawPicPerServer {
 #===============================================================================
 sub drawPic {
     my ($requestsNowHashRef, $requestHistoryHashRef, $outputname) = @_;
-    my @x = sort keys %{$requestsNowHashRef} ;
+    my @x = sort keys %{$requestsNowHashRef};
     my %timeReq;
     #
     # insert today's data
@@ -326,7 +329,7 @@ sub drawPic {
         }
     }
     #
-    my @dates_toDraw = sort keys  %timeReq ;
+    my @dates_toDraw = sort keys  %timeReq;
     # set plot format.
     my $chart = Chart::Gnuplot->new(
         output => "/tmp/$outputname.png",
@@ -418,7 +421,7 @@ my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
 #-------------------------------------------------------------------------------
 #  check mean, sum, min, max with history and $threshhold, 
 #    abs ($comparation) > $threshhold ?
-#           alarm : next ;
+#           alarm : next;
 #-------------------------------------------------------------------------------
 my $errorStr;
 my $mailSubj;
@@ -431,8 +434,8 @@ foreach my $statKey ( qw/mean sum min max/ ) {
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
     if ( abs($comparation)>$threshhold ) {
-        my %hashValue ;
-        my @hashFiltered ;
+        my %hashValue;
+        my @hashFiltered;
         my $updown = $comparation > 0 ? "+" : "-";
         $comparation = sprintf "%.2f%%", abs$comparation*100;
         $errorStr .= sprintf "%s %s%s\n",$statKey, $updown, $comparation;
@@ -459,8 +462,8 @@ foreach my $statKey ( qw/RSD/ ) {
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
     if ( abs($comparation)>$threshhold && $nowdata > $RSDthreshhold) {
-        my %hashValue ;
-        my @hashFiltered ;
+        my %hashValue;
+        my @hashFiltered;
         if ( $comparation > 0 ) {
             my $updown = $comparation > 0 ? "+" : "-";
             $comparation = sprintf "%.2f%%", abs$comparation*100;
@@ -496,21 +499,26 @@ outputHtml($errorStr, $mailSubj);
 #     SEE ALSO: n/a
 #===============================================================================
 sub outputHtml {
-    my $errorOutput = shift ;
+    my $errorOutput = shift;
     my $mailSubj = shift;
     if ( $mailSubj ) {
         drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
         drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
-        drawPicPerServer($requestsNowHashRef, $requestsPerServer, "nginxPVPerServerHourly");
-        drawPicPerServer($requestsToday, $requestsPerServer, "nginxPVPerServerToday");
+        drawPicPerServer($requestsNowHashRef, $requestsPerServer,
+            "nginxPVPerServerHourly");
+        drawPicPerServer($requestsToday, $requestsPerServer,
+            "nginxPVPerServerToday");
         # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
         my $outputfilename = '/tmp/nginx_status_now.txt';
         open my $fho, ">", $outputfilename || die $!;
         say $fho "<pre>some errors may be occured:";
-        say $fho $errorOutput ;
+        say $fho $errorOutput;
         say $fho "</pre>";
-        close $fho ;
+        close $fho;
         if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
+            my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-nginx-$mailSubj";
+            `cp -f $outputfilename /tmp/alarm_mail.txt`;
+            `$errorMailCommand`;
             my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
             `$systemCommand`;
         }
