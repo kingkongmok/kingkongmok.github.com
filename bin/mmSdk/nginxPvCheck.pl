@@ -414,6 +414,7 @@ sub getComparation {
 #-------------------------------------------------------------------------------
 my @logFiles = map { $_ . $logfilename } @logLocations;
 my $requestsNowHashRef = getRequestsMinutely(@logFiles);
+my $startTimeEndTime = join"~",+(sort keys %{$requestsNowHashRef})[0,-1];
 my ($requestsToday, $requestsPerServer) = getRequestsToday(\@logFiles, \%lognameServerMap);
 my $requestHistoryHashRef = retrieve("$hashHistoryFile");
 my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
@@ -511,8 +512,8 @@ sub outputHtml {
         # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
         my $outputfilename = '/tmp/nginx_status_now.txt';
         open my $fho, ">", $outputfilename || die $!;
-        say $fho "<pre>some errors may be occured:";
-        say $fho $errorOutput;
+        say $fho "<pre>some errors may be occured during $startTimeEndTime:";
+        print $fho $errorOutput;
         say $fho "</pre>";
         close $fho;
         if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
