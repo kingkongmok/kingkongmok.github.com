@@ -25,8 +25,8 @@ use Statistics::Descriptive;
 use File::stat;
 use POSIX "strftime";
 
-my $diffThreshold = 0.25 ;
-
+my $diffThreshold = 0.25;
+my $RSDThreshold = 10;
 #-------------------------------------------------------------------------------
 #  don't edit below
 #-------------------------------------------------------------------------------
@@ -194,9 +194,10 @@ foreach my $log ( @logArrays ) {
 #-------------------------------------------------------------------------------
    $stat = Statistics::Descriptive::Full->new();
    $stat->add_data(\@filtered_data);
-   my $max=$stat->max();
-   my $RSD_Comparation = sprintf "%.2f", ( $RSD - $max ) / $RSD ;
-    if ( $RSD_Comparation > $diffThreshold && $RSD > 5 ) {
+   # my $max=$stat->max();
+   my $mean=$stat->mean();
+   my $RSD_Comparation = sprintf "%.2f", ( $RSD - $mean ) / $mean ;
+    if ( $RSD_Comparation > $diffThreshold && $RSD > $RSDThreshold ) {
 	 my $errorOutput1 =  sprintf "%s-RSD+%.2f%%,",$server_ip[ $serverIterator ], $RSD;
 	 $mailSubj.=$errorOutput1;
         my $iterator = 0;
