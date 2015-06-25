@@ -6,10 +6,6 @@ tags: [gnuplot, perl]
 ---
 {% include JB/setup %}
 
-### 正常的方法使用[Chart::Gnuplot](http://search.cpan.org/~kwmak/Chart-Gnuplot-0.23/lib/Chart/Gnuplot.pm)
-
-但由于服务不太好支持cpan更新，所以要考虑直接执行gnuplot的命令
-
 
 ### gnuplot Demo
 
@@ -77,7 +73,7 @@ close $P;
 
 ### Chart::Gnuplot
 
-遇到以下错误
+#### font error 
 
 ```
 Could not find/open font when opening font "arial", using internal non-scalable font
@@ -91,3 +87,36 @@ export GDFONTPATH=/usr/share/fonts/liberation
 export GNUPLOT_DEFAULT_GDFONT=LiberationSans-Regular
 ```
 
+#### example
+
+```
+    my @dates_toDraw = sort keys  %timeReq;
+    # set plot format below.
+    my $chart = Chart::Gnuplot->new(  
+        output => "/tmp/$outputname.png",
+        terminal => 'png',
+        imagesize => "1000,500", 
+        key => 'top left',   # location
+        title => {
+            text => 'nginx requests',
+            font => "LiberationMono-Regular, 20",
+        },
+        grid => 'on',
+        timeaxis => "x",   # set x axis as time format.
+        xlabel => 'Time: every minute',
+        ylabel => 'request(10K)',
+    );
+    # #
+    my @dataSetArray;
+    for ( my $iterator=0; $iterator<$#dates_toDraw+1; $iterator++ ) {
+        $dataSetArray[$iterator] = Chart::Gnuplot::DataSet->new(
+            xdata   => \@x,
+            ydata   => [@{$timeReq{$dates_toDraw[$iterator]}}{sort keys
+                %{$timeReq{$dates_toDraw[$iterator]}}}],
+            style   => 'lines',
+            title => "$dates_toDraw[$iterator]",
+            timefmt => '%H:%M',      # input time format
+        );
+    }
+    $chart->plot2d(@dataSetArray); # draw
+```
