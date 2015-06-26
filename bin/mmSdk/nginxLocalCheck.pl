@@ -33,6 +33,7 @@ use Storable qw(retrieve);
 use Data::Dumper;
 use Chart::Gnuplot;
 use Sys::HostAddr;
+use POSIX 'strftime';
 
 
 #-------------------------------------------------------------------------------
@@ -67,6 +68,7 @@ my $RSDthreshhold = 10;
 #  don't edit below
 #-------------------------------------------------------------------------------
 
+my $thisDate = strftime "%F", localtime time;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
@@ -240,7 +242,7 @@ sub getStatusDetail {
 #     SEE ALSO: n/a
 #===============================================================================
 sub drawPicPerServer {
-    my ($requestsNowHashRef, $requestsPerServer, $outputname) = @_;
+    my ($requestsNowHashRef, $requestsPerServer, $outputname, $ip, $thisDate) = @_;
     my @x = sort keys %{$requestsNowHashRef};
     my %timeReq;
     #
@@ -260,7 +262,7 @@ sub drawPicPerServer {
         imagesize => "1000,500", 
         key => 'top left',
         title => {
-            text => 'nginx requests',
+            text => "$ip $thisDate nginx requests",
             font => "LiberationMono-Regular, 20",
         },
         grid => 'on',
@@ -281,7 +283,7 @@ sub drawPicPerServer {
         );
     }
     $chart->plot2d(@dataSetArray);
-} ## --- end sub drawPicrequestHistoryHashRefPerServer
+} ## --- end sub drawPicPerServer
 
 
 #===  FUNCTION  ================================================================
@@ -295,7 +297,7 @@ sub drawPicPerServer {
 #     SEE ALSO: n/a
 #===============================================================================
 sub drawPic {
-    my ($requestsNowHashRef, $requestHistoryHashRef, $outputname) = @_;
+    my ($requestsNowHashRef, $requestHistoryHashRef, $outputname, $ip, $thisDate) = @_;
     my @x = sort keys %{$requestsNowHashRef};
     my %timeReq;
     #
@@ -321,7 +323,7 @@ sub drawPic {
         imagesize => "1000,500", 
         key => 'top left',
         title => {
-            text => 'nginx requests',
+            text => "$ip $thisDate nginx requests",
             font => "LiberationMono-Regular, 20",
         },
         grid => 'on',
@@ -489,8 +491,8 @@ sub outputHtml {
     my $errorOutput = shift;
     my $mailSubj = shift;
     if ( $mailSubj ) {
-        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly");
-        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly", $ip, $thisDate);
+        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday", $ip, $thisDate);
         # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
         my $outputfilename = '/tmp/nginx_status_now.txt';
         open my $fho, ">", $outputfilename || die $!;
