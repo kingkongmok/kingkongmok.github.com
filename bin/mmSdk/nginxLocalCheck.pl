@@ -56,11 +56,11 @@ my %lognameServerMap = (
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxLocalHistoryPV_backup.hash";
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshhold = 0.25;
-# my $threshhold = 0; #test
-# threshhold of RSD now value;
-my $RSDthreshhold = 10;
-# my $RSDthreshhold = 0; #test
+my $threshold = 0.25;
+# my $threshold = 0; #test
+# threshold of RSD now value;
+my $RSDthreshold = 10;
+# my $RSDthreshold = 0; #test
 
 
 
@@ -406,8 +406,8 @@ my $requestHistoryHashRef = retrieve("$hashHistoryFile");
 my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
     $requestHistoryHashRef);
 #-------------------------------------------------------------------------------
-#  check mean, sum, min, max with history and $threshhold, 
-#    abs ($comparation) > $threshhold ?
+#  check mean, sum, min, max with history and $threshold, 
+#    abs ($comparation) > $threshold ?
 #           alarm : next;
 #-------------------------------------------------------------------------------
 my $errorStr;
@@ -415,12 +415,12 @@ my $mailSubj;
 #-------------------------------------------------------------------------------
 #  get comparation and filtered_index for mean sum min max
 #-------------------------------------------------------------------------------
-foreach my $statKey ( qw/mean sum min max/ ) {
+foreach my $statKey ( qw/mean sum / ) {
     my $histdata = $hist_Array_hash->{$statKey};
     my $nowdata = $now_hash->{$statKey};
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
-    if ( abs($comparation)>$threshhold ) {
+    if ( abs($comparation)>$threshold ) {
         my %hashValue;
         my @hashFiltered;
         my $updown = $comparation > 0 ? "+" : "-";
@@ -448,7 +448,7 @@ foreach my $statKey ( qw/RSD/ ) {
     my $nowdata = $now_hash->{$statKey};
     my ($comparation, $filtered_index ) = getComparation( \@$histdata,
         $nowdata);
-    if ( abs($comparation)>$threshhold && $nowdata > $RSDthreshhold) {
+    if ( abs($comparation)>$threshold && $nowdata > $RSDthreshold) {
         my %hashValue;
         my @hashFiltered;
         if ( $comparation > 0 ) {
