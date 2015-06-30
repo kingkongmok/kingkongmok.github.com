@@ -195,19 +195,24 @@ checkStorageMultipath ()
 
 checkRouter ()
 {
-    # if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
+    # if ! nc -nz 10.101.13.1 81 &>/dev/null ; then
     if ! nc -nz 10.101.13.1 80 &>/dev/null ; then
-        echo -n "tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
+        echo -n "<b><font color=blue>$IP_ADDR tracing route start at " >> /mmsdk/crontabLog/checkRouter.log
         date +"%F %T" >> /mmsdk/crontabLog/checkRouter.log 
+        echo -n "</font></b>" >> /mmsdk/crontabLog/checkRouter.log
         echo "<b><font color=red>\$ route -n</font></b>  <b><font color=green># Display Existing Routes</font></b>" >> /mmsdk/crontabLog/checkRouter.log
         /sbin/route -n >> /mmsdk/crontabLog/checkRouter.log 
         echo "<b><font color=red>\$ tracepath to 10.101.13.1</font></b>  <b><font color=green># tracerouter to DMZ</font></b>" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 10.101.13.1 >> /mmsdk/crontabLog/checkRouter.log 
         echo "<b><font color=red>\$ tracepath to 192.168.63.20</font></b>  <b><font color=green># tracerouter to www gateway</font></b>" >> /mmsdk/crontabLog/checkRouter.log
         /bin/tracepath -n 192.168.63.20 >> /mmsdk/crontabLog/checkRouter.log 
+        echo "<b><font color=red>\$ tracepath to 192.168.63.245</font></b>  <b><font color=green># test spot</font></b>" >> /mmsdk/crontabLog/checkRouter.log
+        /bin/tracepath -n  192.168.63.245 >> /mmsdk/crontabLog/checkRouter.log 
+        echo "<b><font color=red>\$ tracepath to 192.168.63.246</font></b>  <b><font color=green># test spot</font></b>" >> /mmsdk/crontabLog/checkRouter.log
+        /bin/tracepath -n 192.168.63.246 >> /mmsdk/crontabLog/checkRouter.log 
         echo "<b><font color=red>\$ bond0 info</font></b>  <b><font color=green># bonding info</font></b>" >> /mmsdk/crontabLog/checkRouter.log
         cat /proc/net/bonding/bond0 >> /mmsdk/crontabLog/checkRouter.log
-        echo -e "tracing route end\n">> /mmsdk/crontabLog/checkRouter.log 
+        echo -e "<b><font color=blue>tracing route end</font></b>\n">> /mmsdk/crontabLog/checkRouter.log 
     fi
 }
 
