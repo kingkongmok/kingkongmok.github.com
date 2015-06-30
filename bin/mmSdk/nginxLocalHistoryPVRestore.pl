@@ -90,10 +90,10 @@ sub getHistoryReq (@) {
 my @historyLogFiles;
 #
 # compare with 7,14,21,28,35,42,48 day's ago
-#my @historyFileSuffix = map {$_ . ".gz"} grep {$_%7 == 0}(1..56);
+my @historyFileSuffix = map {$_ . ".gz"} grep {$_%7 == 0}(1..56);
 #
 # compare with 1,2,3,4,5,6,7 day's ago
-my @historyFileSuffix = map {$_ . ".gz"} (1..8);
+# my @historyFileSuffix = map {$_ . ".gz"} (1..8);
 foreach my $suffix ( @historyFileSuffix ) {
     push @historyLogFiles , map { $_ . $logfilename . "." .  $suffix } @logLocations;
 }
