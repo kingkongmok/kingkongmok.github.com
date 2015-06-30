@@ -3,7 +3,7 @@
 #
 #         FILE: nginxPvCheck.pl
 #
-#        USAGE: ./nginxPvCheck.pl  
+#        USAGE: "./nginxPvCheck.pl" for cronie, "nginxPvCheck.pl 0" for testing
 #
 #  DESCRIPTION: 
 #
@@ -47,20 +47,16 @@ my $ip = $sysaddr->first_ip();
 # nginx status.log location
 my @logLocations = (
     "/mmsdk/crontabLog/nginx/",
-    # "/home/kk/Documents/logs/nginx/1/", #test
 );
 my %lognameServerMap = (
     "/mmsdk/crontabLog/nginx/nginx_status.log" => $ip,
-    # "/home/kk/Documents/logs/nginx/1/nginx_status.log" => $ip, #test
 );
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxLocalHistoryPV_backup.hash";
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshold = 0.25;
-# my $threshold = 0; #test
+my $threshold = @ARGV ? 0 : 0.25;
 # threshold of RSD now value;
-my $RSDthreshold = 10;
-# my $RSDthreshold = 0; #test
+my $RSDthreshold = @ARGV ? 0 : 10;
 
 
 
@@ -392,6 +388,38 @@ sub getComparation {
 } ## --- end sub getComparation
 
 
+#===  FUNCTION  ================================================================
+#         NAME: outputHtml
+#      PURPOSE: get png and html, then mail 
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub outputHtml {
+    my ($errorOutput, $mailSubj, $requestsNowHashRef, $requestHistoryHashRef,
+        $requestsToday, $startTimeEndTime) = @_;
+    drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly", $ip, $thisDate);
+    drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday", $ip, $thisDate);
+    # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+    my $outputfilename = '/tmp/nginx_status_now.txt';
+    open my $fho, ">", $outputfilename || die $!;
+    say $fho "<pre>some errors may be occured at $ip during $startTimeEndTime:";
+    print $fho $errorOutput;
+    say $fho "</pre>";
+    close $fho;
+    if ( -e "/opt/mmSdk/sbin/nginx_local_mail.sh" ) {
+        my $errorMailCommand = "/opt/mmSdk/sbin/alarm_local_mail.sh mmSdk-nginx-$mailSubj";
+        `cp -f $outputfilename /tmp/alarm_mail.txt`;
+        `$errorMailCommand`;
+        my $systemCommand=qq#/opt/mmSdk/sbin/nginx_local_mail.sh mmSdk-nginx-$mailSubj#;
+        `$systemCommand`;
+    }
+} ## --- end sub outputHtml
+
+
 #-------------------------------------------------------------------------------
 #  start here
 #-------------------------------------------------------------------------------
@@ -401,7 +429,8 @@ sub getComparation {
 my @logFiles = map { $_ . $logfilename } @logLocations;
 my $requestsNowHashRef = getRequestsMinutely(@logFiles);
 my $startTimeEndTime = join"~",+(sort keys %{$requestsNowHashRef})[0,-1];
-my ($requestsToday, $requestsPerServer) = getRequestsToday(\@logFiles, \%lognameServerMap);
+my ($requestsToday, $requestsPerServer) = getRequestsToday(\@logFiles,
+    \%lognameServerMap);
 my $requestHistoryHashRef = retrieve("$hashHistoryFile");
 my ( $hist_Array_hash, $now_hash ) = getStatusDetail( $requestsNowHashRef,
     $requestHistoryHashRef);
@@ -471,41 +500,8 @@ foreach my $statKey ( qw/RSD/ ) {
         }
     }
 }
-
-$mailSubj = $mailSubj ? $ip . "_" . $mailSubj : undef;
-
-outputHtml($errorStr, $mailSubj);
-
-
-#===  FUNCTION  ================================================================
-#         NAME: outputHtml
-#      PURPOSE: 
-#   PARAMETERS: ????
-#      RETURNS: ????
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub outputHtml {
-    my $errorOutput = shift;
-    my $mailSubj = shift;
-    if ( $mailSubj ) {
-        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly", $ip, $thisDate);
-        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday", $ip, $thisDate);
-        # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
-        my $outputfilename = '/tmp/nginx_status_now.txt';
-        open my $fho, ">", $outputfilename || die $!;
-        say $fho "<pre>some errors may be occured at $ip during $startTimeEndTime:";
-        print $fho $errorOutput;
-        say $fho "</pre>";
-        close $fho;
-        if ( -e "/opt/mmSdk/sbin/nginx_local_mail.sh" ) {
-            my $errorMailCommand = "/opt/mmSdk/sbin/alarm_local_mail.sh mmSdk-nginx-$mailSubj";
-            `cp -f $outputfilename /tmp/alarm_mail.txt`;
-            `$errorMailCommand`;
-            my $systemCommand=qq#/opt/mmSdk/sbin/nginx_local_mail.sh mmSdk-nginx-$mailSubj#;
-            `$systemCommand`;
-        }
-    }
-} ## --- end sub outputHtml
+if ( $mailSubj ) {
+    $mailSubj = $ip . "_" . $mailSubj; 
+    outputHtml($errorStr, $mailSubj, $requestsNowHashRef, $requestHistoryHashRef,
+        $requestsToday, $startTimeEndTime);
+}

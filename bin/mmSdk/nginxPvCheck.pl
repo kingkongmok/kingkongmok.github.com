@@ -3,7 +3,8 @@
 #
 #         FILE: nginxPvCheck.pl
 #
-#        USAGE: ./nginxPvCheck.pl  
+#        USAGE: "./nginxPvCheck.pl" for cronie, "./nginxPvCheck.pl 0" for
+#               testing 
 #
 #  DESCRIPTION: 
 #
@@ -39,14 +40,13 @@ use POSIX 'strftime';
 #-------------------------------------------------------------------------------
 # check the 60 minutes ( 1hour ) history from nginx_status.log.
 my $line_number = 60;   # hourly
-
 # nginx status.log location
-my @logLocations = qw#
-/home/logs/1_mmlogs/crontabLog/nginx/
-/home/logs/4_mmlogs/crontabLog/nginx/
-/home/logs/3_mmlogs/crontabLog/nginx/
-/home/logs/5_mmlogs/crontabLog/nginx/
-#;
+my @logLocations = (
+    "/home/logs/1_mmlogs/crontabLog/nginx/",
+    "/home/logs/4_mmlogs/crontabLog/nginx/",
+    "/home/logs/3_mmlogs/crontabLog/nginx/",
+    "/home/logs/5_mmlogs/crontabLog/nginx/",
+);
 my %lognameServerMap = (
     "/home/logs/1_mmlogs/crontabLog/nginx/nginx_status.log" => "42.1",
     "/home/logs/4_mmlogs/crontabLog/nginx/nginx_status.log" => "42.2",
@@ -56,30 +56,9 @@ my %lognameServerMap = (
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshold = 0.25;
-# my $threshold = 0; #test
+my $threshold = @ARGV ? 0 : 0.25;
 # threshold of RSD now value;
-my $RSDthreshold = 10;
-# my $RSDthreshold = 0; #test
-
-# my @logLocations = (
-#     "/home/kk/Documents/logs/nginx/1/",
-#     "/home/kk/Documents/logs/nginx/2/",
-#     "/home/kk/Documents/logs/nginx/3/",
-#     "/home/kk/Documents/logs/nginx/5/",
-# );
-# my %lognameServerMap = (
-#     "/home/kk/Documents/logs/nginx/1/nginx_status.log" => "42.1",
-#     "/home/kk/Documents/logs/nginx/2/nginx_status.log" => "42.2",
-#     "/home/kk/Documents/logs/nginx/3/nginx_status.log" => "42.3",
-#     "/home/kk/Documents/logs/nginx/5/nginx_status.log" => "42.5",
-# );
-# my $logfilename = "nginx_status.log";
-# my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
-# # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-# my $threshold = 0;
-# # # threshold of RSD now value;
-# my $RSDthreshold = 0;
+my $RSDthreshold = @ARGV ? 0 : 10;
 
 
 #-------------------------------------------------------------------------------
@@ -411,6 +390,44 @@ sub getComparation {
 } ## --- end sub getComparation
 
 
+#===  FUNCTION  ================================================================
+#         NAME: outputHtml
+#      PURPOSE: 
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub outputHtml {
+    my ($errorOutput, $mailSubj, $requestsNowHashRef, $requestHistoryHashRef,
+        $requestsToday, $requestsPerServer, $startTimeEndTime ) = @_;
+    drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly",
+        $thisDate);
+    drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday",
+        $thisDate);
+    drawPicPerServer($requestsNowHashRef, $requestsPerServer,
+        "nginxPVPerServerHourly", $thisDate);
+    drawPicPerServer($requestsToday, $requestsPerServer,
+        "nginxPVPerServerToday", $thisDate);
+    # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
+    my $outputfilename = '/tmp/nginx_status_now.txt';
+    open my $fho, ">", $outputfilename || die $!;
+    say $fho "<pre>some errors may be occured during $startTimeEndTime:";
+    print $fho $errorOutput;
+    say $fho "</pre>";
+    close $fho;
+    if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
+        my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-nginx-$mailSubj";
+        `cp -f $outputfilename /tmp/alarm_mail.txt`;
+        `$errorMailCommand`;
+        my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
+        `$systemCommand`;
+    }
+} ## --- end sub outputHtml
+
+
 #-------------------------------------------------------------------------------
 #  start here
 #-------------------------------------------------------------------------------
@@ -491,45 +508,8 @@ foreach my $statKey ( qw/RSD/ ) {
         }
     }
 }
-
-outputHtml($errorStr, $mailSubj);
-
-
-#===  FUNCTION  ================================================================
-#         NAME: outputHtml
-#      PURPOSE: 
-#   PARAMETERS: ????
-#      RETURNS: ????
-#  DESCRIPTION: ????
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
-sub outputHtml {
-    my $errorOutput = shift;
-    my $mailSubj = shift;
-    if ( $mailSubj ) {
-        drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly",
-            $thisDate);
-        drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday",
-            $thisDate);
-        drawPicPerServer($requestsNowHashRef, $requestsPerServer,
-            "nginxPVPerServerHourly", $thisDate);
-        drawPicPerServer($requestsToday, $requestsPerServer,
-            "nginxPVPerServerToday", $thisDate);
-        # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
-        my $outputfilename = '/tmp/nginx_status_now.txt';
-        open my $fho, ">", $outputfilename || die $!;
-        say $fho "<pre>some errors may be occured during $startTimeEndTime:";
-        print $fho $errorOutput;
-        say $fho "</pre>";
-        close $fho;
-        if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
-            my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-nginx-$mailSubj";
-            `cp -f $outputfilename /tmp/alarm_mail.txt`;
-            `$errorMailCommand`;
-            my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
-            `$systemCommand`;
-        }
-    }
-} ## --- end sub outputHtml
+if ( $mailSubj ) {
+    outputHtml($errorStr, $mailSubj, $requestsNowHashRef,
+        $requestHistoryHashRef, $requestsToday, $requestsPerServer,
+        $startTimeEndTime); 
+}
