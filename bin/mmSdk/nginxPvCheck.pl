@@ -89,7 +89,7 @@ sub getRequestsToday {
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
-        my @specifyLines = @lines;
+        my @specifyLines = grep {/^Active connections:.*Waiting/} @lines;
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             #$requestsToday{ substr $specifyLines[$i], -8, 5 } += 
             my $requestThistMinute =  

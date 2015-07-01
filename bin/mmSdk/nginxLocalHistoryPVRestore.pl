@@ -70,11 +70,12 @@ sub getHistoryReq (@) {
             # my $displayLine = $#lines - $line_number > 0 ? $#lines - $line_number : 0 ;
             # my @specifyLines = @lines[ $displayLine ..  $#lines ];
             # for ( my $i=1; $i<~~@specifyLines; $i++ ) {
-            for ( my $i=1; $i<~~@lines; $i++ ) {
-                $requestsMinutely{substr $lines[$i], -14, 5}{ substr $lines[$i], -8, 5 } += 
-                    +(split/\s+/,$lines[$i])[9] > +(split/\s+/,$lines[$i-1])[9]
-                    ? +(split/\s+/,$lines[$i])[9] -
-                    +(split/\s+/,$lines[$i-1])[9] : +(split/\s+/,$lines[$i])[9]
+            my @specifyLines = grep {/^Active connections:.*Waiting/} @lines;
+            for ( my $i=1; $i<~~@specifyLines; $i++ ) {
+                $requestsMinutely{substr $specifyLines[$i], -14, 5}{ substr $specifyLines[$i], -8, 5 } += 
+                    +(split/\s+/,$specifyLines[$i])[9] > +(split/\s+/,$specifyLines[$i-1])[9]
+                    ? +(split/\s+/,$specifyLines[$i])[9] -
+                    +(split/\s+/,$specifyLines[$i-1])[9] : +(split/\s+/,$specifyLines[$i])[9]
                     ;
             }
             untie @lines;
