@@ -412,9 +412,13 @@ sub outputHtml {
     say $fho "</pre>";
     close $fho;
     if ( -e "/opt/mmSdk/sbin/nginx_local_mail.sh" ) {
-        my $errorMailCommand = "/opt/mmSdk/sbin/alarm_local_mail.sh mmSdk-nginx-$mailSubj";
-        `cp -f $outputfilename /tmp/alarm_mail.txt`;
-        `$errorMailCommand`;
+        # SMS alarm
+        unless ( @ARGV ) {
+            my $errorMailCommand = "/opt/mmSdk/sbin/alarm_local_mail.sh mmSdk-nginx-$mailSubj";
+            `cp -f $outputfilename /tmp/alarm_mail.txt`;
+            `$errorMailCommand`;
+        }
+        # send png mail
         my $systemCommand=qq#/opt/mmSdk/sbin/nginx_local_mail.sh mmSdk-nginx-$mailSubj#;
         `$systemCommand`;
     }
