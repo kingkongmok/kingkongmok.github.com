@@ -33,6 +33,7 @@ use Storable qw(retrieve);
 use Data::Dumper;
 use Chart::Gnuplot;
 use POSIX 'strftime';
+use Getopt::Long;
 
 
 #-------------------------------------------------------------------------------
@@ -55,10 +56,6 @@ my %lognameServerMap = (
 );
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
-# compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshold = @ARGV ? 0 : 0.25;
-# threshold of RSD now value;
-my $RSDthreshold = @ARGV ? 0 : 10;
 
 
 #-------------------------------------------------------------------------------
@@ -66,6 +63,16 @@ my $RSDthreshold = @ARGV ? 0 : 10;
 #-------------------------------------------------------------------------------
 
 my $thisDate = strftime "%F", localtime time;
+my $getPicOnlyTrigger = 0;
+my $testTrigger = 0;
+GetOptions(
+    'p!' => \$getPicOnlyTrigger,
+    't!' => \$testTrigger,
+);
+# compare with history ( $nowValue - $history->mean() ) / $history->mean 
+my $threshold = $testTrigger ? 0 : 0.25;
+# threshold of RSD now value;
+my $RSDthreshold = $testTrigger ? 0 : 10;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
@@ -391,6 +398,30 @@ sub getComparation {
 
 
 #===  FUNCTION  ================================================================
+#         NAME: getPicOnly
+#      PURPOSE: 
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: ????
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub getPicOnly {
+    my ($errorStr, $mailSubj, $requestsNowHashRef, $requestHistoryHashRef,
+        $requestsToday, $requestsPerServer, $startTimeEndTime ) = @_;
+    drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly",
+        $thisDate);
+    drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday",
+        $thisDate);
+    drawPicPerServer($requestsNowHashRef, $requestsPerServer,
+        "nginxPVPerServerHourly", $thisDate);
+    drawPicPerServer($requestsToday, $requestsPerServer,
+        "nginxPVPerServerToday", $thisDate);
+} ## --- end sub getPicOnly
+
+
+#===  FUNCTION  ================================================================
 #         NAME: outputHtml
 #      PURPOSE: 
 #   PARAMETERS: ????
@@ -420,7 +451,7 @@ sub outputHtml {
     close $fho;
     if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
         # SMS alarm
-        unless ( @ARGV ) {
+        unless ( $testTrigger ) {
             my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-nginx-$mailSubj";
             `cp -f $outputfilename /tmp/alarm_mail.txt`;
             `$errorMailCommand`;
@@ -517,3 +548,8 @@ if ( $mailSubj ) {
         $requestHistoryHashRef, $requestsToday, $requestsPerServer,
         $startTimeEndTime); 
 }
+if ( $getPicOnlyTrigger ) {
+    getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
+        $requestHistoryHashRef, $requestsToday, $requestsPerServer,
+        $startTimeEndTime); 
+} 
