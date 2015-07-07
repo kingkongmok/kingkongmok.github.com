@@ -154,7 +154,7 @@ open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 #open my $P, "|-", "gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxValue=$maxValue(PV) at $maxTime"
-        set title "$yesterday Methods visited SmallVie" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "All Tomcat $yesterday Methods visited SmallVie" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"

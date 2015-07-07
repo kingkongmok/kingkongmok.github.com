@@ -114,7 +114,7 @@ my $TotalValue = $maxValue * 4 ;
 open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "TotalMaxAverage=$TotalValue(10k PV) at $maxTime, yesterday Total=$yesterdayValue(10k PV)"
-        set title "$date PV daily compare" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "All Tomcat $date PV daily compare" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt  "%Y-%m-%d"
         set format x  "%Y-%m-%d"

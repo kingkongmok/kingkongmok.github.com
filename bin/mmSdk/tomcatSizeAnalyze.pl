@@ -100,7 +100,7 @@ close $T;
 open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "MaxAverage=$maxValue(MB logSize) with Total=$TotalValue(MB logSize) at $maxTime:00 ~ $maxTimeNext:00"
-        set title "$date Tomcat AccessLog Size Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "All Tomcat $date Tomcat AccessLog Size Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H"
         set format x "%H"

@@ -100,7 +100,7 @@ close $T;
 open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 printflush $P qq[
         set key top left title "MaxAverage=$maxValue(10k PV) with Total=$TotalValue(10k PV) at $maxTime:00 ~ $maxTimeNext:00"
-        set title "$date PV Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "All Tomcat $date PV Hourly" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H"
         set format x "%H"

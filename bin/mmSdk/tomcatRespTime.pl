@@ -113,7 +113,7 @@ open my $P, "|-", "/opt/mmSdk/local/gnuplot-5.0.0/bin/gnuplot" or die;
 #open my $P, "|-", "gnuplot" or die;
 printflush $P qq[
         set key top left title "AverageMaxValue=$maxValue(second) at $maxTime"
-        set title "$yesterday response time" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
+        set title "All Tomcat $yesterday response time" font "/usr/share/fonts/dejavu-lgc/DejaVuLGCSansMono-Bold.ttf, 20"
         set xdata time
         set timefmt "%H:%M"
         set format x "%H:%M"
