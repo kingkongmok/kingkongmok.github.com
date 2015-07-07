@@ -34,6 +34,7 @@ use Data::Dumper;
 use Chart::Gnuplot;
 use Sys::HostAddr;
 use POSIX 'strftime';
+use Getopt::Long;
 
 
 #-------------------------------------------------------------------------------
@@ -53,10 +54,6 @@ my %lognameServerMap = (
 );
 my $logfilename = "nginx_status.log";
 my $hashHistoryFile = "/tmp/nginxLocalHistoryPV_backup.hash";
-# compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshold = @ARGV ? 0 : 0.25;
-# threshold of RSD now value;
-my $RSDthreshold = @ARGV ? 0 : 10;
 
 
 
@@ -65,6 +62,14 @@ my $RSDthreshold = @ARGV ? 0 : 10;
 #-------------------------------------------------------------------------------
 
 my $thisDate = strftime "%F", localtime time;
+my $testTrigger = 0;
+GetOptions(
+    't!' => \$testTrigger,
+);
+# compare with history ( $nowValue - $history->mean() ) / $history->mean 
+my $threshold = $testTrigger ? 0 : 0.25;
+# threshold of RSD now value;
+my $RSDthreshold = $testTrigger ? 0 : 10;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
@@ -413,7 +418,7 @@ sub outputHtml {
     close $fho;
     if ( -e "/opt/mmSdk/sbin/nginx_local_mail.sh" ) {
         # SMS alarm
-        unless ( @ARGV ) {
+        unless ( $testTrigger ) {
             my $errorMailCommand = "/opt/mmSdk/sbin/alarm_local_mail.sh mmSdk-nginx-$mailSubj";
             `cp -f $outputfilename /tmp/alarm_mail.txt`;
             `$errorMailCommand`;
