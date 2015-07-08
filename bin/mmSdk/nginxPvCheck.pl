@@ -72,7 +72,7 @@ GetOptions(
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
 my $threshold = $testTrigger ? 0 : 0.25;
 # threshold of RSD now value;
-my $RSDthreshold = $testTrigger ? 0 : 10;
+my $RSDthreshold = $testTrigger ? 0 : 13;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
