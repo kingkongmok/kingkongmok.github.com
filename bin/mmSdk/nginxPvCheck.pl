@@ -34,6 +34,11 @@ use Data::Dumper;
 use Chart::Gnuplot;
 use POSIX 'strftime';
 use Getopt::Long;
+use MIME::Lite;
+use Net::SMTP;
+use FindBin;
+use lib "$FindBin::Bin";;
+use GetPass;
 
 
 #-------------------------------------------------------------------------------
@@ -422,45 +427,62 @@ sub getPicOnly {
 
 
 #===  FUNCTION  ================================================================
-#         NAME: outputHtml
-#      PURPOSE: 
-#   PARAMETERS: ????
+#         NAME: sendEmailBySmtp
+#      PURPOSE: write mail with MIME::Lite, and send with Net::SMTP
+#   PARAMETERS: $subject, $message
 #      RETURNS: ????
-#  DESCRIPTION: ????
+#  DESCRIPTION: read GetPass.pm , get smtp auth and recipient. then send mail
 #       THROWS: no exceptions
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub outputHtml {
-    my ($errorOutput, $mailSubj, $requestsNowHashRef, $requestHistoryHashRef,
-        $requestsToday, $requestsPerServer, $startTimeEndTime ) = @_;
-    drawPic($requestsNowHashRef, $requestHistoryHashRef, "nginxPVHourly",
-        $thisDate);
-    drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday",
-        $thisDate);
-    drawPicPerServer($requestsNowHashRef, $requestsPerServer,
-        "nginxPVPerServerHourly", $thisDate);
-    drawPicPerServer($requestsToday, $requestsPerServer,
-        "nginxPVPerServerToday", $thisDate);
-    # drawPic($requestsToday, $requestHistoryHashRef, "nginxPVToday");
-    my $outputfilename = '/tmp/nginx_status_now.txt';
-    open my $fho, ">", $outputfilename || die $!;
-    say $fho "<pre>some errors may be occured during $startTimeEndTime:";
-    print $fho $errorOutput;
-    say $fho "</pre>";
-    close $fho;
-    if ( -e "/opt/mmSdk/bin/nginx_mail.sh" ) {
-        # SMS alarm
-        unless ( $testTrigger ) {
-            my $errorMailCommand = "/opt/mmSdk/bin/alarm_mail.sh mmSdk-nginx-$mailSubj";
-            `cp -f $outputfilename /tmp/alarm_mail.txt`;
-            `$errorMailCommand`;
-        }
-        # send png mail
-        my $systemCommand=qq#/opt/mmSdk/bin/nginx_mail.sh mmSdk-nginx-$mailSubj#;
-        `$systemCommand`;
-    }
-} ## --- end sub outputHtml
+sub sendEmailBySmtp {
+    my ($subject, $message) = @_;
+    my $password = new GetPass;
+    my ( $smtpUser, $smtpPass, $smtpFrom, $smtpHost ) =
+    $password->getSmtpAuth("username", "password", "from", "host");
+    my ($infoRec, $fromAddress) = $password->getInfoRec("address", "from");
+    # Send HTML document with inline images
+    # Create a new MIME Lite object
+    my $msg = MIME::Lite->new(
+        From    => $fromAddress,
+        To      => $infoRec,
+        Subject => $subject,
+        Type    =>'multipart/related');
+    # Add the body to your HTML message
+    $msg->attach(Type => 'text/html',
+        Data => qq{ 
+        <BODY>
+        $message
+        <IMG SRC="cid:nginxPVHourly.png">
+        <IMG SRC="cid:nginxPVToday.png">
+        <IMG SRC="cid:nginxPVPerServerHourly.png">
+        <IMG SRC="cid:nginxPVPerServerToday.png">
+        </BODY> });
+    # Attach the image
+    $msg->attach(Type => 'image/png',
+        Id   => 'nginxPVHourly.png',
+        Path => '/tmp/nginxPVHourly.png');
+    $msg->attach(Type => 'image/png',
+        Id   => 'nginxPVToday.png',
+        Path => '/tmp/nginxPVToday.png');
+    $msg->attach(Type => 'image/png',
+        Id   => 'nginxPVPerServerHourly.png',
+        Path => '/tmp/nginxPVPerServerHourly.png');
+    $msg->attach(Type => 'image/png',
+        Id   => 'nginxPVPerServerToday.png',
+        Path => '/tmp/nginxPVPerServerToday.png');
+    # Send it 
+    my $mailer = Net::SMTP->new( $smtpHost );
+    $mailer->auth($smtpUser,$smtpPass);
+    $mailer->mail($smtpFrom);
+    $mailer->to($infoRec);
+    $mailer->data;
+    # this is where you send the MIME::Lite object
+    $mailer->datasend(  $msg->as_string  );
+    $mailer->dataend;
+    $mailer->quit;
+}
 
 
 #-------------------------------------------------------------------------------
@@ -497,9 +519,12 @@ foreach my $statKey ( qw/mean sum min max/ ) {
         my @hashFiltered;
         my $updown = $comparation > 0 ? "+" : "-";
         $comparation = sprintf "%.2f%%", abs$comparation*100;
-        $errorStr .= sprintf "%s %s%s\n",$statKey, $updown, $comparation;
+        $errorStr .= sprintf
+        "<p><font color='blue'><b>%s %s%s</b></font><br>",$statKey, $updown,
+        $comparation;
         $mailSubj .= sprintf "%s%s%s_",$statKey, $updown, $comparation;
-        $errorStr .= sprintf "  today: %i\n",$nowdata;
+        $errorStr .= sprintf
+        "<font color='green'><b>today</b></font>: %i<br>",$nowdata;
         @hashValue{sort keys
         %{$requestHistoryHashRef}}=map{s/$_/sprintf"%i",$_/eg; $_}@$histdata;
         $hashFiltered[$filtered_index]=" (filtered)";
@@ -507,9 +532,10 @@ foreach my $statKey ( qw/mean sum min max/ ) {
         foreach ( sort keys %hashValue ) {
             $errorStr .= sprintf "  %5s: %s",$_, $hashValue{$_} || "n/a";
             $errorStr .= $hashFiltered[$iterator] || "";
-            $errorStr .= "\n";
+            $errorStr .= "<br>";
             $iterator++;
         }
+        $errorStr .= "</p>\n";
     }
 }
 #-------------------------------------------------------------------------------
@@ -526,9 +552,12 @@ foreach my $statKey ( qw/RSD/ ) {
         if ( $comparation > 0 ) {
             my $updown = $comparation > 0 ? "+" : "-";
             $comparation = sprintf "%.2f%%", abs$comparation*100;
-            $errorStr .= sprintf "%s %s%s\n",$statKey, $updown, $comparation;
+            $errorStr .= sprintf 
+            "<p><font color='blue'><b>%s %s%s</b></font><br>",$statKey,
+            $updown, $comparation;
             $mailSubj .= sprintf "%s%s%s_",$statKey, $updown, $comparation;
-            $errorStr .= sprintf "  today: %.2f%%\n",$nowdata;
+            $errorStr .= sprintf
+            "<font color='green'><b>today</b></font>: %.2f%%<br>",$nowdata;
             @hashValue{sort keys
             %{$requestHistoryHashRef}}=map{s/$_/sprintf"%.2f",$_/eg;
             $_}@$histdata;
@@ -537,16 +566,18 @@ foreach my $statKey ( qw/RSD/ ) {
             foreach ( sort keys %hashValue ) {
                 $errorStr .= sprintf "  %5s: %s%%",$_, $hashValue{$_} || "n/a";
                 $errorStr .= $hashFiltered[$iterator] || "";
-                $errorStr .= "\n";
+                $errorStr .= "<br>";
                 $iterator++;
             }
+            $errorStr .= "</p>\n";
         }
     }
 }
 if ( $mailSubj ) {
-    outputHtml($errorStr, $mailSubj, $requestsNowHashRef,
+    getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
         $requestHistoryHashRef, $requestsToday, $requestsPerServer,
         $startTimeEndTime); 
+    sendEmailBySmtp($mailSubj, $errorStr);
 }
 if ( $getPicOnlyTrigger ) {
     getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
