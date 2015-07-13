@@ -29,21 +29,17 @@ use lib '/tmp/auth/';
 use GetPass;
 
 sub sendEmailBySmtp {
-
     my $password = new GetPass;
     my ( $smtpUser, $smtpPass, $smtpFrom, $smtpHost ) =
     $password->getSmtpAuth("username", "password", "from", "host");
     my $infoRec = $password->getInfoRec("address");
-
     # Send HTML document with inline images
     # Create a new MIME Lite object
-
     my $msg = MIME::Lite->new(
         From    => $smtpFrom,
         To      => $infoRec,
-        Subject =>"subjectHere",
+        Subject =>'测试邮件',
         Type    =>'multipart/related');
-
     # Add the body to your HTML message
     $msg->attach(Type => 'text/html',
         Data => qq{ <BODY BGCOLOR=#FFFFFF>
@@ -55,22 +51,19 @@ sub sendEmailBySmtp {
         用于测试邮件显示图片的perl脚本。
         </P>
         <P ALIGN="middle">
-        <IMG SRC="cid:2uni2.png">
+        <IMG SRC="cid:2uni2.jpg">
         </P>
         </BODY> });
-
     # Attach the image
-    $msg->attach(Type => 'image/png',
-        Id   => '2uni2.png',
-        Path => '/tmp/nginxPVHourly.png');
-
+    $msg->attach(Type => 'image/jpg',
+        Id   => '2uni2.jpg',
+        Path => '/home/kk/Downloads/a.jpg');
     # Send it 
     my $mailer = Net::SMTP->new( $smtpHost );
     $mailer->auth($smtpUser,$smtpPass);
     $mailer->mail($smtpFrom);
     $mailer->to($infoRec);
     $mailer->data;
-
     # this is where you send the MIME::Lite object
     $mailer->datasend(  $msg->as_string  );
     $mailer->dataend;
