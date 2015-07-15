@@ -25,7 +25,7 @@ use feature 'say';
 use strict;
 use MIME::Lite;
 use Net::SMTP;
-use lib '/tmp/auth/';
+use lib '/tmp';
 use GetPass;
 
 sub sendEmailBySmtp {
@@ -33,7 +33,7 @@ sub sendEmailBySmtp {
     my $password = new GetPass;
     my ( $smtpUser, $smtpPass, $smtpFrom, $smtpHost ) =
     $password->getSmtpAuth("username", "password", "from", "host");
-    my $infoRec = $password->getInfoRec("address");
+    my $infoRec = $password->getLogRec("address");
 
     # Send HTML document with inline images
     # Create a new MIME Lite object
@@ -54,21 +54,15 @@ sub sendEmailBySmtp {
         <P ALIGN="left">
         用于测试邮件显示图片的perl脚本。
         </P>
-        <P ALIGN="middle">
-        <IMG SRC="cid:2uni2.png">
-        </P>
         </BODY> });
 
     # Attach the image
-    $msg->attach(Type => 'image/png',
-        Id   => '2uni2.png',
-        Path => '/tmp/nginxPVHourly.png');
 
     # Send it 
     my $mailer = Net::SMTP->new( $smtpHost );
     $mailer->auth($smtpUser,$smtpPass);
     $mailer->mail($smtpFrom);
-    $mailer->to($infoRec);
+    $mailer->to(@{$infoRec});
     $mailer->data;
 
     # this is where you send the MIME::Lite object
