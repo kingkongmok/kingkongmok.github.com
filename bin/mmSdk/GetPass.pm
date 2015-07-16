@@ -30,6 +30,13 @@ my %infoRec = (
     from => '需要伪装的邮件From地址: fake@bar.com',
 );
 
+
+# for daily log
+my %logRec = (
+    address => 'kingkongmok@gmail.com moqingqiang@richinfo.cn',
+    from => 'sys.report@139.com',
+);
+
 my %smtpAuth = (
     username => 'smtp的账号',
     password => 'smtp的密码',
@@ -41,6 +48,12 @@ sub getInfoRec {
     shift;
     my @param = @_;
     return @infoRec{@param};
+}
+
+sub getLogRec {
+    shift;
+    my @param = @_;
+    return @logRec{@param};
 }
 
 sub getSmtpAuth {

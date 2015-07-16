@@ -439,9 +439,18 @@ sub getPicOnly {
 sub sendEmailBySmtp {
     my ($subject, $message) = @_;
     my $password = new GetPass;
+    $subject =~ s/^/mmSdk_nginxs_/;
+    $subject =~ s/_$//;
     my ( $smtpUser, $smtpPass, $smtpFrom, $smtpHost ) =
     $password->getSmtpAuth("username", "password", "from", "host");
-    my ($infoRec, $fromAddress) = $password->getInfoRec("address", "from");
+    my $infoRec = $password->getInfoRec("address");
+    my $fromAddress = $password->getInfoRec("from");
+    my @PicArray = (
+        "nginxPVHourly.png",
+        "nginxPVToday.png",
+        "nginxPVPerServerHourly.png",
+        "nginxPVPerServerToday.png",
+    );
     # Send HTML document with inline images
     # Create a new MIME Lite object
     my $msg = MIME::Lite->new(
@@ -450,33 +459,29 @@ sub sendEmailBySmtp {
         Subject => $subject,
         Type    =>'multipart/related');
     # Add the body to your HTML message
+    #
+    # 
+    my @htmlScriptArray = @PicArray;
+    map { s/$_/<IMG SRC="cid:$_">/g; $_} @htmlScriptArray;
+    my $htmlPicScript = join "", @htmlScriptArray;
+    #
     $msg->attach(Type => 'text/html',
         Data => qq{ 
         <BODY>
         $message
-        <IMG SRC="cid:nginxPVHourly.png">
-        <IMG SRC="cid:nginxPVToday.png">
-        <IMG SRC="cid:nginxPVPerServerHourly.png">
-        <IMG SRC="cid:nginxPVPerServerToday.png">
+        $htmlPicScript
         </BODY> });
     # Attach the image
-    $msg->attach(Type => 'image/png',
-        Id   => 'nginxPVHourly.png',
-        Path => '/tmp/nginxPVHourly.png');
-    $msg->attach(Type => 'image/png',
-        Id   => 'nginxPVToday.png',
-        Path => '/tmp/nginxPVToday.png');
-    $msg->attach(Type => 'image/png',
-        Id   => 'nginxPVPerServerHourly.png',
-        Path => '/tmp/nginxPVPerServerHourly.png');
-    $msg->attach(Type => 'image/png',
-        Id   => 'nginxPVPerServerToday.png',
-        Path => '/tmp/nginxPVPerServerToday.png');
+    foreach my $picName ( @PicArray ) {
+        $msg->attach(Type => 'image/png',
+            Id   => "$picName",
+            Path => "/tmp/$picName");
+    }
     # Send it 
     my $mailer = Net::SMTP->new( $smtpHost );
     $mailer->auth($smtpUser,$smtpPass);
     $mailer->mail($smtpFrom);
-    $mailer->to($infoRec);
+    $mailer->to(@{$infoRec});
     $mailer->data;
     # this is where you send the MIME::Lite object
     $mailer->datasend(  $msg->as_string  );
@@ -519,6 +524,7 @@ foreach my $statKey ( qw/mean sum min max/ ) {
         my @hashFiltered;
         my $updown = $comparation > 0 ? "+" : "-";
         $comparation = sprintf "%.2f%%", abs$comparation*100;
+        $errorStr //= "<p>some errors may be occured at all_nginx during $startTimeEndTime:</p>"; 
         $errorStr .= sprintf
         "<p><font color='blue'><b>%s %s%s</b></font><br>",$statKey, $updown,
         $comparation;
@@ -552,6 +558,7 @@ foreach my $statKey ( qw/RSD/ ) {
         if ( $comparation > 0 ) {
             my $updown = $comparation > 0 ? "+" : "-";
             $comparation = sprintf "%.2f%%", abs$comparation*100;
+            $errorStr //= "<p>some errors may be occured at all_nginx during $startTimeEndTime:</p>"; 
             $errorStr .= sprintf 
             "<p><font color='blue'><b>%s %s%s</b></font><br>",$statKey,
             $updown, $comparation;
