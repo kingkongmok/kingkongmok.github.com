@@ -146,9 +146,11 @@ sub getRequestsMinutely (@) {
         # startLine numb and endLineNumb should both -1 incase of losting nginx
         # status
         #
-        my $startLineNumb = $#lines - 1 > $line_number ? 
-        $#lines - 1 - $line_number : 0;
-        my @specifyLines = @lines[ $startLineNumb .. ( $#lines -1 ) ];
+        my $indexLineNumb = $#lines; 
+        my $startLineNumb = $indexLineNumb - 1 > $line_number ? 
+        $indexLineNumb - 1 - $line_number : 0;
+        my @specifyLines = @lines[ $startLineNumb .. ( $indexLineNumb -1 ) ];
+
         #
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
