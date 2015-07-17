@@ -138,9 +138,14 @@ sub getRequestsMinutely (@) {
     my @hourlyLines;
     foreach my $filename ( @logFiles ) {
         tie my @lines, 'Tie::File', $filename, mode => "O_RDONLY" || die $!;
-        my $displayLine = $#lines - $line_number > 0 ? $#lines - $line_number :
-        0;
-        my @specifyLines = @lines[ $displayLine ..  $#lines ];
+        # 
+        # startLine numb and endLineNumb should both -1 incase of losting nginx
+        # status
+        #
+        my $startLineNumb = $#lines - 1 > $line_number ? 
+        $#lines - 1 - $line_number : 0;
+        my @specifyLines = @lines[ $startLineNumb .. ( $#lines -1 ) ];
+        #
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
             +(split/\s+/, $specifyLines[$i])[9] > +(split/\s+/,
