@@ -70,14 +70,16 @@ my $hashHistoryFile = "/tmp/nginxHistoryPV_backup.hash";
 my $thisDate = strftime "%F", localtime time;
 my $getPicOnlyTrigger = 0;
 my $testTrigger = 0;
+my $nightTrigger = 0;
 GetOptions(
     'p!' => \$getPicOnlyTrigger,
     't!' => \$testTrigger,
+    'n!' => \$nightTrigger,
 );
 # compare with history ( $nowValue - $history->mean() ) / $history->mean 
-my $threshold = $testTrigger ? 0 : 0.25;
+my $threshold = $testTrigger ? 0 : $nightTrigger ? 0.35 : 0.25;
 # threshold of RSD now value;
-my $RSDthreshold = $testTrigger ? 0 : 13;
+my $RSDthreshold = $testTrigger ? 0 : $nightTrigger ? 16 : 13;
 
 #===  FUNCTION  ================================================================
 #         NAME: getRequestsToday
