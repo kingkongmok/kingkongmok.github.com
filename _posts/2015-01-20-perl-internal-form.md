@@ -6,7 +6,7 @@ tags: [utf8, charset, perl, encode]
 ---
 {% include JB/setup %}
 
-### [来源地址](http://www.gipsky.com/modules/article/view.article.php?1155/c0)
+### [来源地址](http://blog.chinaunix.net/uid-23622436-id-2394070.html)
 
 ### perl internal form
 
