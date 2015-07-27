@@ -102,3 +102,7 @@ set linebreak
 set nolist  " list disables linebreak
 "set tw=78
 "set formatoptions+=t
+
+" vim scans all included files, change complete to DISABLE this.
+" http://stackoverflow.com/questions/2169645/vims-autocomplete-is-excruciatingly-slow
+set complete-=i
