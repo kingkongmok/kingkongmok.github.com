@@ -150,7 +150,6 @@ sub getRequestsMinutely (@) {
         my $startLineNumb = $indexLineNumb - 1 > $line_number ? 
         $indexLineNumb - 1 - $line_number : 0;
         my @specifyLines = @lines[ $startLineNumb .. ( $indexLineNumb -1 ) ];
-
         #
         for ( my $i=1; $i<~~@specifyLines; $i++ ) {
             $requestsMinutely{ substr $specifyLines[$i], -8, 5 } += 
@@ -589,14 +588,17 @@ foreach my $statKey ( qw/RSD/ ) {
         }
     }
 }
-if ( $mailSubj ) {
-    getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
-        $requestHistoryHashRef, $requestsToday, $requestsPerServer,
-        $startTimeEndTime); 
-    sendEmailBySmtp($mailSubj, $errorStr);
-}
 if ( $getPicOnlyTrigger ) {
     getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
         $requestHistoryHashRef, $requestsToday, $requestsPerServer,
         $startTimeEndTime); 
 } 
+else {
+    if ( $mailSubj ) {
+        getPicOnly($errorStr, $mailSubj, $requestsNowHashRef,
+            $requestHistoryHashRef, $requestsToday, $requestsPerServer,
+            $startTimeEndTime); 
+        sendEmailBySmtp($mailSubj, $errorStr);
+    }
+}
+
