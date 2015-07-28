@@ -59,8 +59,10 @@ sub writeMail {
     # prod: check 1 hour ago.
     # test: check this hour.
     chomp (my $timestamp = $testTrigger ? 
-        sprintf "%d-%02d-%02d %02d\n", $year+1900, $mon+1, $mday, $hour-5
+        # check this hour, for testing.
+        sprintf "%d-%02d-%02d %02d\n", $year+1900, $mon+1, $mday, $hour
         :
+        # check 1 hour ago, for alarm.
         sprintf "%d-%02d-%02d %02d\n", $year+1900, $mon+1, $mday, $hour-1
     );
     #
@@ -104,10 +106,10 @@ sub sendEmailBySmtp {
     my $infoRec = $password->getInfoRec("address");
     my $fromAddress = $password->getInfoRec("from");
     my @PicArray = (
-        "nginxPVHourly.png",
-        "nginxPVToday.png",
+        # "nginxPVHourly.png",
+        # "nginxPVToday.png",
         "nginxPVPerServerHourly.png",
-        "nginxPVPerServerToday.png",
+        # "nginxPVPerServerToday.png",
     );
     # Send HTML document with inline images
     # Create a new MIME Lite object
