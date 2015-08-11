@@ -57,7 +57,7 @@ trap _exit EXIT
 
 
 # to enable bash completion, install app-shells/bash-completion
-. /etc/profile.d/bash-completion.sh
+# . /etc/profile.d/bash-completion.sh
 
 # don't put duplicate lines in the history. See bash(1) for more options
 # ... or force ignoredups and ignorespace
@@ -98,11 +98,11 @@ alias g='grep --perl-regexp --color=auto'
 alias mv='mv -i'
 alias cp='cp -i'
 
-#Starting X11 on console login
-#if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
-#    exec startx
-#fi
-[[ $(tty) = "/dev/tty6" ]] && exec startx
-
-# set monitor on
-[[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
+# #Starting X11 on console login
+# #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
+# #    exec startx
+# #fi
+# [[ $(tty) = "/dev/tty6" ]] && exec startx
+#
+# # set monitor on
+# [[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
