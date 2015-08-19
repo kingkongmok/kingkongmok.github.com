@@ -64,8 +64,8 @@ if has("autocmd")
   filetype plugin indent on
 endif
 set smartindent
-set tabstop=4
-set shiftwidth=4
+"set tabstop=4
+"set shiftwidth=4
 set expandtab
 set visualbell t_vb=
 set t_Co=256
@@ -106,3 +106,11 @@ set nolist  " list disables linebreak
 " vim scans all included files, change complete to DISABLE this.
 " http://stackoverflow.com/questions/2169645/vims-autocomplete-is-excruciatingly-slow
 set complete-=i
+
+" http://blog.dispatched.ch/2009/05/24/vim-as-python-ide/
+" PEP 8(Pythons' style guide) and to have decent eye candy:
+"set expandtab
+set textwidth=79
+set tabstop=8
+set softtabstop=4
+set shiftwidth=4
