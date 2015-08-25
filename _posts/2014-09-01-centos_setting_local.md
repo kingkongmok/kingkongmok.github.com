@@ -38,7 +38,7 @@ PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
-HISTFILESIZE=30000
+HISTFILESIZE=300000
 HISTTIMEFORMAT="%F %T "
 
 LANG="en_US.utf8"
