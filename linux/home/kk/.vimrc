@@ -114,3 +114,9 @@ set complete-=i
 set tabstop=8
 set softtabstop=4
 set shiftwidth=4
+
+" run python
+autocmd FileType python nnoremap <buffer> \rr :exec '!python' shellescape(@%, 1)<cr>
+
+" Revision History wich Gundo plugin.
+map <leader>g :GundoToggle<CR>
