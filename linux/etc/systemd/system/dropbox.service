@@ -1,0 +1,12 @@
+[Unit]
+Description=dropbox
+After=network.target
+
+[Service]
+Type=forking
+User=kk
+ExecStart=/usr/bin/proxychains /home/kk/bin/dropbox.py start
+ExecStop=/home/kk/bin/dropbox.py stop
+
+[Install]
+WantedBy=multi-user.target
