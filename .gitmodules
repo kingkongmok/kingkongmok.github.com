@@ -23,3 +23,6 @@
 	path = linux/home/kk/.vim/bundle/c.vim
 	url = https://github.com/vim-scripts/c.vim
     ignore = dirty
+[submodule "linux/home/kk/.vim/bundle/gundo"]
+	path = linux/home/kk/.vim/bundle/gundo
+	url = https://github.com/sjl/gundo.vim.git
