@@ -44,6 +44,9 @@ HISTTIMEFORMAT="%F %T "
 LANG="en_US.utf8"
 LC_ALL="en_US.utf8"
 export EDITOR="vim"
+
+# User specific aliases and functions
+TMOUT=18000
 ```
 
 如果需要设置用户后面有主机名，很简单修改一下\u@\h
