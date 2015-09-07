@@ -36,4 +36,5 @@ fi
 
 SCREEN=/usr/bin/screen ;
 IRSSI=/usr/bin/irssi ;
-$SCREEN  $IRSSI -c chat.freenode.net
+#$SCREEN  $IRSSI -c chat.freenode.net
+$SCREEN  $IRSSI 
