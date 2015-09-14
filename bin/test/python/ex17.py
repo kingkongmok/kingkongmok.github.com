@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-More Files
+#More Files
 # http://learnpythonthehardway.org/book/ex17.html
 
-rom sys import argv
+from sys import argv
 from os.path import exists
 
 script, from_file, to_file = argv
