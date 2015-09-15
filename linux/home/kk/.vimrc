@@ -117,6 +117,7 @@ set shiftwidth=4
 
 " run python
 autocmd FileType python nnoremap <buffer> \rr :exec '!python' shellescape(@%, 1)<cr>
+autocmd FileType python nnoremap <buffer> \rd :exec '!python -m pdb' shellescape(@%, 1)<cr>
 
 " Revision History wich Gundo plugin.
 map <leader>g :GundoToggle<CR>
