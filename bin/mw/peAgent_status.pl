@@ -7,6 +7,7 @@ use Data::Dumper;
 
 my $logfile = "/home/logs/peAgent/peAgent.log";
 
+#open my $fh, '-|:encoding(gbk)',  "tail -c 300m $logfile" || die $!; 
 open my $fh, "tail -c 500m $logfile |" || die $!; 
 
 
