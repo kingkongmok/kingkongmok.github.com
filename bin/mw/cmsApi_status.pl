@@ -53,3 +53,13 @@ foreach my $time ( @times ) {
     }
     print "\n";
 }
+
+=pod
+output example
+time:       INFO       ERROR    ORA-01722: 无效数字  数据库查询异常 
+00:00:     15051          20                 10             10
+00:10:        30           0                  0              0
+00:20:     15044          20                 10             10
+00:30:         8           0                  0              0
+00:40:         2           0                  0              0
+=cut
