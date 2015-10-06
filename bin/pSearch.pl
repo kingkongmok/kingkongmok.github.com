@@ -49,19 +49,19 @@ sub getMd5File {
 sub mlocateSearch {
     my	( $keyword )	= @_;
     my %mlocateResult;
-    my $mlocatedbDropboxLocation = '/home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc' ;
-    my $mlocatedbLocation = '/home/kk/Documents/sensitive/mlocate.db' ;
-    if ( -r $mlocatedbLocation && -r $mlocatedbDropboxLocation ) {
-        if ( -M $mlocatedbLocation > -M $mlocatedbDropboxLocation ) {
-            system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
-        }
-        print "not going to decrypt\n\n";
-    }
-    else {
-        system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
-    }
+    # my $mlocatedbDropboxLocation = '/home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc' ;
+    # my $mlocatedbLocation = '/home/kk/Documents/sensitive/mlocate.db' ;
+    # if ( -r $mlocatedbLocation && -r $mlocatedbDropboxLocation ) {
+    #     if ( -M $mlocatedbLocation > -M $mlocatedbDropboxLocation ) {
+    #         system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
+    #     }
+    #     print "not going to decrypt\n\n";
+    # }
+    # else {
+    #     system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
+    # }
     foreach my $word ( @{$keyword} ) {
-        my $searchCommand = "locate -d /home/kk/Documents/sensitive/mlocate.db -i -r '$word'";
+        my $searchCommand = "locate -i -r '$word'";
         my @mlocateResult = system($searchCommand);
         $mlocateResult{$word}=[@mlocateResult];
     }
