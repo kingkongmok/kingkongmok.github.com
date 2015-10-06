@@ -46,12 +46,18 @@ foreach my $file ( @files ) {
 
 
 if ( %httperror ) {
-    open my $fho , "> $tmpfile";
-    printf $fho "there's some http errors occored during %s:00~%s:00:\n", $last_hour, $now_hour;
+    my $errortime_sum = 0;
     while ( my( $server, $errortimes ) = each %httperror ) {
-        printf $fho "%s %s times\n", $server, $errortimes;
+        $errortime_sum += $errortimes;
     }
-    close $fho ; 
+    if ( $errortime_sum > 10 ) {
+        open my $fho , "> $tmpfile";
+        printf $fho "there's some http errors occored during %s:00~%s:00:\n", $last_hour, $now_hour;
+        while ( my( $server, $errortimes ) = each %httperror ) {
+            printf $fho "%s %s times\n", $server, $errortimes;
+        }
+        close $fho ; 
+    }
 }
 
 if ( -s "$tmpfile" ) {
