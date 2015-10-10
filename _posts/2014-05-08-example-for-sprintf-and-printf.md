@@ -21,3 +21,9 @@ while ( <$fh> ) {
     printf "%02d\n",$i++;
 }
 {% endhighlight %}
+
+### 16进制显示
+
+```
+ perl -e 'printf"%04x\n",$_ for 1..2**16'
+```
