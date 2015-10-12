@@ -6,7 +6,7 @@ tags: [systemd, sysctl]
 ---
 {% include JB/setup %}
 
-### problems: 
+### [problems](https://bbs.archlinux.org/viewtopic.php?id=153106)
 
 ```
 $ sudo systemctl status systemd-sysctl.servic
