@@ -5,15 +5,15 @@ use utf8;
 use POSIX 'strftime';
 
 my $thisHour = "";
-my $yesterday_thisHour = strftime "%F-%H", localtime (time - 24*60*60 ) ;
+#my $yesterday_thisHour = strftime "%F-%H", localtime (time - 24*60*60 ) ;
 my $lastHour = strftime "%F-%H", localtime (time - 60*60) ;
 my $yesterday_lastHour = strftime "%F-%H", localtime (time - 24*60*60 - 60*60);
 my $beforeLastHour = strftime "%F-%H", localtime (time - 2*60*60) ;
-my $yesterday_beforeLastHour = strftime "%F-%H", localtime (time - 24*60*60 -
-    2*60*60) ;
+#my $yesterday_beforeLastHour = strftime "%F-%H", localtime (time - 24*60*60 - 2*60*60) ;
 
-my @logs_suffix = ( $thisHour, $lastHour, $beforeLastHour, $yesterday_thisHour,
-    $yesterday_lastHour, $yesterday_beforeLastHour );
+#my @logs_suffix = ( $thisHour, $lastHour, $beforeLastHour, $yesterday_thisHour,
+#    $yesterday_lastHour, $yesterday_beforeLastHour );
+my @logs_suffix = ( $thisHour, $lastHour, $beforeLastHour );
 
 my @methods = ( "FolderCreate", "Settings", "FolderSync", "Sync", "Ping");
 
