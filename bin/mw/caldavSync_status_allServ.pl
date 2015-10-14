@@ -61,3 +61,6 @@ foreach my $hour ( sort keys %H  ) {
     printf "%12s", $H{$hour}{ERROR} || "0" ;
     print "\n";
 }
+
+use Data::Dumper;
+print "\n", Dumper \%methods; 
