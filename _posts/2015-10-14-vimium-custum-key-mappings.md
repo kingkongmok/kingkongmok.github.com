@@ -16,4 +16,6 @@ map f scrollPageDown
 # 使用e和E导航
 map E LinkHints.activateModeWithQueue
 map e LinkHints.activateMode
+# disable "Open the clipboard's URL in the current tab"
+unmap p
 ```
