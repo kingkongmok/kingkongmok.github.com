@@ -72,7 +72,7 @@ if [ -r $1 ] ; then
     if [ ! "`file $1 | grep UTF-8`" ]  ; then
         iconv -f gbk -c $1 > $TMPFILE
     else
-        cp $1 > $TMPFILE
+        cp $1 $TMPFILE
     fi
     
     perl -i -ne 'if(/\S/){s/\r//;print "$_\n"}' $TMPFILE
