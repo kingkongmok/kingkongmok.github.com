@@ -10,8 +10,11 @@ zip软件对于文件名似乎没有rar和7z处理好，会出现Linux解压非u
 
 ```bash
 env LANG=GBK 7z x windows_zipped.filename
-ls | xargs -i convmv -f GBK -t utf8 {}
-ls | xargs -i convmv -f GBK -t utf8 {} --notest
+
+find . -type f -print0 | xargs -r0i convmv -f GBK -t utf8 {} --notest
+
+# ls | xargs -i convmv -f GBK -t utf8 {}
+# ls | xargs -i convmv -f GBK -t utf8 {} --notest
 ```
 
 ```bash
