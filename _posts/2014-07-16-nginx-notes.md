@@ -78,3 +78,10 @@ nginx中的`limit_rate`有限制下载速度的作用，配合`if(){}`来判断�
     }
 {% endhighlight %}
 
+### openssl and pcre
+
+[指定openssl的路径](https://dwradcliffe.com/2013/10/04/custom-openssl-with-nginx.html)
+
+```
+./configure --prefix=/usr/local/nginx-1.7.4 --without-mail_smtp_module --without-mail_pop3_module --without-mail_imap_module --with-http_ssl_module --with-http_realip_module --with-pcre --with-openssl=/usr/local/src/openssl-1.0.2d --with-pcre --with-pcre=/usr/local/src/pcre-8.37
+```
