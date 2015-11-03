@@ -227,7 +227,7 @@ empty_catalina
 rm_weblog 
 rm_mmlog 
 rm_yesterdayTomcatAccessLog
-backup_sysstat
+#backup_sysstat
 
 if [ -r "$TFILE" ] ; then
     if [ "`cat $TFILE`" ] ; then
