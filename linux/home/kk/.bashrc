@@ -68,8 +68,8 @@ HISTIGNORE='mlstatus.sh'
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=30000
-HISTFILESIZE=30000
+HISTSIZE=-1
+HISTFILESIZE=-1
 
 # Display Date And Time For Each Command
 HISTTIMEFORMAT="%F %T "
@@ -97,6 +97,7 @@ alias grep='grep --perl-regexp --color=auto'
 alias g='grep --perl-regexp --color=auto'
 alias mv='mv -i'
 alias cp='cp -i'
+alias proxychains='proxychains -q'
 
 # #Starting X11 on console login
 # #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
