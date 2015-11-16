@@ -63,6 +63,7 @@ recordNginxStatus ()
 #-------------------------------------------------------------------------------
 removeTempLogs ()
 {
+    nice find /${MOUNTPOINT}/tomcat_77* -name catalina\.* -type f -mmin -60 -exec tee "{}" \; < /dev/null
     while [ "$USAGE_PERCENT_INT" -gt "$TRUNCATETRIGGER" -a "$TRUNCATE_MINUTES" -gt 600 ]  ; do
         nice -n 19 find ${MOUNTPOINT}/mmlog_77* -type f -mmin +${TRUNCATE_MINUTES} -exec rm -v "{}" \; >> ${MOUNTPOINT}/crontabLog/rm_mmlog.log 2>&1
         #nice -n 19 find ${MOUNTPOINT}/gamelog_77* -type f -mmin +${TRUNCATE_MINUTES} -exec rm -v "{}" \; >> ${MOUNTPOINT}/crontabLog/rm_mmlog.log 2>&1
