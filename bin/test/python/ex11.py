@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Asking Questions
 # http://learnpythonthehardway.org/book/ex11.html
 

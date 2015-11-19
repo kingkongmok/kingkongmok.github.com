@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # What Was That
 # http://learnpythonthehardway.org/book/ex10.html
 
