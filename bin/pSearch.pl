@@ -61,7 +61,7 @@ sub mlocateSearch {
     #     system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
     # }
     foreach my $word ( @{$keyword} ) {
-        my $searchCommand = "locate -i -r '$word'";
+        my $searchCommand = "locate -i -r '$word' | grep -P \"Videos|Pictures\"";
         my @mlocateResult = system($searchCommand);
         $mlocateResult{$word}=[@mlocateResult];
     }
