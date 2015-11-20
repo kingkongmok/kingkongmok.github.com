@@ -23,12 +23,13 @@ use warnings;
 use lib '/home/kk/bin';
 use KK::Gpgutil;
 use KK::Mlocate;
+use feature 'say';
 
 sub usage {
-print <<END
+    print <<END
 usage: pSearch.pl pattern..
 END
-;
+    ;
 } ## --- end sub usage
 
 sub locateSearch {
@@ -49,17 +50,6 @@ sub getMd5File {
 sub mlocateSearch {
     my	( $keyword )	= @_;
     my %mlocateResult;
-    # my $mlocatedbDropboxLocation = '/home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc' ;
-    # my $mlocatedbLocation = '/home/kk/Documents/sensitive/mlocate.db' ;
-    # if ( -r $mlocatedbLocation && -r $mlocatedbDropboxLocation ) {
-    #     if ( -M $mlocatedbLocation > -M $mlocatedbDropboxLocation ) {
-    #         system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
-    #     }
-    #     print "not going to decrypt\n\n";
-    # }
-    # else {
-    #     system("/home/kk/bin//transfterDropboxGPG.pl /home/kk/Dropbox/home/kk/Documents/sensitive/mlocate.db.asc");
-    # }
     foreach my $word ( @{$keyword} ) {
         my $searchCommand = "locate -i -r '$word' | grep -P \"Videos|Pictures\"";
         my @mlocateResult = system($searchCommand);
@@ -89,12 +79,13 @@ sub md5FileSearch {
 if ( @ARGV ) {
     my %md5FileResult = &md5FileSearch(\@ARGV) ;
     my %mlocateResult = &mlocateSearch(\@ARGV) ;
-use Data::Dumper;
-
-
-print Dumper(\%md5FileResult);
-print Dumper(\%mlocateResult);
-
+    if ( keys %md5FileResult ) {
+        say "\n\ntorrent match:\n";
+        foreach my $keys ( keys %md5FileResult ) {
+            say $keys , " :";
+            say @{$md5FileResult{$keys}};
+        }
+    }
 }
 else {
     &usage ;
