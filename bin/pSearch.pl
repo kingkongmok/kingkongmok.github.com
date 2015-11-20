@@ -49,6 +49,7 @@ sub getMd5File {
 
 sub mlocateSearch {
     my	( $keyword )	= @_;
+    say "\n\nFiles match:\n";
     my %mlocateResult;
     foreach my $word ( @{$keyword} ) {
         my $searchCommand = "locate -i -r '$word' | grep -P \"Videos|Pictures\"";
@@ -81,7 +82,7 @@ if ( @ARGV ) {
     my %mlocateResult = &mlocateSearch(\@ARGV) ;
     if ( keys %md5FileResult ) {
         say "\n\ntorrent match:\n";
-        foreach my $keys ( keys %md5FileResult ) {
+        foreach my $keys ( @ARGV ) {
             say $keys , " :";
             say @{$md5FileResult{$keys}};
         }
