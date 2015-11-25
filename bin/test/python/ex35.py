@@ -49,7 +49,7 @@ def cthulhu_room():
 
     choice = raw_input("> ")
 
-    if "flee" in choice or "life" in choice:
+    if "flee" in choice :
         start()
     elif "head" in choice:
         dead("Well that was tasty!")
