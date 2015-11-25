@@ -50,7 +50,7 @@ endif
 :filetype plugin on
 
 " setting for MRU
-map <F1> :MRU<CR>
+map <leader>f :MRU<CR>
 highlight link MRUFileName LineNr
 let MRU_Max_Entries = 1000
 " let MRU_Exclude_Files = '^/tmp/.*\|^/var/tmp/.*'  " For Unix
@@ -119,6 +119,7 @@ set shiftwidth=4
 autocmd FileType python nnoremap <buffer> \rr :exec '!python' shellescape(@%, 1)<cr>
 autocmd FileType python nnoremap <buffer> \rd :exec '!python -m pdb' shellescape(@%, 1)<cr>
 autocmd FileType python nnoremap <buffer> \rs :exec '!python -m py_compile' shellescape(@%, 1)<cr>
+autocmd FileType python nnoremap <buffer> K :<C-u>execute "!pydoc " . expand("<cword>")<CR>
 
 " Revision History wich Gundo plugin.
-map <leader>g :GundoToggle<CR>
+map <leader>h :GundoToggle<CR>
