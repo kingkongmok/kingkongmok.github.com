@@ -10,6 +10,8 @@ tags: [gcc-config, emerge, update, perl, python]
 
 其实要多注意`eselect news`, 但这个似乎不会自动mail或者有什么git发布，需继续了解。
 
+*****
+
 ### gcc-config
 
 * gcc升级后有可能会导致gcc profile不对，编译失败
@@ -37,6 +39,8 @@ kk@ins14 ~ $ sudo gcc-config -l
 
 终结来说，需要手册上perl和python两个升级后的处理脚本遇到GCC升级，还得设置gcc-config
 
+*****
+
 ### perl-cleaner
 
 [Perl/perl-cleaner](http://wiki.gentoo.org/wiki/Project:Perl/perl-cleaner)可以在perl升级后那些使用旧版本libperl.so的binary。用于刚刚更系perl后没有给相应软件做ebuild的情况.
@@ -51,6 +55,8 @@ app-admin/perl-cleaner is a tool that cleans up old perl installations, attempti
 # perl-cleaner all
 ```
 
+*****
+
 ### PYTHON_TARGETS
 
 根据eselect news的提示，如果需要更新`PYTHON_TARGETS`，需要重新编译所有的`python libraries`
@@ -64,4 +70,23 @@ For example:
 
 eselect python set --python3 python3.4
 emerge -uDv --changed-use @world
+```
+
+*****
+
+### [删除多余的包](https://wiki.gentoo.org/wiki/Knowledge_Base:Remove_obsoleted_distfiles)
+
+* The app-portage/gentoolkit package provides an application called eclean-dist which supports, among other strategies, the following clean-up activities.
+
+* Running eclean-dist will remove the source code archives that do not belong to any available ebuild anymore. This is a safe approach since these sources are very unlikely to be needed again (most of these archives are of old ebuilds that have since been removed from the Portage tree).
+
+```
+#eclean-dist
+
+```
+
+* The --destructive option can be added to make eclean-dist remove the source code archives that do not belong to an installed ebuild. This will remove many more sources, but is still not be that troublesome since the source code archives of installed ebuilds remain available in case a rebuild is needed.
+
+```
+#eclean-dist --destructive
 ```
