@@ -235,3 +235,21 @@ UserParameter=net.in.total,/opt/zabbix/bin/neticoming.sh
 UserParameter=net.out.total,/opt/zabbix/bin/netouting.sh
 UserParameter=iowait,iostat -x 1 2 |awk 'BEGIN{RS=""}NR==5'|grep -vE d0p|awk -F' ' '{print $NF}'|grep -e \\.|awk '{if($1+0.01> max)max=$1}END{print max}'
 ```
+
+*****
+
+#### zabbix_agentd command test on agentd site
+
+```
+$ zabbix_agentd -p | grep 'system.uptime'
+system.uptime                                 [u|11624]
+```
+
+*****
+
+####  zabbix_get on server side
+
+```
+$ zabbix_get -s agent.localdomain  -k "system.uptime"
+11685
+```
