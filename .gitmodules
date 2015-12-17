@@ -26,3 +26,6 @@
 [submodule "linux/home/kk/.vim/bundle/gundo"]
 	path = linux/home/kk/.vim/bundle/gundo
 	url = https://github.com/sjl/gundo.vim.git
+[submodule "linux/home/kk/.vim/bundle/ConflictMotions"]
+	path = linux/home/kk/.vim/bundle/ConflictMotions
+	url = https://github.com/vim-scripts/ConflictMotions
