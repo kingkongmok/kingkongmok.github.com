@@ -1,10 +1,12 @@
 ---
 layout: post
-title: "使用vim作为bash和Perl的IDE"
+title: "使用vim作为bash,Perl,Python的IDE"
 category: vim
-tags: [pathogen, perl-support, bash-support]
+tags: [pathogen, perl-support, bash-support, python]
 ---
 {% include JB/setup %}
+
+*****
 
 ### [vim使用pathogen](http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/)
 
@@ -93,6 +95,8 @@ just involves adding the line ignore = dirty to the .gitmodules file for each su
     url = https://github.com/vim-scripts/mru.vim
 ```
 
+*****
+
 ### perl debugger pressing \rd
 
 在vim 的perl-support中，有个bug，不能使用***\rd***来调用debugger，经常出现***xterm: command not found***的错误，原因是vim会查找是否运行gui并调用xterm来debug，但我不需要。所以修改一下:
@@ -109,6 +113,7 @@ diff ~/.vim/bundle/perl-support.vim/plugin/perl-support.vim ~/.vim/bundle/perl-s
 >       if has("gui_running") || &term == "xterm"
 ```
 
+*****
 
 ### perl evn
 
@@ -126,4 +131,35 @@ diff ~/.vim/bundle/perl-support.vim/plugin/perl-support.vim ~/.vim/bundle/perl-s
 ```
 #!/usr/bin/perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}' if 0;
+```
+
+
+*****
+
+### python
+
+####  vimrc add python run, pdb debugger, syntax check, and doc
+
+```
++autocmd FileType python nnoremap <buffer> \rr :exec '!python' shellescape(@%, 1)<cr>
++autocmd FileType python nnoremap <buffer> \rd :exec '!python -m pdb' shellescape(@%, 1)<cr>
++autocmd FileType python nnoremap <buffer> \rs :exec '!python -m py_compile' shellescape(@%, 1)<cr>
++autocmd FileType python nnoremap <buffer> K :<C-u>execute "!pydoc " . expand("<cword>")<CR>
+```
+
+####  [python style](http://blog.dispatched.ch/2009/05/24/vim-as-python-ide/)
+
+```
+
+set tabstop=8
+set softtabstop=4
+set shiftwidth=4
+
+" http://blog.dispatched.ch/2009/05/24/vim-as-python-ide/
+" PEP 8(Pythons' style guide) and to have decent eye candy:
+"set expandtab
+" set textwidth=79
+set tabstop=8
+set softtabstop=4
+set shiftwidth=4
 ```

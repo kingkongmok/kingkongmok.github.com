@@ -178,13 +178,30 @@ No active checks on server: host [test.linux.local] not found
 
 *****
 
-#### sudo config for zabbix
+### 允许运行sudo命令：
+
+* 这里需要sudoers添加非tty输入支持，并设置NOPASSWD
 
 ```
-zabbix ALL=(ALL) NOPASSWD:/sbin/fdisk -l,/sbin/multipath -ll,/bin/su - oracle,/opt/zabbix/bin/
+Defaults:zabbix !requiretty
+Cmnd_Alias ZABBIX_CMD = /sbin/fuser, /usr/sbin/lsof, /usr/sbin/dmidecode, /sbin/mii-tool, /sbin/ethtool, /usr/bin/ipmitool, /usr/sbin/iptstate, /usr/bin/ocaudit, /sbin/iptables
+zabbix   ALL = (other_user)  NOPASSWD: ALL
+zabbix   ALL = (root)        NOPASSWD: ZABBIX_CMD
 ```
 
 *****
+
+### /etc/passwd 
+
+* 这里需要设置用户nologin
+
+```
+zabbix:x:1001:1001::/var/lib/zabbix/home:/bin/nologin
+```
+
+*****
+
+### 使用自定义命令
 
 #### UserParameter
 
@@ -253,3 +270,62 @@ system.uptime                                 [u|11624]
 $ zabbix_get -s agent.localdomain  -k "system.uptime"
 11685
 ```
+
+*****
+
+#### TEMPLATE
+
+* 一般首字母大写，例如 Template Storage
+* Group 设置属于 Templates 即可
+
+#### Application
+
+* 一般简单的文件夹性质，也是首字母大写, 简单的归纳用途，例如新建一个 Processes的 Applicatioin.
+
+#### Item
+
+* 这里就需要对应zabbix_agentd的自定义变量， 可以先用测试是否能得到需要的数值，
+* 例如，我先测试能否得到test.tcpsock
+
+```
+$ zabbix_get  -s 127.0.0.1 -p 10050 -k test.tcpsock
+144
+
+$ sudo grep test.tcpsock /etc/zabbix/zabbix_agentd.conf
+UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
+```
+
+### Trigger
+
+* 那么 ，在刚刚的Application下添加Item， type 为 zabbix agent, Application为刚刚的Processes
+* 格式：
+
+```
+{<Template>:<key>.<function>}<operator><constant>
+或者
+{<Host>:<key>.<function>}<operator><constant>
+```
+
+例如
+
+```
+{Template App Zabbix Agent:agent.hostname.diff(0)}>0
+{Template App Zabbix Agent:agent.ping.nodata(5m)}=1
+{Host_gentoo:test.tcpsock.last(0)}>30
+```
+
+### Web / Scenarios
+
+* scenario相当于curl的脚本，用于检测Web服务器监控情况，可以定义访问的protocal， UA, HTTP proxy等浏览器信息
+* step定影URL，post内容等
+    
+
+*****
+
+### email media
+
+*   SMTP server :   FQDN
+*   SMTP helo   :   FQDN
+*   SMTP email  :   zabbix@FQDN
+
+*   dns反向解析( smtp :25 )
