@@ -314,7 +314,7 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 {Host_gentoo:test.tcpsock.last(0)}>30
 ```
 
-### Web / Scenarios
+### [Scenarios](https://www.zabbix.com/documentation/1.8/manual/web_monitoring)
 
 * scenario相当于curl的脚本，用于检测Web服务器监控情况，可以定义访问的protocal， UA, HTTP proxy等浏览器信息
 * step定影URL，post内容等
@@ -329,3 +329,29 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 *   SMTP email  :   zabbix@FQDN
 
 *   dns反向解析( smtp :25 )
+
+****** 
+
+### [Triggers for Web scenarios](https://www.zabbix.com/forum/archive/index.php/t-43349.html)
+
+#### item key for failed step 
+
+* [推荐](https://www.zabbix.com/documentation/2.2/manual/web_monitoring/items)
+
+*  step 3 出错的邮件报错：
+
+```
+1. Failed step of scenario "Scenario". (Host:web.test.fail[steps]): 3
+```
+
+```
+{Template name:web.test.fail[Scenario name].last(0)}#0
+```
+
+#### item key for fail info change
+
+* 检测最后scenario的steps结果是否非0, 但这个恢复后都会problem，不建议使用
+
+```
+{TEMPLATE name:web.test.fail[Scenario name].change(0)}#0 
+```
