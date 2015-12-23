@@ -2,7 +2,7 @@
 layout: post
 title: "memcached"
 category: linux
-tags: [memcached, replication]
+tags: [memcached, replication, install]
 ---
 {% include JB/setup %}
 
