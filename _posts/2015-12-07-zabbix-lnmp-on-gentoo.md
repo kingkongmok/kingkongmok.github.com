@@ -6,7 +6,7 @@ tags: [php, zabbix]
 ---
 {% include JB/setup %}
 
-***** 
+--- 
 
 ## [php](https://wiki.gentoo.org/wiki/PHP)
 
@@ -18,11 +18,11 @@ tags: [php, zabbix]
 USE="php"
 ```
 
-*****
+---
 
 #### php.ini use production 
 
-设置php.ini使用production版本，当然可/usr/share/doc/php-5.6.14/php.ini-production.bz2找到
+> 设置php.ini使用production版本，当然可/usr/share/doc/php-5.6.14/php.ini-production.bz2找到 
 
 /etc/portage/make.conf
 
@@ -30,7 +30,7 @@ USE="php"
 PHP_INI_VERSION="production"
 ```
 
-*****
+---
 
 
 * package.use ，这个是配合zabbix使用的
@@ -39,7 +39,7 @@ PHP_INI_VERSION="production"
 /etc/portage/package.use:dev-lang/php gd bcmath sockets xmlwriter xmlreader fpm cgi curl imap mysql mysqli pdo zip json xcache apc zlib zip truetype -apache2 
 ```
 
-*****
+---
 
 ```
 $ sudo systemctl status php-fpm@5.6.service
@@ -76,12 +76,12 @@ Dec 07 15:02:48 ins14 systemd[1]: Started The PHP FastCGI Process Manager.
 Hint: Some lines were ellipsized, use -l to show in full.
 ```
 
-*****
+---
 
 ## nginx
 
 
-*****
+---
 
 #### make.conf
 
@@ -93,7 +93,7 @@ $ grep nginx  -iIr /etc/portage/
 /etc/portage/make.conf:NGINX_MODULES_HTTP="access autoindex browser charset empty_gif fastcgi flv geoip gzip map proxy rewrite stub_status upstream_ip_hash upload_progress"
 ```
 
-*****
+---
 
 #### nginx.conf
 
@@ -107,7 +107,7 @@ $ grep nginx  -iIr /etc/portage/
                 }
 ```
 
-*****
+---
 
 #### systemd status
 
@@ -129,7 +129,7 @@ Dec 07 15:36:47 ins14 systemd[1]: Failed to read PID from file /run/nginx.pid: I
 Dec 07 15:36:47 ins14 systemd[1]: Started The nginx HTTP and reverse proxy server.
 ```
 
-*****
+---
 
 ## mysql
 
@@ -141,11 +141,11 @@ $ grep mysql /etc/portage/ -iIr
 /etc/portage/package.use:dev-lang/php gd bcmath sockets xmlwriter xmlreader fpm cgi curl imap mysql mysqli pdo zip json xcache apc zlib zip truetype -apache2
 ```
 
-*****
+---
 
 ## zabbix
 
-***** 
+--- 
 
 #### make.conf package.use
 
@@ -160,11 +160,11 @@ net-analyzer/zabbix agent curl frontend libxml2 mysql proxy server snmp ssh xmpp
 >=dev-lang/php-5.6.14 sysvipc
 ```
 
-*****
+---
 
 ## zabbix_agentd
 
-*****
+---
 
 #### [ host not found ](https://www.zabbix.com/forum/showthread.php?t=16915)
 
@@ -176,7 +176,7 @@ No active checks on server: host [test.linux.local] not found
 
 * set Hostname at zabbix_agentd.conf as the same in server
 
-*****
+---
 
 ### 允许运行sudo命令：
 
@@ -189,17 +189,17 @@ zabbix   ALL = (other_user)  NOPASSWD: ALL
 zabbix   ALL = (root)        NOPASSWD: ZABBIX_CMD
 ```
 
-*****
+---
 
 ### /etc/passwd 
 
-* 这里需要设置用户nologin
+> 这里需要设置用户nologin
 
 ```
 zabbix:x:1001:1001::/var/lib/zabbix/home:/bin/nologin
 ```
 
-*****
+---
 
 ### 使用自定义命令
 
@@ -253,7 +253,7 @@ UserParameter=net.out.total,/opt/zabbix/bin/netouting.sh
 UserParameter=iowait,iostat -x 1 2 |awk 'BEGIN{RS=""}NR==5'|grep -vE d0p|awk -F' ' '{print $NF}'|grep -e \\.|awk '{if($1+0.01> max)max=$1}END{print max}'
 ```
 
-*****
+---
 
 #### zabbix_agentd command test on agentd site
 
@@ -262,7 +262,7 @@ $ zabbix_agentd -p | grep 'system.uptime'
 system.uptime                                 [u|11624]
 ```
 
-*****
+---
 
 ####  zabbix_get on server side
 
@@ -271,21 +271,21 @@ $ zabbix_get -s agent.localdomain  -k "system.uptime"
 11685
 ```
 
-*****
+---
 
 #### TEMPLATE
 
-* 一般首字母大写，例如 Template Storage
-* Group 设置属于 Templates 即可
++ 一般首字母大写，例如 Template Storage
++ Group 设置属于 Templates 即可
 
 #### Application
 
-* 一般简单的文件夹性质，也是首字母大写, 简单的归纳用途，例如新建一个 Processes的 Applicatioin.
++ 一般简单的文件夹性质，也是首字母大写, 简单的归纳用途，例如新建一个 Processes的 Applicatioin.
 
 #### Item
 
-* 这里就需要对应zabbix_agentd的自定义变量， 可以先用测试是否能得到需要的数值，
-* 例如，我先测试能否得到test.tcpsock
++ 这里就需要对应zabbix_agentd的自定义变量， 可以先用测试是否能得到需要的数值，
++ 例如，我先测试能否得到test.tcpsock
 
 ```
 $ zabbix_get  -s 127.0.0.1 -p 10050 -k test.tcpsock
@@ -297,8 +297,8 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 
 ### Trigger
 
-* 那么 ，在刚刚的Application下添加Item， type 为 zabbix agent, Application为刚刚的Processes
-* 格式：
++ 那么 ，在刚刚的Application下添加Item， type 为 zabbix agent, Application为刚刚的Processes
++ 格式：
 
 ```
 {<Template>:<key>.<function>}<operator><constant>
@@ -316,11 +316,11 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 
 ### [Scenarios](https://www.zabbix.com/documentation/1.8/manual/web_monitoring)
 
-* scenario相当于curl的脚本，用于检测Web服务器监控情况，可以定义访问的protocal， UA, HTTP proxy等浏览器信息
-* step定影URL，post内容等
++ scenario相当于curl的脚本，用于检测Web服务器监控情况，可以定义访问的protocal， UA, HTTP proxy等浏览器信息
++ step定影URL，post内容等
     
 
-*****
+---
 
 ### email media
 
@@ -330,7 +330,23 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 
 *   dns反向解析( smtp :25 )
 
-****** 
+
+### 多次邮件报警
+
+#### [Escalation examples](https://www.zabbix.com/documentation/2.0/manual/config/notifications/action/escalations#escalation_examples)
+
+* Actions -> Operations
+* From 1 和 To 0 Step duration 0 是指 从第一次到到无数次, 默认间隔1分钟。这样可以发给SA。
+* From 5 To 5 duration 0 , 是指第5次开始给人发邮件， 适用于manager
+
+### 邮件中添加ip地址和时间：
+
+> **Actions** -> **Action**
+
+```
+On: {DATE} {TIME} At: {IPADDRESS}
+```
+--- 
 
 ### [Triggers for Web scenarios](https://www.zabbix.com/forum/archive/index.php/t-43349.html)
 
@@ -355,3 +371,55 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 ```
 {TEMPLATE name:web.test.fail[Scenario name].change(0)}#0 
 ```
+
+---
+
+### Template App MySQL
+
++ 根据[论坛](https://www.zabbix.com/forum/showthread.php?t=41659)提示，添加相应命令。
+
+> 注意HOME的意思是my.cnf所在路径.
+
+1. 各种**mysql.status**命令
+    1. 修改my.cnf, 添加默认用户密码
+
+        ```
+        my.conf
+
+        [client]
+        user=nobody
+        ```
+
+        ```
+        mysql>
+
+        CREATE USER 'nobody'@'localhost' ;
+        ```
+
+
+    2. mysql命令
+
+        ```
+        UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/etc/mysql mysql -uUSERNAME -N | awk '{print $$2}'
+        ```
+
+        ```
+        Warning: Using a password on the command line interface can be insecure.
+        ```
+
+
+
+2. **mysql.ping**
+
+    ```
+    UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
+    ```
+
+3. **mysql.version**
+
+    ```
+    UserParameter=mysql.version,mysql -V
+    ```
+
+---
+
