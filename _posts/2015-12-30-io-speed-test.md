@@ -6,6 +6,8 @@ tags: [io, dd, hdparm]
 ---
 {% include JB/setup %}
 
+[引用](http://askubuntu.com/questions/87035/how-to-check-hard-disk-performance)
+
 ### 读的速度测试
 
 1. 文件系统
