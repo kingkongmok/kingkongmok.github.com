@@ -35,7 +35,25 @@ tags: [memcached, replication, install]
 #endif
 ```
 
-***
+---
+
+
+### replication
+
+1.  第一个memcached
+
+    ```
+    su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.1 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.2 -X 21212"
+    ```
+
+2.  第一个memcached
+
+    ```
+    su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.2 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.1 -X 21212"
+    ```
+
+
+---
 
 ### ldd 的设置
 
@@ -71,3 +89,50 @@ $ tail -2 .bash_profile
 LD_LIBRARY_PATH=$HOME/libevent-2.0.22-stable/lib
 export LD_LIBRARY_PATH
 ```
+
+---
+
+### telnet测试
+
+[引用](http://www.journaldev.com/16/memcached-telnet-commands-with-example)
+
+
+```
+Pankaj:~ Pankaj$ telnet localhost 11111
+Trying ::1...
+Connected to localhost.
+Escape character is '^]'.
+set Test 0 100 10
+JournalDev
+STORED
+get Test
+VALUE Test 0 10
+JournalDev
+END
+replace Test 0 100 4
+Temp
+STORED
+get Test
+VALUE Test 0 4
+Temp
+END
+stats items
+STAT items:1:number 1
+STAT items:1:age 19
+STAT items:1:evicted 0
+STAT items:1:evicted_time 0
+STAT items:1:outofmemory 0
+STAT items:1:tailrepairs 0
+END
+flush_all
+OK
+get Test
+END
+version
+VERSION 1.2.8
+quit
+Connection closed by foreign host.
+Pankaj:~ Pankaj$
+```
+
+

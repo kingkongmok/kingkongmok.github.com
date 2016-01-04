@@ -122,4 +122,4 @@ autocmd FileType python nnoremap <buffer> \rs :exec '!python -m py_compile' shel
 autocmd FileType python nnoremap <buffer> K :<C-u>execute "!pydoc " . expand("<cword>")<CR>
 
 " Revision History wich Gundo plugin.
-map <leader>h :GundoToggle<CR>
+map <leader>g :GundoToggle<CR>
