@@ -13,8 +13,8 @@ my $stime = `date +%Y%m%d`; chop($stime); $stime .= '1000';
 if( length($stime) != 12 ) { print "Error get date"; exit; }
 
 my $period = 86400;     #24 hour
-my $width=600;
-my $height=100;
+my $width=900;
+my $height=150;
 
 my $login = 'kk';    #---in zabbix
 my $pass = 'whatisup';      #---in zabbix
