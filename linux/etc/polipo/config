@@ -1,0 +1,18 @@
+diskCacheRoot=/var/cache/polipo/
+cacheIsShared=true
+
+proxyAddress=0.0.0.0
+proxyName=localhost
+serverSlots=4
+serverMaxSlots=8
+
+socksParentProxy = localhost:7070
+socksProxyType = socks5
+dnsNameServer=8.8.4.4
+
+logFile = /etc/polipo/log 
+logSyslog=true
+logLevel = 0xFF
+
+mindlesslyCacheVary = true
+daemonise = true 
