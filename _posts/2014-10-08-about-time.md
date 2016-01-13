@@ -130,3 +130,8 @@ kk@ins14 /tmp $ ls -l hp1000_linux.txt
 ```
 perl -MPOSIX -nE 'BEGIN{$l=strftime "%T",localtime time - 3600 }  if (/:(\S+?)\s/){print if $l lt $1}' /nginx/access.log
 ```
+
+```
+$ perl -MPOSIX -MDate::Parse -E 'say strftime "%F %T", localtime str2time"12/Nov/2014:15:47:20 +0800"'
+2014-11-12 15:47:20
+```
