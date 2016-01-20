@@ -460,18 +460,19 @@ On: {DATE} {TIME} At: {IPADDRESS}
 + 以下测试，在原有server -> agentd的基础上，添加proxy。server通过proxy(passive)来访问agentd
 + 创建proxy和server的db信息，注意proxy和server别用同一个库，真实使用中，proxy应该独立建库以cache
 
+1. proxy上，如上述创建mysql的表结构
 
-1. zabbix->administration->DM->create
+2. zabbix->administration->DM->create
     1. Proxy name: proxy的表示，需要和proxy中的**zabbix_proxy.conf** 字段的 **Hostname**匹配
     2. Proxy mode: 这个可以选择被动模式 passive
     3. 地址，端口，这个和 **zabbix_proxy.conf** 字段的 **SourceIP**以及**ListenPort**匹配
 
-2. zabbix->configuration->hosts->host
+3. zabbix->configuration->hosts->host
     1. Host name: 这里的名称依然需要对应 **zabbix-agentd.con** 中的 **Hostname**
     2. Monitored by proxy： 这个设置proxy的 **Hostname**
     3. Status: monitored
 
-2. zabbix_proxy.conf
+4. zabbix_proxy.conf
 
     ```
     ProxyMode=1
@@ -487,7 +488,7 @@ On: {DATE} {TIME} At: {IPADDRESS}
     DBPassword=zabbixpassword
     ```
 
-    3.zabbix_server.conf
+5.zabbix_server.conf
 
     ```
     ListenPort=10051
@@ -504,7 +505,7 @@ On: {DATE} {TIME} At: {IPADDRESS}
     ExternalScripts=/var/lib/zabbix/externalscripts
     ```
 
-    4. zabbix_agentd.conf
+6. zabbix_agentd.conf
 
     ```
     PidFile=/run/zabbix/zabbix_agentd.pid
@@ -525,4 +526,3 @@ On: {DATE} {TIME} At: {IPADDRESS}
     UserParameter=mysql.version,mysql -V
     ```
 
-3. proxy上，如上述创建mysql的表结构
