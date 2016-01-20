@@ -143,6 +143,38 @@ $ grep mysql /etc/portage/ -iIr
 
 ---
 
+###     Database creation scripts
+
+
++ A Zabbix database must be created during the installation of Zabbix server or proxy.
++ [官方说明](https://www.zabbix.com/documentation/2.0/manual/appendix/install/db_scripts)
++ [example](http://blog.zwiegnet.com/linux-server/configure-zabbix-proxy/)
+
+1. for zabbix-server
+
+    ```
+    shell> mysql -u<username> -p<password>
+    mysql> create database zabbix character set utf8 collate utf8_bin;
+    mysql> quit;
+    shell> mysql -u<username> -p<password> zabbix < database/mysql/schema.sql
+    # stop here if you are creating database for Zabbix proxy
+    shell> mysql -u<username> -p<password> zabbix < database/mysql/images.sql
+    shell> mysql -u<username> -p<password> zabbix < database/mysql/data.sql
+    ```
+
+2. for zabbix-proxy
+
+    ```
+    shell> mysql -u<username> -p<password>
+    mysql> create database zabbix_proxy character set utf8;
+    mysql> grant all privileges on zabbix_proxy.* to zabbix@localhost identified by 'zabbixpassword';
+    mysql> quit;
+    shell> mysql -uzabbix -p zabbix_proxy < database/mysql/schema.sql
+    # stop here if you are creating database for Zabbix proxy
+    ```
+
+---
+
 ## zabbix
 
 --- 
@@ -423,3 +455,27 @@ On: {DATE} {TIME} At: {IPADDRESS}
 
 ---
 
+## zabbix-proxy
+
+1. zabbix->administration->DM->create
+    1. Proxy name: proxy的表示，需要和proxy中的**zabbix_proxy.conf** 字段的 **Hostname**匹配
+    2. Proxy mode: 这个可以选择被动模式 passive
+    3. 地址，端口，这个和 **zabbix_proxy.conf** 字段的 **SourceIP**以及**ListenPort**匹配
+
+2. zabbix_proxy.conf
+
+    ```
+    ProxyMode=1
+    Hostname=ins14
+    ListenPort=10052
+    SourceIP=127.0.0.1
+    LogFile=/var/log/zabbix/zabbix_proxy.log
+    LogFileSize=128
+    PidFile=/run/zabbix/zabbix_proxy.pid
+    DBHost=localhost
+    DBName=zabbix_proxy
+    DBUser=<zabbixUserName>
+    DBPassword=<zabbixPassword>
+    ```
+
+3. proxy上，如上述创建mysql的表结构
