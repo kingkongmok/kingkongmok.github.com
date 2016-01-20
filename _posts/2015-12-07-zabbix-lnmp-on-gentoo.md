@@ -457,10 +457,19 @@ On: {DATE} {TIME} At: {IPADDRESS}
 
 ## zabbix-proxy
 
++ 以下测试，在原有server -> agentd的基础上，添加proxy。server通过proxy(passive)来访问agentd
++ 创建proxy和server的db信息，注意proxy和server别用同一个库，真实使用中，proxy应该独立建库以cache
+
+
 1. zabbix->administration->DM->create
     1. Proxy name: proxy的表示，需要和proxy中的**zabbix_proxy.conf** 字段的 **Hostname**匹配
     2. Proxy mode: 这个可以选择被动模式 passive
     3. 地址，端口，这个和 **zabbix_proxy.conf** 字段的 **SourceIP**以及**ListenPort**匹配
+
+2. zabbix->configuration->hosts->host
+    1. Host name: 这里的名称依然需要对应 **zabbix-agentd.con** 中的 **Hostname**
+    2. Monitored by proxy： 这个设置proxy的 **Hostname**
+    3. Status: monitored
 
 2. zabbix_proxy.conf
 
@@ -474,8 +483,46 @@ On: {DATE} {TIME} At: {IPADDRESS}
     PidFile=/run/zabbix/zabbix_proxy.pid
     DBHost=localhost
     DBName=zabbix_proxy
-    DBUser=<zabbixUserName>
-    DBPassword=<zabbixPassword>
+    DBUser=zabbix
+    DBPassword=zabbixpassword
+    ```
+
+    3.zabbix_server.conf
+
+    ```
+    ListenPort=10051
+    LogFile=/var/log/zabbix/zabbix_server.log
+    LogFileSize=128
+    PidFile=/run/zabbix/zabbix_server.pid
+    DBHost=127.0.0.1
+    DBName=zabbix
+    DBUser=zabbix
+    DBPassword=zabbixpassword
+    DBSocket=/tmp/mysql.sock
+    DBPort=3306
+    AlertScriptsPath=/var/lib/zabbix/home
+    ExternalScripts=/var/lib/zabbix/externalscripts
+    ```
+
+    4. zabbix_agentd.conf
+
+    ```
+    PidFile=/run/zabbix/zabbix_agentd.pid
+    LogFile=/var/log/zabbix/zabbix_agentd.log
+    LogFileSize=128
+    SourceIP=127.0.0.1
+    EnableRemoteCommands=1
+    Server=127.0.0.1
+    ListenIP=127.0.0.1
+    ServerActive=127.0.0.1:10052
+    Hostname=gentoo
+    UnsafeUserParameters=1
+    UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
+    UserParameter=test.df,df
+    #危险，待细化,尽量减少*的使用
+    UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/etc/mysql mysql -N | awk '{print $$2}'
+    UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
+    UserParameter=mysql.version,mysql -V
     ```
 
 3. proxy上，如上述创建mysql的表结构
