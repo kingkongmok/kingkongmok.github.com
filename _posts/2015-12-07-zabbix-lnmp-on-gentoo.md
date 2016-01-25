@@ -457,15 +457,16 @@ On: {DATE} {TIME} At: {IPADDRESS}
 
 ## zabbix-proxy
 
-+ 以下测试，在原有server -> agentd的基础上，添加proxy。server通过proxy(passive)来访问agentd
++ 以下测试，在原有server -> agentd的基础上，添加proxy。server通过proxy(active)来访问agentd
+    1. 在proxy passive的情况下，agentd无法通过proxy来上传，不能使用**zabbix_sender**进行上传
+    2. 在active的情况下，agentd可以上传到proxy，并由proxy推送到server。
 + 创建proxy和server的db信息，注意proxy和server别用同一个库，真实使用中，proxy应该独立建库以cache
 
 1. proxy上，如上述创建mysql的表结构
 
 2. zabbix->administration->DM->create
     1. Proxy name: proxy的表示，需要和proxy中的**zabbix_proxy.conf** 字段的 **Hostname**匹配
-    2. Proxy mode: 这个可以选择被动模式 passive
-    3. 地址，端口，这个和 **zabbix_proxy.conf** 字段的 **SourceIP**以及**ListenPort**匹配
+    2. Proxy mode: 这个可以选择active
 
 3. zabbix->configuration->hosts->host
     1. Host name: 这里的名称依然需要对应 **zabbix-agentd.con** 中的 **Hostname**
@@ -475,7 +476,9 @@ On: {DATE} {TIME} At: {IPADDRESS}
 4. zabbix_proxy.conf
 
     ```
-    ProxyMode=1
+    ProxyMode=0
+    Server=127.0.0.1
+    ServerPort=10051
     Hostname=ins14
     ListenPort=10052
     SourceIP=127.0.0.1
@@ -525,4 +528,44 @@ On: {DATE} {TIME} At: {IPADDRESS}
     UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
     UserParameter=mysql.version,mysql -V
     ```
+---
 
+## zabbix node
+
+1. 需要修改数据库，所以先备份zabbix-server所在的zabbix库
+
+    ```
+    mysql -uzabbix -p zabbix | gzip > ~/db_zabbix.sql.gz
+    ```
+
+2. 使用[引用](https://www.zabbix.com/documentation/2.0/manual/distributed_monitoring/nodes)方法进行转换，注意只能做一次否则会破坏数据结构。
+
+```
+cd bin
+./zabbix_server -n 1 -c /usr/local/etc/zabbix_server.conf
+```
+
+    1. ***zabbix node conversion failed***
+
+    这个情况需要delete掉以下两个表**events**和**autoreg_host**; 
+
+    2. 需要停止 phpd，否则以下报错：
+
+    ```
+    Dropping foreign keys ..........................done.
+    Converting tables .....................[12807]: 
+    Error: [Z3005] query failed: [1114] The table 'history_uint' is full 
+    [update history_uint set itemid=itemid+100100000000000 where itemid>0]
+    .................................Conversion failed.
+    ```
+
+3. zabbix_server.conf
+
+```
+NodeID=1
+```
+
+4. [Front-end configuration](https://www.zabbix.com/documentation/2.2/manual/distributed_monitoring/nodes) 
+
+    1. master
+    待续
