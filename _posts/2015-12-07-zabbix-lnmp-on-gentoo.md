@@ -559,13 +559,64 @@ cd bin
     .................................Conversion failed.
     ```
 
-3. zabbix_server.conf
+3. configuration:
 
-```
-NodeID=1
-```
+    1. zabbix_server.conf
+
+    ```
+    NodeID=1
+    ListenPort=10051
+    LogFile=/var/log/zabbix/zabbix_server.log
+    LogFileSize=128
+    PidFile=/run/zabbix/zabbix_server.pid
+    DBHost=127.0.0.1
+    DBName=zabbix
+    DBUser=zabbix
+    DBPassword=zabbixpassword
+    DBSocket=/tmp/mysql.sock
+    DBPort=3306
+    AlertScriptsPath=/var/lib/zabbix/home
+    ExternalScripts=/var/lib/zabbix/externalscripts
+    ```
+
+    2. zabbix_proxy.conf 
+
+    ```
+    ProxyMode=0
+    Server=127.0.0.1
+    ServerPort=10051
+    Hostname=proxy
+    ListenPort=10052
+    SourceIP=127.0.0.1
+    LogFile=/var/log/zabbix/zabbix_proxy.log
+    LogFileSize=128
+    PidFile=/run/zabbix/zabbix_proxy.pid
+    DBHost=localhost
+    DBName=zabbix_proxy
+    DBUser=zabbix
+    DBPassword=zabbixpassword
+    ```
+
+    3. zabbix_agentd.conf
+
+    ```
+    PidFile=/run/zabbix/zabbix_agentd.pid
+    LogFile=/var/log/zabbix/zabbix_agentd.log
+    LogFileSize=128
+    SourceIP=127.0.0.1
+    EnableRemoteCommands=1
+    Server=127.0.0.1
+    ListenIP=127.0.0.1
+    ServerActive=127.0.0.1:10052
+    Hostname=agentd
+    UnsafeUserParameters=1
+    UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
+    UserParameter=test.df,df
+    UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/etc/mysql mysql -N | awk '{print $$2}'
+    UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
+    UserParameter=mysql.version,mysql -V
+    ```
 
 4. [Front-end configuration](https://www.zabbix.com/documentation/2.2/manual/distributed_monitoring/nodes) 
 
-    1. master
-    待续
+    1. master : host设置为 **guangzhou: proxy: agentd** , 依次为Node name， Proxy name，Host name。
