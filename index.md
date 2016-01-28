@@ -1,6 +1,6 @@
 ---
 layout: page
-title: 莫庆强的运维博客
+title: 莫庆强的运维笔记
 tagline: about linux perl and networking
 ---
 {% include JB/setup %}
