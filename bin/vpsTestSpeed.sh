@@ -19,7 +19,7 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-logFile="/home/kk/Dropbox/network/vps_test_result.log"
+logFile="/home/kk/Dropbox/network/vps_test_result.${HOSTNAME}.log"
 serverListFile="/home/kk/Dropbox/network/vps_test.list"
 
 if [ -r "$serverListFile" ] ; then
