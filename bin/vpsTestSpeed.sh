@@ -32,7 +32,7 @@ if [ -r "$serverListFile" ] ; then
             # -q   Quiet.
             # -c   Number  of  request  packets to send to each target.
             #-------------------------------------------------------------------------------
-            sudo /usr/sbin/fping -b1472 -q -c100 `cat $serverListFile | xargs` 2>> "$logFile"
+            sudo /usr/sbin/fping -b1452 -q -c100 `cat $serverListFile | xargs` 2>> "$logFile"
             echo "" >> "$logFile"
         fi
     fi
