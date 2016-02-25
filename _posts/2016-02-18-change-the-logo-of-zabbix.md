@@ -7,7 +7,7 @@ tags: [logo]
 {% include JB/setup %}
 
 
-***[引用】(https://www.zabbix.com/forum/showthread.php?t=22814)***
+###[引用](https://www.zabbix.com/forum/showthread.php?t=22814)
 
 ---
 
