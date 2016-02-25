@@ -4,7 +4,8 @@ permalink: /:categories/:year/:month/:day/:title
 
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "linux", "bin", "backup", "doc"]
 auto: true
-pygments: true
+#pygments: true
+highlighter: true
 
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
@@ -131,5 +132,8 @@ JB :
 #https://help.github.com/articles/migrating-your-pages-site-from-maruku
 #
 #http://jekyllrb.com/docs/extras/
-#markdown: kramdown
-markdown: redcarpet
+markdown: kramdown
+#markdown: redcarpet
+kramdown:
+    input: GFM
+    highlighter: rouge
