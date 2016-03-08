@@ -26,8 +26,8 @@ do
         break
     else
         timestamp=`date +%s`
-        nohup /home/kk/workspace/youtube-dl/youtube-dl "$line" \
-            -o '/home/kk/Downloads/videos/%(title)s.%(ext)s' \
+        nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$line" \
+            -o '/home/kk/Downloads/videos/%(title)s-%(id)s.%(ext)s' \
             > /tmp/youtube-dl.${timestamp}.log 2>&1 &
         echo "$line is downloading...\n"
         echo "please input URL to download, or 'q' to quit:"
