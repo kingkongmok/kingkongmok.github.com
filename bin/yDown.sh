@@ -22,19 +22,26 @@ set -o nounset                              # Treat unset variables as an error
 FirstChoise=h3
 SecondChoise=best
 
+downUrl()
+{
+        timestamp=`date +%s`
+            /home/kk/workspace/youtube-dl/youtube-dl -F "$1" > /tmp/youtube-dl.${timestamp}.log
+            Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
+            nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$1" \
+            -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
+            >> /tmp/youtube-dl.${timestamp}.log 2>&1 
+        echo "$1 is downloading...\n"
+}	# ----------  end of function downUrl  ----------
+
 echo "please input URL to download, or 'q' to quit:"
 while read line           
 do           
     if [ "$line" == "q" ] ; then
         break
     else
-        timestamp=`date +%s`
-            /home/kk/workspace/youtube-dl/youtube-dl -F "$line" > /tmp/youtube-dl.${timestamp}.log
-            Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
-            nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$line" \
-            -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
-            >> /tmp/youtube-dl.${timestamp}.log 2>&1 &
-        echo "$line is downloading...\n"
+        downUrl $line &
         echo "please input URL to download, or 'q' to quit:"
     fi
 done
+
+
