@@ -25,9 +25,10 @@ SecondChoise=best
 downUrl()
 {
         timestamp=`date +%s`
-            /home/kk/workspace/youtube-dl/youtube-dl -F "$1" > /tmp/youtube-dl.${timestamp}.log
-            Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
-            nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$1" \
+        echo "$i" >> /tmp/youtube-dl.${timestamp}.log
+        /home/kk/workspace/youtube-dl/youtube-dl -F "$1" > /tmp/youtube-dl.${timestamp}.log
+        Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
+        nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$1" \
             -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
             >> /tmp/youtube-dl.${timestamp}.log 2>&1 
         echo "$1 is downloading...\n"
