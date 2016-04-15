@@ -25,7 +25,7 @@ SecondChoise=best
 downUrl()
 {
         timestamp=`date +%s`
-        echo "$i" >> /tmp/youtube-dl.${timestamp}.log
+        echo "$1" >> /tmp/youtube-dl.${timestamp}.log
         /home/kk/workspace/youtube-dl/youtube-dl -F "$1" > /tmp/youtube-dl.${timestamp}.log
         Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
         nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$1" \
