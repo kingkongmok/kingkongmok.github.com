@@ -106,10 +106,13 @@ autorun = true
 autorunApps = 
 { 
     "fcitx",
-    "xset s noblank",
-    "xset s off",
-    "xset -dpms",
 }
+-- { 
+--     "fcitx",
+--     "xset s noblank",
+--     "xset s off",
+--     "xset -dpms",
+-- }
 
 if autorun then
     for app = 1, #autorunApps do
