@@ -27,7 +27,7 @@ downUrl()
         timestamp=`date +%s`
         echo "$1" >> /tmp/youtube-dl.${timestamp}.log
         /home/kk/workspace/youtube-dl/youtube-dl -F "$1" > /tmp/youtube-dl.${timestamp}.log
-        Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say "h3"}else{say keys%K}'`
+        Flag=`grep -P "^h\d.*MiB" /tmp/youtube-dl.${timestamp}.log | perl -naE '$H{$F[0]}++; $K{$F[0]}++ if /best/ }{ if(grep/h3/,keys%H){say +(grep /h3/, keys%H)[0]}else{say keys%K}'`
         nohup /home/kk/workspace/youtube-dl/youtube-dl -f h3 "$1" \
             -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
             >> /tmp/youtube-dl.${timestamp}.log 2>&1 
