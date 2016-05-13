@@ -1,306 +1,363 @@
-require "rubygems"
-require 'rake'
-require 'yaml'
-require 'time'
+# coding: utf-8
+task :default => :preview
 
-SOURCE = "."
-CONFIG = {
-  'version' => "0.2.9",
-  'themes' => File.join(SOURCE, "_includes", "themes"),
-  'layouts' => File.join(SOURCE, "_layouts"),
-  'posts' => File.join(SOURCE, "_posts"),
-  'post_ext' => "md",
-  'theme_package_version' => "0.1.0"
-}
-
-# Path configuration helper
-module JB
-  class Path
-    SOURCE = "."
-    Paths = {
-      :layouts => "_layouts",
-      :themes => "_includes/themes",
-      :theme_assets => "assets/themes",
-      :theme_packages => "_theme_packages",
-      :posts => "_posts"
-    }
-    
-    def self.base
-      SOURCE
-    end
-
-    # build a path relative to configured path settings.
-    def self.build(path, opts = {})
-      opts[:root] ||= SOURCE
-      path = "#{opts[:root]}/#{Paths[path.to_sym]}/#{opts[:node]}".split("/")
-      path.compact!
-      File.__send__ :join, path
-    end
-  
-  end #Path
-end #JB
-
-# Usage: rake post title="A Title" [date="2012-02-09"]
-desc "Begin a new post in #{CONFIG['posts']}"
-task :post do
-  abort("rake aborted: '#{CONFIG['posts']}' directory not found.") unless FileTest.directory?(CONFIG['posts'])
-  title = ENV["title"] || "new-post"
-  slug = title.downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
-  begin
-    date = (ENV['date'] ? Time.parse(ENV['date']) : Time.now).strftime('%Y-%m-%d')
-  rescue Exception => e
-    puts "Error - date format must be YYYY-MM-DD, please check you typed it correctly!"
-    exit -1
-  end
-  filename = File.join(CONFIG['posts'], "#{date}-#{slug}.#{CONFIG['post_ext']}")
-  if File.exist?(filename)
-    abort("rake aborted!") if ask("#{filename} already exists. Do you want to overwrite?", ['y', 'n']) == 'n'
-  end
-  
-  puts "Creating new post: #{filename}"
-  open(filename, 'w') do |post|
-    post.puts "---"
-    post.puts "layout: post"
-    post.puts "title: \"#{title.gsub(/-/,' ')}\""
-    post.puts "category: "
-    post.puts "tags: []"
-    post.puts "---"
-    post.puts "{% include JB/setup %}"
-  end
-end # task :post
-
-# Usage: rake page name="about.html"
-# You can also specify a sub-directory path.
-# If you don't specify a file extention we create an index.html at the path specified
-desc "Create a new page."
-task :page do
-  name = ENV["name"] || "new-page.md"
-  filename = File.join(SOURCE, "#{name}")
-  filename = File.join(filename, "index.html") if File.extname(filename) == ""
-  title = File.basename(filename, File.extname(filename)).gsub(/[\W\_]/, " ").gsub(/\b\w/){$&.upcase}
-  if File.exist?(filename)
-    abort("rake aborted!") if ask("#{filename} already exists. Do you want to overwrite?", ['y', 'n']) == 'n'
-  end
-  
-  mkdir_p File.dirname(filename)
-  puts "Creating new page: #{filename}"
-  open(filename, 'w') do |post|
-    post.puts "---"
-    post.puts "layout: page"
-    post.puts "title: \"#{title}\""
-    post.puts "---"
-    post.puts "{% include JB/setup %}"
-  end
-end # task :page
-
-desc "Launch preview environment"
-task :preview do
-  system "jekyll --auto --server"
-end # task :preview
-
-# Public: Alias - Maintains backwards compatability for theme switching.
-task :switch_theme => "theme:switch"
-
-namespace :theme do
-  
-  # Public: Switch from one theme to another for your blog.
-  #
-  # name - String, Required. name of the theme you want to switch to.
-  #        The the theme must be installed into your JB framework.
-  #
-  # Examples
-  #
-  #   rake theme:switch name="the-program"
-  #
-  # Returns Success/failure messages.
-  desc "Switch between Jekyll-bootstrap themes."
-  task :switch do
-    theme_name = ENV["name"].to_s
-    theme_path = File.join(CONFIG['themes'], theme_name)
-    settings_file = File.join(theme_path, "settings.yml")
-    non_layout_files = ["settings.yml"]
-
-    abort("rake aborted: name cannot be blank") if theme_name.empty?
-    abort("rake aborted: '#{theme_path}' directory not found.") unless FileTest.directory?(theme_path)
-    abort("rake aborted: '#{CONFIG['layouts']}' directory not found.") unless FileTest.directory?(CONFIG['layouts'])
-
-    Dir.glob("#{theme_path}/*") do |filename|
-      next if non_layout_files.include?(File.basename(filename).downcase)
-      puts "Generating '#{theme_name}' layout: #{File.basename(filename)}"
-
-      open(File.join(CONFIG['layouts'], File.basename(filename)), 'w') do |page|
-        if File.basename(filename, ".html").downcase == "default"
-          page.puts "---"
-          page.puts File.read(settings_file) if File.exist?(settings_file)
-          page.puts "---"
-        else
-          page.puts "---"
-          page.puts "layout: default"
-          page.puts "---"
-        end 
-        page.puts "{% include JB/setup %}"
-        page.puts "{% include themes/#{theme_name}/#{File.basename(filename)} %}" 
-      end
-    end
-    
-    puts "=> Theme successfully switched!"
-    puts "=> Reload your web-page to check it out =)"
-  end # task :switch
-  
-  # Public: Install a theme using the theme packager.
-  # Version 0.1.0 simple 1:1 file matching.
-  #
-  # git  - String, Optional path to the git repository of the theme to be installed.
-  # name - String, Optional name of the theme you want to install.
-  #        Passing name requires that the theme package already exist.
-  #
-  # Examples
-  #
-  #   rake theme:install git="https://github.com/jekyllbootstrap/theme-twitter.git"
-  #   rake theme:install name="cool-theme"
-  #
-  # Returns Success/failure messages.
-  desc "Install theme"
-  task :install do
-    if ENV["git"]
-      manifest = theme_from_git_url(ENV["git"])
-      name = manifest["name"]
-    else
-      name = ENV["name"].to_s.downcase
-    end
-
-    packaged_theme_path = JB::Path.build(:theme_packages, :node => name)
-    
-    abort("rake aborted!
-      => ERROR: 'name' cannot be blank") if name.empty?
-    abort("rake aborted! 
-      => ERROR: '#{packaged_theme_path}' directory not found.
-      => Installable themes can be added via git. You can find some here: http://github.com/jekyllbootstrap
-      => To download+install run: `rake theme:install git='[PUBLIC-CLONE-URL]'`
-      => example : rake theme:install git='git@github.com:jekyllbootstrap/theme-the-program.git'
-    ") unless FileTest.directory?(packaged_theme_path)
-    
-    manifest = verify_manifest(packaged_theme_path)
-    
-    # Get relative paths to packaged theme files
-    # Exclude directories as they'll be recursively created. Exclude meta-data files.
-    packaged_theme_files = []
-    FileUtils.cd(packaged_theme_path) {
-      Dir.glob("**/*.*") { |f| 
-        next if ( FileTest.directory?(f) || f =~ /^(manifest|readme|packager)/i )
-        packaged_theme_files << f 
-      }
-    }
-    
-    # Mirror each file into the framework making sure to prompt if already exists.
-    packaged_theme_files.each do |filename|
-      file_install_path = File.join(JB::Path.base, filename)
-      if File.exist? file_install_path
-        next if ask("#{file_install_path} already exists. Do you want to overwrite?", ['y', 'n']) == 'n'
-      else
-        mkdir_p File.dirname(file_install_path)
-        cp_r File.join(packaged_theme_path, filename), file_install_path
-      end
-    end
-    
-    puts "=> #{name} theme has been installed!"
-    puts "=> ---"
-    if ask("=> Want to switch themes now?", ['y', 'n']) == 'y'
-      system("rake switch_theme name='#{name}'")
-    end
-  end
-
-  # Public: Package a theme using the theme packager.
-  # The theme must be structured using valid JB API.
-  # In other words packaging is essentially the reverse of installing.
-  #
-  # name - String, Required name of the theme you want to package.
-  #        
-  # Examples
-  #
-  #   rake theme:package name="twitter"
-  #
-  # Returns Success/failure messages.
-  desc "Package theme"
-  task :package do
-    name = ENV["name"].to_s.downcase
-    theme_path = JB::Path.build(:themes, :node => name)
-    asset_path = JB::Path.build(:theme_assets, :node => name)
-
-    abort("rake aborted: name cannot be blank") if name.empty?
-    abort("rake aborted: '#{theme_path}' directory not found.") unless FileTest.directory?(theme_path)
-    abort("rake aborted: '#{asset_path}' directory not found.") unless FileTest.directory?(asset_path)
-    
-    ## Mirror theme's template directory (_includes)
-    packaged_theme_path = JB::Path.build(:themes, :root => JB::Path.build(:theme_packages, :node => name))
-    mkdir_p packaged_theme_path
-    cp_r theme_path, packaged_theme_path
-    
-    ## Mirror theme's asset directory
-    packaged_theme_assets_path = JB::Path.build(:theme_assets, :root => JB::Path.build(:theme_packages, :node => name))
-    mkdir_p packaged_theme_assets_path
-    cp_r asset_path, packaged_theme_assets_path
-
-    ## Log packager version
-    packager = {"packager" => {"version" => CONFIG["theme_package_version"].to_s } }
-    open(JB::Path.build(:theme_packages, :node => "#{name}/packager.yml"), "w") do |page|
-      page.puts packager.to_yaml
-    end
-    
-    puts "=> '#{name}' theme is packaged and available at: #{JB::Path.build(:theme_packages, :node => name)}"
-  end
-  
-end # end namespace :theme
-
-# Internal: Download and process a theme from a git url.
-# Notice we don't know the name of the theme until we look it up in the manifest.
-# So we'll have to change the folder name once we get the name.
+# CONFIGURATION VARIABLES (on top of those defined by Jekyll in _config(_deploy).yml)
 #
-# url - String, Required url to git repository.
-#        
-# Returns theme manifest hash
-def theme_from_git_url(url)
-  tmp_path = JB::Path.build(:theme_packages, :node => "_tmp")
-  abort("rake aborted: system call to git clone failed") if !system("git clone #{url} #{tmp_path}")
-  manifest = verify_manifest(tmp_path)
-  new_path = JB::Path.build(:theme_packages, :node => manifest["name"])
-  if File.exist?(new_path) && ask("=> #{new_path} theme package already exists. Override?", ['y', 'n']) == 'n'
-    remove_dir(tmp_path)
-    abort("rake aborted: '#{manifest["name"]}' already exists as theme package.")
-  end
+# PREVIEWING
+# If your project is based on compass and you want compass to be invoked
+# by the script, set the $compass variable to true
+#
+# $compass = false # default
+# $compass = true  # if you wish to run compass as well
+#
+# Notice that Jekyll 2.0 supports sass natively, so you might want to have a look
+# at the functions provided by Jekyll instead of using the functions provided here.
+#
+# MANAGING POSTS
+# Set the extension for new posts (defaults to .textile, if not set)
+#
+# $post_ext = ".textile"  # default
+# $post_ext = ".md"       # if you prefer markdown
+#
+# Set the location of new posts (defaults to "_posts/", if not set).
+# Please, terminate with a slash:
+#
+# $post_dir = "_posts/"
+#
+# MANAGING MULTI-USER WORK
+# If you are using git to manage the sources, you might want to check the repository
+# is up-to-date with the remote branch, before deploying.  In fact---when this is not the
+# case---you end up deploying a previous version of your website.
+#
+# The following variable determines whether you want to check the git repository is
+# up-to-date with the remote branch and, if not, issue a warning.
+#
+# $git_check = true
+#
+# It is safe to leave the variable set to true, even if you do not manage your sources
+# with git.
+#
+# The following variable controls whether we push to the remote branch after deployment,
+# committing all uncommitted changes
+#
+# $git_autopush = false
+#
+# If set to true, the sources have to be managed by git or an error message will be issued.
+#
+# ... or load them from the configuration file, e.g.:
+# 
+load '_rake-configuration.rb' if File.exist?('_rake-configuration.rb')
+load '_rake_configuration.rb' if File.exist?('_rake_configuration.rb')
 
-  remove_dir(new_path) if File.exist?(new_path)
-  mv(tmp_path, new_path)
-  manifest
+# ... we are a bit redundant and allow two different file names
+
+
+#
+# --- NO NEED TO TOUCH ANYTHING BELOW THIS LINE ---
+#
+
+# Specify default values for variables NOT set by the user
+
+$post_ext ||= ".textile"
+$post_dir ||= "_posts/"
+$git_check ||= true
+$git_autopush ||= false
+
+#
+# Tasks start here
+#
+
+desc 'Clean up generated site'
+task :clean do
+  cleanup
 end
 
-# Internal: Process theme package manifest file.
-#
-# theme_path - String, Required. File path to theme package.
-#        
-# Returns theme manifest hash
-def verify_manifest(theme_path)
-  manifest_path = File.join(theme_path, "manifest.yml")
-  manifest_file = File.open( manifest_path )
-  abort("rake aborted: repo must contain valid manifest.yml") unless File.exist? manifest_file
-  manifest = YAML.load( manifest_file )
-  manifest_file.close
-  manifest
+
+desc 'Preview on local machine (server with --auto)'
+task :preview => :clean do
+  compass('compile') # so that we are sure sass has been compiled before we run the server
+  compass('watch &')
+  jekyll('serve --watch')
+end
+task :serve => :preview
+
+
+desc 'Build for deployment (but do not deploy)'
+task :build, [:deployment_configuration] => :clean do |t, args|
+  args.with_defaults(:deployment_configuration => 'deploy')
+  config_file = "_config_#{args[:deployment_configuration]}.yml"
+
+  if rake_running then
+    puts "\n\nWarning! An instance of rake seems to be running (it might not be *this* Rakefile, however).\n"
+    puts "Building while running other tasks (e.g., preview), might create a website with broken links.\n\n"
+    puts "Are you sure you want to continue? [Y|n]"
+
+    ans = STDIN.gets.chomp
+    exit if ans != 'Y' 
+  end
+
+  compass('compile')
+  jekyll("build --config _config.yml,#{config_file}")
 end
 
-def ask(message, valid_options)
-  if valid_options
-    answer = get_stdin("#{message} #{valid_options.to_s.gsub(/"/, '').gsub(/, /,'/')} ") while !valid_options.include?(answer)
+
+desc 'Build and deploy to remote server'
+task :deploy, [:deployment_configuration] => :build do |t, args|
+  args.with_defaults(:deployment_configuration => 'deploy')
+  config_file = "_config_#{args[:deployment_configuration]}.yml"
+
+  text = File.read("_config_#{args[:deployment_configuration]}.yml")
+  matchdata = text.match(/^deploy_dir: (.*)$/)
+  if matchdata
+
+    if git_requires_attention("master") then
+      puts "\n\nWarning! It seems that the local repository is not in sync with the remote.\n"
+      puts "This could be ok if the local version is more recent than the remote repository.\n"
+      puts "Deploying before committing might cause a regression of the website (at this or the next deploy).\n\n"
+      puts "Are you sure you want to continue? [Y|n]"
+
+      ans = STDIN.gets.chomp
+      exit if ans != 'Y' 
+    end
+
+    deploy_dir = matchdata[1]
+    sh "rsync -avz --delete _site/ #{deploy_dir}"
+    time = Time.new
+    File.open("_last_deploy.txt", 'w') {|f| f.write(time) }
+    %x{git add -A && git commit -m "autopush by Rakefile at #{time}" && git push} if $git_autopush
   else
-    answer = get_stdin(message)
+    puts "Error! deploy_url not found in _config_deploy.yml"
+    exit 1
   end
-  answer
 end
 
-def get_stdin(message)
-  print message
-  STDIN.gets.chomp
+desc 'Build and deploy to github'
+task :deploy_github => :build do |t, args|
+  args.with_defaults(:deployment_configuration => 'deploy')
+  config_file = "_config_#{args[:deployment_configuration]}.yml"
+
+  if git_requires_attention("gh_pages") then
+    puts "\n\nWarning! It seems that the local repository is not in sync with the remote.\n"
+    puts "This could be ok if the local version is more recent than the remote repository.\n"
+    puts "Deploying before committing might cause a regression of the website (at this or the next deploy).\n\n"
+    puts "Are you sure you want to continue? [Y|n]"
+
+    ans = STDIN.gets.chomp
+    exit if ans != 'Y' 
+  end
+
+  %x{git add -A && git commit -m "autopush by Rakefile at #{time}" && git push origin gh_pages} if $git_autopush
+  
+  time = Time.new
+  File.open("_last_deploy.txt", 'w') {|f| f.write(time) }
 end
 
-#Load custom rake scripts
-Dir['_rake/*.rake'].each { |r| load r }
+desc 'Create a post'
+task :create_post, [:date, :title, :category, :content] do |t, args|
+  if args.title == nil then
+    puts "Error! title is empty"
+    puts "Usage: create_post[date,title,category,content]"
+    puts "DATE and CATEGORY are optional"
+    puts "DATE is in the form: YYYY-MM-DD; use nil or empty for today's date"
+    puts "CATEGORY is a string; nil or empty for no category"
+    exit 1
+  end
+  if (args.date != nil and args.date != "nil" and args.date != "" and args.date.match(/[0-9]+-[0-9]+-[0-9]+/) == nil) then
+    puts "Error: date not understood"
+    puts "Usage: create_post[date,title,category,content]"
+    puts "DATE and CATEGORY are optional"
+    puts "DATE is in the form: YYYY-MM-DD; use nil or the empty string for today's date"
+    puts "CATEGORY is a string; nil or empty for no category"
+    puts ""
+
+    title = args.title || "title"
+
+    puts "Examples: create_post[\"\",\"#{args.title}\"]"
+    puts "          create_post[nil,\"#{args.title}\"]"
+    puts "          create_post[,\"#{args.title}\"]"
+    puts "          create_post[#{Time.new.strftime("%Y-%m-%d")},\"#{args.title}\"]"
+    exit 1
+  end
+
+  post_title = args.title
+  post_date = (args.date != "" and args.date != "nil") ? args.date : Time.new.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+  # the destination directory is <<category>>/$post_dir, if category is non-nil
+  # and the directory exists; $post_dir otherwise (a category tag is added in
+  # the post body, in this case)
+  post_category = args.category
+  if post_category and Dir.exists?(File.join(post_category, $post_dir)) then
+    post_dir = File.join(post_category, $post_dir)
+    yaml_cat = nil
+  else
+    post_dir = $post_dir
+    yaml_cat = post_category ? "category: #{post_category}\n" : nil
+  end
+
+  def slugify (title)
+    # strip characters and whitespace to create valid filenames, also lowercase
+    return title.downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
+  end
+
+  filename = post_date[0..9] + "-" + slugify(post_title) + $post_ext
+
+  # generate a unique filename appending a number
+  i = 1
+  while File.exists?(post_dir + filename) do
+    filename = post_date[0..9] + "-" +
+               File.basename(slugify(post_title)) + "-" + i.to_s +
+               $post_ext 
+    i += 1
+  end
+
+  # the condition is not really necessary anymore (since the previous
+  # loop ensures the file does not exist)
+  if not File.exists?(post_dir + filename) then
+    File.open(post_dir + filename, 'w') do |f|
+      f.puts "---"
+      f.puts "title: \"#{post_title}\""
+      f.puts "layout: post"
+      f.puts yaml_cat if yaml_cat != nil
+      # f.puts "date: #{post_date}"
+      f.puts "---"
+      f.puts args.content if args.content != nil
+    end  
+
+    puts "Post created under \"#{post_dir}#{filename}\""
+
+    sh "vim \"#{post_dir}#{filename}\"" if args.content == nil
+  else
+    puts "A post with the same name already exists. Aborted."
+  end
+  # puts "You might want to: edit #{$post_dir}#{filename}"
+end
+
+
+desc 'Create a post listing all changes since last deploy'
+task :post_changes do |t, args|
+  content = list_file_changed
+  Rake::Task["create_post"].invoke(Time.new.strftime("%Y-%m-%d %H:%M:%S"), "Recent Changes", nil, content)
+end
+
+
+desc 'Show the file changed since last deploy to stdout'
+task :list_changes do |t, args|
+  content = list_file_changed
+  puts content
+end
+
+
+#
+# support functions for generating list of changed files
+#
+
+def list_file_changed
+  content = "Files changed since last deploy:\n"
+  IO.popen('find * -newer _last_deploy.txt -type f') do |io| 
+    while (line = io.gets) do
+      filename = line.chomp
+      if user_visible(filename) then
+        content << "* \"#{filename}\":{{site.url}}/#{file_change_ext(filename, ".html")}\n"
+      end
+    end
+  end 
+  content
+end
+
+# this is the list of files we do not want to show in changed files
+EXCLUSION_LIST = [/.*~/, /_.*/, "javascripts?", "js", /stylesheets?/, "css", "Rakefile", "Gemfile", /s[ca]ss/, /.*\.css/, /.*.js/, "bower_components", "config.rb"]
+
+# return true if filename is "visible" to the user (e.g., it is not javascript, css, ...)
+def user_visible(filename)
+  exclusion_list = Regexp.union(EXCLUSION_LIST)
+  not filename.match(exclusion_list)
+end 
+
+def file_change_ext(filename, newext)
+  if File.extname(filename) == ".textile" or File.extname(filename) == ".md" then
+    filename.sub(File.extname(filename), newext)
+  else  
+    filename
+  end
+end
+
+
+desc 'Check links for site already running on localhost:4000'
+task :check_links do
+  begin
+    require 'anemone'
+
+    root = 'http://localhost:4000/'
+    puts "Checking links with anemone ... "
+    # check-links --no-warnings http://localhost:4000
+    Anemone.crawl(root, :discard_page_bodies => true) do |anemone|
+      anemone.after_crawl do |pagestore|
+        broken_links = Hash.new { |h, k| h[k] = [] }
+        pagestore.each_value do |page|
+          if page.code != 200
+            referrers = pagestore.pages_linking_to(page.url)
+            referrers.each do |referrer|
+              broken_links[referrer] << page
+            end
+          else
+            puts "OK #{page.url}"
+          end
+        end
+        puts "\n\nLinks with issues: "
+        broken_links.each do |referrer, pages|
+          puts "#{referrer.url} contains the following broken links:"
+          pages.each do |page|
+            puts "  HTTP #{page.code} #{page.url}"
+          end
+        end
+      end
+    end
+    puts "... done!"
+
+  rescue LoadError
+    abort 'Install anemone gem: gem install anemone'
+  end
+end
+
+
+#
+# General support functions
+#
+
+# remove generated site
+def cleanup
+  sh 'rm -rf _site'
+  compass('clean')
+end
+
+# launch jekyll
+def jekyll(directives = '')
+  sh 'jekyll ' + directives
+end
+
+# launch compass
+def compass(command = 'compile')
+  (sh 'compass ' + command) if $compass
+end
+
+# check if there is another rake task running (in addition to this one!)
+def rake_running
+  `ps | grep 'rake' | grep -v 'grep' | wc -l`.to_i > 1
+end
+
+def git_local_diffs
+  %x{git diff --name-only} != ""
+end
+
+def git_remote_diffs branch
+  %x{git fetch}
+  %x{git rev-parse #{branch}} != %x{git rev-parse origin/#{branch}}
+end
+
+def git_repo?
+  %x{git status} != ""
+end
+
+def git_requires_attention branch
+  $git_check and git_repo? and git_remote_diffs(branch)
+end

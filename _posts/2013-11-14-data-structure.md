@@ -4,7 +4,6 @@ title: "data structure Perl的简单数据结构"
 category: perl
 tags: [data, structur, aoa, hoa, hoh, aoh]
 ---
-{% include JB/setup %}
 
 ##data structure
 

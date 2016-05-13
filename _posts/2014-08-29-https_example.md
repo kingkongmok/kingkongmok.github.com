@@ -4,7 +4,6 @@ title: "https howto"
 category: linux
 tags: [https, ssl, rsa, csr, pem, crt]
 ---
-{% include JB/setup %}
 
 首先看看文件是什么，[这里](http://serverfault.com/questions/9708/what-is-a-pem-file-and-how-does-it-differ-from-other-openssl-generated-key-file)有介绍，
 

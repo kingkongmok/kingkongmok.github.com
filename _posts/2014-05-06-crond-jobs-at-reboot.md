@@ -4,7 +4,6 @@ title: "cron.d"
 category: linux
 tags: [cron, reboot]
 ---
-{% include JB/setup %}
 
 之前一直出现不能运行在/etc/cron.d里面的cron jobs，syslog异常如下
 

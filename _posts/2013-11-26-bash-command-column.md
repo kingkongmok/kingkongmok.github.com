@@ -4,7 +4,6 @@ title: "column example"
 category: linux
 tags: [command, column]
 ---
-{% include JB/setup %}
 
 有人建议使用column来排列输出，效果不错：
 

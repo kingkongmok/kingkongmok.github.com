@@ -4,7 +4,6 @@ title: "centos_setting_local Centos用户的环境配置"
 category: linux
 tags: [centos, settings, local]
 ---
-{% include JB/setup %}
 
 centos的一些配置和常用环境稍稍不同，需要注意。
 

@@ -4,7 +4,6 @@ title: "linux boot from usb"
 category: linux
 tags: [linux, boot, usb, initramfs, modules]
 ---
-{% include JB/setup %}
 
 **https://help.ubuntu.com/community/BootFromUSB**
 

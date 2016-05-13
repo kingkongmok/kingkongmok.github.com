@@ -4,7 +4,6 @@ title: "perl encoding"
 category: perl
 tags: [encoding, perl, utf8, unicode]
 ---
-{% include JB/setup %}
 
 ##测试
 **撰写本文时，还没搞好我需要的东西，本文作为记录**

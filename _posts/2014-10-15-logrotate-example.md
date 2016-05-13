@@ -4,7 +4,6 @@ title: "logrotate example"
 category: linux
 tags: [logrotate, log, tomcat]
 ---
-{% include JB/setup %}
 
 ### example
 

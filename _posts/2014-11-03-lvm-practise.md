@@ -4,7 +4,6 @@ title: "lvm"
 category: linux
 tags: [lvm]
 ---
-{% include JB/setup %}
 
 ## [lvm practise](http://hi.baidu.com/storymedia/blog/item/1d01cbf86a2e7d03d9f9fdd0.html)
 

@@ -4,7 +4,6 @@ title: "ext3文件系统的使用局限"
 category: linux
 tags: [filesystem, ext3]
 ---
-{% include JB/setup %}
 
 在真实案例中有出现过多文件夹导致无法新建的情况
 

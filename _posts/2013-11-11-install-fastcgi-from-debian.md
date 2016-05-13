@@ -4,7 +4,6 @@ title: "install fastcgi from debian"
 category: linux
 tags: [debian insstall fastcgi]
 ---
-{% include JB/setup %}
 
 ```
 sudo apt-get install nginx fcgiwrap spawn-fcgi

@@ -4,7 +4,6 @@ title: "systemd sysctl.service failed"
 category: linux
 tags: [systemd, sysctl]
 ---
-{% include JB/setup %}
 
 ### [problems](https://bbs.archlinux.org/viewtopic.php?id=153106)
 

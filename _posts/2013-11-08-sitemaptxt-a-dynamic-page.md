@@ -4,7 +4,6 @@ title: "sitemap.txt a dynamic page sitemap.txt的正常运作"
 category: web
 tags: [sitemap.txt, atom.xml, dynamic, _config, production_url ]
 ---
-{% include JB/setup %}
 
 ## sitemap.txt 终于能生成正常
 **sitemap.txt atom.xml 是由production_url生产的静态页**

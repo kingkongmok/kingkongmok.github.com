@@ -4,7 +4,6 @@ title: "perl在open时一起使用encoding和pipe的方法"
 category: 
 tags: []
 ---
-{% include JB/setup %}
 
 好像比较少看到有介绍同时使用open的encoding和pipe方法，
 

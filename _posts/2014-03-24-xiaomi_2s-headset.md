@@ -4,7 +4,6 @@ title: "xiaomi_2s headset"
 category: android
 tags: [headset]
 ---
-{% include JB/setup %}
 
 ## key test ##
 

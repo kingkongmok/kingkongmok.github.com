@@ -4,7 +4,6 @@ title: "gentoo install iwlwifi"
 category: linux
 tags: [gentoo, wifi, iwlwifi, kernel]
 ---
-{% include JB/setup %}
 
 ##install sys-firmware/iwl6000-ucode
 **[ iwl6000 sucess ] ( http://bpaste.net/show/163406/ )**

@@ -4,7 +4,6 @@ title: "mutt & msmtp 在Centos5上的编译安装"
 category: linux
 tags: [mutt, msmtp, centos]
 ---
-{% include JB/setup %}
 
 #### packages
 

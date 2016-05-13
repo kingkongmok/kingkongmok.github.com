@@ -4,7 +4,6 @@ title: "tomcat errors"
 category: linux
 tags: [tomcat, jstack, ps]
 ---
-{% include JB/setup %}
 
 ## Fri Nov 14 15:46:02 CST 2014 on ins14
 

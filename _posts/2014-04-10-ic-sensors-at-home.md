@@ -4,7 +4,6 @@ title: "lm_sensors"
 category: linux
 tags: [lm_sensors, sensors, kernel, modules]
 ---
-{% include JB/setup %}
 
 在公司和笔记本T510都是使用似乎是intel的模块coretemp,[操作方法](https://wiki.gentoo.org/wiki/Lm_sensors).
 但是家里面的旧945主板就麻烦点，

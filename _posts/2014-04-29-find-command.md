@@ -4,7 +4,6 @@ title: "find command"
 category: bash
 tags: [find, printf, date]
 ---
-{% include JB/setup %}
 
 ## printf
 

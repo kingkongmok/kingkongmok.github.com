@@ -4,7 +4,6 @@ title: "nginx"
 category: linux
 tags: [nginx, limit_rate, install]
 ---
-{% include JB/setup %}
 
 ## install
 

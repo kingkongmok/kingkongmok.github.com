@@ -4,7 +4,6 @@ title: "monitor logs increase and warning 日志监控增长情况"
 category: linux
 tags: [logs, increase, monitor, logrotate]
 ---
-{% include JB/setup %}
 
 **监控日志的增长量**
 

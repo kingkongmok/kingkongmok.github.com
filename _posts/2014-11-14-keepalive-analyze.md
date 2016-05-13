@@ -4,7 +4,6 @@ title: "keepalive"
 category: linux
 tags: [keepalive, nginx, tomcat]
 ---
-{% include JB/setup %}
 
 ## structure
 目前使用的架构是tomcat-tomcat{0,1,2,3}，研究一下nginx和upstreams之间的keepalive。以下配置为测试机上的设置

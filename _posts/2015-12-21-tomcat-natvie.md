@@ -4,7 +4,6 @@ title: "tomcat natvie的安装"
 category: linux
 tags: [tomcat, openssl, apr, tomcat-native]
 ---
-{% include JB/setup %}
 
 *****
 

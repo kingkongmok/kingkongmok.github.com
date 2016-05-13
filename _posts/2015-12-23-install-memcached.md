@@ -4,7 +4,6 @@ title: "memcached"
 category: linux
 tags: [memcached, replication, install]
 ---
-{% include JB/setup %}
 
 ***
 

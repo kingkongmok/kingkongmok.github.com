@@ -4,7 +4,6 @@ title: "perl counting"
 category: perl
 tags: [count]
 ---
-{% include JB/setup %}
 
 {% highlight bash %}
 kk@ins14 ~/workspace/kingkongmok.github.com $ sudo cat /var/log/syslog | perl -MData::Dumper -ne 'next unless /^Sep  2/../^Sep\s+3/; while(/((master_spawn|kernel|error))/g){$h{$1}++} }{ print Dumper\%h'
@@ -19,7 +18,6 @@ $VAR1 = {
 
 ### random and count
 
-{% include JB/setup %}
 
 {% highlight perl %}
 #!/usr/bin/perl 

@@ -4,7 +4,6 @@ title: "getopt in perl"
 category: perl
 tags: [getopt, perl, shell, ]
 ---
-{% include JB/setup %}
 
 ##bash中的实现方法
 bash当然也有getopt，利用bash的vim模块能快速调用出`usage`和 `getopts` function。

@@ -4,7 +4,6 @@ title: "多连接"
 category: linux
 tags: [sysctl, nginx, dmesg, nginx]
 ---
-{% include JB/setup %}
 
 ### 架构 F5 -> ( bond0 -> Nginx -> lo ->  tomcats ) x4
 

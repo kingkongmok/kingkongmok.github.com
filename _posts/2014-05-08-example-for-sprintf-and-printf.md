@@ -4,7 +4,6 @@ title: "sprintf and printf"
 category: perl
 tags: [printf, sprintf]
 ---
-{% include JB/setup %}
 
 sprintf通常需有e在s///后面，例如
 

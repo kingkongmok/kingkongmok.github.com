@@ -4,7 +4,6 @@ title: "swap space"
 category: linux
 tags: [swap]
 ---
-{% include JB/setup %}
 
 [这里](http://www.cyberciti.biz/tips/linux-swap-space.html)有一个建议如何设置大空间的swap。可以参考redhat的做法：
 

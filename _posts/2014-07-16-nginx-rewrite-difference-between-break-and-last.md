@@ -4,7 +4,6 @@ title: "nginx rewrite"
 category: linux
 tags: [nginx, rewrite, last, break]
 ---
-{% include JB/setup %}
 
 [这里有明确说明](http://serverfault.com/questions/131474/nginx-url-rewriting-difference-between-break-and-last)
 

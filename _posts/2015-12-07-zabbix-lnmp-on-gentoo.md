@@ -4,7 +4,6 @@ title: "zabbix and lnmp on gentoo"
 category: linux
 tags: [php, zabbix]
 ---
-{% include JB/setup %}
 
 --- 
 

@@ -4,7 +4,6 @@ title: "Perl的模块安装和cpan的使用"
 category: perl
 tags: [perl, cpan, local, modules, install]
 ---
-{% include JB/setup %}
 
 ## cpan
 

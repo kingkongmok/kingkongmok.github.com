@@ -4,7 +4,6 @@ title: "mysql backup "
 category: linux
 tags: [mysql, backup]
 ---
-{% include JB/setup %}
 
 ##备份
 

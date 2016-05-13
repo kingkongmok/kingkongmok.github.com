@@ -4,7 +4,6 @@ title: "tcpdump"
 category: linux
 tags: [tcpdump, http]
 ---
-{% include JB/setup %}
 
 
 使用tcpdump可以用-w的参数将包记录下来，当然也可以直接-A来现场查看简单分析

@@ -4,7 +4,6 @@ title: "manage user account"
 category: linux
 tags: [chage, useradd]
 ---
-{% include JB/setup %}
 
 ## chage
 

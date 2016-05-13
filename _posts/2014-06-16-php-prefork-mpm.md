@@ -4,7 +4,6 @@ title: "php prefork mpm"
 category: linux
 tags: [php, fpm, apache, mpm, prefork]
 ---
-{% include JB/setup %}
 
 今天查询一个关于php进程的时候发现这个关于[php进程文章](http://stackoverflow.com/questions/10678542/php5-fpm-children-and-requests).
 

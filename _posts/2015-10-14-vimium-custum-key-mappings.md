@@ -4,7 +4,6 @@ title: "vimium插件的快捷键设置"
 category: chrome
 tags: []
 ---
-{% include JB/setup %}
 
 ```
 # 原来的f和F分别是"Open a link in the current tab"和"Open URL, bookmark, or history entry", 现在取消

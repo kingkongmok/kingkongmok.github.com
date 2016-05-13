@@ -4,7 +4,6 @@ title: "nginx log"
 category: linux
 tags: [nginx, log, uri]
 ---
-{% include JB/setup %}
 
 
 ## 默认情况下的logformat

@@ -1,12 +1,20 @@
----
-theme :
-  name : twitter
----
-{% include JB/setup %}
-{% include themes/twitter/default.html %}
+<!DOCTYPE html>
+<html>
 
-<head>
-...
-<link href="/assets/css/syntax.css" rel="stylesheet">
-...
-</head>
+  {% include head.html %}
+
+  <body>
+
+    {% include header.html %}
+
+    <div class="page-content">
+      <div class="wrapper">
+        {{ content }}
+      </div>
+    </div>
+
+    {% include footer.html %}
+
+  </body>
+
+</html>

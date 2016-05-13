@@ -4,7 +4,6 @@ title: "xl2tp client without ipsec"
 category: linux
 tags: [gentoo, xl2tp, client]
 ---
-{% include JB/setup %}
 
 ### 参考
 

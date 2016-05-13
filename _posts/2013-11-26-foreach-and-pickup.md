@@ -4,7 +4,6 @@ title: "foreach and pickup 百人间隔轮回游戏"
 category: perl
 tags: [foreach, pickup]
 ---
-{% include JB/setup %}
 
 
 ##练习题

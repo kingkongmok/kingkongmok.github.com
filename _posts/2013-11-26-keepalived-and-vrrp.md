@@ -4,7 +4,6 @@ title: "keepalived and vrrp"
 category: linux
 tags: [keepalived, vrrp, linux]
 ---
-{% include JB/setup %}
 
 其实如果只有10多台服务器的话，没必要使用3/4层交换的ipvs
 技术，直接使用7层的nginx的upstream较好。

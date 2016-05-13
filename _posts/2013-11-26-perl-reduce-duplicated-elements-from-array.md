@@ -4,7 +4,6 @@ title: "perl reduce duplicated elements from array 去重"
 category: perl
 tags: [perl, duplicated, array]
 ---
-{% include JB/setup %}
 
 ##$hash{key}++
 

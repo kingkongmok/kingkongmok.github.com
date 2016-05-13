@@ -4,7 +4,6 @@ title: "apache MPM"
 category: linux
 tags: [apache, mpm, worker, event]
 ---
-{% include JB/setup %}
 
 现在都是基于lnmmp的架构，也有nginx用户提出可以[100k每分钟的并发](http://stackoverflow.com/questions/7325211/tuning-nginx-worker-process-to-obtain-100k-hits-per-min)，但apache的lanmmp还是比较有意思的。这里粗略看看apache的MPM选择。
 

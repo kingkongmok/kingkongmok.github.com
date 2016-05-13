@@ -4,7 +4,6 @@ title: "print the line controlled by grep Grep命令"
 category: perl
 tags: [line, grep, number]
 ---
-{% include JB/setup %}
 
 <pre lang="bash">
 #print only lines 13,19

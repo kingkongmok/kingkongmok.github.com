@@ -4,7 +4,6 @@ title: "smart match ~~"
 category: perl
 tags: [smart match, '~~', perl]
 ---
-{% include JB/setup %}
 
 ###用法
 <pre>

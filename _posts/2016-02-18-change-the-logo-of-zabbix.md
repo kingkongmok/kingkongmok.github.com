@@ -4,7 +4,6 @@ title: "修改zabbix在顶端的logo"
 category: zabbix
 tags: [logo]
 ---
-{% include JB/setup %}
 
 
 ###[引用](https://www.zabbix.com/forum/showthread.php?t=22814)

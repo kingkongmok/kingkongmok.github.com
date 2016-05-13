@@ -4,7 +4,6 @@ title: "rsync"
 category: linux
 tags: [rsync, command]
 ---
-{% include JB/setup %}
 
 ## [-i](http://stackoverflow.com/questions/4493525/rsync-what-means-the-f-on-rsync-logs)
 

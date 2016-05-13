@@ -4,7 +4,6 @@ title: "perl cgi upload file"
 category: perl
 tags: [perl, cgi, upload, curl]
 ---
-{% include JB/setup %}
 
 ##perl cgi file upload using curl
 

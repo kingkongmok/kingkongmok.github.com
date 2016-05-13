@@ -4,7 +4,6 @@ title: "perl grep and map"
 category: perl
 tags: [perl, map, grep]
 ---
-{% include JB/setup %}
 
 ### grep更换数组的值
 

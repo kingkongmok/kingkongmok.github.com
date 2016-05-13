@@ -4,7 +4,6 @@ title: "gentoo install jekyll"
 category: linux
 tags: [gentoo, ruby, jekyll, rake, git, blog]
 ---
-{% include JB/setup %}
 
 ##rake的安装
 

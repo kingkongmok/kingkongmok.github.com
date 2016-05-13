@@ -4,7 +4,6 @@ title: "java gc的观察记录"
 category: linux
 tags: [java, gc, tomcat]
 ---
-{% include JB/setup %}
 
 
 ### java gc 介绍

@@ -4,7 +4,6 @@ title: "Linux获取Nikon相机的照片"
 category: Linux
 tags: [Linux, DSLR]
 ---
-{% include JB/setup %}
 
 ***(refer)[http://www.dpreview.com/forums/thread/2945968]***
 

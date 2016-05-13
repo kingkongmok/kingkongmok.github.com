@@ -4,7 +4,6 @@ title: "it words pronounce"
 category: linux
 tags: [pronounce]
 ---
-{% include JB/setup %}
 
 ```
 GNU

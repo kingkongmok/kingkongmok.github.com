@@ -4,7 +4,6 @@ title: "how do i find the window dimensions and position accurately 获取X窗�
 category: linux
 tags: [X, location, demensions]
 ---
-{% include JB/setup %}
 
 ##如何获取位置信息
 

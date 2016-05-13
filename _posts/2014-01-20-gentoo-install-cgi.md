@@ -4,7 +4,6 @@ title: "gentoo install cgi"
 category: linux
 tags: [gentoo, cgi, nginx, emerge]
 ---
-{% include JB/setup %}
 
 ##安装
 首先安装webserver，这里安装nginx；

@@ -4,7 +4,6 @@ title: "forumn command"
 category: linux
 tags: [command, fortune]
 ---
-{% include JB/setup %}
 
 ##fortune
 

@@ -4,7 +4,6 @@ title: "mutt的使用"
 category: linux
 tags: [mutt, key, bindings, png, attachment]
 ---
-{% include JB/setup %}
 
 ### [Embeding an image](http://stackoverflow.com/questions/14381071/embeding-an-image-in-an-email-using-linux-commands)
 

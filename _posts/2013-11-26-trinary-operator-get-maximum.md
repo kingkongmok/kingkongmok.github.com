@@ -4,7 +4,6 @@ title: "trinary operator get maximum"
 category: perl
 tags: [trinary operator, maximum, perl]
 ---
-{% include JB/setup %}
 
 <pre lang="perl">
 perl -ne '$a=$a>$_?$a:$_}{print $a' numb.txt
