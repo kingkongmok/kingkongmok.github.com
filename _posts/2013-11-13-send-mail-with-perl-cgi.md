@@ -4,7 +4,6 @@ title: "send mail with perl cgi"
 category: perl
 tags: [cgi mail perl]
 ---
-{% include JB/setup %}
 
 ##写邮件
 

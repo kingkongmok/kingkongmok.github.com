@@ -4,7 +4,6 @@ title: "delete elements from a array"
 category: perl
 tags: [delete, elements, index, array, perl]
 ---
-{% include JB/setup %}
 
 可以使用grep来获取元素位于数组的位置（indexes），然后通
 过for和splice来删除相应元素，但注意必须使用reverse来反转一下indexes的顺序，否则会误删除元素。

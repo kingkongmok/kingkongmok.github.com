@@ -4,7 +4,6 @@ title: "rename with perl"
 category: perl
 tags: [rename, perl]
 ---
-{% include JB/setup %}
 
 
 ### numeric

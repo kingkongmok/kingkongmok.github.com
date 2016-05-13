@@ -4,7 +4,6 @@ title: "keepalive at home's pc 家里使用的Keepalive"
 category: linux
 tags: [port, forward, linux, keepalived, home]
 ---
-{% include JB/setup %}
 
 keepalived就是电脑使用vrrpd
 

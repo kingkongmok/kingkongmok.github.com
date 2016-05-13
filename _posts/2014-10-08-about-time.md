@@ -4,7 +4,6 @@ title: "date and time"
 category: linux
 tags: [time, find, touch, date]
 ---
-{% include JB/setup %}
 
 有多个时间相关的设置，其中比较常用的是find和date，对于日志应用较多。
 

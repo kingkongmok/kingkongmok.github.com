@@ -4,7 +4,6 @@ title: "printf and trinary operator"
 category: perl
 tags: [printf, trinary operator, du]
 ---
-{% include JB/setup %}
 
 ##As in C, ?: is the only trinary operator. It’s often called the conditional operator
 because it works much like an if-then-else,

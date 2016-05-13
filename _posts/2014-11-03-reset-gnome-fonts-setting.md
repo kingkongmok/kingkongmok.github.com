@@ -4,7 +4,6 @@ title: "reset gnome fonts setting"
 category: linux
 tags: [gnome, font]
 ---
-{% include JB/setup %}
 
 整理的时候发现的，当然现在是直接修改***~/.config/fontconfig/***和***~/.gtkrc-2.0***了，但gnome的配置还是记录一下：
 

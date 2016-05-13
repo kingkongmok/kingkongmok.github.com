@@ -4,7 +4,6 @@ title: "centos的cron.daily bug"
 category: linux
 tags: [centos, cront]
 ---
-{% include JB/setup %}
 
 ### 问题
 

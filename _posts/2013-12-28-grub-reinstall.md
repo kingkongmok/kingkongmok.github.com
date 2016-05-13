@@ -4,7 +4,6 @@ title: "grub reinstall"
 category: linux
 tags: [linux, boot, grub2]
 ---
-{% include JB/setup %}
 
 **[ arch比较详细的文档 ]( https://wiki.archlinux.org/index.php/GRUB )**
 ##先删除

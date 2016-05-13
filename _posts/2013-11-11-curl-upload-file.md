@@ -4,7 +4,6 @@ title: "curl upload file"
 category: linux
 tags: [linux, curl, upload, form]
 ---
-{% include JB/setup %}
 
 ##curl一般使用post和get
 

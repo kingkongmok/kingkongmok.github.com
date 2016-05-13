@@ -4,7 +4,6 @@ title: "perl debugger editor like vim"
 category: perl
 tags: [debugger, editor]
 ---
-{% include JB/setup %}
 
 ### debug editor like vim
 

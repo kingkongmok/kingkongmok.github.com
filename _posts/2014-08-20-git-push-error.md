@@ -4,7 +4,6 @@ title: "git push error"
 category: linux
 tags: [git]
 ---
-{% include JB/setup %}
 
 
 新安装的电脑，当然要clone一下git啦

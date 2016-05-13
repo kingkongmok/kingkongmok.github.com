@@ -4,7 +4,6 @@ title: "updateWebsite_smsRebuild.sh 升级脚本"
 category: linux
 tags: [rsync, smsRebuild, update]
 ---
-{% include JB/setup %}
 
 `使用方法`
 [原文件地址](https://raw.githubusercontent.com/kingkongmok/kingkongmok.github.com/master/bin/updateWebsite_smsRebuild.sh)

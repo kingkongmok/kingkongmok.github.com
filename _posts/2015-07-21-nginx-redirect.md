@@ -4,7 +4,6 @@ title: "nginx的redirect"
 category: linux
 tags: [nginx, redirect]
 ---
-{% include JB/setup %}
 
 ### https转换http
 

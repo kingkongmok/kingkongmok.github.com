@@ -4,7 +4,6 @@ title: "patch and diff"
 category: linux
 tags: [patch, diff]
 ---
-{% include JB/setup %}
 
 **[The Ten Minute Guide to diff and patch](http://jungels.net/articles/diff-patch-ten-minutes.html)**
 

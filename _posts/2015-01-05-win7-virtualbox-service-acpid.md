@@ -4,7 +4,6 @@ title: "win7启动Virtualbox服务和子系统的ACPIShutdown"
 category: linux
 tags: [vbox, virtualbox, service, acpid]
 ---
-{% include JB/setup %}
 
 ### virtualbox service on windows 7.
 

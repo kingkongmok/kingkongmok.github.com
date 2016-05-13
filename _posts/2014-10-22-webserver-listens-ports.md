@@ -4,7 +4,6 @@ title: "webserver listens ports webserver的监听端口"
 category: linux
 tags: [nginx, tomcat, port]
 ---
-{% include JB/setup %}
 
 需要webserver监听多于一个端口的方法，注意nginx那个是一个http，一个https。
 

@@ -4,7 +4,6 @@ title: "gentoo auto login to tty and start X on login"
 category: linux
 tags: [gentoo, tty, autologin]
 ---
-{% include JB/setup %}
 
 每天启动后需要装xdm中输入帐号密码非常不方便，xdm不支持autologin，gentoo建议的方法是tty auto login + start X while tty。
 

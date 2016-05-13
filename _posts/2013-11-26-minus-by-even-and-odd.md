@@ -4,7 +4,6 @@ title: "minus by even and odd 偶数行减奇数行所得到的值"
 category: perl
 tags: [minus, even, odd]
 ---
-{% include JB/setup %}
 
 有个奇葩同学要求偶数行减奇数行所得到的值，随意测试一下
 如下，待修正。

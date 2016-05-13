@@ -4,7 +4,6 @@ title: "perl secret operator"
 category: perl
 tags: [operator]
 ---
-{% include JB/setup %}
 
 [引用](http://search.cpan.org/dist/perlsecret/lib/perlsecret.pod)
 

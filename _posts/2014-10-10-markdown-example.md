@@ -4,7 +4,6 @@ title: "markdown example"
 category: markdown
 tags: [git, markdown]
 ---
-{% include JB/setup %}
 
 ## 语法高亮
 

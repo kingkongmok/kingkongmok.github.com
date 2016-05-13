@@ -4,7 +4,6 @@ title: "squid transparenet proxy"
 category: linux
 tags: [squid, proxy, transparenet]
 ---
-{% include JB/setup %}
 
 ##只有一个网卡
 **公司的文件服务器只有一个网卡，但考虑网络经常出现瓶颈。所以搭建代理服务器，顺便把透明代理设置好。**

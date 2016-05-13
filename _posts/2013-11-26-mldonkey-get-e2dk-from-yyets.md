@@ -4,7 +4,6 @@ title: "mldonkey get e2dk from yyets 人人影视获取e2dk地址"
 category: perl
 tags: [mldonkey e2dk yyets]
 ---
-{% include JB/setup %}
 
 ##通过curl获取e2dk
 

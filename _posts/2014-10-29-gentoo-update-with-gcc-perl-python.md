@@ -4,7 +4,6 @@ title: "gentoo升级的时候涉及到gcc，perl和python的处理方法"
 category: linux
 tags: [gcc-config, emerge, update, perl, python]
 ---
-{% include JB/setup %}
 
 ### 处理方法
 

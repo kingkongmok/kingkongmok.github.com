@@ -4,7 +4,6 @@ title: "从openrc过渡到systemd"
 category: linux
 tags: [ss-local, dropbox, squid]
 ---
-{% include JB/setup %}
 
 ### [安装systemd](https://wiki.gentoo.org/wiki/Systemd)
 

@@ -4,7 +4,6 @@ title: "compare two strings and display the common 比较两个字段获取相�
 category: perl
 tags: [regex, perl, common]
 ---
-{% include JB/setup %}
 
 用于匹配两个string的match部分，是使用 m//进行的，其中(.+) \1部分就是用来匹配相关字段的。使用\0 null字符分开。
 如果需要匹配.+(.+)$，要在中间加？变成 .+?(.+)$;

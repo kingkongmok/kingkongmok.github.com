@@ -4,7 +4,6 @@ title: "adb xiaomi_2s"
 category: android
 tags: [xiaomi, android, adb, recovery, fastboot]
 ---
-{% include JB/setup %}
 
 ### Android adb permision error ###
 

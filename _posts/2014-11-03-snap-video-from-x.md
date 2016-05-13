@@ -4,7 +4,6 @@ title: "snap video from X"
 category: linux
 tags: [X, video, record, ffmpeg]
 ---
-{% include JB/setup %}
 
 来自[最牛bash](http://www.isspy.com/most_useful_linux_commands_1/)的介绍。
 

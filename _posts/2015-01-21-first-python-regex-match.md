@@ -4,7 +4,6 @@ title: "first python regex match"
 category: python
 tags: [regex, match]
 ---
-{% include JB/setup %}
 
 今天要搞一下简单的python
 

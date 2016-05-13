@@ -4,7 +4,6 @@ title: "get address meta from ip138.com 通过ip138查地址的脚本"
 category: web 
 tags: [ 138.com, curl, 地址]
 ---
-{% include JB/setup %}
 
 小伙伴们需要通过ip获取物理地址，利用了下ip138.com的接口
 

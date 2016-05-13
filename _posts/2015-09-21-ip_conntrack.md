@@ -4,7 +4,6 @@ title: "iptables 和 ip_conntrack"
 category: linux
 tags: [iptalbes, nf_conntrack, ip_conntrack]
 ---
-{% include JB/setup %}
 
 ### ip_conntrack 和 nf_conntrack
 

@@ -4,7 +4,6 @@ title: "log with psad and iptables"
 category: linux
 tags: [log, iptables, psad, attack, security]
 ---
-{% include JB/setup %}
 
 ##iptables and syslogd
 iptables能drop，reject和log各种不良的数据包，通过syslog能把信息记录。psad能通过该log分析和警报。例如超过1500个数据包的nmap，iptables通过syslog记录后，psad就将会将其定义为DANGER_LEVEL4。

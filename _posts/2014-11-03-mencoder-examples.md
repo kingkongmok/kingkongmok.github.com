@@ -4,7 +4,6 @@ title: "mencoder"
 category: linux
 tags: [mencoder]
 ---
-{% include JB/setup %}
 
 ### for PC
 

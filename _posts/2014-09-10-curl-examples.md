@@ -4,7 +4,6 @@ title: "curl examples "
 category: linux
 tags: [curl, examples, upload, delete, ftp]
 ---
-{% include JB/setup %}
 
 ### curl的 --data-binary 应用
 

@@ -4,7 +4,6 @@ title: "revdep-rebuild in gentoo"
 category: linux
 tags: [gentoo, revdep-rebuild, libraries, broken]
 ---
-{% include JB/setup %}
 
 ##problems when run revdep-rebuild
 

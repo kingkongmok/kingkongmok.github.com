@@ -4,7 +4,6 @@ title: "Multi-lines on Perl 多行文本的Perl处理"
 category: perl
 tags: [count, while, txt, multi]
 ---
-{% include JB/setup %}
 
 记录一下perl的多行正则用法
 

@@ -4,7 +4,6 @@ title: "content_dispostion http response header"
 category: web
 tags: [download, filename, web]
 ---
-{% include JB/setup %}
 
 ##http中的Content-Disposition##
 

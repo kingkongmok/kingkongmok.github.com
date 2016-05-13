@@ -4,7 +4,6 @@ title: "fetch github in home 如何设置git"
 category: web
 tags: [github, pull, ssh, clone, https]
 ---
-{% include JB/setup %}
 
 ##设置
 

@@ -4,7 +4,6 @@ title: "epel on centos"
 category: linux
 tags: [centos, yum, nginx, epel]
 ---
-{% include JB/setup %}
 
 在的centos的默认源里是不提供nginx和 php5-fpm这些包的，baidu上介绍较多的方法是编译。 google上推荐较多的解决方法是使用EPEL源来实现的。
 

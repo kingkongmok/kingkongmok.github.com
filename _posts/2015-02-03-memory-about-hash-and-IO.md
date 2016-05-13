@@ -4,7 +4,6 @@ title: "perl在读大文件时的hash和IO和内存占用"
 category: perl
 tags: [perl, hash, memory, IO]
 ---
-{% include JB/setup %}
 
 ## hash的内存
 

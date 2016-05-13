@@ -4,7 +4,6 @@ title: "perl使用gnuplot绘图"
 category: linux
 tags: [gnuplot, perl]
 ---
-{% include JB/setup %}
 
 
 ### gnuplot Demo

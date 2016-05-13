@@ -4,7 +4,6 @@ title: "iptables add nat netfilter"
 category: linux
 tags: [iptables, nat, kernel]
 ---
-{% include JB/setup %}
 
 在新增一条nat的iptable配置时候出现问题：
 

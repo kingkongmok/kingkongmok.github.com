@@ -4,7 +4,6 @@ title: "squidclient"
 category: linux
 tags: [squid, squidclient, status]
 ---
-{% include JB/setup %}
 
 ##A simple way to test the access to the cache manager is:
 

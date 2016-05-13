@@ -4,7 +4,6 @@ title: "display Non Ascii chars"
 category: perl
 tags: [ascii, perl ]
 ---
-{% include JB/setup %}
 
 需要判断语句中是否包含中文，这个不会，但要排除不包含英
 文也能达到目的：

@@ -4,7 +4,6 @@ title: "perl字符处理问题"
 category: perl 
 tags: [utf8, charset, perl, encode]
 ---
-{% include JB/setup %}
 
 ### [来源地址](http://blog.chinaunix.net/uid-23622436-id-2394070.html)
 

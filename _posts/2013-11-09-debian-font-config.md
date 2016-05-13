@@ -4,7 +4,6 @@ title: "debian font config 在Debian的X下的config设置"
 category: linux
 tags: [debian, font, config]
 ---
-{% include JB/setup %}
 
 ##这个是在家里squeeze的设置，是根据ubuntu10.04做出修改的。
 

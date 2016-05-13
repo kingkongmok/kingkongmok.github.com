@@ -4,7 +4,6 @@ title: "nginx转发jetty并保留真实ip"
 category: 
 tags: []
 ---
-{% include JB/setup %}
 
 ### [保留真实ip](./_posts/2015-12-03-nginx-x-forwarded-for-as-jettys-remote_addr-ip.md)
 

@@ -4,7 +4,6 @@ title: "linux 64bit using adb"
 category: android
 tags: [android, linux, adb]
 ---
-{% include JB/setup %}
 
 没有安装豌豆夹什么的软件，只能自己动手更新手机的hosts啦。所以电脑使用adb + android的wifi adb来控制，之前安装64bit的wheezy后一直不能使用adb，今天终于有时间查找一下：解决方法如下：
 

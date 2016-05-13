@@ -4,7 +4,6 @@ title: "zabbix report"
 category: perl
 tags: [zabbix, report]
 ---
-{% include JB/setup %}
 
 
 ## zabbix的带图片自动report

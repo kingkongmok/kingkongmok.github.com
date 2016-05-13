@@ -4,10 +4,9 @@ title: "gentoo xfce4"
 category: 
 tags: []
 ---
-{% include JB/setup %}
 
 
-{% highlight bash %}
+```
 # emerge --ask xfce4-meta xfce4-notifyd
 
  * IMPORTANT: 7 news items need reading for repository 'gentoo'.
@@ -399,4 +398,4 @@ Use --autounmask-write to write changes to config files (honoring
 CONFIG_PROTECT). Carefully examine the list of proposed changes,
 paying special attention to mask or keyword changes that may expose
 experimental or unstable packages.
-{% endhighlight %}
+```

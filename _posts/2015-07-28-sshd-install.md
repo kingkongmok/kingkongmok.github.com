@@ -4,7 +4,6 @@ title: "openssh的安装"
 category: linux
 tags: [openssh, openssl, sshd, compile, install]
 ---
-{% include JB/setup %}
 
 ### error message
 

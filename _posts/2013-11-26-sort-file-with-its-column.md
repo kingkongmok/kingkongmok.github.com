@@ -4,7 +4,6 @@ title: "perl sort"
 category: perl
 tags: [perl, sort, cmp, column]
 ---
-{% include JB/setup %}
 
 ##方法一，之前抄的
 

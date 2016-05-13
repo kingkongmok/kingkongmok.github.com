@@ -4,7 +4,6 @@ title: "crontab "
 category: linux
 tags: [crontab, seperate, every, minute]
 ---
-{% include JB/setup %}
 
 ### 需求：
 每个程序，每三分钟运行一次，并错开

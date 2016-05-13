@@ -4,7 +4,6 @@ title: "httperf and ab"
 category: linux
 tags: [web, performence, httperf, ab]
 ---
-{% include JB/setup %}
 
 ##前期优化
 

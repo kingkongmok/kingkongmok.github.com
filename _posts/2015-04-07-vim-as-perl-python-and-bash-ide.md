@@ -4,7 +4,6 @@ title: "使用vim作为bash,Perl,Python的IDE"
 category: vim
 tags: [pathogen, perl-support, bash-support, python]
 ---
-{% include JB/setup %}
 
 *****
 
