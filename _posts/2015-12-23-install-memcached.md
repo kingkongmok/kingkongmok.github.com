@@ -5,17 +5,15 @@ category: linux
 tags: [memcached, replication, install]
 ---
 
-***
 
-### 安装
+## 安装
 
 ```
 ./configure --prefix=/home/appSys/yuanbao/memcached-1.4.24 --with-libevent=/home/appSys/yuanbao/libevent-2.0.22-stable --enable-64bit
 ```
 
-***
 
-### 带主从功能的[memcached-repcached](http://guodong810.blog.51cto.com/4046313/1338953)的安装
+## 带主从功能的[memcached-repcached](http://guodong810.blog.51cto.com/4046313/1338953)的安装
 
 * configure
 * 注意***--enable-replication***
@@ -37,24 +35,24 @@ tags: [memcached, replication, install]
 ---
 
 
-### replication
+## replication
 
-1.  第一个memcached
+### 第一个memcached
 
-    ```
-    su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.1 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.2 -X 21212"
-    ```
+```
+su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.1 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.2 -X 21212"
+```
 
-2.  第一个memcached
+###  第一个memcached
 
-    ```
-    su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.2 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.1 -X 21212"
-    ```
+```
+su - yuanbao -c "/home/appSys/yuanbao/memcached/bin/memcached -d -t 6 -l 192.168.1.2 -p 2211 -m 500  -c 1024 -P /home/appSys/yuanbao/memcached/run/memcached.pid -x 192.168.1.1 -X 21212"
+```
 
 
 ---
 
-### ldd 的设置
+## ldd 的设置
 
 看openssl的doc/openssl-shared.txt有介绍怎么处理：
 
@@ -91,7 +89,7 @@ export LD_LIBRARY_PATH
 
 ---
 
-### telnet测试
+## telnet测试
 
 [引用](http://www.journaldev.com/16/memcached-telnet-commands-with-example)
 

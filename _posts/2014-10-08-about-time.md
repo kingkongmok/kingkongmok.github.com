@@ -101,14 +101,14 @@ kk@ins14 /tmp $ ls -l hp1000_linux.txt
 kk@ins14 /tmp $ touch -t 201111111111.11 hp1000_linux.txt 
 kk@ins14 /tmp $ ls -l hp1000_linux.txt 
 -rw-r--r-- 1 kk kk 1223 2011-11-11 11:11 hp1000_linux.txt
- ```
+```
 
  man一下touch的用法可以知道
  
- ```
+```
        -t STAMP
               use [[CC]YY]MMDDhhmm[.ss] instead of current time
- ```
+```
 
 ### perl
 
