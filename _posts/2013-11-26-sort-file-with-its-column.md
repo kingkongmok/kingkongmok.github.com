@@ -60,7 +60,7 @@ perl -ae 'print map {$_->[0]}  sort {$a->[1] <=> $b->[1]}  map {[ $_, (split)[2]
 
 ### 另外一个范例使用index
 
- ```perl
- $_="-6461_Pol2 5597_Pol2 1062_Pol2 8.5_Taf1 9210.5_Taf1 -9989_Taf1 1049_Taf1";
- print  join " ", sort {substr($a,0,index($a,"_")) <=> substr($b,0,index($b,"_"))} split;
- ```
+```perl
+$_="-6461_Pol2 5597_Pol2 1062_Pol2 8.5_Taf1 9210.5_Taf1 -9989_Taf1 1049_Taf1";
+print  join " ", sort {substr($a,0,index($a,"_")) <=> substr($b,0,index($b,"_"))} split;
+```

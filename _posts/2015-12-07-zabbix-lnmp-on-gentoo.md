@@ -324,16 +324,23 @@ UserParameter=test.tcpsock,ss -s | perl -nae 'print $F[1] if /^TCP:/'
 
 ### Trigger
 
-+ 那么 ，在刚刚的Application下添加Item， type 为 zabbix agent, Application为刚刚的Processes
-+ 格式：
+那么 ，在刚刚的Application下添加Item， type 为 zabbix agent, Application为刚刚的Processes
 
-```
-{<Template>:<key>.<function>}<operator><constant>
-或者
-{<Host>:<key>.<function>}<operator><constant>
-```
+#### 格式：
 
-例如
+ 1. 例子一
+
+    ~~~
+        {<Template>:<key>.<function>}<operator><constant>
+    ~~~
+
+ 2. 例子二
+
+    ```
+        {<Host>:<key>.<function>}<operator><constant>
+    ```
+
+#### 例子：
 
 ```
 {Template App Zabbix Agent:agent.hostname.diff(0)}>0
@@ -407,8 +414,8 @@ On: {DATE} {TIME} At: {IPADDRESS}
 
 > 注意HOME的意思是my.cnf所在路径.
 
-1. 各种**mysql.status**命令
-    1. 修改my.cnf, 添加默认用户密码
+ 1. 各种**mysql.status**命令
+     1. 修改my.cnf, 添加默认用户密码
 
         ```
         my.conf
@@ -424,28 +431,28 @@ On: {DATE} {TIME} At: {IPADDRESS}
         ```
 
 
-    2. mysql命令
-
+     2. mysql命令
+     
         ```
-        UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/etc/mysql mysql -uUSERNAME -N | awk '{print $$2}'
-        ```
-
-        ```
-        Warning: Using a password on the command line interface can be insecure.
+            UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/etc/mysql mysql -uUSERNAME -N | awk '{print $$2}'
         ```
 
+        ```
+            Warning: Using a password on the command line interface can be insecure.
+        ```
 
 
-2. **mysql.ping**
+
+ 2. **mysql.ping**
 
     ```
-    UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
+        UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
     ```
 
-3. **mysql.version**
+ 3. **mysql.version**
 
     ```
-    UserParameter=mysql.version,mysql -V
+        UserParameter=mysql.version,mysql -V
     ```
 
 ---
@@ -457,18 +464,18 @@ On: {DATE} {TIME} At: {IPADDRESS}
     2. 在active的情况下，agentd可以上传到proxy，并由proxy推送到server。
 + 创建proxy和server的db信息，注意proxy和server别用同一个库，真实使用中，proxy应该独立建库以cache
 
-1. proxy上，如上述创建mysql的表结构
+ 1. proxy上，如上述创建mysql的表结构
 
-2. zabbix->administration->DM->create
+ 2. zabbix->administration->DM->create
     1. Proxy name: proxy的表示，需要和proxy中的**zabbix_proxy.conf** 字段的 **Hostname**匹配
     2. Proxy mode: 这个可以选择active
 
-3. zabbix->configuration->hosts->host
+ 3. zabbix->configuration->hosts->host
     1. Host name: 这里的名称依然需要对应 **zabbix-agentd.con** 中的 **Hostname**
     2. Monitored by proxy： 这个设置proxy的 **Hostname**
     3. Status: monitored
 
-4. zabbix_proxy.conf
+ 4. zabbix_proxy.conf
 
         ProxyMode=0
         Server=127.0.0.1
@@ -522,20 +529,25 @@ On: {DATE} {TIME} At: {IPADDRESS}
 
 ## zabbix node
 
-1. 需要修改数据库，所以先备份zabbix-server所在的zabbix库
+ 1. 需要修改数据库，所以先备份zabbix-server所在的zabbix库
+    
+    ```
+    mysql -uzabbix -p zabbix | gzip > ~/db_zabbix.sql.gz
+    ```
 
-        mysql -uzabbix -p zabbix | gzip > ~/db_zabbix.sql.gz
 
-2. 使用[引用](https://www.zabbix.com/documentation/2.0/manual/distributed_monitoring/nodes)方法进行转换，注意只能做一次否则会破坏数据结构。
+ 2. 使用[引用](https://www.zabbix.com/documentation/2.0/manual/distributed_monitoring/nodes)方法进行转换，注意只能做一次否则会破坏数据结构。
 
+    ```
         cd bin
         ./zabbix_server -n 1 -c /usr/local/etc/zabbix_server.conf
+    ```
 
-    1. ***zabbix node conversion failed***
+     1. ***zabbix node conversion failed***
 
     这个情况需要delete掉以下两个表**events**和**autoreg_host**; 
 
-    2. 需要停止 phpd，否则以下报错：
+     2. 需要停止 phpd，否则以下报错：
 
             Dropping foreign keys ..........................done.
             Converting tables .....................[12807]: 
@@ -543,9 +555,9 @@ On: {DATE} {TIME} At: {IPADDRESS}
             [update history_uint set itemid=itemid+100100000000000 where itemid>0]
             .................................Conversion failed.
 
-3. configuration:
+ 3. configuration:
 
-    1. zabbix_server.conf
+     1. zabbix_server.conf
 
             NodeID=1
             ListenPort=10051
@@ -561,7 +573,7 @@ On: {DATE} {TIME} At: {IPADDRESS}
             AlertScriptsPath=/var/lib/zabbix/home
             ExternalScripts=/var/lib/zabbix/externalscripts
 
-    2. zabbix_proxy.conf 
+     2. zabbix_proxy.conf 
 
             ProxyMode=0
             Server=127.0.0.1
@@ -577,7 +589,7 @@ On: {DATE} {TIME} At: {IPADDRESS}
             DBUser=zabbix
             DBPassword=zabbixpassword
 
-    3. zabbix_agentd.conf
+     3. zabbix_agentd.conf
 
             PidFile=/run/zabbix/zabbix_agentd.pid
             LogFile=/var/log/zabbix/zabbix_agentd.log
@@ -595,6 +607,6 @@ On: {DATE} {TIME} At: {IPADDRESS}
             UserParameter=mysql.ping,HOME=/etc/mysql mysqladmin ping | grep -c alive
             UserParameter=mysql.version,mysql -V
 
-4. [Front-end configuration](https://www.zabbix.com/documentation/2.2/manual/distributed_monitoring/nodes) 
+ 4. [Front-end configuration](https://www.zabbix.com/documentation/2.2/manual/distributed_monitoring/nodes) 
 
-    1. master : host设置为 **guangzhou: proxy: agentd** , 依次为Node name， Proxy name，Host name。
+     1. master : host设置为 **guangzhou: proxy: agentd** , 依次为Node name， Proxy name，Host name。
