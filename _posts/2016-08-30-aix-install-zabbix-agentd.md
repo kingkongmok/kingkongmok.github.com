@@ -4,6 +4,10 @@ layout: post
 category: zabbix
 ---
 
+[zabbix Agent AIX version](https://www.zabbix.com/forum/showthread.php?t=46470)
+
+[How to start hlds on server start up?](http://forums.steampowered.com/forums/archive/index.php/t-98189.html)
+
 ### install
 
 + copy and mv to /usr/local
