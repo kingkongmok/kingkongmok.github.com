@@ -33,12 +33,12 @@ my $now = time();
 my $thisDay = strftime"%F", localtime $now;
 
 
-getopts('s:d:l:m:c:t:k:ph');
-our($opt_s, $opt_d, $opt_l, $opt_m, $opt_c, $opt_t, $opt_k, $opt_p, $opt_h);
+getopts('s:d:l:m:c:t:k:rph');
+our($opt_s, $opt_d, $opt_l, $opt_m, $opt_c, $opt_t, $opt_k, $opt_r, $opt_p, $opt_h);
 my $LogPath ;
 if ( $opt_s or $opt_d ) {
     $opt_s = $opt_s ? $opt_s : 206 ; 
-    my $logDate = strftime"%F", localtime ( $now - ($opt_d?$opt_d:0)*24*60*60 ) ; 
+    my $logDate = strftime"%F", localtime ( $now - ($opt_d ? $opt_d : 0)*24*60*60 ) ; 
     $LogPath = "/home/logs/172.16.45.$opt_s/localhost_access_log.$logDate.txt";
     $now = $now - ($opt_d?$opt_d:0)*24*60*60 ;
 } else {
@@ -48,9 +48,17 @@ if ( $opt_s or $opt_d ) {
 }
 my $ServerIP="172.16.45." . $opt_s ;
 our $MAXAGE = $opt_m ? $opt_m*60 : 3*60;
+my $split_time = $opt_m ? $opt_m*60 : 3*60;
 my $Trigger_reqCount = $opt_c ? $opt_c : 1;
 my $Trigger_reqTime = $opt_t ? $opt_t : 1;
 my $keys = $opt_k ? $opt_k : 20 ; 
+if ( $opt_r ) {
+    my $s_day = strftime"%F", localtime $now; 
+    my $s_day_time = $s_day . " 23:59:59";
+    $now = str2time $s_day_time ;
+    $MAXAGE = 24*60*60;
+    $keys = $opt_k ? $opt_k : 480; 
+}
 
 
 sub help {
@@ -102,7 +110,6 @@ my %ip_hash = (
 my $s_request_time = Statistics::Descriptive::Full->new(); 
 my %remote_addr_hash; 
 my %remote_addr_time; 
-my $oldcount = 0;
 my $reqcount = 0;
 my $reqmscount = 0;
 my $ignored = 0;
@@ -134,12 +141,11 @@ while(<$fh>){
     ) {
         my $l = $_;
         my $time = str2time($time_local);
-        my $diff = time() - $time;
         my @split_ks = ( 0..$keys ) ;
         foreach my $ks ( @split_ks ) {
             if ( 
-                ($now-($MAXAGE*$ks)) > $time && 
-                ($now-($MAXAGE*($ks+1))) < $time 
+                ($now-($split_time*$ks)) > $time && 
+                ($now-($split_time*($ks+1))) < $time 
             ) {
                 $time_hash{$ks}{statuscount}->{$status < 400 ? 'success' : 'failure'}++;
                 $time_hash{$ks}{resptime} += int($request_time);
@@ -155,9 +161,7 @@ while(<$fh>){
             $remote_addr_hash{"$remote_addr"} += 1;
             $remote_addr_time{"$remote_addr"} += $reqms;
             $reqmscount += $reqms ;
-        } else {
-            $oldcount += 1;
-        }
+        } 
     } 
 }
 
@@ -167,7 +171,6 @@ sub printScreen {
         $s_request_time->mean() > $Trigger_reqTime && 
         $reqcount > $Trigger_reqCount 
     ) {
-        my $oldtime = $now - $MAXAGE ; 
         if ( $opt_c or $opt_t ) {
             printf 
             "some errors may be occured.
@@ -206,8 +209,8 @@ sub printScreen {
             my $totalcount = ( $success  + $failure ) ? 
             ( $success  + $failure ) : 1 ;
             printf "%s~%s | %8d+%-8d | %8.2f\n" ,
-            (strftime "%T",localtime ($now - ($ks+1)*$MAXAGE)),
-            (strftime "%T",localtime ($now - $ks*$MAXAGE)),
+            (strftime "%T",localtime ($now - ($ks+1)*$split_time)),
+            (strftime "%T",localtime ($now - $ks*$split_time)),
             $success,
             $failure,
             $time_hash{$ks}{resptime}/$totalcount ;
@@ -223,28 +226,30 @@ sub printHtml {
         ($reqcount > $Trigger_reqCount) 
     ) {
         my $q= new CGI;
-
-        print $q->start_html('Problems'),
-        $q->h2("$ServerIP 可能出现流量异常 ");
-
-        my $oldtime = $now - $MAXAGE ; 
-        if ( $opt_c or $opt_t ) {
-            printf 
-            "some errors may be occured.<br>AVG RespTime: %.2f, warning trigger: %s<br>PV: %i, warning trigger: %s<br>",
-            # $MAXAGE/60,
-            $s_request_time->mean(),
-            $Trigger_reqTime,
-            $reqcount,
-            $Trigger_reqCount;
+        if ( $opt_r ) {
+            print $q->start_html('Problems'),
+            $q->h2("$ServerIP 日流量统计报表 ");
+        }
+        else {
+            print $q->start_html('Problems'),
+            $q->h2("$ServerIP 可能出现流量异常 ");
+            if ( $opt_c or $opt_t ) {
+                printf 
+                "some errors may be occured.<br>AVG RespTime: %.2f, warning trigger: %s<br>PV: %i, warning trigger: %s<br>",
+                # $MAXAGE/60,
+                $s_request_time->mean(),
+                $Trigger_reqTime,
+                $reqcount,
+                $Trigger_reqCount;
+            }
         }
         my $ERRORMSG = sprintf ("%s ~ %s on $ServerIP", 
             (strftime "%F_%T", localtime $firstTime), (strftime "%F_%T", localtime $lasttime)
         ); 
-
         print $q->h3($ERRORMSG);
-
         my $tablecontent=
-        [$q->th(['ip', '地理位置', '该IP的访问量(PV)', 'PV百分比', '该IP平均处理时间(ms)', '处理时间百分比'])];
+        [$q->th(['ip', '地理位置', '该IP的访问量(PV)', 
+                    'PV百分比', '该IP平均处理时间(ms)', '处理时间百分比'])];
         foreach my $ip ( 
             sort {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}} keys %remote_addr_hash 
         ) {
@@ -256,15 +261,11 @@ sub printHtml {
                     sprintf ("%.2f%%", 100*$remote_addr_hash{$ip}/$reqcount), 
                     sprintf ("%.2fms", $remote_addr_time{$ip}/$remote_addr_hash{$ip}),  
                     sprintf ("%.2f%%", 100*$remote_addr_time{$ip}/$reqmscount)
-
                 ]) ;
         } 
         print $q->table( { border => 1,},
             $q->Tr( $tablecontent),
         );
-
-
-
         $tablecontent=[$q->th(['时间段', 'PV(成功数+失败数)', '平均响应时间(ms)'])];
         foreach my $ks ( reverse sort {$a<=>$b} keys %time_hash ) {
             my $success = $time_hash{$ks}{statuscount}{'success'} ? 
@@ -273,19 +274,17 @@ sub printHtml {
             $time_hash{$ks}{statuscount}{'failure'} : 0;
             my $totalcount = ( $success  + $failure ) ? ( $success  + $failure ) : 1 ;
             push @$tablecontent,  $q->td([
-                    (strftime "%T",localtime ($now - ($ks+1)*$MAXAGE)) 
+                    (strftime "%H:%M",localtime ($now - ($ks+1)*$split_time)) 
                     . "~" .  
-                    (strftime "%T",localtime ($now - $ks*$MAXAGE)),
+                    (strftime "%H:%M",localtime ($now - $ks*$split_time)),
                     $success . "+" .  $failure,
                     sprintf ("%.2f",$time_hash{$ks}{resptime}/$totalcount)
-
                 ]) ;
         } 
         #print $q->table( { border => 1, -width => '100%'},
         print $q->table( { border => 1},
             $q->Tr( $tablecontent),
         );
-
     }
 }
 
