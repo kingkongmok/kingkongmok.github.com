@@ -12,6 +12,7 @@ The **SNAT** target requires you to give it an IP address to apply to all the ou
 Good documents include the HOWTOs on the Netfilter site and the iptables [man page](http://linux.die.net/man/8/iptables).
 
 #### SNAT作用于IP
+
 #### Masquerade作用于接口
 
 ---
