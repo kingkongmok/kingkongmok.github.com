@@ -151,6 +151,7 @@ my %remote_addr_hash;
 my %remote_addr_time; 
 my $reqcount = 0;
 my %pathHash;
+my %path_time;
 my $pathCount = 0;
 my $reqmscount = 0;
 my $ignored = 0;
@@ -178,10 +179,12 @@ while(<$fh>){
         "(.*?)"\s+
         (\S+)\s+
         (\S+)\s+
-        (\S+)\s*/x
+        (\S+)\s*
+        $/x
     ) {
         my $l = $_;
-        my $time = str2time($time_local);
+        my $time = str2time($time_local) || next ;
+        my $reqms = int($request_time) || next ;
         my @split_ks = ( 0..$keys ) ;
         foreach my $ks ( @split_ks ) {
             if ( 
@@ -189,7 +192,7 @@ while(<$fh>){
                 ($now-($split_time*($ks+1))) < $time 
             ) {
                 $time_hash{$ks}{statuscount}->{$status < 400 ? 'success' : 'failure'}++;
-                $time_hash{$ks}{resptime} += int($request_time);
+                $time_hash{$ks}{resptime} += $reqms;
             }
         }
         if ( ($now - $MAXAGE < $time) && ($now > $time )) {
@@ -199,7 +202,7 @@ while(<$fh>){
             $path =~ s/\?.*//;
             $pathCount += 1;
             $pathHash{$path}++;
-            my $reqms = int($request_time);
+            $path_time{$path} += $reqms;
             $s_request_time->add_data($reqms);
             $reqcount += 1;
             $remote_addr_hash{"$remote_addr"} += 1;
@@ -243,6 +246,17 @@ sub printScreen {
             100*$remote_addr_time{$ip}/$reqmscount;
         }
         print "\n";
+        #
+        foreach my $path ( reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ) {
+            printf "%24s\t|\t%8s(pv)\t%5.2f%%\t|\t%8dms\t%5.2f%%\n", 
+            $path,
+            $pathHash{$path},
+            100*$pathHash{$path}/$pathCount,
+            $path_time{$path}/$pathHash{$path},  
+            100*$path_time{$path}/$reqmscount,
+        }
+        print "\n";
+        #
         printf "%17s | %8s+%-8s | %16s\n" 
         , "time", "success", "fail(pv)", "RespTime(ms)"; 
         foreach my $ks ( reverse sort {$a<=>$b} keys %time_hash ) {
@@ -260,14 +274,7 @@ sub printScreen {
             $time_hash{$ks}{resptime}/$totalcount ;
         }
         print "\n";
-        printf "%40s | %8s | %8s\n" 
-        , "path", "Count", "CountPercent(%)"; 
-        foreach my $ks ( reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ) {
-            printf "%40s | %8d | %8.2f%%\n" ,
-            $ks,
-            $pathHash{$ks},
-            $pathHash{$ks}*100/$pathCount
-        }
+        #
     }
 }
 
@@ -300,10 +307,27 @@ sub printHtml {
         ); 
         print $q->h3($ERRORMSG);
         my $tablecontent=
-        [$q->th(['ip', '地理位置', '该IP的访问量(PV)', 
-                    'PV百分比', '该IP平均处理时间(ms)', '处理时间百分比'])];
+        [$q->th([
+                    'ip',
+                    '地理位置',
+                    '该IP的访问量(PV)', 
+                    'PV百分比', 
+                    '该IP平均处理时间(ms)', 
+                    '处理时间百分比',
+                ])];
+        my @ip_array =
+        sort {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}} keys %remote_addr_hash;
+        if ( $opt_r ) {
+            print $q->h3("访问量最多的前100个IP的统计情况");
+            if ( keys %remote_addr_hash > 100 ) {
+                @ip_array = 
+                +(sort 
+                    {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}} 
+                    keys %remote_addr_hash)[0..99];
+            } 
+        }
         foreach my $ip ( 
-            sort {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}} keys %remote_addr_hash 
+            @ip_array
         ) {
             my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
             push @$tablecontent,  $q->td([
@@ -315,9 +339,39 @@ sub printHtml {
                     sprintf ("%.2f%%", 100*$remote_addr_time{$ip}/$reqmscount)
                 ]) ;
         } 
+        # }
         print $q->table( { border => 1,},
             $q->Tr( $tablecontent),
         );
+        #
+        $tablecontent=[$q->th([
+                    'URI', 
+                    '访问次数', 
+                    '访问百分比', 
+                    '该URI平均处理时间(ms)', 
+                    '处理时间百分比',
+                ])];
+        my @path_array = reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ;
+        if ( $opt_r ) {
+            print $q->h3("访问量最多的前100个URI的统计情况");
+            if ( keys %pathHash > 100 ) {
+                @path_array = +(reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash)[0..99];
+            } 
+        }
+        foreach my $path ( @path_array  ) {
+            push @$tablecontent,  $q->td([
+                    $path,
+                    $pathHash{$path},
+                    sprintf ("%.2f%%", $pathHash{$path}*100/$pathCount),
+                    sprintf ("%.2fms", $path_time{$path}/$pathHash{$path}),  
+                    sprintf ("%.2f%%", 100*$path_time{$path}/$reqmscount),
+                ]) ;
+        } 
+        #print $q->table( { border => 1, -width => '100%'},
+        print $q->table( { border => 1},
+            $q->Tr( $tablecontent),
+        );
+        #
         $tablecontent=[$q->th(['时间段', 'PV(成功数+失败数)', '平均响应时间(ms)'])];
         foreach my $ks ( reverse sort {$a<=>$b} keys %time_hash ) {
             my $success = $time_hash{$ks}{statuscount}{'success'} ? 
@@ -331,19 +385,6 @@ sub printHtml {
                     (strftime "%H:%M",localtime ($now - $ks*$split_time)),
                     $success . "+" .  $failure,
                     sprintf ("%.2f",$time_hash{$ks}{resptime}/$totalcount)
-                ]) ;
-        } 
-        #print $q->table( { border => 1, -width => '100%'},
-        print $q->table( { border => 1},
-            $q->Tr( $tablecontent),
-        );
-
-        $tablecontent=[$q->th(['访问路径', '访问次数', '访问百分比'])];
-        foreach my $ks ( reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ) {
-            push @$tablecontent,  $q->td([
-                    $ks,
-                    $pathHash{$ks},
-                    sprintf ("%.2f%%", $pathHash{$ks}*100/$pathCount)
                 ]) ;
         } 
         #print $q->table( { border => 1, -width => '100%'},
