@@ -150,6 +150,8 @@ my $s_request_time = Statistics::Descriptive::Full->new();
 my %remote_addr_hash; 
 my %remote_addr_time; 
 my $reqcount = 0;
+my %pathHash;
+my $pathCount = 0;
 my $reqmscount = 0;
 my $ignored = 0;
 my $lasttime = 0 ;
@@ -194,6 +196,9 @@ while(<$fh>){
             $lasttime = $time > $lasttime ? $time : $lasttime ;
             $firstTime = $firstTime > $time ? $time : $firstTime ;
             my ($method, $path) = split(' ', $request, 3);
+            $path =~ s/\?.*//;
+            $pathCount += 1;
+            $pathHash{$path}++;
             my $reqms = int($request_time);
             $s_request_time->add_data($reqms);
             $reqcount += 1;
@@ -255,6 +260,14 @@ sub printScreen {
             $time_hash{$ks}{resptime}/$totalcount ;
         }
         print "\n";
+        printf "%40s | %8s | %8s\n" 
+        , "path", "Count", "CountPercent(%)"; 
+        foreach my $ks ( reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ) {
+            printf "%40s | %8d | %8.2f%%\n" ,
+            $ks,
+            $pathHash{$ks},
+            $pathHash{$ks}*100/$pathCount
+        }
     }
 }
 
@@ -318,6 +331,19 @@ sub printHtml {
                     (strftime "%H:%M",localtime ($now - $ks*$split_time)),
                     $success . "+" .  $failure,
                     sprintf ("%.2f",$time_hash{$ks}{resptime}/$totalcount)
+                ]) ;
+        } 
+        #print $q->table( { border => 1, -width => '100%'},
+        print $q->table( { border => 1},
+            $q->Tr( $tablecontent),
+        );
+
+        $tablecontent=[$q->th(['访问路径', '访问次数', '访问百分比'])];
+        foreach my $ks ( reverse sort {$pathHash{$a}<=>$pathHash{$b}} keys %pathHash ) {
+            push @$tablecontent,  $q->td([
+                    $ks,
+                    $pathHash{$ks},
+                    sprintf ("%.2f%%", $pathHash{$ks}*100/$pathCount)
                 ]) ;
         } 
         #print $q->table( { border => 1, -width => '100%'},
