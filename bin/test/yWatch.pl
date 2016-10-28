@@ -28,13 +28,13 @@ my $videoPath = "/home/kk/Downloads/videos";
 
 
 sub confirm{
-   my $question=shift;
-   my $reply = "";
-   print "$question (y/n)?";
-   while ($reply !~ m/^[yn]/i){ # allow for pedants who reply "yes" or "now" 
-       chomp($reply=<STDIN>);
-   }
-   return $reply=~m/^y/i ? 1 : undef;
+    my $question=shift;
+    my $reply = "";
+    print "$question (y/n)?";
+    while ($reply !~ m/^[yn]/i){ # allow for pedants who reply "yes" or "now" 
+        chomp($reply=<STDIN>);
+    }
+    return $reply=~m/^y/i ? 1 : undef;
 }
 
 #-------------------------------------------------------------------------------
@@ -44,12 +44,12 @@ sub confirm{
 opendir (my $dh, $videoPath) || die $!; 
 my %h; 
 my @videoFiles =  
-                grep { !$h{$_}++ }
-                map{s/-\d+?\.(?:mp4|flv)//; $_}
-                map $_->[0],
-                sort { $a->[1] <=> $b->[1] }
-                map [ $_, +(stat "$videoPath/$_")[9] ],
-                grep{/\.(?:mp4|flv)$/} readdir $dh ; 
+grep { !$h{$_}++ }
+map{s/-\d+?\.(?:mp4|flv)//; $_}
+map $_->[0],
+sort { $a->[1] <=> $b->[1] }
+map [ $_, +(stat "$videoPath/$_")[9] ],
+grep{/\.(?:mp4|flv)$/} readdir $dh ; 
 
 foreach my $file ( @videoFiles ) {
     system("mplayer $videoPath/\'$file\'\*");
