@@ -130,19 +130,20 @@ my %ip_hash = (
     '112.175.92.183' => 'TOURBAKSA', 
     '112.175.92.188' => 'TOURBAKSA', 
     '10.100.101.20' => 'CKS华为防火墙', 
-    '192.168.198.208' => '蛇口港', 
-    '192.168.198.206' => '蛇口港', 
-    '192.168.198.220' => '蛇口港', 
-    '192.168.198.221' => '蛇口港', 
-    '192.168.198.204' => '蛇口港', 
-    '192.168.198.203' => '蛇口港', 
-    '192.168.198.180' => '蛇口港', 
-    '192.168.198.6' => '蛇口港', 
-    '192.168.198.179' => '蛇口港', 
-    '192.168.198.177' => '蛇口港', 
-    '192.168.198.236' => '蛇口港', 
-    '192.168.198.4' => '蛇口港', 
-    '192.168.198.24' => '蛇口港', 
+    '192.168.198.*' => '蛇口港', 
+    # '192.168.198.208' => '蛇口港', 
+    # '192.168.198.206' => '蛇口港', 
+    # '192.168.198.220' => '蛇口港', 
+    # '192.168.198.221' => '蛇口港', 
+    # '192.168.198.204' => '蛇口港', 
+    # '192.168.198.203' => '蛇口港', 
+    # '192.168.198.180' => '蛇口港', 
+    # '192.168.198.6' => '蛇口港', 
+    # '192.168.198.179' => '蛇口港', 
+    # '192.168.198.177' => '蛇口港', 
+    # '192.168.198.236' => '蛇口港', 
+    # '192.168.198.4' => '蛇口港', 
+    # '192.168.198.24' => '蛇口港', 
     '172.16.45.243' => 'PTMS_API', 
 ) ;
 
@@ -236,7 +237,14 @@ sub printScreen {
             sort {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}}
             keys %remote_addr_hash 
         ) {
-            my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            # my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            my $physical_ip; 
+            foreach my $ip_pattern ( keys %ip_hash ) {
+                if ( grep {/^$ip_pattern/} $ip ) {
+                    $physical_ip = $ip_hash{$ip_pattern};
+                } 
+            }
+            $physical_ip //= "未知";
             printf "%12s\t%8s\t|\t%8s(pv)\t%5.2f%%\t|\t%8dms\t%5.2f%%\n", 
             $ip, 
             $physical_ip,
@@ -329,7 +337,14 @@ sub printHtml {
         foreach my $ip ( 
             @ip_array
         ) {
-            my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            # my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            my $physical_ip; 
+            foreach my $ip_pattern ( keys %ip_hash ) {
+                if ( grep {/^$ip_pattern/} $ip ) {
+                    $physical_ip = $ip_hash{$ip_pattern};
+                } 
+            }
+            $physical_ip //= "未知";
             push @$tablecontent,  $q->td([
                     $ip,
                     $physical_ip,  
