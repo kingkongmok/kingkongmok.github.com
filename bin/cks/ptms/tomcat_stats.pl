@@ -101,6 +101,10 @@ if($opt_h ) {
 
 open my $fh , $LogPath || die $! ; 
 
+my @remote_monitor_ip = (
+    '172.16.40.74',
+    '172.26.45.12',
+);
 
 my %ip_hash = ( 
     '223.255.137.66' => '永安',
@@ -186,6 +190,7 @@ while(<$fh>){
         my $l = $_;
         my $time = str2time($time_local) || next ;
         my $reqms = int($request_time) || next ;
+        next if grep { /^$remote_addr$/ } @remote_monitor_ip;
         my @split_ks = ( 0..$keys ) ;
         foreach my $ks ( @split_ks ) {
             if ( 
