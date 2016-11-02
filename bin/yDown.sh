@@ -89,24 +89,24 @@ do
 
         esac    # --- end of case ---
     done
-    shift $(($OPTIND-1))
+shift $(($OPTIND-1))
 
 
-    #-------------------------------------------------------------------------------
-    # main()
-    #-------------------------------------------------------------------------------
-    echo "please input URL to download, or 'q' to quit:"
-    while read line           
-    do           
-        if [ "$line" == "q" ] ; then
-            break
+#-------------------------------------------------------------------------------
+# main()
+#-------------------------------------------------------------------------------
+echo "please input URL to download, or 'q' to quit:"
+while read line           
+do           
+    if [ "$line" == "q" ] ; then
+        break
+    else
+        if [ "$ForceDownload" ] ; then
+            forceDownUrl $line &
         else
-            if [ "$ForceDownload" ] ; then
-                forceDownUrl $line &
-            else
-                downUrl $line &
-            fi
-            echo "please input URL to download, or 'q' to quit:"
+            downUrl $line &
         fi
-    done
+        echo "please input URL to download, or 'q' to quit:"
+    fi
+done
 
