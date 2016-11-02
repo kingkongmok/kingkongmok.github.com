@@ -1,6 +1,7 @@
 [submodule "linux/home/kk/.vim/bundle/vim-pathogen"]
 	path = linux/home/kk/.vim/bundle/vim-pathogen
 	url = https://github.com/tpope/vim-pathogen
+    ignore = dirty
 [submodule "linux/home/kk/.vim/bundle/perl-support.vim"]
 	path = linux/home/kk/.vim/bundle/perl-support.vim
 	url = https://github.com/vim-scripts/perl-support.vim
@@ -12,6 +13,7 @@
 [submodule "linux/home/kk/.vim/bundle/vim-surround"]
 	path = linux/home/kk/.vim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround
+    ignore = dirty
 [submodule "linux/home/kk/.vim/bundle/tComment"]
 	path = linux/home/kk/.vim/bundle/tComment
 	url = https://github.com/vim-scripts/tComment
@@ -19,6 +21,7 @@
 [submodule "linux/home/kk/.vim/bundle/mru.vim"]
 	path = linux/home/kk/.vim/bundle/mru.vim
 	url = https://github.com/vim-scripts/mru.vim
+    ignore = dirty
 [submodule "linux/home/kk/.vim/bundle/c.vim"]
 	path = linux/home/kk/.vim/bundle/c.vim
 	url = https://github.com/vim-scripts/c.vim
