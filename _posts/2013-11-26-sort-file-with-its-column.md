@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "perl sort"
+title: "how to sort an array or table by column in perl"
 category: perl
 tags: [perl, sort, cmp, column]
 ---
