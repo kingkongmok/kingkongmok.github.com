@@ -1,6 +1,14 @@
 #!/bin/sh
 
 
+# reset this list
+# emaint --fix cleanresume
+
+# get the resume list 
+# python -c 'import portage; print portage.mtimedb.get("resume", {}).get("mergelist")' 
+
+#https://forums.gentoo.org/viewtopic-p-6823472.html
+
 #===  FUNCTION  ================================================================
 #         NAME:  usage
 #  DESCRIPTION:  Display usage information.
