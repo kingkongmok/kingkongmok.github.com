@@ -65,9 +65,9 @@ git submodule add https://github.com/vim-scripts/perl-support.vim
 git submodule foreach git pull origin master
 ```
 
-#### dirty tree
+#### ~~dirty tree~~
 
-just involves adding the line ignore = dirty to the .gitmodules file for each submodule that reports a dirty tree when you run git status
+~~just involves adding the line ignore = dirty to the .gitmodules file for each submodule that reports a dirty tree when you run git status~~
 
 ```
  $ cat .gitmodules 
@@ -93,6 +93,13 @@ just involves adding the line ignore = dirty to the .gitmodules file for each su
     path = linux/home/kk/.vim/bundle/mru.vim
     url = https://github.com/vim-scripts/mru.vim
 ```
+
+---
+
+### [Git - how to track untracked content?](http://stackoverflow.com/questions/4161022/git-how-to-track-untracked-content)
+
+
+>I just had the same problem. The reason was because there was a subfolder that contained a ".git" folder. Removing it made git happy.
 
 *****
 
