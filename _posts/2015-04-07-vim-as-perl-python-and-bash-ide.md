@@ -103,7 +103,7 @@ git submodule foreach git pull origin master
 
 *****
 
-### perl debugger pressing \rd
+### perl debugger pressing
 
 在vim 的perl-support中，有个bug，不能使用***\rd***来调用debugger，经常出现***xterm: command not found***的错误，原因是vim会查找是否运行gui并调用xterm来debug，但我不需要。所以修改一下:
 
