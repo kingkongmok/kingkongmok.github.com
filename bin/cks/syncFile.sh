@@ -21,7 +21,7 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-logPath=
+logPath=/home/logs/syncFile
 fromUser='alarm@cks.com.hk'
 recipients="moqq@cks.com.hk"
 #recipients="jay@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk"
@@ -31,7 +31,7 @@ recipients="moqq@cks.com.hk"
 # don't edit below
 #-------------------------------------------------------------------------------
 
-local_ip=`ip ro | grep 'proto kernel' | awk '{print $9}' | tail -1`
+local_ip=`/sbin/ip ro | grep 'proto kernel' | awk '{print $9}' | tail -1`
 timestamp=`date +"%F_%T"`
 scriptName=`basename "$0"`
 logfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.log
@@ -64,6 +64,8 @@ function usage ()
   Options: 
   -s            set Source path
   -d            set Destination path
+  -r            remove old tigger
+  -x            exclude path
   -e            DESCRIPTION
   -h|help       Display this message
 
@@ -76,18 +78,22 @@ EOT
 SourcePath=
 DestinationPath=
 DESCRIPTION=
+DELETE=
+EXCLUDE=
 
 if [ "$#" -lt 6 ] ; then
       usage; exit 1 
 fi
 
-while getopts "s:d:e:h" opt
+while getopts "s:d:e:rx:h" opt
 do
   case $opt in
 
     s     )  SourcePath="$OPTARG" ;  ;;
     d     )  DestinationPath="$OPTARG" ;  ;;
     e     )  DESCRIPTION="$OPTARG" ;  ;;
+    r     )  DELETE="--delete" ;  ;;
+    x     )  EXCLUDE="--exclude $OPTARG" ;  ;;
     h|help     )  usage; exit 0   ;;
 
     \? )  echo -e "\n  Option does not exist : $OPTARG\n"
@@ -105,11 +111,12 @@ shift $(($OPTIND-1))
 [ -r /etc/default/locale ] && . /etc/default/locale
 [ -n "$LANG" ] && export LANG
 
+
 if [[ -z $DestinationPath && -z $SourcePath && -z $DESCRIPTION ]] ; then
           usage; exit 1   
 fi
 
-/usr/bin/rsync -aLvih $SourcePath $DestinationPath > $logfile 2> $errlogfile
+/usr/bin/rsync -avih $DELETE $EXCLUDE "$SourcePath" "$DestinationPath" > $logfile 2> $errlogfile
 
 IfModify=`find $DestinationPath -type f -mtime -1 -print -quit`
 if [ -z "$IfModify" ] ; then
