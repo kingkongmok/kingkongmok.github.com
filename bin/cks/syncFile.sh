@@ -21,7 +21,8 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-logPath=/home/logs/syncFile
+logPath="/mnt/172.16.45.200/EmailServerBackupLog"
+letter="${logPath}/letter.txt"
 fromUser='alarm@cks.com.hk'
 recipients="moqq@cks.com.hk"
 #recipients="jay@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk"
@@ -32,7 +33,7 @@ recipients="moqq@cks.com.hk"
 #-------------------------------------------------------------------------------
 
 local_ip=`/sbin/ip ro | grep 'proto kernel' | awk '{print $9}' | tail -1`
-timestamp=`date +"%F_%T"`
+timestamp=`date +"%Y%m%d%H%M%S"`
 scriptName=`basename "$0"`
 logfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.log
 errlogfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.err
@@ -43,7 +44,7 @@ errlogfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.err
 #  DESCRIPTION:  send email to recipients which the errlogfile
 #===============================================================================
 sendEmail(){
-        Subject="$DESCRIPTION $scriptName $local_ip error"
+        Subject="$DESCRIPTION $scriptName $local_ip backup finished"
         Content="`cat $@`"
         echo -e "From: $fromUser\nTo: $recipients\nSubject: $Subject \nContent-Type: text/plain; charset=\"utf-8\" \n\n$Content"  | /usr/local/bin/msmtp $recipients
 }
@@ -116,17 +117,16 @@ if [[ -z $DestinationPath && -z $SourcePath && -z $DESCRIPTION ]] ; then
           usage; exit 1   
 fi
 
-/usr/bin/rsync -avih $DELETE $EXCLUDE "$SourcePath" "$DestinationPath" > $logfile 2> $errlogfile
+/usr/bin/rsync -avihP $DELETE $EXCLUDE "$SourcePath" "$DestinationPath" > $logfile 2> $errlogfile
+
 
 IfModify=`find $DestinationPath -type f -mtime -1 -print -quit`
 if [ -z "$IfModify" ] ; then
-    echo "没有能找到在昨天更新的文件，请登陆 $local_ip 检查 $logfile" >> $errlogfile
+    echo "没有能找到在昨天更新的文件，请登陆 $local_ip 检查 $logfile" > $letter
 fi
 
-if [ -s $errlogfile ] ; then
-    sendEmail $errlogfile 
-else
-    rm $errlogfile
+if [ -s $letter ] ; then
+    sendEmail $letter && rm $letter
 fi
 
 if [ -w $errlogfile ]; then
