@@ -24,8 +24,7 @@ set -o nounset                              # Treat unset variables as an error
 logPath="/mnt/172.16.45.200/EmailServerBackupLog"
 letter="${logPath}/letter.txt"
 fromUser='alarm@cks.com.hk'
-recipients="moqq@cks.com.hk"
-#recipients="jay@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk"
+recipients="jay@cks.com.hk marvin@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk"
 
 
 #-------------------------------------------------------------------------------
