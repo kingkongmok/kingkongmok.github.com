@@ -21,7 +21,7 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-logPath="/mnt/172.16.45.200/EmailServerBackupLog"
+logPath="/mnt/172.16.45.200/logs"
 letter="${logPath}/letter.txt"
 fromUser='alarm@cks.com.hk'
 recipients="jay@cks.com.hk marvin@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk"
@@ -115,6 +115,8 @@ shift $(($OPTIND-1))
 if [[ -z $DestinationPath && -z $SourcePath && -z $DESCRIPTION ]] ; then
           usage; exit 1   
 fi
+
+mount -a || exit 26
 
 /usr/bin/rsync -avihP $DELETE $EXCLUDE "$SourcePath" "$DestinationPath" > $logfile 2> $errlogfile
 
