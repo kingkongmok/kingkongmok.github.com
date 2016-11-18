@@ -19,6 +19,7 @@
 ##===============================================================================
 
 use strict;
+use Tie::File;
 use File::Basename;
 use POSIX;
 use Statistics::Descriptive;
@@ -33,20 +34,18 @@ my $now = time();
 my $thisDay = strftime"%y%m%d", localtime $now;
 
 
-getopts('s:d:l:m:c:t:k:rph');
-our($opt_s, $opt_d, $opt_l, $opt_m, $opt_c, $opt_t, $opt_k, $opt_r, $opt_p, $opt_h);
+getopts('s:d:l:m:c:t:k:rpah');
+our($opt_s, $opt_d, $opt_l, $opt_m, $opt_c, $opt_t, $opt_k, $opt_r, $opt_p, $opt_a, $opt_h);
 my $LogPath ;
 if ( $opt_s or $opt_d ) {
     $opt_s = $opt_s ? $opt_s : 212 ; 
-    my $logDate = strftime"%y%m%d", localtime ( $now - ($opt_d ? $opt_d : 0)*24*60*60 ) ; 
-    #$LogPath = "/home/logs/172.16.45.$opt_s/localhost_access_log.$logDate.txt";
-    $LogPath = "/home/kk/logs/172.16.45.$opt_s/LogFiles/W3SVC1/u_ex$logDate.log";
+    my $logDate = strftime"%y%m%d", localtime ( $now - ($opt_d ? $opt_d : 0)*24*60*60 ) ;
+    $LogPath = "/home/logs/172.16.45.$opt_s/LogFiles/W3SVC1/u_ex$logDate.log";
     $now = $now - ($opt_d?$opt_d:0)*24*60*60 ;
 } else {
     $opt_s = $opt_s ? $opt_s : 212 ; 
     $LogPath = $opt_l ? $opt_l : 
-    #"/home/logs/172.16.45.206/localhost_access_log.$thisDay.txt";
-    "/home/kk/logs/172.16.45.212/LogFiles/W3SVC1/u_ex$thisDay.log";
+    "/home/logs/172.16.45.212/LogFiles/W3SVC1/u_ex$thisDay.log";
 }
 my $ServerIP="172.16.45." . $opt_s ;
 our $MAXAGE = $opt_m ? $opt_m*60 : 3*60;
@@ -61,6 +60,7 @@ if ( $opt_r ) {
     $MAXAGE = 24*60*60;
     $keys = $opt_k ? $opt_k : 480; 
 }
+my $hist_PV_stats_file = "/home/kk/.pv_stats/$ServerIP.log";
 
 
 sub help {
@@ -80,13 +80,14 @@ sub help {
     参数：
             -s          选择host点，默认212代表172.16.45.212
             -d          选择多少天前的日志，默认 -d 0 ，表示今天
-            -l          log的路径，例如 /home/logs/172.16.45.212/localhost_access_log.2016-09-14.txt 
-                        默认 -l /home/logs/$thisDay/localhost_access_log.$thisDay.txt
+            -l          log的路径，例如 /home/logs/172.16.45.212/LogFiles/W3SVC1/u_ex161111.log
+                        默认 -l /home/logs/172.16.45.212/LogFiles/W3SVC1/u_ex$thisDay.log
             -m          统计距今x分钟的数据，默认 -n 3
             -c          设置pv报警阈值，默认 -c 1
             -t          设置平均response time的ms阈值，默认 -t 1
             -k          列时间段段数默认20
             -p          html格式输出
+            -a          记录总数以便历史对比
             -h          print this help
 
     example:
@@ -103,6 +104,10 @@ if($opt_h ) {
 
 open my $fh , $LogPath || die $! ; 
 
+my @remote_monitor_ip = (
+    '172.16.40.74',
+    '172.26.45.12',
+);
 
 my %ip_hash = ( 
     '223.255.137.66' => '永安',
@@ -130,21 +135,11 @@ my %ip_hash = (
     '112.175.92.181' => 'TOURBAKSA', 
     '112.175.92.182' => 'TOURBAKSA', 
     '112.175.92.183' => 'TOURBAKSA', 
+    '112.175.92.185' => 'TOURBAKSA', 
+    '112.175.92.186' => 'TOURBAKSA', 
     '112.175.92.188' => 'TOURBAKSA', 
     '10.100.101.20' => 'CKS华为防火墙', 
-    '192.168.198.208' => '蛇口港', 
-    '192.168.198.206' => '蛇口港', 
-    '192.168.198.220' => '蛇口港', 
-    '192.168.198.221' => '蛇口港', 
-    '192.168.198.204' => '蛇口港', 
-    '192.168.198.203' => '蛇口港', 
-    '192.168.198.180' => '蛇口港', 
-    '192.168.198.6' => '蛇口港', 
-    '192.168.198.179' => '蛇口港', 
-    '192.168.198.177' => '蛇口港', 
-    '192.168.198.236' => '蛇口港', 
-    '192.168.198.4' => '蛇口港', 
-    '192.168.198.24' => '蛇口港', 
+    '192.168.198.*' => '蛇口港', 
     '172.16.45.243' => 'PTMS_API', 
 ) ;
 
@@ -189,7 +184,10 @@ while(<$fh>){
     ) {
         my $l = $_;
         my $time = str2time($time_local) || next ;
-        my $reqms = int($request_time) || next ;
+        # my $reqms = int($request_time) || next ;
+        $request_time =~ /\d+/ || next; 
+        my $reqms = $request_time;
+        next if grep { /^$remote_addr$/ } @remote_monitor_ip;
         my @split_ks = ( 0..$keys ) ;
         foreach my $ks ( @split_ks ) {
             if ( 
@@ -203,7 +201,8 @@ while(<$fh>){
         if ( ($now - $MAXAGE < $time) && ($now > $time )) {
             $lasttime = $time > $lasttime ? $time : $lasttime ;
             $firstTime = $firstTime > $time ? $time : $firstTime ;
-            # my ($method, $path) = split(' ', $request, 3);
+            #my ($method, $path) = split(' ', $request, 3);
+            #$path =~ s/\?.*//;
             $pathCount += 1;
             $pathHash{$path}++;
             $path_time{$path} += $reqms;
@@ -216,6 +215,36 @@ while(<$fh>){
     } 
 }
 
+
+sub getHistPVStats{
+    my $reqcount = shift;
+    my @days;
+    my $result;
+    my $logDate = strftime"%F", localtime ( $now ) ; 
+    my $weekago_1 = strftime"%F", localtime ( $now - 7*24*60*60 ) ; 
+    my $weekago_2 = strftime"%F", localtime ( $now - 14*24*60*60 ) ; 
+    my $weekago_3 = strftime"%F", localtime ( $now - 21*24*60*60 ) ; 
+    my $weekago_4 = strftime"%F", localtime ( $now - 28*24*60*60 ) ; 
+    @days = ( $logDate, $weekago_1, $weekago_2, $weekago_3, $weekago_4);
+    tie my @linearray, 'Tie::File', $hist_PV_stats_file or die $!;
+    if ( $opt_a ) {
+        push @linearray, "$logDate $reqcount";
+    }
+    foreach my $oldday ( @days ) {
+        $result->{"$oldday"} //= 0;
+        foreach my $thisline ( @linearray ) {
+            my ($day,$count) = split /\s+/, $thisline ;
+            if ( $oldday =~ /^$day$/ ) {
+                if ( $result->{$oldday} < $count ) {
+                    $result->{$oldday}=$count;
+                }
+            }
+        }
+        $result->{"$oldday"} //= "-";
+    }
+    untie @linearray;
+    return $result, $logDate;
+}
 
 sub printScreen {
     if ( 
@@ -235,12 +264,25 @@ sub printScreen {
         printf "<%s> ~ <%s> on $LogPath \n",
         (strftime "%F_%T", localtime $firstTime),
         (strftime "%F_%T", localtime $lasttime); 
+        #
+        if ( $opt_r ) {
+            my ($history_PV_stats, $logDate) = getHistPVStats($reqcount);
+        }
+        print "\n";
+        #
         foreach my $ip 
         ( 
             sort {$remote_addr_hash{$b}<=>$remote_addr_hash{$a}}
             keys %remote_addr_hash 
         ) {
-            my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            # my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            my $physical_ip; 
+            foreach my $ip_pattern ( keys %ip_hash ) {
+                if ( grep {/^$ip_pattern/} $ip ) {
+                    $physical_ip = $ip_hash{$ip_pattern};
+                } 
+            }
+            $physical_ip //= "未知";
             printf "%12s\t%8s\t|\t%8s(pv)\t%5.2f%%\t|\t%8dms\t%5.2f%%\n", 
             $ip, 
             $physical_ip,
@@ -310,6 +352,35 @@ sub printHtml {
             (strftime "%F_%T", localtime $firstTime), (strftime "%F_%T", localtime $lasttime)
         ); 
         print $q->h3($ERRORMSG);
+        #
+        if ( $opt_r ) {
+            my ($history_PV_stats, $logDate) = getHistPVStats($reqcount);
+            my $tablecontent=
+            [$q->th([
+                        '时间',
+                        'PV',
+                        '当天比较', 
+                    ])];
+            my @day_array = reverse sort keys %{$history_PV_stats};
+            print $q->h3("PV每日和上几周对比");
+            foreach my $day ( 
+                @day_array
+            ) {
+                my $operater = $history_PV_stats->{$logDate}>$history_PV_stats->{$day} ? "" : "+";
+                my $perc = sprintf "%.2f%%",(100*$history_PV_stats->{$day}/$history_PV_stats->{$logDate}-100);
+                # my $result = $history_PV_stats->{$logDate}=$history_PV_stats->{$day}?"-":$operater.$perc;
+                push @$tablecontent,  $q->td([
+                        $day,
+                        $history_PV_stats->{$day},  
+                        $operater.$perc,
+                    ]) ;
+            } 
+            print $q->table( { border => 1,},
+                $q->Tr( $tablecontent),
+            );
+            print "\n";
+        }
+        #
         my $tablecontent=
         [$q->th([
                     'ip',
@@ -333,7 +404,14 @@ sub printHtml {
         foreach my $ip ( 
             @ip_array
         ) {
-            my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            # my $physical_ip = $ip_hash{$ip} ? $ip_hash{$ip} : "未知" ;
+            my $physical_ip; 
+            foreach my $ip_pattern ( keys %ip_hash ) {
+                if ( grep {/^$ip_pattern/} $ip ) {
+                    $physical_ip = $ip_hash{$ip_pattern};
+                } 
+            }
+            $physical_ip //= "未知";
             push @$tablecontent,  $q->td([
                     $ip,
                     $physical_ip,  
@@ -375,7 +453,9 @@ sub printHtml {
         print $q->table( { border => 1},
             $q->Tr( $tablecontent),
         );
+        print "\n";
         #
+        print $q->h3("每时段PV情况");
         $tablecontent=[$q->th(['时间段', 'PV(成功数+失败数)', '平均响应时间(ms)'])];
         foreach my $ks ( reverse sort {$a<=>$b} keys %time_hash ) {
             my $success = $time_hash{$ks}{statuscount}{'success'} ? 
