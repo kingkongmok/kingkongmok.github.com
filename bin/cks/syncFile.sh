@@ -34,8 +34,6 @@ recipients="jay@cks.com.hk marvin@cks.com.hk gary.liu@cks.com.hk moqq@cks.com.hk
 local_ip=`/sbin/ip ro | grep 'proto kernel' | awk '{print $9}' | tail -1`
 timestamp=`date +"%Y%m%d%H%M%S"`
 scriptName=`basename "$0"`
-logfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.log
-errlogfile="${logPath:-/tmp}"/${scriptName}_${local_ip}_${timestamp}.err
 
 
 #===  FUNCTION  ================================================================
@@ -110,7 +108,8 @@ shift $(($OPTIND-1))
 
 [ -r /etc/default/locale ] && . /etc/default/locale
 [ -n "$LANG" ] && export LANG
-
+logfile="${logPath:-/tmp}"/${DESCRIPTION}_${timestamp}.log
+errlogfile="${logPath:-/tmp}"/${DESCRIPTION}_${timestamp}.err
 
 if [[ -z $DestinationPath && -z $SourcePath && -z $DESCRIPTION ]] ; then
           usage; exit 1   
