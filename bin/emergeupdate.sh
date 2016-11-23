@@ -50,6 +50,8 @@ shift $(($OPTIND-1))
 
 if [ "$ForceUpdate" != 1 ] ; then
     sudo nice -n 19 emerge --resume 
+else
+    sudo emaint --fix cleanresume
 fi
 
 sudo nice -n 19 emerge --sync && \
