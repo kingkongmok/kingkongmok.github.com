@@ -1,6 +1,0 @@
-#config_enp0s3=dhcp
-config_enp0s3="10.0.2.15 netmask 255.255.255.0"
-routes_enp0s3="default via 10.0.2.2"
-dns_servers_enp0s3="114.114.114.114"
-dns_domain_lo="datlet.com"
-config_enp0s8="192.168.56.101 netmask 255.255.255.0"
