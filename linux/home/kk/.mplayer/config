@@ -1,9 +1,0 @@
-# Write your default config options here!
-utf8=1
-font='Microsoft YaHei'
-ffactor=10
-subfont-text-scale=4
-framedrop=1
-fs=1
-ao=alsa
-vo=gl
