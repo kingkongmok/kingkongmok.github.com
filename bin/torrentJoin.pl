@@ -21,8 +21,11 @@
 
 use strict;
 use warnings;
-my$dir="/home/kk/Downloads";
+my@dirs=("/home/kk/Downloads", "/home/kk/Dropbox/torrents");
 
+#
+# use Dropbox to restore done_before.md5
+#
 #open FH,"</home/kk/.mldonkey/done_before.md5";
 open FH,"</home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5" || die $! ;
 my%md5record ;
@@ -36,9 +39,12 @@ while ( <FH> ) {
 }
 close FH;
 
-opendir(DIR, $dir) || die "can't opendir $dir: $!";
-my@files = grep { /\.torrent/ && -f "$dir/$_" } readdir(DIR);
-closedir DIR;
+my @files;
+foreach my $dir ( @dirs ) {
+    opendir(DIR, $dir) || die "can't opendir $dir: $!";
+    push @files, grep { /\.torrent/ && -f "$dir/$_" } readdir(DIR);
+    closedir DIR;
+}
 
 foreach my $file ( @files ) {
     my$filemd5 = qx#md5sum "$dir/$file"# ;
