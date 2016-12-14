@@ -39,20 +39,20 @@ while ( <FH> ) {
 }
 close FH;
 
-my @files;
 foreach my $dir ( @dirs ) {
+    my @files;
     opendir(DIR, $dir) || die "can't opendir $dir: $!";
     push @files, grep { /\.torrent/ && -f "$dir/$_" } readdir(DIR);
     closedir DIR;
-}
 
-foreach my $file ( @files ) {
-    my$filemd5 = qx#md5sum "$dir/$file"# ;
-    if (  exists $md5record{+(split/\s/,$filemd5)[0]} ){
-        print " $dir/$file 已经下载过。\n"; 
-    } else {
-        #qx#echo -n "$filemd5" >> /home/kk/.mldonkey/done_before.md5# ;
-        qx#echo -n "$filemd5" >> /home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5# ;
-        qx#mv "$dir/$file" /home/kk/.mldonkey/torrents/incoming/#;
+    foreach my $file ( @files ) {
+        my$filemd5 = qx#md5sum "$dir/$file"# ;
+        if (  exists $md5record{+(split/\s/,$filemd5)[0]} ){
+            print " $dir/$file 已经下载过。\n"; 
+        } else {
+            #qx#echo -n "$filemd5" >> /home/kk/.mldonkey/done_before.md5# ;
+            qx#echo -n "$filemd5" >> /home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5# ;
+            qx#mv "$dir/$file" /home/kk/.mldonkey/torrents/incoming/#;
+        }
     }
 }
