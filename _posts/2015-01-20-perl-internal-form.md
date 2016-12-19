@@ -5,7 +5,7 @@ category: perl
 tags: [utf8, charset, perl, encode]
 ---
 
-### [来源地址](http://blog.chinaunix.net/uid-23622436-id-2394070.html)
+### [来源地址](http://www.php-oa.com/2008/12/13/perl-unicode.html)
 
 ### perl internal form
 
