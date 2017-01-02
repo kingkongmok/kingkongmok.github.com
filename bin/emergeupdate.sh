@@ -57,7 +57,7 @@ fi
 sudo nice -n 19 emerge --sync && \
 sudo nice -n 19 emerge --keep-going --update --deep --with-bdeps=y --newuse @world && \
 sudo nice -n 19 emerge --depclean && \
-sudo nice -n 19 revdep-rebuild
+sudo nice -n 19 revdep-rebuild.sh
 
 if [ -d "/usr/portage/packages" ] ; then
     sudo nice eclean -C -q packages 
