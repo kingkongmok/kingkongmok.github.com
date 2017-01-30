@@ -1,21 +1,21 @@
 ---
 layout: post
-title: "revdep-rebuild in gentoo"
+title: "revdep-rebuild.sh in gentoo"
 category: linux
-tags: [gentoo, revdep-rebuild, libraries, broken]
+tags: [gentoo, revdep-rebuild.sh, libraries, broken]
 ---
 
-##problems when run revdep-rebuild
+##problems when run revdep-rebuild.sh
 
 升级的时候，顺便查找并清除依赖，使用以下命令的
 
 {% highlight bash %}
-sudo emerge --sync && sudo emerge -a --update --deep --with-bdeps=y --newuse @world && sudo emerge --depclean && sudo revdep-rebuild
+sudo emerge --sync && sudo emerge -a --update --deep --with-bdeps=y --newuse @world && sudo emerge --depclean && sudo revdep-rebuild.sh
 {% endhighlight %}
 
 
 {% highlight bash %}
-kk@gentoo ~ $ sudo emerge --depclean && sudo revdep-rebuild
+kk@gentoo ~ $ sudo emerge --depclean && sudo revdep-rebuild.sh
 
 * Always study the list of packages to be cleaned for any obvious
  * mistakes. Packages that are part of the world set will always
@@ -37,7 +37,7 @@ Packages in world:    92
 Packages in system:   44
 Required packages:    693
 Number removed:       0
- * Configuring search environment for revdep-rebuild
+ * Configuring search environment for revdep-rebuild.sh
 
  * Checking reverse dependencies
  * Packages containing binaries and libraries broken by a package update
@@ -70,7 +70,7 @@ kk@gentoo ~ $ ls -lh /usr/lib64/codecs/cook.so /usr/lib64/codecs/drvc.so
 
 {% highlight bash %}
 sudo mv /usr/lib64/codecs/cook.so /tmp/
-sudo revdep-rebuild --ignore --pretend
+sudo revdep-rebuild.sh --ignore --pretend
 
 Calculating dependencies... done!
 >>> No packages selected for removal by depclean
@@ -80,7 +80,7 @@ Packages in world:    92
 Packages in system:   44
 Required packages:    693
 Number removed:       0
- * Configuring search environment for revdep-rebuild
+ * Configuring search environment for revdep-rebuild.sh
 
  * Checking reverse dependencies
  * Packages containing binaries and libraries broken by a package update
@@ -105,8 +105,8 @@ Number removed:       0
 sudo mv /usr/lib64/codecs/cook.so /tmp/
 sudo mv /usr/lib64/codecs/drvc.so /tmp/
 
-sudo revdep-rebuild --ignore
- * Configuring search environment for revdep-rebuild
+sudo revdep-rebuild.sh --ignore
+ * Configuring search environment for revdep-rebuild.sh
 
  * Checking reverse dependencies
  * Packages containing binaries and libraries broken by a package update
