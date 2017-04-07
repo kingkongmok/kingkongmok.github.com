@@ -38,7 +38,7 @@ while ( <$fh> ) {
 close $fh;
 
 use Tie::File ; 
-tie my @lines , "Tie::File", "/home/kk/Dropbox/toDown1.txt" or die $! ; 
+tie my @lines , "Tie::File", "/home/kk/Dropbox/toDown.txt" or die $! ; 
 # tie my @lines , "Tie::File", "/tmp/list.txt" or die $! ; 
 
 while ( @lines ){
