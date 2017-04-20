@@ -7,7 +7,7 @@ category: windows
 ## [add user](https://www.windows-commandline.com/add-user-from-command-line/)
 
 ```
-NET USER kenneth password /ADD
+NET USER kenneth <password> /ADD
 ```
 
 ---
