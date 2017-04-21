@@ -418,3 +418,11 @@ awful.util.spawn_with_shell("xinput set-prop 13 \"Device Enabled\" 0")
 awful.util.spawn_with_shell("setxkbmap -option ctrl:nocaps")
 EOF
 ```
+
+---
+
+## no sound 
+
+```
+sudo modprobe -r snd_hda_intel && sudo modprobe snd_hda_intel
+```
