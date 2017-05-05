@@ -76,10 +76,28 @@ sub md5FileSearch {
     return %md5Result;
 } ## --- end sub md5FileSearch
 
+sub comicSearch {
+    my %comicResult;
+    my	( $keyword )	= @_;
+    my $comicFile= '/home/kk/Dropbox/Documents/comic.done';
+    if ( -r $comicFile ) {
+        foreach my $word ( @{$keyword} ) {
+            my @comicResult;
+            open my $fh , "< $comicFile";
+            while ( <$fh> ) {
+                push @comicResult,$_ if /$word/i ;
+            }
+            $comicResult{$word}=[@comicResult];
+        }
+    }
+    return %comicResult;
+} ## --- end sub comicFileSearch
+
 
 if ( @ARGV ) {
     my %md5FileResult = &md5FileSearch(\@ARGV) ;
     my %mlocateResult = &mlocateSearch(\@ARGV) ;
+    my %comicResult = &comicSearch(\@ARGV) ;
     if ( keys %md5FileResult ) {
         say "\n\ntorrent match:\n";
         foreach my $keys ( @ARGV ) {
