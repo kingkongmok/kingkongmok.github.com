@@ -92,3 +92,14 @@ ab -n 100000 -c 100 -t 1 -k "http://127.0.0.1:8080/100.html"
 
 注意**-l**参数，用于动态内容的忽略（例如sid变更）, 否则只能查精通文件了
 **-k** 是指 keepalive，ab默认是不开启的。
+
+---
+
+## [POST request using
+ab](http://stackoverflow.com/questions/29731023/make-a-post-request-using-ab-apache-benchmarking-on-a-django-server)
+
+```
+ab -T 'application/x-www-form-urlencoded' -p post.data URL
+```
+
+
