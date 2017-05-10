@@ -82,5 +82,50 @@ nginx中的`limit_rate`有限制下载速度的作用，配合`if(){}`来判断�
 [指定openssl的路径](https://dwradcliffe.com/2013/10/04/custom-openssl-with-nginx.html)
 
 ```
-./configure --prefix=/usr/local/nginx-1.7.4 --without-mail_smtp_module --without-mail_pop3_module --without-mail_imap_module --with-http_ssl_module --with-http_realip_module --with-openssl=/usr/local/src/openssl-1.0.2d --with-pcre --with-pcre=/usr/local/src/pcre-8.37
+./configure --prefix=/usr/local/nginx-1.7.4 --without-mail_smtp_module
+--without-mail_pop3_module --without-mail_imap_module --with-http_ssl_module
+--with-http_realip_module --with-openssl=/usr/local/src/openssl-1.0.2d
+--with-pcre --with-pcre=/usr/local/src/pcre-8.37
+```
+
+---
+
+## limit_req_zone
+
+nginx 可以使用limit_req_zone模块进行限速，
+
+
+创建一个zone，大小30MB，针对remote ip可做 50request/sec的限制
+
+```
+http {
+...
+limit_req_zone $binary_remote_addr zone=one:30m rate=50r/s;
+...
+```
+
+限速中，可以使用burst作为队列长度。例如burst=10000指将10000个请求放入队列。
+
+```
+location ...
+...
+limit_req   zone=one  burst=10000;
+```
+
+如果加入nodelay，则将rate以外也就是50个以外的request丢弃，使用503返回。
+
+```
+location ...
+...
+limit_req   zone=one  burst=10000;
+```
+
+###  configure
+
+```
+configure arguments: --prefix=/usr/local/nginx-1.10.3 --without-mail_smtp_module
+--without-mail_pop3_module --without-mail_imap_module --with-http_ssl_module
+--with-http_realip_module --with-openssl=../openssl-1.0.2k --with-pcre
+--with-pcre=../pcre-8.40 --with-zlib=../zlib-1.2.11
+--with-http_stub_status_module
 ```
