@@ -10,15 +10,15 @@ tags: [web, performence, httperf, ab]
 首先当然先做优化，不过我本人比较倾向编译内核模块而不是
 启动参数，不过方便的说，
 
-{% highlight bash %}
+```
 cp /etc/security/limits.conf{,.orig}
 cat << EOF >> /etc/security/limits.conf
 * soft nofile 200000
 * hard nofile 200000
 EOF
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```
 cp /etc/sysctl.conf /etc/sysctl.conf.orig
 cat << EOF >> /etc/sysctl.conf
 # "Performance Scalability of a Multi-Core Web Server", Nov 2007
@@ -56,21 +56,39 @@ net.ipv4.tcp_tw_reuse = 1
 # but this option is for benchmarks, NOT for production (NAT issues)
 net.ipv4.tcp_tw_recycle = 1
 EOF
-{% endhighlight %}
+```
+
+---
+
+## [httperf](http://www.yolinux.com/TUTORIALS/WebServerBenchmarking.html)
+
+如果没有按照apache，也可以直接使用httperf，
+
+其中hog的参数是尽量开启tcp链接，达到模拟多tcp和服务器交换的目的
+
+httperf默认开启keepalive。
 
 
-##httperf
-
-如果没有按照apache，也可以直接使用httperf，因为感觉提供的hog参数更好。
-
-**http://www.yolinux.com/TUTORIALS/WebServerBenchmarking.html**
-
-<pre lang="bash" >
+```
 httperf --hog --server www.website.com --num-conns 10
-</pre>
+```
 
-**http://gwan.com/en_apachebench_httperf.html**
+[wsess](http://www.51testing.com/html/89/15117689-3693913.html)
 
-<pre lang="bash" >
+```
+-wsess=100,1000,3 -burst-length=10
+```
+
+---
+
+## [ab]( http://gwan.com/en_apachebench_httperf.html )
+
+这里是指共请求100000次，并做100并行查询
+
+
+```
 ab -n 100000 -c 100 -t 1 -k "http://127.0.0.1:8080/100.html"
-</pre>
+```
+
+注意**-l**参数，用于动态内容的忽略（例如sid变更）, 否则只能查精通文件了
+**-k** 是指 keepalive，ab默认是不开启的。
