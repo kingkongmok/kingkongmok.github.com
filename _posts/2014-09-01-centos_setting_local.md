@@ -10,30 +10,26 @@ centos的一些配置和常用环境稍稍不同，需要注意。
 ## color shell
 
 可以先设置一下colorshell。这个是绿色的
-{% highlight bash %}
+
+```
 echo "PS1='\[\033[02;32m\]\u@\H:\[\033[02;34m\]\w\$\[\033[00m\] '" >> ~/.bashrc
-{% endhighlight %}
+```
 
 如果需要设置一下前面为红色,参考[arch](https://wiki.archlinux.org/index.php/Color_Bash_Prompt)的设置
 history也设置一下
-{% highlight bash %}
+
+```
 PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
-{% endhighlight %}
+```
+
+---
 
 ### ~/.bashrc
 
-```bash
-$ cat ~/.bashrc 
-# .bashrc
+```
 
-# Source global definitions
-if [ -f /etc/bashrc ]; then
-    . /etc/bashrc
-fi
-
-# User specific aliases and functions
-#PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
-PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\]
+\[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
@@ -45,8 +41,63 @@ LC_ALL="en_US.utf8"
 export EDITOR="vim"
 
 # User specific aliases and functions
-TMOUT=18000
+
+export PATH=$PATH:~/bin/:/usr/local/sbin/:/usr/sbin/:/sbin/
 ```
+
+---
+
+## ~/.vimrc
+
+```
+if has("syntax")
+  syntax on
+endif
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
+set showcmd		" Show (partial) command in status line.
+set showmatch		" Show matching brackets.
+set ignorecase		" Do case insensitive matching
+set smartcase		" Do smart case matching
+set incsearch		" Incremental search
+set autowrite		" Automatically save before commands like :next and :make
+set hidden             " Hide buffers when they are abandoned
+set nu
+set hls
+set background=dark
+hi StatusLine ctermfg=39 ctermbg=239 cterm=None
+hi StatusLineNC ctermfg=39 ctermbg=239 cterm=None
+hi VertSplit ctermfg=39 ctermbg=239 cterm=None
+if filereadable("/etc/vim/vimrc.local")
+  source /etc/vim/vimrc.local
+endif
+:filetype plugin on
+highlight link MRUFileName LineNr
+let MRU_Max_Entries = 1000
+if has("autocmd")
+  filetype plugin indent on
+endif
+set smartindent
+set expandtab
+set visualbell t_vb=
+set t_Co=256
+set autoindent
+:nnoremap <F8> :setl si paste! si paste?<CR> 
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+set wrap
+set linebreak
+set nolist  " list disables linebreak
+set complete-=i
+set tabstop=8
+set softtabstop=4
+set shiftwidth=4
+let &colorcolumn=join(range(81,999),",")                                        
+let &colorcolumn="80,".join(range(400,999),",")     
+highlight Comment ctermfg=green
+```
+
+---
 
 如果需要设置用户后面有主机名，很简单修改一下\u@\h
 history也设置一下
