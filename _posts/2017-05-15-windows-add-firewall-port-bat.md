@@ -4,8 +4,7 @@ layout: post
 category: windows
 ---
 
-### [add
-port](http://stackoverflow.com/questions/15171255/how-to-open-ports-on-windows-firewall-through-batch-file)
+### [add port](http://stackoverflow.com/questions/15171255/how-to-open-ports-on-windows-firewall-through-batch-file)
 
 ```
 ECHO OFF
