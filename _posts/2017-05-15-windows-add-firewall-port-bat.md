@@ -4,7 +4,7 @@ layout: post
 category: windows
 ---
 
-## [add
+### [add
 port](http://stackoverflow.com/questions/15171255/how-to-open-ports-on-windows-firewall-through-batch-file)
 
 ```
@@ -21,4 +21,12 @@ if not ERRORLEVEL 1 (
     netsh advfirewall firewall add rule name=%RULE_NAME% dir=in action=allow protocol=TCP localport=%PORT%
 )
 pause
+```
+---
+
+### windows 2008+ add zabbix port
+
+```
+netsh advfirewall firewall add rule name=zabbix_agentd dir=in action=allow
+protocol=TCP localport=10050
 ```
