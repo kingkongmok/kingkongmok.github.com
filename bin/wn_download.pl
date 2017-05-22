@@ -37,12 +37,15 @@ while ( <$fh> ) {
 }
 close $fh;
 
-use Tie::File ; 
-tie my @lines , "Tie::File", "/home/kk/Dropbox/toDown.txt" or die $! ; 
+use Tie::File; 
+tie my @lines , "Tie::File", "/home/kk/Dropbox/comic_download.list" or die $!; 
 # tie my @lines , "Tie::File", "/tmp/list.txt" or die $! ; 
 
-while ( @lines ){
-    my $line = shift @lines; 
+# while ( @lines ){
+my $index = 0;
+my @deleteLines;
+foreach my $line ( @lines ){
+    my $result = 1;
     $line =~ s/photos/download/;
     my $message = `proxychains curl $line`; 
     if ($message){
@@ -52,16 +55,28 @@ while ( @lines ){
             /sxm ){
             my $DownloadUrl = $2 ; 
             my $DownloadFilename = $1 ; 
-
-
             if (  exists $downloaded_url{$DownloadUrl} ){ 
                 print "$DownloadFilename 已经下载过。\n";
+                $result = 0;
             } else {
-                system("proxychains curl -C -  \"$DownloadUrl\" -o /home/kk/Downloads/\"$DownloadFilename\"")   ; 
-                system("echo $DownloadUrl \"$DownloadFilename\" >> $record_file")   ; 
+                $result = system("proxychains curl -C -  \"$DownloadUrl\"" . 
+                    " -o /home/kk/Downloads/\"$DownloadFilename\""); 
+                if ( $result == 0 ) {
+                    system("echo $DownloadUrl \"$DownloadFilename\"" .
+                        " >> $record_file")   ; 
+                }
             }
         }
+        if ( $result == 0 ) {
+            push @deleteLines, $index; 
+        }
     }
+    $index++;
 } 
+
+
+foreach ( reverse @deleteLines ) {
+    splice @lines,$_,1;
+}
 
 untie @lines ; 
