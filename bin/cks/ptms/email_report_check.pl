@@ -20,12 +20,33 @@
 
 use strict;
 use warnings;
-use utf8;
+# use utf8;
 use Data::Dumper;
 use feature 'say';
-use POSIX; 
+use POSIX;
 use Fcntl 'O_RDONLY';
 use Tie::File;
+use Getopt::Std;
+
+
+#-------------------------------------------------------------------------------
+#  usage
+#-------------------------------------------------------------------------------
+getopts('mqht');
+our($opt_m, $opt_q, $opt_h, $opt_t);
+
+sub usage {
+    print <<HELPTEXT;                                                           
+
+    目的： 查找遗漏的邮件
+    
+
+    参数：
+            -t          测试，输出共找到多少个邮件
+            -h          print this help                      
+
+HELPTEXT
+}
 
 
 #-------------------------------------------------------------------------------
@@ -60,7 +81,8 @@ my %headers_Rec_Sub = (
 #  列出itdept的inbox位置， default
 #  /mnt/172.16.45.203/IceWarp/mail/cks.com.hk/itdept/inbox   
 #-------------------------------------------------------------------------------
-my $mail_location = "/tmp/mail/";
+#my $mail_location = "/tmp/mail/";
+my $mail_location = "/mnt/172.16.45.203/IceWarp/mail/cks.com.hk/itdept/inbox/";
 
 
 #===  FUNCTION  ================================================================
@@ -74,11 +96,11 @@ my $mail_location = "/tmp/mail/";
 #     SEE ALSO: n/a
 #===============================================================================
 sub matchReg {
-    my $string = shift; 
+    my $string = shift;
     my $recipients = shift;
     my $subject = shift;
     if ( $string =~ m/^To:.*?$recipients.*?^Subject: $subject/smg ) {
-        return 1 ; 
+        return 1;
     } else {
         return 0;
     }
@@ -96,7 +118,7 @@ sub matchReg {
 #     SEE ALSO: n/a
 #===============================================================================
 sub getContent {
-    my $filename = shift; 
+    my $filename = shift;
     my @lines;
     if (  -r $filename ) {
 #-------------------------------------------------------------------------------
@@ -136,6 +158,9 @@ sub find_email_file () {
 }
 
 
+#-------------------------------------------------------------------------------
+#  main
+#-------------------------------------------------------------------------------
 sub listNoutFound{
     my @files = &find_email_file($mail_location, "*.imap", );
     foreach my $recipients ( keys %headers_Rec_Sub ) {
@@ -145,19 +170,22 @@ sub listNoutFound{
             $match = &matchReg($content, $recipients,
                 $headers_Rec_Sub{$recipients});
             if ( $match ) {
-#-------------------------------------------------------------------------------
-#  uncomment if test
-#-------------------------------------------------------------------------------
-                # say "$recipients\n",
-                # "\t$headers_Rec_Sub{$recipients} MATCH ON $file";
-#-------------------------------------------------------------------------------
-#  test code end
-#-------------------------------------------------------------------------------
+                if ( $opt_t ) {
+                    say "$recipients\n",
+                    "\t$headers_Rec_Sub{$recipients} MATCH ON $file";
+                }
                 last;
             }
         }
-        say "\"$headers_Rec_Sub{$recipients}\" is not found." unless $match;
+        say "\"$headers_Rec_Sub{$recipients}\" 未能找到，请确认" unless $match;
     }
+}
+
+
+if ( $opt_h)
+{
+    &usage;
+    exit;
 }
 
 
