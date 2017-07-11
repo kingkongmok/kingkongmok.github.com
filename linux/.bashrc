@@ -92,7 +92,6 @@ export PATH=$PATH:~/bin/:/usr/local/go/bin
 # securecrt, xshell中menuconfig乱码解决方法
 export TERM=xterm-color
 
-
 alias ls='ls --color=auto --time-style=long-iso'
 alias l='locate -i -r'
 alias s='sdcv'
@@ -103,6 +102,8 @@ alias mv='mv -i'
 alias cp='cp -i'
 alias proxychains='proxychains -q'
 alias rm='rm -i'
+alias sqlplus='rlwrap sqlplus'
+alias mysql=$(echo -e 'mysql --prompt="\x1B[31m\\u\x1B[34m@\x1B[32m\\h\x1B[0m:\x1B[36m\\d>\x1B[0m "')
 
 # #Starting X11 on console login
 # #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
@@ -112,3 +113,4 @@ alias rm='rm -i'
 #
 # # set monitor on
 # [[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
+
