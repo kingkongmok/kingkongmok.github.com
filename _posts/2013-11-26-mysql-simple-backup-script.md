@@ -12,7 +12,7 @@ tags: [mysql, backup]
 nice /usr/local/mysql/bin/mysqldump -ukk -p igbsurvey | gzip > igbsurvey.sql.gz
 ```
 
-## 还原(注意是zcat不是gzip)
+## 还原
 
 ```
 nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
@@ -20,7 +20,7 @@ nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
 
 --- 
 
-[不重启的情况下备份](http://lizhenliang.blog.51cto.com/7876557/1669829)
+## [不重启的情况下备份](http://lizhenliang.blog.51cto.com/7876557/1669829)
 
 ```
 # mysqldump -uroot -p123 --routines --single_transaction --master-data=2
