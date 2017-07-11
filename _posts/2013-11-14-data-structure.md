@@ -11,7 +11,7 @@ tags: [data, structur, aoa, hoa, hoh, aoh]
 
 https://github.com/kingkongmok/perl/blob/master/billConvert.pl
 
-{% highlight  perl %}
+```
 use strict;
 use warnings;
 
@@ -99,4 +99,4 @@ while ( my($key1,$value1)=each%hash ) {
     }
 }
 
-{% endhighlight %}
+```

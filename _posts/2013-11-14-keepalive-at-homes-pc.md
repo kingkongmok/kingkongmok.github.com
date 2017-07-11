@@ -13,14 +13,14 @@ keepalived就是电脑使用vrrpd
 ### 安装方法
 
 
-{% highlight bash %}
+```
 sudo apt-get install keepalived
 sudo cp /usr/share/doc/keepalived/samples/keepalived.conf.sample /etc/keepalived/keepalived.conf
-{% endhighlight %}
+```
 
 **priority 99 for laptop**
 
-{% highlight bash %}
+```
 ! Configuration File for keepalived
 
 global_defs {
@@ -43,7 +43,7 @@ vrrp_instance VI_1 {
         192.168.1.254
     }
 }
-{% endhighlight %}
+```
 
 **台式机上使用的是100**
 
@@ -52,7 +52,7 @@ vrrp_instance VI_1 {
 **除了syslog外，可以使用ip a来查看**
 
 
-{% highlight bash %}
+```
 kk@t510:~$ sudo ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue state UNKNOWN 
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -67,4 +67,4 @@ kk@t510:~$ sudo ip a
     inet 192.168.1.254/32 scope global wlan0
     inet6 fe80::1a3d:a2ff:fe2b:1110/64 scope link 
        valid_lft forever preferred_lft forever
-{% endhighlight %}
+```

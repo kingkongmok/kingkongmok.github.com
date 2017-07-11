@@ -52,7 +52,7 @@ else {                      # Else, first time through so present form.
         print end_form();
 }
 print end_html;
-{% endhighlight %}
+```
 
 
 {% highlight perl lineons %}
@@ -83,6 +83,6 @@ kk@debian:~$ curl "localhost/sendmail.pl?address=kk@fileserver.kk.igb&subject=te
 <h1>Email Form</h1><p>Email has been sent to kk@fileserver.kk.igb</p>
 </body>
 </html>
-{% endhighlight %}
+```
 
 

@@ -6,13 +6,13 @@ tags: [debian, jekyll]
 ---
 ## install with forrowing commmands:
 
-<pre>
-
+```
 $ sudo apt-get install rubygems ruby1.9.1-dev
-</pre>
+```
 
 ## install jekyll by gem
-<pre>
+
+```
 kk@debian:~/github/kingkongmok.github.com$ sudo gem install jekyll
 Building native extensions.  This could take a while...
 Fetching: classifier-1.3.3.gem (100%)
@@ -109,10 +109,11 @@ Installing RDoc documentation for safe_yaml-0.9.7...
 Installing RDoc documentation for colorator-0.1...
 Installing RDoc documentation for redcarpet-2.3.0...
 Installing RDoc documentation for jekyll-1.3.0...
-</pre>
+```
 
 # run server
-<pre>
+
+```
 kk@debian:~/github/kingkongmok.github.com$ jekyll serve
 Configuration file: /home/kk/github/kingkongmok.github.com/_config.yml
        Deprecation: Auto-regeneration can no longer be set from your configuration file(s). Use the --watch/-w command-line option instead.
@@ -121,5 +122,5 @@ Configuration file: /home/kk/github/kingkongmok.github.com/_config.yml
       Generating... done.
     Server address: http://0.0.0.0:4000
   Server running... press ctrl-c to stop.
-</pre>
+```
 

@@ -13,7 +13,7 @@ tags: [linux, boot, usb, initramfs, modules]
 
 ##initramfs
 
-{% highlight bash %}
+```
 #修改initrd所需加载的usb驱动，一般内核不加载usb2.0驱动的。
 sudo cp /etc/initramfs-tools/modules{,.orig}
 cat <<EOF |sudo tee -a /etc/initramfs-tools/modules
@@ -25,7 +25,7 @@ ohci_hcd
 usb_storage
 scsi_mod
 EOF
-{% endhighlight %}
+```
 
 ##这个是用于内核增加加载时间的。
 

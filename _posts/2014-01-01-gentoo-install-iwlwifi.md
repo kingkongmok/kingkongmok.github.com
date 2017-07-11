@@ -15,8 +15,8 @@ ucode文件应当是私有的驱动程序，可以安装对应的ucode文件，�
 **[ detail ] (http://bpaste.net/show/163407/)**
 这里需要添加wireless的驱动。之前漏了这个步骤只安装ucode是不可以的。
 
-{% highlight bash %}
+```
 kk@gentoo:~$ sudo lspci | grep net -i
 00:19.0 Ethernet controller: Intel Corporation 82577LM Gigabit Network Connection (rev 06)
 03:00.0 Network controller: Intel Corporation Centrino Advanced-N 6200 (rev 35)
-{% endhighlight %}
+```

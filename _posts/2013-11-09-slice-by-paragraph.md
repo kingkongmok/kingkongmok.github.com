@@ -5,7 +5,7 @@ category: perl
 tags: [slice, paragraph]
 ---
 **这样的字段，需要查询exon的在tran中间的exon次数，例如这里是2 3**
-{% highlight perl %}
+```
 kk@R61e:~$ cat test.txt
 tran
 exon
@@ -14,9 +14,9 @@ tran
 exon
 exon
 exon
-{% endhighlight %}
+```
 
-{% highlight perl %}
+```
 use strict;
 use warnings;
  
@@ -36,4 +36,4 @@ for ( @string ) {
  
 use Data::Dumper;
 print Dumper(\%h);
-{% endhighlight %}
+```

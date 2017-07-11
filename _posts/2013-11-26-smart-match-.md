@@ -5,14 +5,16 @@ category: perl
 tags: [smart match, '~~', perl]
 ---
 
-###用法
-<pre>
+### 用法
+
+```
 $key ~~ %hash       # Does $key exist in %hash ?
 $value ~~ @array    # Does $value exist in @array?
-</pre>
+```
 
-###以下一个失败一个成功
-<pre lang="perl">
+### 以下一个失败一个成功
+
+```
 my @primary = ("red", "blue", "green");
     if (@primary ~~ "red") { # false
         print "primary smartmatches red";
@@ -21,17 +23,18 @@ my @primary = ("red", "blue", "green");
     if ("red" ~~ @primary ) { #true
         print "red smartmatches primary";
     }
-</pre>
+```
 
 
-##以下是失败的例子，不能这样用
-<pre lang="perl">
+## 以下是失败的例子，不能这样用
+
+```
 my@array1=qw/1 2 3 /; 
 my@array2=qw/1 2 3 4/;
 print "yes" if @array ~~ @array2;
-</pre>
+```
 
-<pre lang="perl">
+```
 #测试中，发现 ~~ 后面需要变量，以下这个失败
  if 2 ~~ qw(1 2 3) #false
  
@@ -40,7 +43,7 @@ print "yes" if @array ~~ @array2;
 perl -ne 'print if int($.) ~~ (13, 19, 67)' 
 # Print all lines from line 17 to line 30
 perl -ne 'print if int($.) ~~ (17..30)'
-</pre>
+```
 
 
 perl中对于两个数组的对比方法，一般能google到的都是利用e
@@ -54,7 +57,7 @@ exists是寻找该key是否在hash中存在。所以，keys必须是uniq的。�
 
 comm是分3列来显示的，-1-2-3分别是surpress（不显示）相应列数，这个单词误我好久！
 
-<pre lang="perl">
+```
 my@a=qw/1 2 3 /;
 my@b=qw/1 2 3 4 5/;
 my%h;
@@ -63,4 +66,4 @@ my%h;
 print "yes" if @a ~~ %h ;
 
 print grep {!exists $h{$_} } @b ;
-</pre>
+```
