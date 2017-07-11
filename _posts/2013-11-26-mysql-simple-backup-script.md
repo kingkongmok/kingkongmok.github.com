@@ -27,11 +27,9 @@ nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
 --databases weibo > weibo.sql
 ```
 
-    + **--routines**：导出存储过程和函数
-
-    + **--single_transaction**：导出开始时设置事务隔离状态，并使用一致性快照开始事务，然后unlock tables;而lock-tables是锁住一张表不能写操作，直到dump完毕。
-
-    + **--master-data**：默认等于1，将dump起始（change master to）binlog点和pos值写到结果中，等于2是将change master to写到结果中并注释。
+* **--routines**：导出存储过程和函数
+* **--single_transaction**：导出开始时设置事务隔离状态，并使用一致性快照开始事务，然后unlock tables;而lock-tables是锁住一张表不能写操作，直到dump完毕。
+* **--master-data**：默认等于1，将dump起始（change master to）binlog点和pos值写到结果中，等于2是将change master to写到结果中并注释。
 
 在备份文件weibo.sql查看binlog和pos值
 
