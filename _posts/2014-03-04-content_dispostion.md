@@ -11,7 +11,7 @@ tags: [download, filename, web]
 
 curl 中可以通过-J来启动这个功能，例如
 
-{% highlight bash %}
+```
 
 HTTP/1.1 200 OK
 Date: Tue, 04 Mar 2014 01:38:59 GMT
@@ -28,11 +28,11 @@ Connection: close
 Vary: Accept-Encoding
 Content-Type: application/x-perl
 
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```
 
 这个使用通过以下命令就可以下载了。
 curl -OJ URL
 
-{% endhighlight %}
+```

@@ -101,24 +101,24 @@ highlight Comment ctermfg=green
 
 如果需要设置用户后面有主机名，很简单修改一下\u@\h
 history也设置一下
-{% highlight bash %}
+```
 PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
-{% endhighlight %}
+```
 
 
 
 
 刚刚开始的时候，觉得curl的 -I 和一般不同，但man能找到相应设置，这个需要另外测试一下。
-{% highlight bash %}
+```
 $ curl --version
 curl 7.15.5 (x86_64-redhat-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8b zlib/1.2.3 libidn/0.6.5
 Protocols: tftp ftp telnet dict ldap http file https ftps 
 Features: GSS-Negotiate IDN IPv6 Largefile NTLM SSL libz
-{% endhighlight %}
+```
 
 幸好grep和sed感觉差不多，awk不会用自动忽略。
-{% highlight bash %}
+```
 $ grep --version
 grep (GNU grep) 2.5.1
 
@@ -126,10 +126,10 @@ Copyright 1988, 1992-1999, 2000, 2001 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-{% endhighlight %}
+```
 
 perl 感觉好像没问题，但注意pm是不能用了。自己的pm也懒得导。
-{% highlight bash %}
+```
 $ perl -V
 Summary of my perl5 (revision 5 version 8 subversion 8) configuration:
   Platform:
@@ -179,6 +179,6 @@ Characteristics of this binary (from libperl):
     /usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi
     /usr/lib/perl5/5.8.8
     .
-{% endhighlight %}
+```
 
 

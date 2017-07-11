@@ -9,7 +9,7 @@ tags: [find, printf, date]
 
 [这里](http://cygwin.com/ml/cygwin/2005-01/msg00672.html) 有帖子提供find的bug，并给出一个很好的shell来测试printf的时间戳。
 
-{% highlight bash %}
+```
 $ for fmt in H I k l p Z M S @ a A b h B m d w j U W Y y r T X c D x +
 > do echo "$fmt: `find /etc/passwd -printf \"%T$fmt\"`"
 > done
@@ -42,7 +42,7 @@ c: Mon Oct 11 15:36:42 2004
 D: 1097523402            date (mm/dd/yy)
 x: Mon Oct 11 2004
 +: +                     Date and time, separated by '+'
-{% endhighlight %}
+```
 
 非常好用呢。
 

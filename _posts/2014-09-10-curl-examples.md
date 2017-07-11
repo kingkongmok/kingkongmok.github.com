@@ -31,14 +31,14 @@ echo '<object>
 
 curl除了可以使用于http，还可以使用于ftp。
 
-{% highlight bash %}
+```
 backup_ftps="ftp://user:pasw@ftp:21/"
 backup_file="/home/backup/${backup_name}"
 curl -s -T ${backup_file} ${backup_ftps}
-{% endhighlight %}
+```
 
 -T为上传的参数
-{% highlight bash %}
+```
 -T --upload files，
 
 examples: 
@@ -48,15 +48,15 @@ examples:
 or even
 
     curl -T "img[1-1000].png" ftp://ftp.picturemania.com/upload/
-{% endhighlight %}
+```
 
 -X可以用于POST或者GET这些HTTP的方法，在ftp使用可以用DELETE
 
-{% highlight bash %}
+```
 -X, --request <command>
 
 curl -s -X "DELE ${backup_file_delete}" ${backup_ftps}
-{% endhighlight %}
+```
 
 ---
 
@@ -82,12 +82,12 @@ cat mdk-iso.part? > mdk-80.iso
 在curl中，提交get和post的方法分别是？和 -d， 而-b -c 分别是使用和产生cookie。
 在pl的上传文件中，表格是这样写的：
 
-<pre>
+```
 form action=”/cgi-bin/upload.cgi” method=”post”
 input type=”file” name=”photo”
 input type=”text” name=”email_address”
 input type=”submit” name=”Submit” value=”Submit Form”
-</pre>
+```
 
 针对第二行，我们可以用curl的form进行测试
 

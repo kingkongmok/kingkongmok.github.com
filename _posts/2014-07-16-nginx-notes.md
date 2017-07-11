@@ -71,11 +71,11 @@ kk@ins14 ~ $ diff -u /usr/local/nginx-1.7.4/conf/nginx.conf /usr/local/nginx-1.7
 ## limit_rate
 nginx中的`limit_rate`有限制下载速度的作用，配合`if(){}`来判断爬虫bot可这样来用：
 
-{% highlight bash %}
+```
     if ( $http_user_agent ~ Google|Yahoo|MSN|baidu ){
         limit_rate 20k;
     }
-{% endhighlight %}
+```
 
 ### openssl and pcre
 

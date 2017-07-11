@@ -12,32 +12,32 @@ tags: [encoding, perl, utf8, unicode]
 
 * [ commandline ] ( http://perldoc.perl.org/perlrun.html#%2A-C-%5B%5Fnumber/list%5F%5D%2A )
 
-{% highlight perl %}
+```
 perl -CSDL -le 'print "\x{1815}"';
-{% endhighlight %}
+```
 
 * [ binmode ] ( http://perldoc.perl.org/functions/binmode.html )
 
-{% highlight perl %}
+```
 binmode(STDOUT, ":utf8");          #treat as if it is UTF-8
 binmode(STDIN, ":encoding(utf8)"); #actually check if it is UTF-8
-{% endhighlight %}
+```
 
 
 * [ PerlIO ] ( http://perldoc.perl.org/PerlIO.html )
 
-{% highlight perl %}
+```
 open my $fh, ">:utf8", $filename
     or die "could not open $filename: $!\n";
 
 open my $fh, "<:encoding(utf-8)", $filename
     or die "could not open $filename: $!\n";
-{% endhighlight %}
+```
 
 
 * [ open pragma ] ( http://perldoc.perl.org/open.html )
 
-{% highlight perl %}
+```
 use open ":encoding(utf8)";
 use open IN => ":encoding(utf8)", OUT => ":utf8";
-{% endhighlight %}
+```

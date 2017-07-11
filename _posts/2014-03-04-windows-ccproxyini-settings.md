@@ -7,7 +7,7 @@ tags: [windows, ccproxy.ini]
 
 这里是在祈福使用二次代理上网时候的windows ccproxy设置
 
-{% highlight bash %}
+```
 [System]
 Ver=6.3.8
 Language=ChineseGB
@@ -155,4 +155,4 @@ NVAClass=CWebWindow_Class
 ServerBindIP=0.0.0.0
 [ListWidth]
 Account=100,120,90,50,50,50,25,50,100,100,100
-{% endhighlight %}
+```

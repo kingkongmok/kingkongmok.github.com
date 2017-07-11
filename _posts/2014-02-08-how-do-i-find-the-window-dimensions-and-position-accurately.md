@@ -12,15 +12,15 @@ tags: [X, location, demensions]
 
 **用以下方法可以得到当前activewindow的x window信息。**
 
-{% highlight bash %}
+```
 xwininfo -id $(xdotool getactivewindow)
-{% endhighlight %}
+```
 
 ##bash
 
 **已经保存为xwinposition.sh文件**
 
-{% highlight bash %}
+```
 #!/bin/bash
 # Get the coordinates of the active window's
 #    top-left corner, and the window's size.
@@ -33,7 +33,7 @@ xwininfo -id $(xdotool getactivewindow)
            -e "s/^ \+Height: \+\([0-9]\+\).*/h=\1/p" )
   echo -n "$x $y $w $h"
 #
-{% endhighlight %}
+```
 
 ##用于ffmpeg的录像
 

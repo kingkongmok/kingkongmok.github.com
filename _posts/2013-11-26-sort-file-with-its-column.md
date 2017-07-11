@@ -7,7 +7,7 @@ tags: [perl, sort, cmp, column]
 
 ##方法一，之前抄的
 
-{% highlight perl %}
+```
 #!/usr/bin/perl 
 use strict;
 use warnings;
@@ -24,11 +24,11 @@ foreach my $line ( @sortedarray  ) {
     print "$line\n" ;
 }
 
-{% endhighlight %}
+```
 
 ##方法二，依然调用map但直接拆数组。
 
-{% highlight perl %}
+```
 open FILE, "<", "testinput.txt" ;
 my @array = <FILE>;
 my @splitedarray = sort {$a->[1] <=> $b->[1]} map { [(split) ] } @array; 
@@ -43,19 +43,19 @@ foreach my $aoa (@splitedarray  ) {
     }
     print "\n";
 }
-{% endhighlight %}
+```
 
 ##方法三，顺便测试push，臃肿的表现。
 
-{% highlight perl %}
+```
 perl -lane ' push(@newarray, $_ ); END { foreach ( map {$_->[0]} sort { $a->[1] <=> $b->[1] } map {[$_, (split)[2]]} @newarray) { print } }' testinput.txt
-{% endhighlight %}
+```
 
 ##方法四，数组表现。
 
-{% highlight perl %}
+```
 perl -ae 'print map {$_->[0]}  sort {$a->[1] <=> $b->[1]}  map {[ $_, (split)[2]]} <>'
-{% endhighlight %}
+```
 
 
 ### 另外一个范例使用index

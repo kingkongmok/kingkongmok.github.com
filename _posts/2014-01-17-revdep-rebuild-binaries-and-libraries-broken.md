@@ -9,12 +9,12 @@ tags: [gentoo, revdep-rebuild.sh, libraries, broken]
 
 升级的时候，顺便查找并清除依赖，使用以下命令的
 
-{% highlight bash %}
+```
 sudo emerge --sync && sudo emerge -a --update --deep --with-bdeps=y --newuse @world && sudo emerge --depclean && sudo revdep-rebuild.sh
-{% endhighlight %}
+```
 
 
-{% highlight bash %}
+```
 kk@gentoo ~ $ sudo emerge --depclean && sudo revdep-rebuild.sh
 
 * Always study the list of packages to be cleaned for any obvious
@@ -62,13 +62,13 @@ Number removed:       0
 kk@gentoo ~ $ ls -lh /usr/lib64/codecs/cook.so /usr/lib64/codecs/drvc.so
 -rw-rw-r-- 1 1012 1004  42K 2005-02-16 03:39 /usr/lib64/codecs/cook.so
 -rw-rw-r-- 1 1012 1004 314K 2005-02-16 03:40 /usr/lib64/codecs/drvc.so
-{% endhighlight %}
+```
 
 **google了一下[解决方法](https://www.hellboundhackers.org/forum/gentoo_-_revdep-rebuild_%22not_owned_by_any_package%22-63-16523_0.html)**
 
 ##处理方法
 
-{% highlight bash %}
+```
 sudo mv /usr/lib64/codecs/cook.so /tmp/
 sudo revdep-rebuild.sh --ignore --pretend
 
@@ -120,6 +120,6 @@ sudo revdep-rebuild.sh --ignore
 [ 100% ]                 
 
  * Dynamic linking on your system is consistent... All done. 
-{% endhighlight %}
+```
 
 这korg真是机智.

@@ -9,7 +9,7 @@ tags: [virtualbox, windows, port, forward]
 
 **The following commands will forward TCP traffic that originates from port 2222 on your host OS to port 22 on your guest OS:**
 
-<pre>
+```
 $ VBoxManage setextradata "VM Name Here" \
       "VBoxInternal/Devices/pcnet/0/LUN#0/Config/guestssh/Protocol" TCP
 
@@ -19,11 +19,11 @@ $ VBoxManage setextradata "VM Name Here" \
 
 $ VBoxManage setextradata "VM Name Here” \
       "VBoxInternal/Devices/pcnet/0/LUN#0/Config/guestssh/HostPort" 2222
-</pre>
+```
 
 ##我自己的配置
 
-<pre>
+```
 kk@dns:~$ VBoxManage setextradata xp "VBoxInternal/Devices/pcnet/0/LUN#0/Config/guestssh/Protocol" TCP
 Sun VirtualBox Command Line Management Interface Version 3.1.6_OSE
 (C) 2005-2010 Sun Microsystems, Inc.
@@ -38,4 +38,4 @@ kk@dns:~$ VBoxManage setextradata xp "VBoxInternal/Devices/pcnet/0/LUN#0/Config/
 Sun VirtualBox Command Line Management Interface Version 3.1.6_OSE
 (C) 2005-2010 Sun Microsystems, Inc.
 All rights reserved.
-</pre>
+```

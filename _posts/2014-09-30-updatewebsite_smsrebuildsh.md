@@ -9,14 +9,14 @@ tags: [rsync, smsRebuild, update]
 [原文件地址](https://raw.githubusercontent.com/kingkongmok/kingkongmok.github.com/master/bin/updateWebsite_smsRebuild.sh)
 
 `示范`
-{% highlight bash %}
+```
     ./bin/updateWebsite_smsRebuild.sh -t -m sms         #测试升级sms模块和config
     ./bin/updateWebsite_smsRebuild.sh -t -r -m mms      #还原最近一次mms模块和config
     ./bin/updateWebsite_smsRebuild.sh -m mms -w         #删除WEB-INF文档,进行sms模块和config的升级,
     ./bin/updateWebsite_smsRebuild.sh -c -m calendar    #升级calendar模块和配置，并升级本地的定时服务
-{% endhighlight %}
+```
 
-{% highlight bash %}
+```
 kk@ins14 ~/bin $ ./updateWebsite_smsRebuild.sh -t -m sms
 
 #backuping the sms modules.
@@ -49,10 +49,10 @@ rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 172.16.210.54:/h
 ssh 172.16.210.52 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
 ssh 172.16.210.53 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
 ssh 172.16.210.54 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
-{% endhighlight %}
+```
 
 
-{% highlight bash %}
+```
 kk@ins14 ~/bin $ ./updateWebsite_smsRebuild.sh -t -m calendar -w -c
 
 #backuping the calendar modules.
@@ -110,4 +110,4 @@ rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ /home/
 
 #restarting the local tomcat.
 /home/appSys/smsRebuild/sbin/tomcat_calendarTimer.sh restart
-{% endhighlight %}
+```

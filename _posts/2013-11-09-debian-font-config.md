@@ -9,7 +9,7 @@ tags: [debian, font, config]
 
 **69-language-selector-zh-cn.conf**
 
-{% highlight bash %}
+```
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
@@ -69,11 +69,11 @@ tags: [debian, font, config]
 		</edit>
 	</match> 
 </fontconfig>
-{% endhighlight %}
+```
 
 **99-language-selector-zh.conf**
 
-{% highlight bash %}
+```
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
@@ -96,11 +96,11 @@ tags: [debian, font, config]
 		</edit>
 	</match>
 </fontconfig>
-{% endhighlight %}
+```
 
 **其他调用的文件**
 
-{% highlight bash %}
+```
 kk@kk:/tmp/etc/fonts/conf.d$ ls
 10-antialias.conf                 65-fonts-persian.conf
 10-autohint.conf                  65-nonlatin.conf
@@ -123,4 +123,4 @@ kk@kk:/tmp/etc/fonts/conf.d$ ls
 53-monospace-lcd-filter.conf      90-ttf-telugu-fonts.conf
 60-latin.conf                     99-language-selector-zh.conf
 64-ttf-arphic-uming.conf          README
-{% endhighlight %}
+```

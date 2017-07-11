@@ -5,7 +5,7 @@ category: perl
 tags: [open, 2files, line by line]
 ---
 
-{% highlight bash %}
+```
 perl -e 'open FHA,"<a"; open FHB,"<b"; while(1){$x=<FHA>;$y=<FHB>; $x||last;$y||last ; print $x, $y }'
-{% endhighlight %}
+```
 

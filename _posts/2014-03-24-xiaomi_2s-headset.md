@@ -13,12 +13,12 @@ tags: [headset]
 小米2s的cyanogenmod 10.1的配置文件找不到，只能修改`/system/usr/keylayout/Generic.kl`文件了
 
 
-{% highlight bash %}
+```
 #key 257   BUTTON_2
 key 257   MEDIA_PLAY_PAUSE        WAKE
 #key 260   BUTTON_5
 key 260   MEDIA_NEXT    WAKE
-{% endhighlight %}
+```
 
 ## 旧手机HTC G7 ##
 

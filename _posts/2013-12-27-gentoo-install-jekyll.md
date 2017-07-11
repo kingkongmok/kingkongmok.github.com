@@ -9,20 +9,20 @@ tags: [gentoo, ruby, jekyll, rake, git, blog]
 
 **首先需要安装rake用来写帖子，**
 
-{% highlight bash %}
+```
 sudo emerge dev-ruby/rake
-{% endhighlight %}
+```
 
 ##安装ruby和rubygems
 
-{% highlight bash %}
+```
 sudo emerge dev-lang/ruby
 sudo emerge dev-ruby/rubygems
-{% endhighlight %}
+```
 
 ##设置ruby
 
-{% highlight bash %}
+```
 kk@gentoo /etc/fonts $ sudo equery list "*" | grep gem
 dev-ruby/rubygems-2.0.3
 virtual/rubygems-1
@@ -42,11 +42,11 @@ kk@gentoo /etc/fonts $ sudo equery uses rubygems
  - - test                : Workaround to pull in packages needed to run with FEATURES=test.
                            Portage-2.1.2 handles this internally, so don't set it in
                            make.conf/package.use anymore
-{% endhighlight %}
+```
 
 ## 选择ruby版本。
 
-{% highlight bash %}
+```
 kk@gentoo ~/workspace/kingkongmok.gibub.com $ eselect ruby list
 Available Ruby profiles:
   [1]   ruby18 (with Rubygems)
@@ -55,11 +55,11 @@ Available Ruby profiles:
 kk@gentoo ~/workspace/kingkongmok.gibub.com $ sudo eselect ruby set 2
 Successfully switched to profile:
   ruby19              
-{% endhighlight %}
+```
 
 ##不选择版本出异常。
 
-{% highlight bash %}
+```
 kk@gentoo ~/workspace $ sudo gem install jekyll
 
 Building native extensions.  This could take a while...
@@ -100,10 +100,10 @@ Thread.o: In function `rbffi_Thread_Init':
 Thread.c:(.text+0x35f): undefined reference to `pthread_key_create'
 collect2: error: ld returned 1 exit status
 make: *** [ffi_c.so] Error 1
-{% endhighlight %}
+```
 
 今天重新设置的时候，出现一个javascript无法解析的异常
-{% highlight bash %}
+```
 kk@ins14 ~/workspace/kingkongmok.github.com $ jekyll server
 /usr/local/lib64/ruby/gems/1.9.1/gems/execjs-2.2.1/lib/execjs/runtimes.rb:51:in `autodetect': Could not find a JavaScript runtime. See https://github.com/sstephenson/execjs for a list of available runtimes. (ExecJS::RuntimeUnavailable)
     from /usr/local/lib64/ruby/gems/1.9.1/gems/execjs-2.2.1/lib/execjs.rb:5:in `<module:ExecJS>'
@@ -128,10 +128,10 @@ kk@ins14 ~/workspace/kingkongmok.github.com $ jekyll server
     from /usr/local/lib64/ruby/gems/1.9.1/gems/jekyll-2.3.0/bin/jekyll:6:in `<top (required)>'
     from /usr/local/bin/jekyll:23:in `load'
     from /usr/local/bin/jekyll:23:in `<main>'
-{% endhighlight %}
+```
 
 [解决方法](http://jekyllrb.com/docs/troubleshooting/)
-{% highlight bash %}
+```
 kk@ins14 ~ $ sudo emerge -pv nodejs
 
 These are the packages that would be merged, in order:
@@ -140,6 +140,6 @@ Calculating dependencies... done!
 [ebuild  N     ] net-libs/nodejs-0.10.30  USE="npm snapshot" 13,211 kB
 
 Total: 1 package (1 new), Size of downloads: 13,211 kB
-{% endhighlight %}
+```
 安装后正常.
 
