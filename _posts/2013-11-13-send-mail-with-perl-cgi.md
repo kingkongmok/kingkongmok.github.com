@@ -5,9 +5,9 @@ category: perl
 tags: [cgi mail perl]
 ---
 
-##写邮件
+## 写邮件
 
-**当然的，perl是调用sendmail来进行发邮件。仔细看下24～27行，原来mail的是明文指定了To,Subject这样的，非常有意思。其实通过cgi也可以发邮件了，只是需要修改下from address，否则发出去的都是www-data了。**
+当然的，perl是调用sendmail来进行发邮件。仔细看下**24～27行**，原来mail的是明文指定了To,Subject这样的，非常有意思。其实通过cgi也可以发邮件了，只是需要修改下from address，否则发出去的都是www-data了。
 
 ```
 use strict;
