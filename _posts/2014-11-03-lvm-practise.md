@@ -65,7 +65,10 @@ df -h #查看当前磁盘情况
 ### ==========增加=============
 
 ```
+# lv增加30M存储
 lvextend -L +30M /dev/vgloop01/lvloop01 
+# lv增加所有vg空余存储
+lvextend -l 100%FREE /dev/vgloop01/lvloop01
 e2fsck -f /dev/vgloop01/lvloop01 
 lvdisplay 
 resize2fs /dev/vgloop01/lvloop01 50M
