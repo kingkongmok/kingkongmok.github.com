@@ -20,6 +20,31 @@ nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
 
 --- 
 
+## [All Data is InnoDB](https://dba.stackexchange.com/questions/19532/safest-way-to-perform-mysqldump-on-a-live-system-with-active-reads-and-writes)
+
+```
+mysqldump -uuser -ppass --single-transaction --routines --triggers
+--master-data=2 --all-databases > backup_db.sql
+```
+
+* **--single-transaction** produces a checkpoint that allows the dump to capture all data prior to the checkpoint while receiving incoming changes. Those incoming changes do not become part of the dump. That ensures the same point-in-time for all tables.
+
+* **--routines** dumps all stored procedures and stored functions
+
+* **--triggers** dumps all triggers for each table that has them
+
+* **--master-data=2** the CHANGE MASTER TO statement is written as an SQL comment, and thus is informative only; it has no effect when the dump file is reloaded. 
+
+    The **--master-data** option automatically turns off --lock-tables. It also turns on **--lock-all-tables**
+
+---
+
+## MyISAM 
+
+* --lock-tables
+
+---
+
 ## [不重启的情况下备份](http://lizhenliang.blog.51cto.com/7876557/1669829)
 
 ```
