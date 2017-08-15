@@ -1,0 +1,15 @@
+CREATE USER "ZABBIX" IDENTIFIED BY 密码;
+GRANT "CONNECT" TO "ZABBIX";
+grant select on v_$instance to zabbix;
+grant select on v_$sysstat to zabbix;
+grant select on v_$session to zabbix;
+grant select on dba_free_space to zabbix;
+grant select on dba_data_files to zabbix;
+grant select on dba_tablespaces to zabbix;
+grant select on v_$log to zabbix;
+grant select on v_$archived_log to zabbix;
+grant select on v_$loghist to zabbix;
+grant select on v_$system_event to zabbix;
+grant select on v_$event_name to zabbix;
+grant select on v_$locked_object to zabbix;
+grant select on v_$process to zabbix;
