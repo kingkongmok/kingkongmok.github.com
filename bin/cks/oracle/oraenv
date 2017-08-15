@@ -1,0 +1,4 @@
+ORACLE_BASE=/u01/app/oracle; export ORACLE_BASE
+ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1; export ORACLE_HOME
+ORACLE_SID=orcl; export ORACLE_SID
+PATH=$ORACLE_HOME/bin:/usr/sbin:$PATH; export PATH
