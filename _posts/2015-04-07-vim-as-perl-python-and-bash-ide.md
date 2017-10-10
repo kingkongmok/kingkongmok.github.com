@@ -169,3 +169,20 @@ set tabstop=8
 set softtabstop=4
 set shiftwidth=4
 ```
+
+---
+
+## [Deleting XML Comments](https://stackoverflow.com/questions/1722569/vim-deleting-xml-comments)
+
+```
+:%s/<!--\_.\{-}-->//g
+```
+
+---
+
+## [Vim delete blank
+lines](https://stackoverflow.com/questions/706076/vim-delete-blank-lines)
+
+```
+:g/^$/d
+```

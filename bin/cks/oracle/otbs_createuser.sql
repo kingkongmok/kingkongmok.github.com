@@ -13,3 +13,4 @@ grant select on v_$system_event to zabbix;
 grant select on v_$event_name to zabbix;
 grant select on v_$locked_object to zabbix;
 grant select on v_$process to zabbix;
+grant select on DBA_TABLESPACE_USAGE_METRICS to zabbix;
