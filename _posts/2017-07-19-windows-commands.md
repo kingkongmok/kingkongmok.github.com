@@ -93,4 +93,6 @@ wmic process where "name='mysqld.exe'" get ProcessID, ExecutablePath
 ```
 #route ADD destination_network MASK subnet_mask  gateway_ip metric_cost
 route add 77.77.77.36 mask 255.255.255.255 172.26.31.254
+
+# route add 77.77.77.36 mask 255.255.255.255 172.26.31.254 -p
 ```

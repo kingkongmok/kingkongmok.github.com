@@ -3,7 +3,8 @@
 #. /home/zabbix/etc/oraenv
 . /var/lib/zabbix/bin/oraenv
 
-sql="select distinct tablespace_name from dba_data_files where tablespace_name<>'SYSAUX' and tablespace_name<>'SYSTEM';"
+#sql="select distinct tablespace_name from dba_data_files where tablespace_name<>'SYSAUX' and tablespace_name<>'SYSTEM';"
+sql="select distinct tablespace_name from dba_data_files;"
 
 echo -n "{"
 echo -n "\"data\":["

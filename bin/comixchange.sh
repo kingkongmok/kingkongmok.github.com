@@ -18,6 +18,7 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
+set -x
 
 # 设置高像素
 #TARGETHI=1450
