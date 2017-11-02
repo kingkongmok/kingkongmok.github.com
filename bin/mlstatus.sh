@@ -23,7 +23,5 @@ set -o nounset                              # Treat unset variables as an error
 
 
 if [ "`pgrep mlnet`" ] ; then
-    #echo vd | nc -q 1 localhost 4040 | perl -lane 'if(/\[(B|D)/){printf "%5s%%%6s\t",@F[$#F-7,$#F-1]; print join" ",@F[6..$#F-8]}'
-#    echo vd | nc -q 1 localhost 4040 | perl -lane '$result=$_ if $.==8; if(/\[(B|D)/){printf "%5s%%%6s\t",@F[$#F-7,$#F-1]; print join" ",@F[6..$#F-8]}}{ print"\n$result"'
-    echo vd | nc -q 1 localhost 4040 | perl -nae '$s=$_ if $.==8 ; push @a,$_ if /\[(?:B|D)\s+(\d+)/ }{ print $s, map {$_->[0]} sort{$a->[1] <=> $b->[1] } map{[$_, +(split)[1]]}@a ' | perl -lane '$result=$_ if $.== 1; if(/\[(B|D)/){printf "%5s%%%6s\t",@F[$#F-7,$#F-1]; print join" ",@F[6..$#F-8]}}{ print"\n$result"'
+    (echo vd ;echo q) | nc 127.0.0.1 4040 | perl -nae '$s=$_ if $.==8 ; push @a,$_ if /\[(?:B|D)\s+(\d+)/ }{ print $s, map {$_->[0]} sort{$a->[1] <=> $b->[1] } map{[$_, +(split)[1]]}@a ' | perl -lane '$result=$_ if $.== 1; if(/\[(B|D)/){printf "%5s%%%6s\t",@F[$#F-7,$#F-1]; print join" ",@F[6..$#F-8]}}{ print"\n$result"'
 fi
