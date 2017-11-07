@@ -4,8 +4,7 @@ layout: post
 category: oracle
 ---
 
-## [Unable to determine local host from URL
-REPOSITORY_URL](http://www.orafaq.com/forum/t/146583/)
+## [Unable to determine local host from URL REPOSITORY_URL](http://www.orafaq.com/forum/t/146583/)
 
 ```
 C:\Documents and Settings\Administrator.sriram>emctl  status dbconsole
