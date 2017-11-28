@@ -20,7 +20,7 @@
 
 use strict;
 use warnings;
-use utf8;
+# use utf8;
 use Data::Dumper;
 use feature 'say';
 
@@ -57,13 +57,11 @@ my $expire_alarm_day = 30;
 my $now = time;
 
 my @servers = (
-    "test2.cks.com.hk"
+    "test2.cks.com.hk",
+    "ticketing.cotaiwaterjet.com",
 );
 
 
-use strict;
-use warnings;
-use LWP::UserAgent;
 
 my $last_expire;
 my $ua = LWP::UserAgent->new(
@@ -80,23 +78,16 @@ my $ua = LWP::UserAgent->new(
 
 foreach my $server ( @servers ) {
     $ua->get("https://$server/");
-    say "$last_expire\n";
     if ( $last_expire ) {
+        $last_expire = str2time $last_expire;
         my $timeFormat = strftime "%F",  localtime($last_expire);
         #
         # print out result.
         say "$server $timeFormat" if $opt_t;
+        #if ( $last_expire - $now < $expire_alarm_day*24*60*60 ) {
         if ( $last_expire - $now < $expire_alarm_day*24*60*60 ) {
-            say "$server expire date is $timeFormat , please check it.";
-        }
-    }
-    else {
-        my $expiration_str_auto  = expire_date( $_, '%Y-%m-%d' );
-        if ( $expiration_str_auto ) {
-            my $last_expire = str2time $expiration_str_auto;
-            if ( $last_expire - $now < $expire_alarm_day*24*60*60 ) {
-                say "$_ expire date is $expiration_str_auto, please check it.";
-            }
+            # say "$server expire date is $timeFormat , please check it.";
+            say "程序判断 https://$server/ SSL的CA到期时间为 $timeFormat, 请复查。";
         }
     }
 }
