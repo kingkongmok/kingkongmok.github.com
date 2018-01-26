@@ -1,0 +1,279 @@
+#!/bin/bash
+#
+# OraLog analyzator
+# (c) Vadim Pilipenko
+# ver 1.0  26.02.2008
+#
+WORKDIR="/opt/oralog_analyser"
+TMPDIR="$WORKDIR/tmp"
+LOGFILE="/u01/app/oracle/diag/rdbms/oltp/oltp/trace/alert_oltp.log"
+PREFIX="\\b("
+PREFIX2="ORA-"
+TEMPFILE="$TMPDIR/temp.txt"
+SKIPCOUNT="$TMPDIR/skipcount"
+BLOCKS="$TMPDIR/blocks"
+RESULT="$TMPDIR/result"
+BS="1"
+SENDER="/usr/local/zabbix_agent/bin/zabbix_sender"
+KEY1="alertlog.high"
+KEY2="alertlog.avg"
+KEY3="alertlog.warn"
+KEY4="alertlog.info"
+CKEY1="alertlog_count.high"
+CKEY2="alertlog_count.avg"
+CKEY3="alertlog_count.warn"
+CKEY4="alertlog_count.info"
+ALERTLOG1="$TMPDIR/tmp1.txt"
+ALERTLOG2="$TMPDIR/tmp2.txt"
+ALERTLOG3="$TMPDIR/tmp3.txt"
+ALERTLOG4="$TMPDIR/tmp4.txt"
+ZBX_SERVER="172.16.40.74"
+ZBX_PORT="10051"
+ZBX_HOST="ptmstest"
+
+#High
+CODES1="
+ORA-00600
+ORA-00602
+ORA-00603
+ORA-00604
+ORA-00606
+ORA-00607
+ORA-00608
+ORA-0204
+ORA-0206
+ORA-0210
+ORA-0257
+ORA-0333
+ORA-0345
+ORA-0440
+ORA-0441
+ORA-0442
+ORA-0443
+ORA-0444
+ORA-0445
+ORA-0446
+ORA-0447
+ORA-0448
+ORA-0449
+ORA-0450
+ORA-0451
+ORA-0452
+ORA-0453
+ORA-0454
+ORA-0455
+ORA-0456
+ORA-0457
+ORA-0458
+ORA-0459
+ORA-0460
+ORA-0461
+ORA-0462
+ORA-0463
+ORA-0464
+ORA-0465
+ORA-0466
+ORA-0467
+ORA-0468
+ORA-0469
+ORA-0470
+ORA-0471
+ORA-0472
+ORA-0473
+ORA-0474
+ORA-0475
+ORA-0476
+ORA-0477
+ORA-0478
+ORA-0479
+ORA-0480
+ORA-0481
+ORA-0482
+ORA-0483
+ORA-0484
+ORA-0485
+ORA-0600
+ORA-0601
+ORA-0602
+ORA-0603
+ORA-0604
+ORA-0605
+ORA-0606
+ORA-0607
+ORA-0608
+ORA-0609
+ORA-0610
+ORA-0611
+ORA-0612
+ORA-0613
+ORA-0614
+ORA-0615
+ORA-0616
+ORA-0617
+ORA-0618
+ORA-0619
+ORA-0620
+ORA-0621
+ORA-0622
+ORA-0623
+ORA-0624
+ORA-0625
+ORA-0626
+ORA-0627
+ORA-0628
+ORA-0629
+ORA-0630
+ORA-0631
+ORA-0632
+ORA-0633
+ORA-0634
+ORA-0635
+ORA-0636
+ORA-0637
+ORA-0638
+ORA-0639
+ORA-1114
+ORA-1115
+ORA-1116
+ORA-1118
+ORA-1578
+#ORA-(00600:00608)
+"
+#Average
+CODES2="
+ORA-1135
+ORA-1547
+ORA-1555
+ORA-1562
+ORA-1628
+ORA-1650
+ORA-4031
+"
+#Warning
+CODES3="
+ORA-3113
+ORA-6501
+"
+######################################
+#create rules for egrep
+
+for CODE1 in $( echo ${CODES1} ); do
+    echo ${CODE1} | egrep "^[^#]" >/dev/null &&
+    TMP1="${TMP1}${CODE1}|";
+done
+
+for CODE2 in $( echo ${CODES2} ); do
+    echo ${CODE2} | egrep "^[^#]" >/dev/null &&
+    TMP2="${TMP2}${CODE2}|";
+done
+
+for CODE3 in $( echo ${CODES3} ); do
+    echo ${CODE3} | egrep "^[^#]" >/dev/null &&
+    TMP3="${TMP3}${CODE3}|";
+done
+
+EXP1=$( echo $PREFIX$TMP1 | sed "s/|$/\)\\\\b/" ) #"
+EXP2=$( echo $PREFIX$TMP2 | sed "s/|$/\)\\\\b/" ) #"
+EXP3=$( echo $PREFIX$TMP3 | sed "s/|$/\)\\\\b/" ) #"
+EXP4=$( echo $PREFIX$TMP1$TMP2$TMP3 | sed "s/|$/\)\\\\b/" ) #"
+######################################
+
+#check for tmp directory in $work directory
+if [ ! -d $TMPDIR ] ; then
+    mkdir $TMPDIR
+fi
+
+#skip specified number of bytes. if file does not exist - assume SKIP=0. File will be created later.
+
+FILESIZE=$(ls -l $LOGFILE | awk '{print $5}')
+SKIPFILE=$FILESIZE
+
+if [ -f $SKIPCOUNT ] ; then
+    SKIP=$(cat $SKIPCOUNT)
+    if [ $FILESIZE -lt $SKIP ] ; then
+        SKIP=0
+    fi;
+else
+    SKIP=0
+fi
+
+#grep logfile and sort errors into cetegories
+dd if=$LOGFILE of=$TEMPFILE skip=$SKIP bs=$BS 2>$BLOCKS
+
+# get number of bytes processed and change skip bytes for next time
+echo $SKIPFILE > $SKIPCOUNT
+
+if [ $(ls -l $TEMPFILE | awk '{print $5}') -eq 0 ]; then
+    exit
+fi
+
+cat $TEMPFILE| egrep "$EXP1" >$ALERTLOG1
+cat $TEMPFILE| egrep "$EXP2" >$ALERTLOG2
+cat $TEMPFILE| egrep "$EXP3" >$ALERTLOG3
+cat $TEMPFILE| grep "$PREFIX2"| egrep -v "$EXP4" >$ALERTLOG4
+
+
+#check for *.tmp files and send to zabbix server
+if [ -f $ALERTLOG1 ]; then
+    if [ $(ls -l $ALERTLOG1 | awk '{print $5}') -gt 0 ]; then
+        ERR_COUNT1=$(grep -c "" $ALERTLOG1)
+        ERR_COUNT_TXT1=$(echo -e "Errors: $ERR_COUNT1\n\r")
+        ZBX_DATA1=$( cat $ALERTLOG1 )
+        IFS_OLD=$IFS
+        IFS=$'\n'
+        $SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY1 -o "$ERR_COUNT_TXT1$ZBX_DATA1" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY1 -o "$ERR_COUNT1" >/dev/null 2>&1
+        IFS=$IFS_OLD
+
+    #else
+	#$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY1 -o "OK" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY1 -o 0 >/dev/null 2>&1
+    fi
+fi
+if [ -f $ALERTLOG2 ]; then
+    if [ $(ls -l $ALERTLOG2 | awk '{print $5}') -gt 0 ]; then
+        ERR_COUNT2=$(grep -c "" $ALERTLOG2)
+        ERR_COUNT_TXT2=$(echo -e "Errors: $ERR_COUNT2\n\r")
+        IFS_OLD=$IFS
+        IFS=$'\n'
+        ZBX_DATA2=$( cat $ALERTLOG2 )
+        $SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY2 -o "$ERR_COUNT_TXT2$ZBX_DATA2" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY2 -o "$ERR_COUNT2" >/dev/null 2>&1
+        IFS=$IFS_OLD
+    #else
+	#$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY2 -o "OK" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY2 -o 0 >/dev/null 2>&1
+    fi
+fi
+if [ -f $ALERTLOG3 ]; then
+    if [ $(ls -l $ALERTLOG3 | awk '{print $5}') -gt 0 ]; then
+        ERR_COUNT3=$(grep -c "" $ALERTLOG3)
+        ERR_COUNT_TXT3=$(echo -e "Errors: $ERR_COUNT3\n\r")
+        IFS_OLD=$IFS
+        IFS=$'\n'
+        ZBX_DATA3=$( cat $ALERTLOG3 )
+        $SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY3 -o "$ERR_COUNT_TXT3$ZBX_DATA3" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY3 -o "$ERR_COUNT3" >/dev/null 2>&1
+        IFS=$IFS_OLD
+    #else
+	#$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY3 -o "OK" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY3 -o 0 >/dev/null 2>&1
+    fi
+fi
+if [ -f $ALERTLOG4 ]; then
+    if [ $(ls -l $ALERTLOG4 | awk '{print $5}') -gt 0 ]; then
+        ERR_COUNT4=$(grep -c "" $ALERTLOG4)
+        ERR_COUNT_TXT4=$(echo -e "Errors: $ERR_COUNT4\n\r")
+        IFS_OLD=$IFS
+        IFS=$'\n'
+        ZBX_DATA4=$( cat $ALERTLOG4 )
+        $SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY4 -o "$ERR_COUNT_TXT4$ZBX_DATA4" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY4 -o "$ERR_COUNT4" >/dev/null 2>&1
+        IFS=$IFS_OLD
+    #else
+	#$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $KEY4 -o "OK" >/dev/null 2>&1
+        #$SENDER -z $ZBX_SERVER -s $ZBX_HOST -p $ZBX_PORT -k $CKEY4 -o 0 >/dev/null 2>&1
+    fi
+fi
+
+exit
