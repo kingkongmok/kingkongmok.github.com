@@ -144,6 +144,10 @@ resize ()
 {
 	cd "${WORKPATH}/${FILENAME}"
 	#find "${WORKPATH}/${FILENAME}" -type f ! -iregex ".*\.\(bmp\|jpg\|jpeg\|tiff\|tif\|png\)" -exec rm -f "{}" \;
+        #remove cover page
+        find -iname 001-00.jpg -type f -size 228683c -exec rm -f "{}" \;
+        find -iname 002.jpg -type f -size 281122c -exec rm -f "{}" \;
+        find -iname 003.jpg -type f -size 553644c -exec rm -f "{}" \;
 
     # convert \(bmp\|tiff\|tif\|png\) type to jpg
 	OLDIFS=$IFS
@@ -201,7 +205,6 @@ tar_it ()
 {
 	cd "${WORKPATH}/${FILENAME}"
     find -iname Thumbs.db -type f -exec rm -f "{}" \;
-    find -iname 001-00.jpg -type f -exec rm -f "{}" \;
 	tar cf "${WORKPATH}/${FILENAME}.tar" *
 	
 	if [ -d "${WORKPATH}/${FILENAME}" ] ; then
