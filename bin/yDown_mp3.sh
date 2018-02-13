@@ -30,11 +30,9 @@ downUrl()
         else
             echo "$1" >> /tmp/youtube-dl.${timestamp}.log
             echo "$1" >> /home/kk/Dropbox/videos/history.list.txt
-            /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
-            nohup /home/kk/workspace/youtube-dl/youtube-dl -f "[height < 720]" "$1" \
-                -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
-            #nohup /home/kk/workspace/youtube-dl/youtube-dl "$1" \
-                # -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
+            /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
+            nohup /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl  --extract-audio --audio-format mp3 "$1" \
+                -o '/home/kk/Downloads/videos/%(title)s.%(ext)s' \
                 >> /tmp/youtube-dl.${timestamp}.log 2>&1 
         fi
 }	# ----------  end of function downUrl  ----------
@@ -45,11 +43,9 @@ forceDownUrl()
     timestamp=`date +%s`
     echo "$1" >> /tmp/youtube-dl.${timestamp}.log
     echo "$1" >> /home/kk/Dropbox/videos/history.list.txt
-    /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
-    nohup /home/kk/workspace/youtube-dl/youtube-dl -f "[height < 720]" "$1" \
-        -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
-    #nohup /home/kk/workspace/youtube-dl/youtube-dl "$1" \
-        #-o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
+    /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
+    nohup /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl --extract-audio --audio-format mp3 "$1" \
+        -o '/home/kk/Downloads/videos/%(title)s.%(ext)s' \
         >> /tmp/youtube-dl.${timestamp}.log 2>&1 
 }	# ----------  end of function downUrl  ----------
 

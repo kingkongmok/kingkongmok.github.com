@@ -23,6 +23,10 @@ use warnings;
 # use utf8;
 use Data::Dumper;
 use feature 'say';
+use Getopt::Std;
+
+getopts('f');
+our($opt_f);
 
 my $record_file = "/home/kk/Dropbox/Documents/comic.done"; 
 my%downloaded_url ;
@@ -47,7 +51,7 @@ my @deleteLines;
 foreach my $line ( @lines ){
     my $result = 1;
     $line =~ s/photos/download/;
-    my $message = `proxychains curl $line`; 
+    my $message = `/usr/bin/proxychains4 curl $line`; 
     if ($message){
         if ( $message =~ /download_filename\"\>(.*?.zip)\<\/p\>
             .*?
@@ -55,11 +59,11 @@ foreach my $line ( @lines ){
             /sxm ){
             my $DownloadUrl = $2 ; 
             my $DownloadFilename = $1 ; 
-            if (  exists $downloaded_url{$DownloadUrl} ){ 
+            if (  exists $downloaded_url{$DownloadUrl} && ! $opt_f){ 
                 print "$DownloadFilename 已经下载过。\n";
                 $result = 0;
             } else {
-                $result = system("proxychains curl -C -  \"$DownloadUrl\"" . 
+                $result = system("/usr/bin/proxychains4 curl -C -  \"$DownloadUrl\"" . 
                     " -o /home/kk/Downloads/\"$DownloadFilename\""); 
                 if ( $result == 0 ) {
                     system("echo $DownloadUrl \"$DownloadFilename\"" .
