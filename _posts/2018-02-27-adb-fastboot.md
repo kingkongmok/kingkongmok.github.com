@@ -61,4 +61,22 @@ See [http://developer.android.com/tools/device.html] for more information
 $ adb sideload lineage-14.1-20180223-nightly-oneplus3-signed.zip
 ```
 
+---
 
+## [去除网络感叹号方法](https://mr21.cc/geek/remove-the-network-status-notification-in-android-5-6-7-711.html)
+
+### 重置
+
+```
+adb shell "settings delete global captive_portal_server"
+adb shell "settings delete global captive_portal_https_url"
+adb shell "settings delete global captive_portal_http_url"
+adb shell "settings put global captive_portal_detection_enabled 1"
+```
+
+### 修改 
+
+```
+adb shell "settings put global captive_portal_https_url https://captive.v2ex.co/generate_204"
+
+```
