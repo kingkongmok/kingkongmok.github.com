@@ -28,6 +28,7 @@ adb reboot adb bootloader
 
 ### 安装 recovery
 
+```
 $ fastboot flash recovery twrp-3.2.1-0-oneplus3.img 
 target reported max download size of 440401920 bytes
 sending 'recovery' (22680 KB)...
