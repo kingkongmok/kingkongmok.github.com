@@ -6,11 +6,10 @@ category: android
 
 ## install recovery
 
-### [fastboot commands
-examples](https://android.gadgethacks.com/how-to/complete-guide-flashing-factory-images-android-using-fastboot-0175277/)
+#### [fastboot commands examples](https://android.gadgethacks.com/how-to/complete-guide-flashing-factory-images-android-using-fastboot-0175277/)
 
 
-### 确认usb链接上：
+#### 确认usb链接上, 我使用的vbox，所以需要usb映射到vm上，vm上确认一下usb映射ok：
  
 ```
 $ lsusb
@@ -20,13 +19,19 @@ Bus 002 Device 002: ID 80ee:0021 VirtualBox USB Tablet
 Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
 ```
 
-### 重启到bootloader
+映射ok后，就可以用adb和fastboot命令控制手机了
+
+---
+
+#### 重启到bootloader
 
 ```
 adb reboot adb bootloader
 ```
 
-### 安装 recovery
+#### 安装 recovery
+
+需要最新的recovery才能支持新的rom
 
 ```
 $ fastboot flash recovery twrp-3.2.1-0-oneplus3.img 
@@ -45,7 +50,7 @@ finished. total time: 6.165s
 
 
 
-### 重启到recovery , 进行双清，（dalvik 和 cache ），并安装fireware和rom。
+#### 重启到recovery , 进行双清，（dalvik 和 cache ），并安装fireware和rom。
 
 ```
 $ adb sideload OnePlus3T_Beta22-\(31-01-18\)-FIRMWARE-flashable.zip 
@@ -66,7 +71,9 @@ $ adb sideload lineage-14.1-20180223-nightly-oneplus3-signed.zip
 
 ## [去除网络感叹号方法](https://mr21.cc/geek/remove-the-network-status-notification-in-android-5-6-7-711.html)
 
-### 重置
+这里是让手机不断访问HTTP CODE 204的URL, 默认是google的地址。
+
+#### 重置
 
 ```
 adb shell "settings delete global captive_portal_server"
@@ -75,7 +82,7 @@ adb shell "settings delete global captive_portal_http_url"
 adb shell "settings put global captive_portal_detection_enabled 1"
 ```
 
-### 修改 
+#### 修改 
 
 ```
 adb shell "settings put global captive_portal_https_url https://captive.v2ex.co/generate_204"
