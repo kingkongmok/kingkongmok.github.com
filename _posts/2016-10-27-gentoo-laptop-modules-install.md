@@ -426,3 +426,12 @@ EOF
 ```
 sudo modprobe -r snd_hda_intel && sudo modprobe snd_hda_intel
 ```
+
+---
+
+### brightness
+
+```
+sudo vim /sys/class/backlight/intel_backlight/brightness
+```
+
