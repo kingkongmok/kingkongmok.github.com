@@ -88,3 +88,25 @@ adb shell "settings put global captive_portal_detection_enabled 1"
 adb shell "settings put global captive_portal_https_url https://captive.v2ex.co/generate_204"
 
 ```
+
+---
+
+## 解决普通用户使用adb时候出现[insufficient permissions for
+device](https://stackoverflow.com/questions/28704636/insufficient-permissions-for-device-in-android-studio-workspace-running-in-opens) 的问题
+
+
+获取uid信息
+
+```
+$ lsusb
+Bus 001 Device 002: ID 05c6:9025 Qualcomm, Inc. Qualcomm HSUSB Device
+```
+
+添加usb信息到udev中，让挂载的时候属性修改
+
+```
+$ cat >> /etc/udev/rules.d/50-android.rules SUBSYSTEM=="usb", ATTR{idVendor}=="05c6", ATTR{idProduct}=="9025",SYMLINK+="android_adb", OWNER="kk"
+```
+
+删除 ~/.android/ 信息，删除后手机输入adb
+shell的话，手机会提示认证，确定即可从新生成 ***~/.adb/adbkey***
