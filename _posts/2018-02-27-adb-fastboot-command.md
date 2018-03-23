@@ -1,5 +1,5 @@
 ---
-title: "adb fastboot"
+title: "adb fastboot command"
 layout: post
 category: android
 ---
@@ -110,3 +110,30 @@ $ cat >> /etc/udev/rules.d/50-android.rules SUBSYSTEM=="usb", ATTR{idVendor}=="0
 
 删除 ~/.android/ 信息，删除后手机输入adb
 shell的话，手机会提示认证，确定即可从新生成 ***~/.adb/adbkey***
+
+---
+
+## [Refresh Android mediastore using adb](https://stackoverflow.com/questions/17928576/refresh-android-mediastore-using-adb)
+
+
+not recursive
+
+```
+adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///mnt/sdcard/Music/<exact_file_name>
+```
+
+recursive
+
+```
+adb shell "find /mnt/sdcard/Music/ | while read f; do \
+    am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
+    -d \"file://${f}\"; done"
+```
+
+---
+
+## battery
+
+```
+adb shell dumpsys battery | grep level
+```
