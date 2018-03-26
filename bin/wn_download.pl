@@ -51,7 +51,7 @@ my @deleteLines;
 foreach my $line ( @lines ){
     my $result = 1;
     $line =~ s/photos/download/;
-    my $message = `/usr/bin/proxychains4 curl $line`; 
+    my $message = `/usr/bin/proxychains4 curl -s $line`; 
     if ($message){
         if ( $message =~ /download_filename\"\>(.*?.zip)\<\/p\>
             .*?
@@ -60,14 +60,20 @@ foreach my $line ( @lines ){
             my $DownloadUrl = $2 ; 
             my $DownloadFilename = $1 ; 
             if (  exists $downloaded_url{$DownloadUrl} && ! $opt_f){ 
-                print "$DownloadFilename 已经下载过。\n";
+                print "$DownloadFilename downloaded before\n";
                 $result = 0;
             } else {
-                $result = system("/usr/bin/proxychains4 curl -C -  \"$DownloadUrl\"" . 
-                    " -o /home/kk/Downloads/\"$DownloadFilename\""); 
-                if ( $result == 0 ) {
-                    system("echo $DownloadUrl \"$DownloadFilename\"" .
-                        " >> $record_file")   ; 
+                my $httpcode = `/usr/bin/proxychains4 curl -s -o /dev/null -I -w '%{http_code}' \"$DownloadUrl\"`;
+                if ( $httpcode == 200 ) {
+                    $result = system("/usr/bin/proxychains4 curl -C -  \"$DownloadUrl\"" . 
+                        " -o /home/kk/Downloads/\"$DownloadFilename\""); 
+                    if ( $result == 0 ) {
+                        system("echo $DownloadUrl \"$DownloadFilename\"" .
+                            " >> $record_file")   ; 
+                    }
+                }
+                else {
+                    say "$DownloadUrl not exists";
                 }
             }
         }
