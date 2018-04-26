@@ -63,7 +63,14 @@ foreach my $line ( @lines ){
                 print "$DownloadFilename downloaded before\n";
                 $result = 0;
             } else {
+                #-------------------------------------------------------------------------------
+                #  check http header, NEXT if not 200  
+                #-------------------------------------------------------------------------------
                 my $httpcode = `/usr/bin/proxychains4 curl -s -o /dev/null -I -w '%{http_code}' \"$DownloadUrl\"`;
+                sleep 5;
+                #-------------------------------------------------------------------------------
+                #  download comic with curl/aria if http coder = 200
+                #-------------------------------------------------------------------------------
                 if ( $httpcode == 200 ) {
                     $result = system("/usr/bin/proxychains4 curl -C -  \"$DownloadUrl\"" . 
                         " -o /home/kk/Downloads/\"$DownloadFilename\""); 
@@ -71,6 +78,7 @@ foreach my $line ( @lines ){
                         system("echo $DownloadUrl \"$DownloadFilename\"" .
                             " >> $record_file")   ; 
                     }
+                    sleep 5;
                 }
                 else {
                     say "$DownloadUrl not exists";
