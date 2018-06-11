@@ -733,7 +733,7 @@ exec SP_UPDATE_AGE('jack',1);
 
 
 
--- 统计行数最多的表
+-- 统计行数最多的表 the table with the most rows in the database
 select TABLE_NAME, TABLESPACE_NAME, LAST_ANALYZED, NUM_ROWS from user_tables where TABLESPACE_NAME in ('TICKET_TABLESPACES', 'USERS') order by NUM_ROWS;
 --
 --
