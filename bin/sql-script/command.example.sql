@@ -376,7 +376,7 @@ begin
             select Sid, Serial#, machine, program  
             from gv$session  
             where  
-                machine = 'AP-206-64BIT'  
+                machine = 'AP-234'  
         ) loop  
         execute immediate 'Alter System Kill Session '''|| x.Sid  
                      || ',' || x.Serial# || ''' IMMEDIATE';  
@@ -392,7 +392,7 @@ begin
             select Sid, Serial#, machine, program  
             from gv$session  
             where  
-                machine <> 'MyDatabaseServerName'  
+                machine <> 'kenneth-PC'  
         ) loop  
         execute immediate 'Alter System Kill Session '''|| x.Sid  
                      || ',' || x.Serial# || ''' IMMEDIATE';  
@@ -797,4 +797,26 @@ SELECT OBJECT_NAME , OBJECT_TYPE , TIMESTAMP, STATUS from user_objects where OBJ
 
 -- show sequence
 select SEQUENCE_NAME,to_char(LAST_NUMBER),to_char(MAX_VALUE) from user_sequences where SEQUENCE_NAME='TICKETTRANSACTION_SEQ';
+
+
+-- check session
+select s.sid, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text
+from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.machine like 'AP-234' ;
+--
+--
+       SID USERNAME   MACHINE			OSUSER	     CPU_TIME	 MINUTES
+---------- ---------- ------------------------- ---------- ---------- ----------
+SQL_TEXT
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	 5 CKSP       AP-234			AP-234$     281968805 205.728281
+UPDATE VOYAGEMAPDETAIL SET TRANSACTION_ID = NULL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
+
+	 7 CKSP       AP-234			AP-234$     516242204 545.368544
+SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
+
+	10 CKSP       AP-234			AP-234$     516242204 545.368544
+SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
+
+	11 CKSP       AP-234			AP-234$     516242204 545.368544
+SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 
