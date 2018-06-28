@@ -336,6 +336,41 @@ GRANT resource,connect,dba TO CKSP;
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 
 
+-- create table
+CREATE TABLE suppliers
+( supplier_id number(10) NOT NULL,
+  supplier_name varchar2(50) NOT NULL,
+  address varchar2(50),
+  city varchar2(50),
+  state varchar2(25),
+  zip_code varchar2(10)
+);
+CREATE TABLE customers
+( customer_id number(10) NOT NULL,
+  customer_name varchar2(50) NOT NULL,
+  address varchar2(50),
+  city varchar2(50),
+  state varchar2(25),
+  zip_code varchar2(10),
+  CONSTRAINT customers_pk PRIMARY KEY (customer_id)
+);
+CREATE TABLE departments
+( department_id number(10) NOT NULL,
+  department_name varchar2(50) NOT NULL,
+  CONSTRAINT departments_pk PRIMARY KEY (department_id)
+);
+CREATE TABLE employees
+( employee_number number(10) NOT NULL,
+  employee_name varchar2(50) NOT NULL,
+  department_id number(10),
+  salary number(6),
+  CONSTRAINT employees_pk PRIMARY KEY (employee_number),
+  CONSTRAINT fk_departments
+    FOREIGN KEY (department_id)
+    REFERENCES departments(department_id)
+);
+
+
 -- create tablespace
 
 create tablespace test datafile 'test01.dbf' SIZE 20M AUTOEXTEND ON;
@@ -820,3 +855,76 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 	11 CKSP       AP-234			AP-234$     516242204 545.368544
 SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 
+
+-- rman
+$ rman target /
+
+
+-- 列出rman备份
+RMAN> list backup; 
+
+List of Backup Sets
+===================
+
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+6       Full    1011.96M   DISK        00:00:13     27-JUN-18      
+        BP Key: 6   Status: AVAILABLE  Compressed: NO  Tag: TAG20180627T162419
+        Piece Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_nnndf_TAG20180627T162419_fm6lfn2j_.bkp
+  List of Datafiles in backup set 6
+  File LV Type Ckp SCN    Ckp Time  Name
+  ---- -- ---- ---------- --------- ----
+  1       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/system01.dbf
+  2       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/sysaux01.dbf
+  3       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/undotbs01.dbf
+  4       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/users01.dbf
+  5       Full 997322     27-JUN-18 /u01/app/oracle/product/11.2.0/EE/dbs/test01.dbf
+
+
+
+-- 列出 配置
+RMAN> show all; 
+
+
+-- 基于时间的备份保留策略 ( 3天 )
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 3 DAYS;
+
+-- 基于备份份数保留策略 ( 3份 )
+CONFIGURE RETENTION POLICY TO REDUNDANCY 3;
+
+
+--  查看当前处于废弃状态的备份文件
+RMAN> report obsolete;
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to redundancy 1
+Report of obsolete backups and copies
+Type                 Key    Completion Time    Filename/Handle
+-------------------- ------ ------------------ --------------------
+Backup Set           6      27-JUN-18         
+  Backup Piece       6      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_nnndf_TAG20180627T162419_fm6lfn2j_.bkp
+Backup Set           7      27-JUN-18         
+  Backup Piece       7      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_ncsnf_TAG20180627T162419_fm6lg45q_.bkp
+Archive Log          5      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_06_27/o1_mf_1_9_fm6lg588_.arc
+Backup Set           8      27-JUN-18         
+  Backup Piece       8      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_annnn_TAG20180627T162437_fm6lg5g0_.bkp
+Archive Log          6      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_06_27/o1_mf_1_10_fm6m69cs_.arc
+Backup Set           9      27-JUN-18         
+  Backup Piece       9      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_annnn_TAG20180627T163729_fm6m69l2_.bkp
+
+
+-- 删除废弃备份
+RMAN> delete obsolete;
+
+
+-- 完全恢复
+
+-- 目标数据库必须是mount 状态
+$ rman target /
+RMAN> startup mount
+-- Restore是使用备份文件，将数据库还原到过去的某个状态。
+RMAN> restore database;
+-- Recovery是使用redo日志和归档日志将数据库向前恢复，一步步的恢复到现在这个时点。
+RMAN> recover database;
+RMAN> alter database open;
