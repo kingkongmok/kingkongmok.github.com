@@ -15,3 +15,25 @@ tags: [centos, yum, nginx, epel]
 
 <pre lang="bash" line="1">su -c 'rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm'</pre>
 
+---
+
+### using aliyun
+
+
+using aliyun mirror
+
+```
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+```
+
+epel using aliyun
+
+```
+wget -O /etc/yum.repos.d/epel-7.repo https://mirrors.aliyun.com/repo/epel-7.repo
+```
+
+clean and update cache
+
+```
+yum clean all && yum makecache
+```
