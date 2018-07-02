@@ -809,8 +809,6 @@ ERROR at line 1:
 ORA-01113: file 8 needs media recovery  
 ORA-01110: data file 8: 'D:\APP\ASUS\ORADATA\WAREHOUSE\TEST03.DBF'  
 
-RMAN> list failure;  
-RMAN> advise failure;  
 
 SQL>alter database datafile 8 offline;  
 SQL>alter database recover datafile 8;  
@@ -859,6 +857,9 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 -- rman
 $ rman target /
 
+-- 异常和建议
+RMAN> list failure;  
+RMAN> advise failure;  
 
 -- 列出rman备份
 RMAN> list backup; 
@@ -928,3 +929,4 @@ RMAN> restore database;
 -- Recovery是使用redo日志和归档日志将数据库向前恢复，一步步的恢复到现在这个时点。
 RMAN> recover database;
 RMAN> alter database open;
+
