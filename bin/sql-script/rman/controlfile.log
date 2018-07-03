@@ -1,0 +1,283 @@
+RMAN> list failure;  
+
+List of Database Failures
+=========================
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+120        CRITICAL OPEN      02-JUL-18     System datafile 1: '/u01/app/oracle/oradata/EE/system01.dbf' needs media recovery
+117        CRITICAL OPEN      02-JUL-18     Redo log group 3 is unavailable
+111        CRITICAL OPEN      02-JUL-18     Redo log group 2 is unavailable
+105        CRITICAL OPEN      02-JUL-18     Redo log group 1 is unavailable
+141        HIGH     OPEN      02-JUL-18     One or more non-system datafiles are missing
+8          HIGH     OPEN      02-JUL-18     One or more non-system datafiles need media recovery
+114        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo03.log is corrupt
+108        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo02.log is corrupt
+102        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo01.log is corrupt
+
+RMAN> 
+
+RMAN> 
+
+RMAN> advise failure;
+
+List of Database Failures
+=========================
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+120        CRITICAL OPEN      02-JUL-18     System datafile 1: '/u01/app/oracle/oradata/EE/system01.dbf' needs media recovery
+117        CRITICAL OPEN      02-JUL-18     Redo log group 3 is unavailable
+111        CRITICAL OPEN      02-JUL-18     Redo log group 2 is unavailable
+105        CRITICAL OPEN      02-JUL-18     Redo log group 1 is unavailable
+141        HIGH     OPEN      02-JUL-18     One or more non-system datafiles are missing
+8          HIGH     OPEN      02-JUL-18     One or more non-system datafiles need media recovery
+114        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo03.log is corrupt
+108        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo02.log is corrupt
+102        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo01.log is corrupt
+
+analyzing automatic repair options; this may take some time
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=63 device type=DISK
+analyzing automatic repair options complete
+
+Not all specified failures can currently be repaired.
+The following failures must be repaired before advise for others can be given.
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+117        CRITICAL OPEN      02-JUL-18     Redo log group 3 is unavailable
+111        CRITICAL OPEN      02-JUL-18     Redo log group 2 is unavailable
+105        CRITICAL OPEN      02-JUL-18     Redo log group 1 is unavailable
+114        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo03.log is corrupt
+108        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo02.log is corrupt
+102        HIGH     OPEN      02-JUL-18     Redo log file /u01/app/oracle/oradata/EE/redo01.log is corrupt
+
+Mandatory Manual Actions
+========================
+1. Please contact Oracle Support Services to resolve failure 105: Redo log group 1 is unavailable
+2. Please contact Oracle Support Services to resolve failure 102: Redo log file /u01/app/oracle/oradata/EE/redo01.log is corrupt
+
+Optional Manual Actions
+=======================
+no manual actions available
+
+Automated Repair Options
+========================
+Option Repair Description
+------ ------------------
+1      Clear redo log group 3; Clear redo log group 2 
+  Strategy: The repair includes complete media recovery with no data loss
+  Repair script: /u01/app/oracle/diag/rdbms/ee/EE/hm/reco_3310351593.hm
+
+
+RMAN> list backup of controlfile;
+
+
+List of Backup Sets
+===================
+
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+29      Full    9.80M      DISK        00:00:02     28-JUN-18      
+        BP Key: 29   Status: AVAILABLE  Compressed: NO  Tag: TAG20180628T231315
+        Piece Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_28/o1_mf_ncsnf_TAG20180628T231315_fm9yshw4_.bkp
+  Control File Included: Ckp SCN: 1200114      Ckp time: 28-JUN-18
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+32      Full    9.80M      DISK        00:00:01     01-JUL-18      
+        BP Key: 32   Status: AVAILABLE  Compressed: NO  Tag: TAG20180701T210939
+        Piece Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_ncsnf_TAG20180701T210939_fmknoqjz_.bkp
+  Control File Included: Ckp SCN: 1348456      Ckp time: 01-JUL-18
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+35      Full    9.80M      DISK        00:00:01     02-JUL-18      
+        BP Key: 35   Status: AVAILABLE  Compressed: NO  Tag: TAG20180702T082747
+        Piece Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_02/o1_mf_ncsnf_TAG20180702T082747_fmlwf86s_.bkp
+  Control File Included: Ckp SCN: 1413084      Ckp time: 02-JUL-18
+
+RMAN> restore controlfile from autobackup;
+
+Starting restore at 02-JUL-18
+using channel ORA_DISK_1
+
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of restore command at 07/02/2018 16:11:40
+RMAN-06496: must use the TO clause when the database is mounted or open
+
+RMAN> shutdown immediate;
+
+database dismounted
+Oracle instance shut down
+
+RMAN> startup nomount
+
+connected to target database (not started)
+Oracle instance started
+
+Total System Global Area    1603411968 bytes
+
+Fixed Size                     2213776 bytes
+Variable Size                402655344 bytes
+Database Buffers            1191182336 bytes
+Redo Buffers                   7360512 bytes
+
+RMAN> restore controlfile from autobackup;
+
+Starting restore at 02-JUL-18
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=63 device type=DISK
+
+recovery area destination: /u01/app/oracle/flash_recovery_area
+database name (or database unique name) used for search: EE
+channel ORA_DISK_1: no AUTOBACKUPS found in the recovery area
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180702
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180701
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180630
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180629
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180628
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180627
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20180626
+channel ORA_DISK_1: no AUTOBACKUP in 7 days found
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of restore command at 07/02/2018 16:12:06
+RMAN-06172: no AUTOBACKUP found or specified handle is not a valid copy or piece
+
+RMAN> crosscheck backupset;
+
+using channel ORA_DISK_1
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of crosscheck command at 07/02/2018 16:12:22
+ORA-01507: database not mounted
+
+RMAN> restore controlfile from '/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_02/o1_mf_ncsnf_TAG20180702T082747_fmlwf86s_.bkp';  
+
+Starting restore at 02-JUL-18
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+output file name=/u01/app/oracle/oradata/EE/control01.ctl
+output file name=/u01/app/oracle/flash_recovery_area/EE/control02.ctl
+Finished restore at 02-JUL-18
+
+RMAN> alter database mount;
+
+database mounted
+released channel: ORA_DISK_1
+
+RMAN> crosscheck backupset;
+
+Starting implicit crosscheck backup at 02-JUL-18
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=63 device type=DISK
+Crosschecked 9 objects
+Finished implicit crosscheck backup at 02-JUL-18
+
+Starting implicit crosscheck copy at 02-JUL-18
+using channel ORA_DISK_1
+Finished implicit crosscheck copy at 02-JUL-18
+
+searching for all files in the recovery area
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_02/o1_mf_ncsnf_TAG20180702T082747_fmlwf86s_.bkp
+
+using channel ORA_DISK_1
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_28/o1_mf_annnn_TAG20180628T231314_fm9yrbd0_.bkp RECID=28 STAMP=980032394
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_28/o1_mf_ncsnf_TAG20180628T231315_fm9yshw4_.bkp RECID=29 STAMP=980032431
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_annnn_TAG20180701T210931_fmknncxf_.bkp RECID=30 STAMP=980370571
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_nnndf_TAG20180701T210939_fmknnmdw_.bkp RECID=31 STAMP=980370579
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_ncsnf_TAG20180701T210939_fmknoqjz_.bkp RECID=32 STAMP=980370615
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_annnn_TAG20180701T211016_fmknorym_.bkp RECID=33 STAMP=980370616
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_nnsnf_TAG20180701T224742_fmktdgfs_.bkp RECID=34 STAMP=980376462
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_02/o1_mf_ncsnf_TAG20180702T082747_fmlwf86s_.bkp RECID=35 STAMP=980439214
+Crosschecked 8 objects
+
+
+RMAN> delete expired backupset;
+
+using channel ORA_DISK_1
+RMAN-06169: could not read file header for datafile 5 error reason 4
+specification does not match any backup in the repository
+
+RMAN> restore database;   
+
+Starting restore at 02-JUL-18
+using channel ORA_DISK_1
+
+skipping datafile 1; already restored to file /u01/app/oracle/oradata/EE/system01.dbf
+skipping datafile 2; already restored to file /u01/app/oracle/oradata/EE/sysaux01.dbf
+skipping datafile 3; already restored to file /u01/app/oracle/oradata/EE/undotbs01.dbf
+skipping datafile 4; already restored to file /u01/app/oracle/oradata/EE/users01.dbf
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00005 to /u01/app/oracle/product/11.2.0/EE/dbs/test01.dbf
+channel ORA_DISK_1: reading from backup piece /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_nnndf_TAG20180701T210939_fmknnmdw_.bkp
+channel ORA_DISK_1: piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_nnndf_TAG20180701T210939_fmknnmdw_.bkp tag=TAG20180701T210939
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+Finished restore at 02-JUL-18
+
+RMAN> recover database;
+
+Starting recover at 02-JUL-18
+using channel ORA_DISK_1
+
+starting media recovery
+
+archived log for thread 1 with sequence 6 is already on disk as file /u01/app/oracle/oradata/EE/redo03.log
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 07/02/2018 16:13:59
+RMAN-06053: unable to perform media recovery because of missing log
+RMAN-06025: no backup of archived log for thread 1 with sequence 86 and starting SCN of 1394414 found to restore
+RMAN-06025: no backup of archived log for thread 1 with sequence 85 and starting SCN of 1389535 found to restore
+RMAN-06025: no backup of archived log for thread 1 with sequence 84 and starting SCN of 1368507 found to restore
+RMAN-06025: no backup of archived log for thread 1 with sequence 83 and starting SCN of 1348462 found to restore
+
+RMAN> recover database until sequence 83;   
+
+Starting recover at 02-JUL-18
+using channel ORA_DISK_1
+
+starting media recovery
+
+archived log for thread 1 with sequence 6 is already on disk as file /u01/app/oracle/oradata/EE/redo03.log
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=82
+channel ORA_DISK_1: reading from backup piece /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_annnn_TAG20180701T211016_fmknorym_.bkp
+channel ORA_DISK_1: piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_01/o1_mf_annnn_TAG20180701T211016_fmknorym_.bkp tag=TAG20180701T211016
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_02/o1_mf_1_82_fmmqqv51_.arc thread=1 sequence=82
+channel default: deleting archived log(s)
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_02/o1_mf_1_82_fmmqqv51_.arc RECID=112 STAMP=980439291
+media recovery complete, elapsed time: 00:00:00
+Finished recover at 02-JUL-18
+
+RMAN> alter database open resetlogs;
+
+database opened
