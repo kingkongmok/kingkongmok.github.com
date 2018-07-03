@@ -1,0 +1,55 @@
+version: '2'
+services:
+
+    oracle:
+        image: sath89/oracle-ee-11g
+        container_name: oracle
+        restart: always
+        environment:
+            - CHARACTER_SET=AL32UTF8
+            - DEFAULT_SYS_PASS=oracle
+            - processes=1000
+            - sessions=1105
+            - transactions=1215
+        ports:
+            - 1521:1521
+        volumes:
+            # restore datafile using 
+            # rsync -aviPn --delete  /data/oracle_env/ /mnt/nas/oracle_env/
+            # - ./bak/oracle_env:/u01/app/oracle
+            - /mnt/nas/oracle_env:/u01/app/oracle
+            - /etc/localtime:/etc/localtime:ro
+            - /mnt/nas/.bash_profile:/home/oracle/.bash_profile:ro
+            - /mnt/nas/libncurses.so.6.1:/lib64/libncurses.so.6:ro
+            - /mnt/nas/libreadline.so.7.0:/lib64/libreadline.so.7:ro
+            - /mnt/nas/rlwrap:/usr/bin/rlwrap:ro
+            - /mnt/nas/login.sql:/home/oracle/login.sql
+
+    oracle2:
+        image: sath89/oracle-ee-11g
+        container_name: oracle2
+        restart: always
+        environment:
+            - CHARACTER_SET=AL32UTF8
+            - DEFAULT_SYS_PASS=oracle
+            - processes=1000
+            - sessions=1105
+            - transactions=1215
+        ports:
+            - 1522:1521
+        volumes:
+            # restore datafile using 
+            # rsync -aviPn --delete  /data/oracle_env/ /mnt/nas/oracle_env/
+            # - ./bak/oracle_env:/u01/app/oracle
+            - /mnt/nas/oracle_env2:/u01/app/oracle
+            - /etc/localtime:/etc/localtime:ro
+            - /mnt/nas/.bash_profile:/home/oracle/.bash_profile:ro
+            - /mnt/nas/libncurses.so.6.1:/lib64/libncurses.so.6:ro
+            - /mnt/nas/libreadline.so.7.0:/lib64/libreadline.so.7:ro
+            - /mnt/nas/rlwrap:/usr/bin/rlwrap:ro
+            - /mnt/nas/login.sql:/home/oracle/login.sql
+
+networks:
+    default:
+        ipam:
+            driver: default
