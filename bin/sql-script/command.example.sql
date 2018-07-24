@@ -1447,3 +1447,162 @@ ora.ons        ora.ons.type   OFFLINE   OFFLINE
 $ crs_stop -all
 
 
+
+-- asm drop
+ASMCMD> rm -rf DATA
+
+ASMCMD> dropdg -r data
+
+ASMCMD> dropdg -r init
+ORA-15039: diskgroup not dropped
+ORA-15027: active use of diskgroup "INIT" precludes its dismount (DBD ERROR: OCIStmtExecute)
+
+ASMCMD> dropdg -r init
+ORA-15039: diskgroup not dropped
+ORA-15027: active use of diskgroup "INIT" precludes its dismount (DBD ERROR: OCIStmtExecute)
+
+ASMCMD> lsdg
+State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+MOUNTED  EXTERN  N         512   4096  1048576      1019      960                0             960              0             N  INIT/
+
+-- 无法删除INIT ,
+
+SQL> SELECT name, header_status, path FROM V$ASM_DISK; 
+
+NAME			       HEADER_STATUS	    PATH
+------------------------------ -------------------- -------------------------
+			       FORMER		    ORCL:ASMDISK2
+			       FORMER		    ORCL:ASMDISK3
+			       FORMER		    ORCL:ASMDISK4
+ASMDISK1		       MEMBER		    ORCL:ASMDISK1
+
+
+SQL>  create pfile=’/tmp/init.ora‘  from spfile;
+
+SQL> 
+SQL> shutdown immediate; 
+ASM diskgroups dismounted
+ASM instance shutdown
+SQL> startup pfile='/tmp/init.ora' ; 
+ASM instance started
+
+Total System Global Area 1135747072 bytes
+Fixed Size		    2260728 bytes
+Variable Size		 1108320520 bytes
+ASM Cache		   25165824 bytes
+ORA-15110: no diskgroups mounted
+
+
+SQL> SELECT name, header_status, path FROM V$ASM_DISK; 
+
+NAME			       HEADER_STATUS	    PATH
+------------------------------ -------------------- -------------------------
+			       MEMBER		    ORCL:ASMDISK1
+			       FORMER		    ORCL:ASMDISK4
+			       FORMER		    ORCL:ASMDISK3
+			       FORMER		    ORCL:ASMDISK2
+
+SQL> DROP DISKGROUP INIT FORCE INCLUDING CONTENTS;
+
+Diskgroup dropped.
+
+
+-- create asm diskgroup
+-- https://www.hhutzler.de/blog/using-asm-spfile/
+
+SQL> col PATH format a40
+SQL> select path,header_status from v$asm_disk;
+
+PATH					 HEADER_STATU
+---------------------------------------- ------------
+ORCL:ASMDISK1				 FORMER
+ORCL:ASMDISK4				 FORMER
+ORCL:ASMDISK3				 FORMER
+ORCL:ASMDISK2				 FORMER
+
+SQL> CREATE DISKGROUP FRA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK1' ; 
+
+Diskgroup created.
+
+SQL> CREATE DISKGROUP OCR EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK2' ; 
+
+Diskgroup created.
+
+SQL> CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK3', 'ORCL:ASMDISK4' ; 
+
+Diskgroup created.
+
+SQL> select path,header_status from v$asm_disk;
+
+PATH					 HEADER_STATU
+---------------------------------------- ------------
+ORCL:ASMDISK1				 MEMBER
+ORCL:ASMDISK2				 MEMBER
+ORCL:ASMDISK3				 MEMBER
+ORCL:ASMDISK4				 MEMBER
+
+SQL> Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Automatic Storage Management option
+oracle@orcl ~ $ asmcmd -p
+ASMCMD [+] > ls
+DATA/
+FRA/
+OCR/
+ASMCMD [+] > exit
+
+-- 更换数据文件到asm
+-- https://www.thegeekdiary.com/how-to-move-a-datafile-from-filesystem-to-asm-using-asmcmd-cp-command/
+
+col FILE_NAME format a50
+select file_name, file_id from dba_data_files;
+
+
+FILE_NAME					      FILE_ID
+-------------------------------------------------- ----------
+/u01/app/oracle/oradata/EE/users01.dbf			    4
+/u01/app/oracle/oradata/EE/undotbs01.dbf		    3
+/u01/app/oracle/oradata/EE/sysaux01.dbf 		    2
+/u01/app/oracle/oradata/EE/system01.dbf 		    1
+/u01/app/oracle/oradata/EE/test_tablespace01.dbf	    5
+
+alter database datafile 5 offline;
+Database altered.
+
+
+select file_name, file_id, online_status from dba_data_files where file_id=5;
+
+FILE_NAME					      FILE_ID ONLINE_
+-------------------------------------------------- ---------- -------
+/u01/app/oracle/oradata/EE/test_tablespace01.dbf	    5 RECOVER
+
+
+ASMCMD> mkdir EE/
+ASMCMD> mkdir EE/DATAFILE
+ASMCMD> cd /
+ASMCMD> cp /u01/app/oracle/oradata/EE/test_tablespace01.dbf +DATA/EE/DATAFILE/test_tablespace01.dbf
+copying /u01/app/oracle/oradata/EE/test_tablespace01.dbf -> +DATA/EE/DATAFILE/test_tablespace01.dbf
+ASMCMD> ls -lt +DATA/EE/DATAFILE/
+Type      Redund  Striped  Time             Sys  Name
+                                            N    test_tablespace01.dbf => +DATA/ASM/DATAFILE/test_tablespace01.dbf.256.982344385
+
+
+SQL> alter database rename file '/u01/app/oracle/oradata/EE/test_tablespace01.dbf' to '+DATA/EE/DATAFILE/test_tablespace01.dbf';
+
+Database altered.
+
+SQL> alter database recover datafile 5; 
+
+Database altered.
+
+SQL> alter database datafile 5 online ; 
+
+Database altered.
+
+
+SQL> select file_name, file_id, online_status from dba_data_files where file_id=5;
+
+FILE_NAME					      FILE_ID ONLINE_
+-------------------------------------------------- ---------- -------
++DATA/ee/datafile/test_tablespace01.dbf 		    5 ONLINE
+
+
