@@ -334,7 +334,7 @@ create user CKSP identified by NEWPASSWORD default tablespace TICKET_TABLESPACES
 create user ckscjc identified by NEWPASSWORD default tablespace USERS TEMPORARY TABLESPACE temp profile default account unlock;
 GRANT resource,connect,dba TO CKSP;       
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
-
+--revoke dba TO CKSP;       
 
 -- create table
 CREATE TABLE suppliers
@@ -380,10 +380,15 @@ DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS;
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
 
 
--- create user
-create user USERNAME identified by NEWPASSWORD default tablespace USERDEFAULTSPACE temporary tablespace USERDEFAULTSPACE profile default account unlock;
-GRANT create session, create table, create sequence, create view TO test;  
+-- create user/schema
+CREATE USER USERNAME IDENTIFIED BY NEWPASSWORD DEFAULT TABLESPACE USERDEFAULTSPACE TEMPORARY TABLESPACE USERDEFAULTSPACE PROFILE DEFAULT ACCOUNT UNLOCK;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TEST;  
+GRANT CONNECT, RESOURCE TO USERNAME ; 
 GRANT UNLIMITED TABLESPACE TO TEST;
+-- CONNECT to assign privileges to the user through attaching the account to various roles
+-- RESOURCE role (allowing the user to create named types for custom schemas)
+-- DBA  which allows the user to not only create custom named types but alter and destroy them as well
+-- ensure our new user has disk space allocated in the system to actually create or modify tables and data
 
 
 -- drop user 
@@ -929,4 +934,516 @@ RMAN> restore database;
 -- Recovery是使用redo日志和归档日志将数据库向前恢复，一步步的恢复到现在这个时点。
 RMAN> recover database;
 RMAN> alter database open;
+
+
+-- delete obsolete 
+
+RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+
+old RMAN configuration parameters:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+new RMAN configuration parameters:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+new RMAN configuration parameters are successfully stored
+
+RMAN> delete obsolete ; 
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to redundancy 2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=71 device type=DISK
+Deleting the following obsolete backups and copies:
+Type                 Key    Completion Time    Filename/Handle
+-------------------- ------ ------------------ --------------------
+Archive Log          248    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_1_fmvr3bjx_.arc
+Archive Log          249    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_2_fmvr3dk2_.arc
+Archive Log          250    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_3_fmvr3gfz_.arc
+Archive Log          251    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_4_fmvr3s6b_.arc
+Archive Log          252    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_5_fmwmh5gr_.arc
+Archive Log          253    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_6_fmxgd05w_.arc
+Archive Log          254    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_7_fmxgd70l_.arc
+Backup Set           79     06-JUL-18         
+  Backup Piece       79     06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_06/o1_mf_nnndf_TAG20180706T083948_fmxglo4w_.bkp
+Backup Set           80     06-JUL-18         
+  Backup Piece       80     06-JUL-18          /u01/app/oracle/product/11.2.0/EE/dbs/c-1893248064-20180706-00
+
+Do you really want to delete the above objects (enter YES or NO)? yes
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_1_fmvr3bjx_.arc RECID=248 STAMP=980701802
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_2_fmvr3dk2_.arc RECID=249 STAMP=980701804
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_3_fmvr3gfz_.arc RECID=250 STAMP=980701806
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_4_fmvr3s6b_.arc RECID=251 STAMP=980701817
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_5_fmwmh5gr_.arc RECID=252 STAMP=980729829
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_6_fmxgd05w_.arc RECID=253 STAMP=980757376
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_7_fmxgd70l_.arc RECID=254 STAMP=980757383
+deleted backup piece
+backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_06/o1_mf_nnndf_TAG20180706T083948_fmxglo4w_.bkp RECID=79 STAMP=980757589
+deleted backup piece
+backup piece handle=/u01/app/oracle/product/11.2.0/EE/dbs/c-1893248064-20180706-00 RECID=80 STAMP=980757644
+Deleted 9 objects
+
+
+-- delete expired
+
+RMAN> crosscheck archivelog all ;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=71 device type=DISK
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_9_fmxkgtn2_.arc RECID=256 STAMP=980760538
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_10_fmxkgwwn_.arc RECID=257 STAMP=980760540
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_11_fmxl00kb_.arc RECID=258 STAMP=980761088
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_12_fmxl0qdz_.arc RECID=259 STAMP=980761111
+Crosschecked 5 objects
+
+
+RMAN> host;
+
+[oracle@dfcc11b5e819 ~]$ rm -f /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc
+[oracle@dfcc11b5e819 ~]$ exit
+host command complete
+
+RMAN> crosscheck archivelog all ;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=71 device type=DISK
+validation failed for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_9_fmxkgtn2_.arc RECID=256 STAMP=980760538
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_10_fmxkgwwn_.arc RECID=257 STAMP=980760540
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_11_fmxl00kb_.arc RECID=258 STAMP=980761088
+validation succeeded for archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_12_fmxl0qdz_.arc RECID=259 STAMP=980761111
+Crosschecked 5 objects
+
+
+RMAN> delete expired archivelog all ; 
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=71 device type=DISK
+List of Archived Log Copies for database with db_unique_name EE
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+255     1    8       X 06-JUL-18
+        Name: /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc
+
+
+Do you really want to delete the above objects (enter YES or NO)? yes
+deleted archived log
+archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
+Deleted 1 EXPIRED objects
+
+
+-- create dblink
+-- 使用带dblink方式的datapump迁移Oracle 10g到11g
+-- https://blog.csdn.net/leshami/article/details/11033449
+
+
+
+
+
+-- XX数据迁移方案 - 副本
+
+-- 方案一  冷库直接拷贝
+
+-- 1首先删除以前的归档（可保留七天）
+
+-- a、rman模式删除
+--rman target用户名/密码@实例名
+rman >DELETE ARCHIVELOG UNTIL TIME 'SYSDATE-7';删除7前的所有归档日志。
+rman >crosscheck archivelog all;
+rman >delete noprompt expired archivelog all;
+rman>crosscheck archivelog all;
+rman> delete expired archivelog all;
+
+ -- 或
+
+rman target /
+RMAN> crosscheck archivelog all; --验证的DB的归档日志
+RMAN> delete expired archivelog all; --删除所有失效归档日志
+RMAN> DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';--保留7天的归档日志
+RMAN>DELETE ARCHIVELOG ALL; --完全删除归档
+
+
+-- b、使用操作系统命令删除
+su - oracle
+cd /oradata/arch
+find . -xdev -mtime +7 -name "*.dbf" -exec rm -f {} \;
+然后rman target /
+RMAN> crosscheck archivelog all; --验证的DB的归档日志
+RMAN> delete expired archivelog all; --删除所有失效归档日志
+
+-- 关闭归档命令如下：
+-- 关闭归档
+SQL> alter system set log_archive_start=false scope=spfile; --禁用自归档 oracle10g以后 这条命令就不需要了。。
+SQL> shutdown immediate; --强制关闭数据库
+SQL> startup mount; --重启数据库到mount模式
+SQL> alter database noarchivelog; --修改为非归档模式
+SQL> alter database open; --打数据文件
+SQL> archive log list; --再次查看前归档模式
+
+-- 2、数据复制
+find /u01 -type s
+cp -R -p  /u01  /u01_2
+cp -R -p /oradata /oradata_2    
+
+-- 3、文件系统重新挂载
+
+umount /u01
+umount /oradata
+umount /u01_2
+umount /oradata_2
+
+--需要修改文件系统挂载参数，即把原来的两个文件系统的自动挂载改为手动挂载，把新建的两个文件系统的自动挂载点改为/u01和/oradata
+--（需做实验）
+
+-- 然后挂载：
+mount /u01
+mount /oradata
+
+
+
+
+--  方案二  RMAN备份恢复
+-- Rman备份再恢复
+
+-- 1、数据库做全备
+Shutdown immediate;
+Startup mount;
+Alter database open read only;   -- 这几步可以省略
+
+rman target /
+
+-- 并记录下dbid： --完全恢复可以不需要
+
+-- 检查database错误（物理和逻辑）
+backup validate check logical database;    --这一步最好事先检查一下
+
+backup as compressed backupset full database include current controlfile plus archivelog;
+
+
+-- 备份脚本如下：
+
+RMAN> 
+run{
+allocate channel ch1 device type disk;
+allocate channel ch2 device type disk;
+allocate channel ch3 device type disk;
+allocate channel ch4 device type disk;
+crosscheck archivelog all;
+delete expired archivelog all;  --若手工没删除控制文件，这两行可以取消
+backup as compressed backupset format '/expdp/FULL_%U' database include current controlfile;
+sql 'alter system archive log current';  --这一步其实完全不需要，全备会执行三次
+backup archivelog all format '/expdp/ARC_%U';
+release channel ch1 ;
+release channel ch2 ;
+release channel ch3 ;
+release channel ch4 ;
+}
+
+--备注：设置控制文件的自动备份路径命令为：
+set controlfile autobackup format for device type disk to ‘/u01/xxx/%F’;
+-- 这样恢复时可以直接：
+Restore controlfile autobackup;
+
+sqlplus / as sysdba
+create pfile from spfile;
+
+RMAN> report schema; --可以查看原数据文件信息，并登记
+
+
+-- 2、备份文件拷贝
+
+-- 把pfile(inithzxzdb.ora)、redolog、rman备份集文件夹 拷贝到其他的目录：
+
+cp -R -p /u01/app/oracle/fast_recovery_area/HZXZDB/ /home
+cp -p /oradata/hzxzdb/redo* /home
+cp -p /oradata/hzxzdb/control* /home
+cp -R -p $ORACLE_HOME/dbs/ /home
+cp -p /u01/app/oracle/product/11.2.0/db_1/network/admin/listener.ora /home
+cp -p /u01/app/oracle/product/11.2.0/db_1/network/admin/tnsnames.ora /home
+
+
+
+-- 3、删除lv、vg、pv，卸载磁盘（不知道需不需要先dbca把库给干掉） 其实可以简单的 直接umount /u01 ;  umount /oradata，然后修改文件系统挂载点，从自动挂载改为手动挂载。
+--
+-- 4、新的磁盘挂载，建3.2章节
+--
+-- 5、安装oracle数据库软件，安装监听等；
+--
+-- 6、创建目录，并把备份的数据拷贝过去
+
+mkdir -p /u01/app/oracle/admin/hzxzdb/adump
+chown -R oracle:dba /u01/app/oracle/admin/
+
+cd /u01/app/oracle/fast_recovery_area/
+mkdir hzxzdb
+chmod -R 750 /u01/app/oracle/fast_recovery_area/
+chown -R oracle:oinstall /u01/app/oracle/fast_recovery_area/
+cp -R -p /home/HZXZDB /u01/app/oracle/fast_recovery_area/
+
+
+cd /oradata/hzxzdb
+cp -p /home/redo* /oradata/hzxzdb
+cp -p /home/inithzxzdb.ora /u01/app/oracle/product/11.2.0/dbhome_1/dbs
+
+-- 7、rman恢复
+
+sqlplus / as sysdba
+startup nomount pfile='/u01/app/oracle/product/11.2.0/dbhome_1/dbs/inithzxzdb.ora';
+
+rman target /
+RMAN> set dbid xxxx;
+RMAN> restore spfile from autobackup;  --目录相同的话可以直接拷贝，若目录不同的话需要由修改后的pfile生成spfile；
+restore controlfile from autobackup;
+shutdown immediate;
+startup mount;
+
+
+--注册备份集信息，把最新的备份集信息（即路径）注册到控制文件中，这样restore database时可以自动发现备份集。若备份集路径和原始的路径一致，则不需要注册备份集：
+catalog start with '/expdp/'
+
+-- 恢复数据文件（数据文件路径一致）
+run{
+allocate channel ch1 device type disk;
+allocate channel ch2 device type disk;
+allocate channel ch3 device type disk;
+allocate channel ch4 device type disk;
+restore database;
+release channel ch1;
+release channel ch2;
+release channel ch3;
+release channel ch4;
+}
+
+recover database;  --上面的这个方式下，根本不需要recover，即不需要redolog；
+alter database open resetlogs;  
+
+-- 注：AIX系统oracle数据库自动启动：
+-- 1、vi /etc/oratab  并添加：
+ORACLE_SID:ORACLE_HOME:Y
+-- 2、vi $ORACLE_HOME/bin/dbstart
+-- 对ORACLE_HOME_LISTENER一行进行修改，使其等于$ORACLE_HOME
+-- 3、编写数据库启动脚本  vi /etc/rc.startdb
+-- 添加：
+su - oracle “-c /u01/app/oracle/product/11.2.0/db_1/bin/dbstart”
+-- 4、为此文件授予可执行的权限：chmod +x /etc/rc.startdb
+-- 5、vi /etc/inittab
+-- 添加：
+startdb:2:once:/etc/rc.startdb
+-- 或者使用mkitab命令将启动条目添加到/etc/initab文件中
+#mkitab “startdb:2:once:/etc/rc.startdb > /dev/null 2>&1”
+
+
+-- 2.4.3 方案三  数据泵导入导出
+-- 1、导出
+-- A、创建directory域，分配dump文件目录
+-- 然后给需要导出的模式（用户）分配读写权限给directory域。
+SQL> create directory dump_file_dir as '/u01test';
+Directory created.
+SQL> grant read,write on directory dump_file_dir to gabsj, hztb, xttb,mylcpt;
+Grant succeeded.
+-- B、以每一个用户去执行全库导出
+-- （导出整个数据）
+expdp sys/oracle@10.118.137.9/hzxzdb as sysdba directory=dump_file_dir full=y dumpfile=allfile.dmp logfile=allfile.log 
+
+-- 针对用户去导出：
+expdp gabsj/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= gabsj _file.dmp logfile=gabsj _file.log 
+
+expdp hztb/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= hztb _file.dmp logfile=hztb _file.log 
+
+expdp xttb/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= xttb _file.dmp logfile=xttb _file.log 
+
+expdp mylcpt /xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= mylcpt _file.dmp logfile=mylcpt _file.log 
+
+
+-- 2、原数据库删除，数据库软件删除
+--
+-- 3、安装oracle软件，并新建数据库
+--
+-- 4、导入
+--
+-- 第一步：新建所有模式（用户）
+-- 并建表空间，给用户赋予表空间
+-- 需要知道这四个用户的密码：gabsj,hztb,xttb,mylcpt
+create user GABSJ
+identified by values ''
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT;
+
+grant RESOURCE to GABSJ;
+grant CONNECT to GABSJ;
+
+
+create user HZTB
+identified by values ''
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT;
+
+grant CONNECT to HZTB;
+grant RESOURCE to HZTB;
+
+create user XTTB
+identified by values ''
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT;
+
+grant CONNECT to XTTB;
+grant RESOURCE to XTTB;
+
+create user MYLCPT
+identified by values ''
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT;
+
+grant RESOURCE to MYLCPT;
+grant CONNECT to MYLCPT;
+
+-- 依照上面的模板去创建用户和表空间，命令如下：
+create tablespace ts_mylcpt datafile '/oradata/oradata/hzxzdb/ts_mylcpt01.dbf' size 30G autoextend off; 
+alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt02.dbf' size 30G autoextend off;
+alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt03.dbf' size 30G autoextend off;
+alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt04.dbf' size 30G autoextend off;
+create temporary tablespace ts_temp_mylcpt tempfile '/oradata/oradata/hzxzdb/ts_temp_mylcpt01.dbf' size 30G autoextend off;
+alter tablespace ts_temp_mylcpt add tempfile  '/oradata/oradata/hzxzdb/ts_temp_mylcpt02.dbf' size 30G autoextend off;
+create  tablespace ts_idx_mylcpt datafile '/oradata/oradata/hzxzdb/ts_idx_mylcpt01.dbf' size 30G autoextend off; 
+alter tablespace ts_idx_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_idx_mylcpt02.dbf' size 30G autoextend off;
+
+-- 创建用户：
+create user MYLCPT identified by hzxzzd321 
+default tablespace ts_mylcpt
+temporary tablespace ts_temp_mylcpt
+profile default
+account unlock;
+grant connect,resource to MYLCPT;
+
+create user GABSJ identified by XXXX
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT
+profile default
+account unlock;
+grant connect,resource to GABSJ;
+
+create user XTTB identified by XXXX
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT
+profile default
+account unlock;
+grant connect,resource to XTTB;
+
+create user HZTB identified by XXXX
+default tablespace TS_MYLCPT
+temporary tablespace TS_TEMP_MYLCPT
+profile default
+account unlock;
+grant connect,resource to HZTB;
+
+-- 第二步：创建directory域，分配dump文件目录
+-- 然后给需要导出的模式（用户）分配读写权限给directory域。
+SQL> create directory dump_file_dir as '/u01test';
+Directory created.
+SQL> grant read,write on directory dump_file_dir to gabsj,hztb,xttb,mylcpt;
+Grant succeeded.
+
+
+-- 第三步：把dmp文件拷贝至此机
+-- 然后导入：以不同的用户进行全部导入
+impdp gabsj/gabsj directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
+impdp hztb/hztb directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
+impdp xttb/xttb directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
+impdp mylcpt/mylcpt directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
+
+-- crs 命令
+
+$ source  profile_grid
+
+-- 查看当前的服务器启动情况，
+$ crs_stat -t
+Name           Type           Target    State     Host        
+------------------------------------------------------------
+ora.DATA.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora.INIT.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora....ER.lsnr ora....er.type OFFLINE   OFFLINE               
+ora.asm        ora.asm.type   ONLINE    ONLINE    orcl        
+ora.cssd       ora.cssd.type  ONLINE    ONLINE    orcl        
+ora.diskmon    ora....on.type OFFLINE   OFFLINE               
+ora.evmd       ora.evm.type   ONLINE    ONLINE    orcl        
+ora.ons        ora.ons.type   OFFLINE   OFFLINE               
+ora.orcl.db    ora....se.type OFFLINE   OFFLINE              
+
+-- 删除旧服务
+$ srvctl remove database -d orcl
+Remove the database orcl? (y/[n]) y
+
+-- 添加服务
+$ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
+
+
+-- 检查是否重启生效
+
+-- https://oracleracdba1.wordpress.com/2013/01/29/how-to-set-auto-start-resources-in-11g-rac/
+$ crsctl stat res -p | perl -00 -ne  ' print if /ora.database.type/' | grep AUTO_START
+AUTO_START=restore
+
+-- 设置重启
+crsctl modify resource "ora.ee.db" -attr "AUTO_START=always"
+
+$ crsctl stat res -p | perl -00 -ne  ' print if /ora.database.type/' | grep AUTO_START
+AUTO_START=always
+
+-- 查看情况
+$ crs_stat -t
+Name           Type           Target    State     Host        
+------------------------------------------------------------
+ora.DATA.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora.INIT.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora....ER.lsnr ora....er.type ONLINE    OFFLINE               
+ora.asm        ora.asm.type   ONLINE    ONLINE    orcl        
+ora.cssd       ora.cssd.type  ONLINE    ONLINE    orcl        
+ora.diskmon    ora....on.type OFFLINE   OFFLINE               
+ora.ee.db      ora....se.type OFFLINE   OFFLINE               
+ora.evmd       ora.evm.type   ONLINE    ONLINE    orcl        
+ora.ons        ora.ons.type   OFFLINE   OFFLINE        
+
+-- 启动
+$ crs_start ora.ee.db
+Attempting to start `ora.ee.db` on member `orcl`
+Start of `ora.ee.db` on member `orcl` succeeded.
+
+--检查
+$ crs_stat -t
+Name           Type           Target    State     Host        
+------------------------------------------------------------
+ora.DATA.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora.INIT.dg    ora....up.type ONLINE    ONLINE    orcl        
+ora....ER.lsnr ora....er.type ONLINE    ONLINE    orcl        
+ora.asm        ora.asm.type   ONLINE    ONLINE    orcl        
+ora.cssd       ora.cssd.type  ONLINE    ONLINE    orcl        
+ora.diskmon    ora....on.type OFFLINE   OFFLINE               
+ora.ee.db      ora....se.type ONLINE    ONLINE    orcl        
+ora.evmd       ora.evm.type   ONLINE    ONLINE    orcl        
+ora.ons        ora.ons.type   OFFLINE   OFFLINE      
+
+-- 关闭所有服务
+$ crs_stop -all
+
 

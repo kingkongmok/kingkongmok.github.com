@@ -1,3 +1,6 @@
+RMAN>catalog start with /u01/app/oracle/backup' noprompt;
+
+
 RMAN> list failure;  
 
 List of Database Failures
