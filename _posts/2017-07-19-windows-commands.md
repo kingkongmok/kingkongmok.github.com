@@ -33,6 +33,7 @@ NET SHARE LogFiles="C:\Windows\System32\LogFiles" /GRANT:kenneth,READ
 ```
 icacls "C:\inetpub\logs\LogFiles" /grant kenneth:(OI)(CI)F /T
 NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,READ
+NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,FULL
 ```
 ---
 
