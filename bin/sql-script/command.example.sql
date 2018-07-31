@@ -329,11 +329,13 @@ exp ftsp/ftsp owner=ftsp file=20161205ftsp.dmp log=20161205ftsp.log;
 
 create tablespace TICKET_TABLESPACES datafile '/u01/app/oracle/oradata/oltp/ticket_tablespace01.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 create tablespace INDEX_TABLESPACES datafile '/u01/app/oracle/oradata/oltp/index_tablespace01.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+CREATE TEMPORARY TABLESPACE TEMP_NEW TEMPFILE '/DATA/database/ifsprod/temp_01.dbf' SIZE 500m autoextend on next 10m maxsize unlimited;
 alter tablespace TICKET_TABLESPACES add datafile '/u01/app/oracle/oradata/oltp/ticket_tablespace03.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 create user CKSP identified by NEWPASSWORD default tablespace TICKET_TABLESPACES profile default account unlock;
 create user ckscjc identified by NEWPASSWORD default tablespace USERS TEMPORARY TABLESPACE temp profile default account unlock;
 GRANT resource,connect,dba TO CKSP;       
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
+
 --revoke dba TO CKSP;       
 
 -- create table

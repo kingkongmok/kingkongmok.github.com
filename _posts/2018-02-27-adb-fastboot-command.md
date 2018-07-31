@@ -137,3 +137,34 @@ adb shell "find /sdcard/Music/ | while read f; do \
 ```
 adb shell dumpsys battery | grep level
 ```
+
+--- [list / backup apk](https://stackoverflow.com/questions/4032960/how-do-i-get-an-apk-file-from-an-android-device)
+
+```
+adb shell pm list packages -f -3
+package:/data/app/XX.XX.XX.apk=YY.YY.YY
+adb pull /data/app/XX.XX.XX.apk
+```
+
+
+```
+$ adb shell pm list packages -f -3 | grep -P "fake|gps|shadowsocks|obfs"
+package:/data/app/com.github.shadowsocks-2/base.apk=com.github.shadowsocks
+package:/data/app/com.github.shadowsocks.plugin.obfs_local-1/base.apk=com.github.shadowsocks.plugin.obfs_local
+package:/data/app/com.lexa.fakegps-1/base.apk=com.lexa.fakegps
+
+$ adb pull /data/app/com.github.shadowsocks-2/base.apk shadowsocks.apk
+/data/app/com.github.shadowsocks-2/base.apk: 1 file pulled. 8.2 MB/s (5358433 bytes in 0.625s)
+$ adb pull /data/app/com.github.shadowsocks.plugin.obfs_local-1/base.apk obfs.apk
+/data/app/com.github.shadowsocks.plugin.obfs_local-1/base.apk: 1 file pulled. 6.9 MB/s (1184779 bytes in 0.163s)
+$ adb pull /data/app/com.lexa.fakegps-1/base.apk fakegps.apk
+/data/app/com.lexa.fakegps-1/base.apk: 1 file pulled. 7.7 MB/s (1613972 bytes in 0.199s)
+```
+
+---  [How to skip WiFi configuration during initial setup of Nexus 7](How to skip WiFi configuration during initial setup of Nexus 7)
+
+```
+adb $> mount /system 
+adb $> echo "ro.setupwizard.mode=DISABLED" >> /system/build.prop
+adb $> sed -i 's/ro.setupwizard.wifi_required=true/ro.setupwizard.wifi_required=false/g' /system/build.prop
+```
