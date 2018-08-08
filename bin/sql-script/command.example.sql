@@ -289,6 +289,7 @@ select TABLESPACE_NAME, TABLESPACE_SIZE, round(100-USED_PERCENT,0) "free percent
 select * from dba_tablespaces;
 -- 使用以下方式添加数据文件
 alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 -- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
