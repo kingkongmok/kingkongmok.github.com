@@ -62,7 +62,11 @@ sub mlocateSearch {
 sub md5FileSearch {
     my %md5Result;
     my	( $keyword )	= @_;
-    my $md5File= '/home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5';
+    my @md5File= [
+        '/home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5',
+        '/home/kk/Dropbox/Documents/comic.done',
+    ];
+    foreach my $md5File ( @md5File ) {
     if ( -r $md5File ) {
         foreach my $word ( @{$keyword} ) {
             my @md5Result;
@@ -73,6 +77,7 @@ sub md5FileSearch {
             $md5Result{$word}=[@md5Result];
         }
     }
+}
     return %md5Result;
 } ## --- end sub md5FileSearch
 
@@ -103,6 +108,13 @@ if ( @ARGV ) {
         foreach my $keys ( @ARGV ) {
             say $keys , " :";
             say @{$md5FileResult{$keys}};
+        }
+    }
+    if ( keys %comicResult ) {
+        say "\n\ncomic match:\n";
+        foreach my $keys ( @ARGV ) {
+            say $keys , " :";
+            say @{$comicResult{$keys}};
         }
     }
 }
