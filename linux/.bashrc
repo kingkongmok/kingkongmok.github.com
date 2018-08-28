@@ -64,6 +64,9 @@ trap _exit EXIT
 HISTCONTROL=ignoredups:ignorespace
 HISTIGNORE='mlstatus.sh'
 
+# color prompt
+PS1='\[\e[1;32m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+
 # append to the history file, don't overwrite it
 shopt -s histappend
 
@@ -95,28 +98,35 @@ export TERM=xterm-color
 alias ls='ls --color=auto --time-style=long-iso'
 alias l='locate -i -r'
 alias s='sdcv'
+alias m='mcomix'
+alias p='mplayer'
 alias mysql='mysql --sigint-ignore'
 alias grep='grep --perl-regexp --color=auto'
 alias g='grep --perl-regexp --color=auto'
+alias t='tail'
+alias h='head'
 alias mv='mv -i'
 alias cp='cp -i'
 alias proxychains='proxychains -q'
 alias rm='rm -i'
 alias tailf='tail -f'
 alias sqlplus='rlwrap sqlplus'
+alias alsamixer='alsamixer -c 1'
 alias mysql=$(echo -e 'mysql --prompt="\x1B[31m\\u\x1B[34m@\x1B[32m\\h\x1B[0m:\x1B[36m\\d>\x1B[0m "')
+alias xmame='xmame  -joytype 1 -jdev /dev/input/js0'
 
 export NLS_LANG=AMERICAN_AMERICA.UTF8
+export EDITOR=/usr/bin/vim
 
 # #Starting X11 on console login
-# #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
-# #    exec startx
-# #fi
-# [[ $(tty) = "/dev/tty6" ]] && exec startx
-#
-# # set monitor on
-# [[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
+# if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
+#    exec startx
+# fi
+[[ $(tty) = "/dev/tty1" ]] && exec startx
 
+# set monitor on
+#[[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
+[[ $(tty) = "/dev/tty1" ]] && xset s noblank && xset s off && xset -dpms 
 
 PATH="/home/kk/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/home/kk/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
