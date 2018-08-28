@@ -325,6 +325,8 @@ WHERE tablespace_name = 'SYSTEM'
 -- 数据泵 impdp expdb
 -- expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
 
+expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
+
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 exp ftsp/ftsp owner=ftsp file=20161205ftsp.dmp log=20161205ftsp.log;
 
@@ -1378,6 +1380,10 @@ impdp mylcpt/mylcpt directory=dump_file_dir dumpfile=allfile.dmp nologfile=y con
 -- crs 命令
 
 $ source  profile_grid
+
+
+-- 启动 crs
+/oracle/11.2.0/grid/gridhome/bin/crsctl start cluster
 
 -- 查看当前的服务器启动情况，
 $ crs_stat -t
