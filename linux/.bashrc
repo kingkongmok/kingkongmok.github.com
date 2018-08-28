@@ -86,7 +86,7 @@ shopt -s checkwinsize
 MAIL=~/.maildir/mbox
 MAILCHECK=30
 MAILPATH=~/.maildir/mbox?"You have mail"
-export PATH=$PATH:~/bin/:/usr/local/go/bin
+export PATH=$PATH:~/bin/:/usr/local/go/bin:/usr/sbin:/sbin:/usr/local/sbin
 
 # http://blog.csdn.net/kinbo88/article/details/20123351
 # securecrt, xshell中menuconfig乱码解决方法
@@ -102,8 +102,11 @@ alias mv='mv -i'
 alias cp='cp -i'
 alias proxychains='proxychains -q'
 alias rm='rm -i'
+alias tailf='tail -f'
 alias sqlplus='rlwrap sqlplus'
 alias mysql=$(echo -e 'mysql --prompt="\x1B[31m\\u\x1B[34m@\x1B[32m\\h\x1B[0m:\x1B[36m\\d>\x1B[0m "')
+
+export NLS_LANG=AMERICAN_AMERICA.UTF8
 
 # #Starting X11 on console login
 # #if [[ ! ${DISPLAY} && ${XDG_VTNR} == 8 ]]; then
@@ -114,3 +117,9 @@ alias mysql=$(echo -e 'mysql --prompt="\x1B[31m\\u\x1B[34m@\x1B[32m\\h\x1B[0m:\x
 # # set monitor on
 # [[ -x /usr/bin/xset ]] && xset s noblank && xset s off && xset -dpms 
 
+
+PATH="/home/kk/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/home/kk/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/home/kk/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/home/kk/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/home/kk/perl5"; export PERL_MM_OPT;
