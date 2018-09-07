@@ -55,7 +55,8 @@ foreach my $line ( @lines ){
     if ($message){
         if ( $message =~ /download_filename\"\>(.*?.zip)\<\/p\>
             .*?
-            (http:\/\/wnacg.download\/down.*?zip)
+            # (http:\/\/wnacg.download\/down.*?zip)
+            (http:\/\/(?:d3\.)?wnacg.download\/down.*?zip)
             /sxm ){
             my $DownloadUrl = $2 ; 
             my $DownloadFilename = $1 ; 
