@@ -15,7 +15,7 @@ ffmpeg -i input.mp4 -vf "scale=iw/2:ih/2" output.mp4
 ```
 
 
-+ Constant Rate Factor, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24
++ **Constant Rate Factor**, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24
 
 ```
 ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
