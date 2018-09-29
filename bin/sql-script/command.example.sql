@@ -241,6 +241,29 @@ RP_FREIGHT_CONFIRM_D	   2210 Row-X (SX)    None		     2		1
 
 
 
+-- 查看最近消耗最多资源的语句
+-- top SQL statements that are currently stored in the SQL cache ordered by elapsed time
+
+SELECT * FROM
+(SELECT sql_fulltext, sql_id, elapsed_time, child_number, disk_reads, executions, first_load_time, last_load_time
+    FROM    v$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
+
+
+--
+--
+SQL_FULLTEXT		       SQL_ID	       ELAPSED_TIME CHILD_NUMBER DISK_READS EXECUTIONS FIRST_LOAD_TIME		 LAST_LOAD_TIME
+------------------------------ --------------- ------------ ------------ ---------- ---------- ------------------------- -------------------------
+BEGIN SP_ST_FEEDER_CTN_QRY(:1, 59q2zvpf2cuzz	 1637055902	       0    2060894	    27 2018-09-29/09:36:05	 2018-09-29/09:36:05
+SELECT COUNT(1) FROM (SELECT S 82y10vp2p6ww3	  443434457	       0     367953	     1 2018-09-29/10:34:39	 2018-09-29/10:34:39
+DECLARE job BINARY_INTEGER :=  6gvch1xu9ca3g	  342201758	       0     649290	  2576 2018-09-24/23:18:10	 2018-09-27/15:47:18
+
+
+
+--
+-- actual plan from the SQL cache and the full text of the SQL.
+
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id', &child));
+
 --  查看锁
 select * from gv$lock where type in ('tx', 'tm');
 
@@ -407,6 +430,16 @@ select text from user_source where name='BATCHINPUTMEMBERINFO';
 select distinct name from user_source where name like 'P_IMPORT_TICKETINFO_%'; 
 
 
+-- current session id, process id, client process id?
+select b.sid, b.serial#, a.spid processid, b.process clientpid from v$process a, v$session b where a.addr = b.paddr and b.audsid = userenv(‘sessionid’); 
+
+SID SERIAL# PROCESSID CLIENTPID
+———- ———- ——— ———
+43 52612 420734 5852:5460
+
+-- V$SESSION.SID and V$SESSION.SERIAL# are database process id
+-- V$PROCESS.SPID – Shadow process id on the database server
+-- V$SESSION.PROCESS – Client process id, on windows it is “:” separated the first # is the process id on the client and 2nd one is the thread id.
 
 -- kill session
 

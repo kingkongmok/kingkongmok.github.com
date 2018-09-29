@@ -173,9 +173,7 @@ adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:
 recursive
 
 ```
-adb shell "find /sdcard/Music/ | while read f; do \
-    am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
-    -d \"file://${f}\"; done"
+for i in `adb shell find /sdcard/Music/` ; do adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://"$i"; done
 ```
 
 ---
