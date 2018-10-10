@@ -86,17 +86,17 @@ CyanogenMod由于版权问题所以不集成了 ，需要另外安装,记得需�
 + 安装firmware
 
 
-```
-$ adb sideload OnePlus3T_Beta22-\(31-01-18\)-FIRMWARE-flashable.zip 
-* daemon not running; starting now at tcp:5037
-* daemon started successfully
-```
+    ```
+    $ adb sideload OnePlus3T_Beta22-\(31-01-18\)-FIRMWARE-flashable.zip 
+    * daemon not running; starting now at tcp:5037
+    * daemon started successfully
+    ```
 
 + 刷rom
 
-```
-$ adb sideload lineage-14.1-20180223-nightly-oneplus3-signed.zip
-```
+    ```
+    $ adb sideload lineage-14.1-20180223-nightly-oneplus3-signed.zip
+    ```
 
 + gapps
 
