@@ -243,13 +243,10 @@ RP_FREIGHT_CONFIRM_D	   2210 Row-X (SX)    None		     2		1
 
 -- 查看最近消耗最多资源的语句
 -- top SQL statements that are currently stored in the SQL cache ordered by elapsed time
-
 SELECT * FROM
 (SELECT sql_fulltext, sql_id, elapsed_time, child_number, disk_reads, executions, first_load_time, last_load_time
-    FROM    v$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
+    FROM    gv$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
 
-
---
 --
 SQL_FULLTEXT		       SQL_ID	       ELAPSED_TIME CHILD_NUMBER DISK_READS EXECUTIONS FIRST_LOAD_TIME		 LAST_LOAD_TIME
 ------------------------------ --------------- ------------ ------------ ---------- ---------- ------------------------- -------------------------
@@ -257,12 +254,49 @@ BEGIN SP_ST_FEEDER_CTN_QRY(:1, 59q2zvpf2cuzz	 1637055902	       0    2060894	   
 SELECT COUNT(1) FROM (SELECT S 82y10vp2p6ww3	  443434457	       0     367953	     1 2018-09-29/10:34:39	 2018-09-29/10:34:39
 DECLARE job BINARY_INTEGER :=  6gvch1xu9ca3g	  342201758	       0     649290	  2576 2018-09-24/23:18:10	 2018-09-27/15:47:18
 
-
-
 --
 -- actual plan from the SQL cache and the full text of the SQL.
-
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id', &child));
+
+
+-- the average buffer gets per execution during a period of activity 
+--
+SELECT username,
+buffer_gets,
+disk_reads,
+executions,
+buffer_get_per_exec,
+parse_calls,
+sorts,
+rows_processed,
+hit_ratio,
+module,
+sql_text
+-- elapsed_time, cpu_time, user_io_wait_time, ,
+FROM (SELECT sql_text,
+    b.username,
+    a.disk_reads,
+    a.buffer_gets,
+    trunc(a.buffer_gets / a.executions) buffer_get_per_exec,
+    a.parse_calls,
+    a.sorts,
+    a.executions,
+    a.rows_processed,
+    100 - ROUND (100 * a.disk_reads / a.buffer_gets, 2) hit_ratio,
+    module
+    -- cpu_time, elapsed_time, user_io_wait_time
+    FROM v$sqlarea a, dba_users b
+    WHERE a.parsing_user_id = b.user_id
+    AND b.username NOT IN ('SYS', 'SYSTEM', 'RMAN','SYSMAN')
+    AND a.buffer_gets > 10000
+    ORDER BY buffer_get_per_exec DESC)
+WHERE ROWNUM <= 20 
+/
+
+ 
+
+
+
 
 --  查看锁
 select * from gv$lock where type in ('tx', 'tm');
@@ -313,6 +347,7 @@ select * from dba_tablespaces;
 -- 使用以下方式添加数据文件
 alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 -- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
