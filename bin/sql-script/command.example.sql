@@ -244,12 +244,15 @@ RP_FREIGHT_CONFIRM_D	   2210 Row-X (SX)    None		     2		1
 -- 查看最近消耗最多资源的语句
 -- top SQL statements that are currently stored in the SQL cache ordered by elapsed time
 
+set linesize 180
+col sql_fulltext format a25
+col sql_id format a25
+col FIRST_LOAD_TIME format a25
+col LAST_LOAD_TIME format a25
 SELECT * FROM
 (SELECT sql_fulltext, sql_id, elapsed_time, child_number, disk_reads, executions, first_load_time, last_load_time
-    FROM    v$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
+    FROM    gv$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
 
-
---
 --
 SQL_FULLTEXT		       SQL_ID	       ELAPSED_TIME CHILD_NUMBER DISK_READS EXECUTIONS FIRST_LOAD_TIME		 LAST_LOAD_TIME
 ------------------------------ --------------- ------------ ------------ ---------- ---------- ------------------------- -------------------------
@@ -258,11 +261,58 @@ SELECT COUNT(1) FROM (SELECT S 82y10vp2p6ww3	  443434457	       0     367953	   
 DECLARE job BINARY_INTEGER :=  6gvch1xu9ca3g	  342201758	       0     649290	  2576 2018-09-24/23:18:10	 2018-09-27/15:47:18
 
 
+-- top 10 statements by disk read
+
+select sql_id,child_number from
+(
+    select sql_id,child_number from v$sql
+    order by disk_reads desc
+)
+where rownum<11 ;
 
 --
 -- actual plan from the SQL cache and the full text of the SQL.
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR( &sql_id, &child ));
 
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id', &child));
+
+-- the average buffer gets per execution during a period of activity 
+--
+SELECT username,
+buffer_gets,
+disk_reads,
+executions,
+buffer_get_per_exec,
+parse_calls,
+sorts,
+rows_processed,
+hit_ratio,
+module,
+sql_text
+-- elapsed_time, cpu_time, user_io_wait_time, ,
+FROM (SELECT sql_text,
+    b.username,
+    a.disk_reads,
+    a.buffer_gets,
+    trunc(a.buffer_gets / a.executions) buffer_get_per_exec,
+    a.parse_calls,
+    a.sorts,
+    a.executions,
+    a.rows_processed,
+    100 - ROUND (100 * a.disk_reads / a.buffer_gets, 2) hit_ratio,
+    module
+    -- cpu_time, elapsed_time, user_io_wait_time
+    FROM v$sqlarea a, dba_users b
+    WHERE a.parsing_user_id = b.user_id
+    AND b.username NOT IN ('SYS', 'SYSTEM', 'RMAN','SYSMAN')
+    AND a.buffer_gets > 10000
+    ORDER BY buffer_get_per_exec DESC)
+WHERE ROWNUM <= 20 
+/
+
+ 
+
+
+
 
 --  查看锁
 select * from gv$lock where type in ('tx', 'tm');
@@ -313,6 +363,7 @@ select * from dba_tablespaces;
 -- 使用以下方式添加数据文件
 alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 -- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
@@ -431,7 +482,7 @@ select distinct name from user_source where name like 'P_IMPORT_TICKETINFO_%';
 
 
 -- current session id, process id, client process id?
-select b.sid, b.serial#, a.spid processid, b.process clientpid from v$process a, v$session b where a.addr = b.paddr and b.audsid = userenv(‘sessionid’); 
+select b.sid, b.serial#, a.spid processid, b.process clientpid from v$process a, v$session b where a.addr = b.paddr and b.audsid = USERENV('SESSIONID') ;
 
 SID SERIAL# PROCESSID CLIENTPID
 ———- ———- ——— ———
@@ -439,14 +490,15 @@ SID SERIAL# PROCESSID CLIENTPID
 
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
--- V$SESSION.PROCESS – Client process id, on windows it is “:” separated the first # is the process id on the client and 2nd one is the thread id.
+-- V$SESSION.PROCESS – Client process id
 
 -- kill session
 
 select * from gv$lock where BLOCK!=0;
-select sid,serial# from gv$session where sid=31; 
-select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = 31;
-alter system kill session '31,222' immediate;
+select sid,serial# from gv$session where sid=&sid; 
+alter system kill session '&sid,&serial' immediate;
+
+select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
 
 -- 杀所有来自相同machine的session
 begin     
@@ -640,7 +692,7 @@ select distinct TABLE_NAME,TABLESPACE_NAME from user_indexes;
 
 
 -- 查询index是否失效；
-select index_name,last_analyzed,status from dba_indexes where owner='TEST';
+select index_name,last_analyzed,status from dba_indexes where owner='CKSP';
 select index_name,last_analyzed,status, NUM_ROWS from user_indexes;
 
 alter index user1.indx rebuild;
@@ -676,6 +728,10 @@ select index_name, table_name, num_rows, sample_size, distinct_keys, last_analyz
 
 
 -- 收集此表的优化程序统计信息。
+-- single table
+exec DBMS_STATS.GATHER_TABLE_STATS (ownname => 'SMART' , tabname => 'AGENT',cascade => true, estimate_percent => 10,method_opt=>'for all indexed columns size 1', granularity => 'ALL', degree => 1);
+-- index
+exec dbms_stats.gather_index_stats(null, 'IDX_PCTREE_PARENTID', null, DBMS_STATS.AUTO_SAMPLE_SIZE);
 execute dbms_stats.gather_table_stats(ownname => 'CKSP', tabname => 'PCLINE', estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,
 execute dbms_stats.gather_table_stats(ownname => 'CKSP', tabname => 'PCLINE');
 execute dbms_stats.gather_schema_stats('SCOTT');
@@ -741,24 +797,26 @@ select s.username, s.inst_id, s.sid, s.serial#, p.spid, s.last_call_et/60 mins_r
 
 
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
-column PGA_ALLOC_MEM format 99,990
+column pgA_ALLOC_MEM format 99,990
 column PGA_USED_MEM format 99,990
 column inst_id format 99
 column username format a15
 column program format a25
 column logon_time format a25
 column SPID format a15
-select s.inst_id, s.sid, p.spid, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 order by PGA_USED_MEM;
+select s.inst_id, s.sid, s.serial#, p.spid, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 order by PGA_USED_MEM;
 --
 
-INST_ID        SID SPID        USERNAME    LOGON_TIME            PROGRAM               PGA_USED_MEM PGA_ALLOC_MEM
-------- ---------- --------------- --------------- ------------------------- ------------------------- ------------ -------------
-      1       1701 26017950			   2018-02-11_12:45:21	     oracle@ptms3db1 (ARCE)		 45	       57
-      2       1999 32309318	   CKSP 	   2018-03-02_09:21:43	     w3wp.exe				 62	       66
-      1       2143 51708040	   SYSMAN	   2018-01-24_19:28:53	     OMS				 62	       64
-      1       1977 43581626			   2018-01-18_01:38:50	     oracle@ptms3db1 (LMS0)		 85	       96
-      1       2129 17039370			   2018-01-18_01:38:50	     oracle@ptms3db1 (LMS1)		 86	       97
-
+INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  PGA_USED_MEM PGA_ALLOC_MEM
+------- ---------- ---------- --------------- --------------- ------------------------- ------------------------- ------------ -------------
+      2       4474	    1 12275			      2018-10-12_12:02:58	oracle@ckstmis-db2 (ARCH)	    41		  44
+      1       3480	    1 10846			      2018-10-12_12:14:28	oracle@ckstmis-db1 (ARC3)	    51		  55
+      2       3764	    5 12255			      2018-10-12_12:02:57	oracle@ckstmis-db2 (ARC7)	    51		  55
+      2       3551	   15 12249			      2018-10-12_12:02:57	oracle@ckstmis-db2 (ARC4)	    51		  55
+      2       3409	   37 12245			      2018-10-12_12:02:57	oracle@ckstmis-db2 (ARC2)	    51		  55
+      1       3764	    1 10855			      2018-10-12_12:14:28	oracle@ckstmis-db1 (ARC7)	    52		  56
+      1       1990	22249 26260	      CKS	      2018-10-19_10:19:34	JDBC Thin Client		    83		  92
+      1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
 
 
 
@@ -772,7 +830,7 @@ select S.USERNAME, s.sid, s.osuser, t.sql_id, sql_text from v$sqltext_with_newli
 where t.address =s.sql_address and t.hash_value = s.sql_hash_value and s.status = 'ACTIVE'
 and s.username <> 'SYSTEM' order by s.sid,t.piece ;
 --
-select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=114 and s.SERIAL#=2147
+select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
 
 
 
@@ -876,8 +934,7 @@ select SEQUENCE_NAME,to_char(LAST_NUMBER),to_char(MAX_VALUE) from user_sequences
 
 
 -- check session
-select s.sid, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text
-from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.machine like 'AP-234' ;
+select s.sid, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.sid = '&sid' ;
 --
 --
        SID USERNAME   MACHINE			OSUSER	     CPU_TIME	 MINUTES
@@ -1647,4 +1704,8 @@ FILE_NAME					      FILE_ID ONLINE_
 -------------------------------------------------- ---------- -------
 +DATA/ee/datafile/test_tablespace01.dbf 		    5 ONLINE
 
+
+
+-- check sql
+select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 
