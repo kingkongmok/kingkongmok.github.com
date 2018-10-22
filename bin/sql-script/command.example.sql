@@ -452,7 +452,7 @@ CREATE TABLE employees
 
 -- create tablespace
 
-create tablespace test datafile 'test01.dbf' SIZE 20M AUTOEXTEND ON;
+create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
 
 -- drop dataspaces
 DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS; 
