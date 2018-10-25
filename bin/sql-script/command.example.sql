@@ -1709,3 +1709,144 @@ FILE_NAME					      FILE_ID ONLINE_
 -- check sql
 select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 
+
+
+-- 1. 原因是OCR 区挂载失败，导致CRS daemon异常
+[grid]$crs_stat -t
+CRS-0184: Cannot communicate with the CRS daemon.
+
+[oragrid]$which crs_stat
+/oracle/11.2.0/grid/gridhome/bin/crs_stat
+[oragrid]$/oracle/11.2.0/grid/gridhome/bin/crs_stat -t
+CRS-0184: Cannot communicate with the CRS daemon.
+
+
+-- 2. log 查异常原因
+[oragrid:/oracle/11.2.0/grid/gridhome/log/hostname/crsd]$vi crsd.log 
+
+
+-- 3.  ocr是oracle集群的注册文件，位于asm
+[oragrid ~]$ocrcheck 
+PROT-602: Failed to retrieve data from the cluster registry
+PROC-26: Error while accessing the physical storage
+
+
+-- 4.  查看diskgroup并尝试挂载OCR分区
+SQL> select name,state from v$asm_diskgroup;
+
+NAME
+--------------------------------------------------------------------------------
+STATE
+---------------------------------
+ARCDG1
+MOUNTED
+
+DATADG1
+MOUNTED
+
+OCR
+DISMOUNTED
+
+
+SQL> alter diskgroup ocr mount;
+
+Diskgroup altered.
+
+
+[oragrid]$asmcmd
+ASMCMD> lsdg
+State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+MOUNTED  EXTERN  N         512   4096  1048576   1023986   601547                0          601547              0             N  ARCDG1/
+MOUNTED  EXTERN  N         512   4096  1048576   2559965  1850805                0         1850805              0             N  DATADG1/
+MOUNTED  NORMAL  N         512   4096  1048576      3069     2143             1023             560              0             Y  OCR/
+ASMCMD> exit
+
+
+-- 需要用root权限，否则报错如下：
+[oragrid]$ocrcheck 
+Status of Oracle Cluster Registry is as follows :
+	 Version                  :          3
+	 Total space (kbytes)     :     262120
+	 Used space (kbytes)      :       3172
+	 Available space (kbytes) :     258948
+	 ID                       : 1572689525
+	 Device/File Name         :       +OCR
+                                    Device/File integrity check succeeded
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+	 Cluster registry integrity check succeeded
+
+	 Logical corruption check bypassed due to non-privileged user
+
+
+-- root运行
+[oragrid]$sudo su - 
+[root ~]# /oracle/11.2.0/grid/gridhome/bin/ocrcheck
+Status of Oracle Cluster Registry is as follows :
+	 Version                  :          3
+	 Total space (kbytes)     :     262120
+	 Used space (kbytes)      :       3172
+	 Available space (kbytes) :     258948
+	 ID                       : 1572689525
+	 Device/File Name         :       +OCR
+                                    Device/File integrity check succeeded
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+	 Cluster registry integrity check succeeded
+
+	 Logical corruption check succeeded
+
+
+
+-- 这个会失败， 尝试启动crs，但失败。只能启动cluster
+[root ~]# /oracle/11.2.0/grid/gridhome/bin/crsctl start crs
+CRS-4640: Oracle High Availability Services is already active
+CRS-4000: Command Start failed, or completed with errors.
+[root ~]# /oracle/11.2.0/grid/gridhome/bin/crsctl start cluster
+CRS-2672: Attempting to start 'ora.crsd' on 'db2'
+CRS-2676: Start of 'ora.crsd' on 'db2' succeeded
+
+
+-- 处理最终结果，target和state一致，并且有rac1和rac2的信息
+
+[oragrid]$crs_stat -t
+Name           Type           Target    State     Host        
+------------------------------------------------------------
+ora.ARCDG1.dg  ora....up.type ONLINE    ONLINE    db1 
+ora.DATADG1.dg ora....up.type ONLINE    ONLINE    db1 
+ora....ER.lsnr ora....er.type ONLINE    ONLINE    db1 
+ora....N1.lsnr ora....er.type ONLINE    ONLINE    db2 
+ora.OCR.dg     ora....up.type ONLINE    ONLINE    db1 
+ora.asm        ora.asm.type   ONLINE    ONLINE    db1 
+ora....SM1.asm application    ONLINE    ONLINE    db1 
+ora....B1.lsnr application    ONLINE    ONLINE    db1 
+ora....db1.gsd application    OFFLINE   OFFLINE               
+ora....db1.ons application    ONLINE    ONLINE    db1 
+ora....db1.vip ora....t1.type ONLINE    ONLINE    db1 
+ora....SM2.asm application    ONLINE    ONLINE    db2 
+ora....B2.lsnr application    ONLINE    ONLINE    db2 
+ora....db2.gsd application    OFFLINE   OFFLINE               
+ora....db2.ons application    ONLINE    ONLINE    db2 
+ora....db2.vip ora....t1.type ONLINE    ONLINE    db2 
+ora.cvu        ora.cvu.type   ONLINE    ONLINE    db1 
+ora.gsd        ora.gsd.type   OFFLINE   OFFLINE               
+ora....network ora....rk.type ONLINE    ONLINE    db1 
+ora.oc4j       ora.oc4j.type  ONLINE    ONLINE    db2 
+ora.ons        ora.ons.type   ONLINE    ONLINE    db1 
+ora....ry.acfs ora....fs.type ONLINE    ONLINE    db1 
+ora.scan1.vip  ora....ip.type ONLINE    ONLINE    db2 
+ora.zjzzdb.db  ora....se.type ONLINE    ONLINE    db1 
