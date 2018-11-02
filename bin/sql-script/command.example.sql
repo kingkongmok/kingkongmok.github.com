@@ -926,7 +926,7 @@ select * from user_errors;
 -- 查找更新对象
 col OBJECT_NAME format a30;
 col OBJECT_TYPE format a15;
-SELECT OBJECT_NAME , OBJECT_TYPE , TIMESTAMP, STATUS from user_objects where OBJECT_TYPE in ( 'FUNCTION', 'PACKAGE', 'PACKAGE BODY','PROCEDURE', 'SEQUENCE', 'TRIGGER', 'VIEW')  and STATUS = 'VALID' order by TIMESTAMP;
+SELECT OBJECT_NAME , OBJECT_TYPE , TIMESTAMP, STATUS from user_objects where OBJECT_TYPE in ( 'FUNCTION', 'PACKAGE', 'PACKAGE BODY','PROCEDURE', 'SEQUENCE', 'TRIGGER', 'VIEW')  and STATUS = 'VALID' order by TIMESTAMP desc;
 
 
 -- show sequence
@@ -1850,3 +1850,19 @@ ora.ons        ora.ons.type   ONLINE    ONLINE    db1
 ora....ry.acfs ora....fs.type ONLINE    ONLINE    db1 
 ora.scan1.vip  ora....ip.type ONLINE    ONLINE    db2 
 ora.zjzzdb.db  ora....se.type ONLINE    ONLINE    db1 
+
+
+-- 观察超过1分钟以上的holder会话
+SELECT l.inst_id,DECODE(l.request,0,'Holder: ','Waiter: ')||l.sid,s.serial#, s.machine, s.program,to_char(s.logon_time,'yyyy-mm-dd hh24:mi:ss'),l.id1, l.id2, l.lmode, l.request, l.type, s.sql_id,s.sql_child_number, s.prev_sql_id,s.prev_child_number
+FROM gV$LOCK l , gv$session s 
+ WHERE (l.id1, l.id2, l.type) IN (SELECT id1, id2, type FROM GV$LOCK WHERE request>0)
+ and l.inst_id=s.inst_id and l.sid=s.sid
+ORDER BY l.inst_id,l.id1, l.request;
+
+-- 查询上述超过1分钟以上会话的SQL ID对应的SQL语句
+select distinct piece,sql_text from gv$sqltext where sql_id='&sql_id' order by piece asc;
+
+-- 查询到当时的传入参数
+select name,position,datatype_string,value_string from dba_hist_sqlbind
+where sql_id='&sqlid' order by snap_id,name,position;
+
