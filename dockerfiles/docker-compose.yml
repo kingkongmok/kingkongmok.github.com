@@ -58,7 +58,7 @@ services:
             - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
             - /etc/localtime:/etc/localtime:ro
             # restore datafile using 
-            - ./docker/oracle_env:/u01/app/oracle
+            - ./containers/oracle_env:/u01/app/oracle
             - ./containers/oracle_env/dockerfile/.bash_profile:/home/oracle/.bash_profile:ro
             - ./containers/oracle_env/dockerfile/libncurses.so.6.1:/lib64/libncurses.so.6:ro
             - ./containers/oracle_env/dockerfile/libreadline.so.7.0:/lib64/libreadline.so.7:ro
