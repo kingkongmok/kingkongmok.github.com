@@ -90,4 +90,4 @@ WantedBy=multi-user.target
 ### [Module vboxguest and vboxsf missing](https://forums.gentoo.org/viewtopic-t-1038758-start-0.html)
 
 
-+ Try to emerge @module-rebuild.
++ Try to **emerge @module-rebuild**.
