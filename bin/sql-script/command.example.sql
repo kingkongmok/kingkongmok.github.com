@@ -181,6 +181,9 @@ SELECT SID, SERIAL#, MACHINE FROM gv$SESSION;
 select s.sid, s.serial#, p.spid processid, s.process clientpid from gv$process p, gv$session s where p.addr = s.paddr 
 
 
+
+
+
 -- count process.
 select count(*) from gv$process;
 select value from v$parameter where name ='processes' ;
@@ -481,6 +484,7 @@ select text from user_source where name='BATCHINPUTMEMBERINFO';
 select distinct name from user_source where name like 'P_IMPORT_TICKETINFO_%'; 
 
 
+
 -- current session id, process id, client process id?
 select b.sid, b.serial#, a.spid processid, b.process clientpid from v$process a, v$session b where a.addr = b.paddr and b.audsid = USERENV('SESSIONID') ;
 
@@ -491,6 +495,17 @@ SID SERIAL# PROCESSID CLIENTPID
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
+
+-- check session and process, get PID
+col MACHINE fomat a30
+col PROGRAM fomat a25
+col CLIENTPID fomat a25
+select distinct s.sid, s.serial#, s.machine, s.program,  s.process clientpid from gv$session s where s.sid=&sid ; 
+
+       SID    SERIAL# MACHINE			PROGRAM 		  CLIENTPID
+---------- ---------- ------------------------- ------------------------- -------------------------
+       630	53521 WORKGROUP\PTMSB2B-212	w3wp.exe		  2080:3652
+
 
 -- kill session
 
@@ -1149,9 +1164,28 @@ Deleted 1 EXPIRED objects
 
 
 -- create dblink
--- 使用带dblink方式的datapump迁移Oracle 10g到11g
--- https://blog.csdn.net/leshami/article/details/11033449
+-- https://dba.stackexchange.com/questions/54185/create-database-link-on-oracle-database-with-2-databases-on-different-machines
+--list dblik
+SELECT * FROM ALL_DB_LINKS;
+-- You can define the connection string via tnsnames.ora ( $ORACLE_HOME/network/admin/tnsnames.ora ) then reference the alias
+remotedb =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = remotedb.fqdn.com)(PORT = 1521))
+    (CONNECT_DATA = (SERVICE_NAME = ORCL))
+  )
+-- Then create a dblink referencing that alias:
+drop database link remotedb;
+CREATE DATABASE LINK remotedb
+    CONNECT TO SYSTEM IDENTIFIED BY <password>
+    USING 'remotedb';
+-- Or facilitate the same inline with:
+CREATE DATABASE LINK remotedb
+CONNECT TO SYSTEM IDENTIFIED BY <password>
+USING'(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = remotedb.fqdn.com)(PORT = 1521))(CONNECT_DATA = (SERVICE_NAME = ORCL)))';
 
+
+-- 查看是否有权限进程dblink操作
+select * from user_sys_privs where privilege like upper('%DATABASE LINK%');  
 
 
 
