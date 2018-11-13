@@ -43,16 +43,16 @@ kibana:
         links: 
             - elasticsearch
 
-logstash-api:
+logstash:
         image: docker.elastic.co/logstash/logstash:6.4.2
-        container_name: logstash-api
+        container_name: logstash
         restart: always
         links: 
             - elasticsearch
         volumes:
                 - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro
-                - /root/container/logstash-api/pipeline:/usr/share/logstash/pipeline:ro
-                - /root/container/logstash-api/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+                - /root/container/logstash/pipeline:/usr/share/logstash/pipeline:ro
+                - /root/container/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
 
 ```
 
