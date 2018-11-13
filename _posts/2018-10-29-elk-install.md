@@ -7,9 +7,102 @@ tags: [elk]
 
 ### docker
 
-```
++ docker-compose.yml
 
 ```
+elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+        container_name: elasticsearch
+        restart: always
+        volumes:
+                - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
+                # config        
+                - /root/container/elasticsearch/config:/usr/share/elasticsearch/config:ro
+                # logs
+                - /root/container/elasticsearch/logs:/usr/share/elasticsearch/logs
+                # data
+                - /root/container/elasticsearch/data:/usr/share/elasticsearch/data
+        environment:
+                - cluster.name=docker-cluster
+                - bootstrap.memory_lock=true
+                - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+        ulimits:
+                memlock:
+                        soft: -1
+                        hard: -1
+
+kibana:
+        image: docker.elastic.co/kibana/kibana:6.4.2
+        container_name: kibana
+        restart: always
+        ports:
+                - 5601:5601
+        volumes:
+                - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro
+                - /root/container/kibana/config:/usr/share/kibana/config
+        links: 
+            - elasticsearch
+
+logstash-api:
+        image: docker.elastic.co/logstash/logstash:6.4.2
+        container_name: logstash-api
+        restart: always
+        links: 
+            - elasticsearch
+        volumes:
+                - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro
+                - /root/container/logstash-api/pipeline:/usr/share/logstash/pipeline:ro
+                - /root/container/logstash-api/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+
+```
+
+
+logstash.yml
+
+```
+http.host: "0.0.0.0"
+path.config: /usr/share/logstash/pipeline
+```
+
+logstash 使用文件收取日志 **logstash.conf**
+
+```
+input {
+    file {
+        path => "/var/log/nginx/u_ex*.log"
+        start_position => "beginning"
+        ignore_older => 8000
+    }
+}
+
+filter {
+ grok {
+    match => { "message" => "%{TIMESTAMP_ISO8601:time} %{IPORHOST:server_ip} %{WORD:method} %{URIPATH:url} %{NOTSPACE:query_string} %{NUMBER:port} %{NOTSPACE:user_name} %{IPORHOST:remote_ip} %{NOTSPACE:agent} %{NOTSPACE:referrer} %{NUMBER:response_code} %{NUMBER:sub_status} %{NUMBER:win32_status} %{NUMBER:request_time_ms}" }
+ }
+ mutate {
+   convert => ["response_code", "integer"]
+   convert => ["request_time_ms", "integer"]
+ }
+ date {
+   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
+   remove_field => [ "timestamp" ]
+ }
+ useragent {
+   source => "agent"
+ }
+}
+output {
+	elasticsearch {
+		hosts => ["elasticsearch:9200"]
+			index => "gz_access_logs-%{+yyyy-MM-dd}"
+			document_type => "iis_logs"
+	}
+}
+
+```
+
+---
+
 
 ###  [create a graph](https://stackoverflow.com/questions/22053926/how-do-i-create-a-stacked-graph-of-http-codes-in-kibana/26471825#26471825)
 
