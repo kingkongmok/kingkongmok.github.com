@@ -699,6 +699,25 @@ select thread#||'_'||SEQUENCE#,name,STATUS,applied,to_char(COMPLETION_TIME,'yyyy
 
 select thread#,max(sequence#) as "last_applied_log" from v$log_history group by thread#;
 
+-- 成华提供
+
+-- 1、检查主备两边的序号
+select max(sequence#) from v$log;   ---检查发现一致
+
+-- 2、备库执行，查看是否有数据未应用
+select name,SEQUENCE#,APPLIED from v$archived_log order by sequence#;
+
+select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
+
+
+-- 3、检查备库是否开启实时应用
+select recovery_mode from v$archive_dest_status where dest_id=2;
+
+
+-- 4、检查备库状态
+select switchover_status from v$database; --发现状态not allowed 
+
+
 
 -- 查询列对应的索引 indexes and columns
 select * from user_ind_columns where table_name='PERSONALINFORMATION';
@@ -1900,3 +1919,10 @@ select distinct piece,sql_text from gv$sqltext where sql_id='&sql_id' order by p
 select name,position,datatype_string,value_string from dba_hist_sqlbind
 where sql_id='&sqlid' order by snap_id,name,position;
 
+-- 勒索病毒
+select 'DROP TRIGGER '||owner||'."'||TRIGGER_NAME||'";' from dba_triggers where
+TRIGGER_NAME like  'DBMS_%_INTERNAL%'
+union all
+select 'DROP PROCEDURE '||owner||'."'||a.object_name||'";' from DBA_PROCEDURES a
+where a.object_name like 'DBMS_%_INTERNAL% '
+/
