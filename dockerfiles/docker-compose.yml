@@ -68,7 +68,7 @@ oracle:
         - ./containers/oracle_env/dockerfile/libncurses.so.6.1:/lib64/libncurses.so.6:ro
         - ./containers/oracle_env/dockerfile/libreadline.so.7.0:/lib64/libreadline.so.7:ro
         - ./containers/oracle_env/dockerfile/rlwrap:/usr/bin/rlwrap:ro
-        - ./containers/oracle_env/dockerfile/login.sql:/home/oracle/login.sql
+        - ./containers/oracle_env/dockerfile/login.sql:/home/oracle/login.sql:ro
         - ./containers/oracle_env/dockerfile/oracle_archive_backup.sh:/home/oracle/oracle_archive_backup.sh:ro
         - ./containers/oracle_env/dockerfile/oracle_full_backup.sh:/home/oracle/oracle_full_backup.sh:ro
         - ./containers/oracle_env/dockerfile/rman_arch:/home/oracle/rman_arch:ro
