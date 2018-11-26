@@ -154,7 +154,7 @@ col DATUM_TIME format a30
 select * from V$DATAGUARD_STATS;
 select VALUE from V$DATAGUARD_STATS where NAME = 'transport lag';
 select VALUE from V$DATAGUARD_STATS where NAME = 'apply lag';
-select to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) from V$DATAGUARD_STATS;
+select to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) Lag_Total from V$DATAGUARD_STATS;
 
 
 -- on master, dg gap
@@ -826,7 +826,52 @@ select s.username,s.sid,s.serial#,s.last_call_et/60 mins_running from gv$session
 --
 column USERNAME format a15
 column spid format a15
-select s.username, s.inst_id, s.sid, s.serial#, p.spid, s.last_call_et/60 mins_running from gv$session s, gv$process p where p.addr = s.paddr and s.status='ACTIVE' and s.type <>'BACKGROUND' and s.last_call_et> 60 order by sid,serial# ;
+select s.username, s.inst_id, s.sid, s.serial#, s.program, s.machine, p.spid, s.last_call_et/60 mins_running from gv$session s, gv$process p where p.addr = s.paddr and s.status='ACTIVE' and s.type <>'BACKGROUND' and s.last_call_et> 60 order by sid,serial# ;
+
+
+-- 查看在跑什么
+-- https://community.oracle.com/thread/2354739?start=0&tstart=0
+select a.sid, a.username,b.sql_id, b.sql_fulltext from gv$session a, gv$sql b where a.sql_id = b.sql_id and a.status = 'ACTIVE' and a.username != 'SYS';
+
+
+--  SQL ordered by Elapsed Time in 20mins, like awr
+col EXEs format a5;
+col TOTAL_ELAPSED format a15;
+col ELAPSED_PER_EXEC format a15;
+col TOTAL_CPU format a15;
+col CPU_PER_SEC format a15;
+col TOTAL_USER_IO format a15;
+col USER_IO_PER_EXEC format a15;
+col MODULE format a20;
+select * from (
+    select
+    SQL_ID,
+    EXECUTIONS EXEs,
+    -- in second
+    round(ELAPSED_TIME/1000000,2) TOTAL_ELAPSED,
+    round(ELAPSED_TIME/1000000/nullif(executions, 0) ,2) ELAPSED_PER_EXEC,
+    round(CPU_TIME/1000000,2) TOTAL_CPU,
+    round(CPU_TIME/1000000/EXECUTIONS,2) CPU_PER_SEC,
+    round(user_io_wait_time/1000000,2) TOTAL_USER_IO,
+    round(user_io_wait_time/1000000/EXECUTIONS,2) USER_IO_PER_EXEC,  
+    to_char(LAST_ACTIVE_TIME , 'hh24:mm:ss') LAST_ACTIVE_TIME,
+    module
+    from v$sqlarea a where
+    LAST_ACTIVE_TIME >=  (sysdate - 20/60*24)
+    and sql_fulltext like '%TICKETRECORD_HIST%'
+    order by ELAPSED_PER_EXEC desc)
+where ROWNUM < 6
+/
+
+
+SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_SEC   TOTAL_USER_IO USER_IO_PER_EXE LAST_ACT MODULE             
+------------- ----- --------------- --------------- --------------- --------------- --------------- --------------- -------- --------------------
+4z1xp5zx99mr7     2         18730.2          9365.1           96.45           48.22        16529.86         8264.93 14:11:11 DataExchange.exe    
+98sz9txr8z1m4     7        24956.02         3565.15          381.22           54.46        24567.53         3509.65 14:11:56 DataExchange.exe    
+9j5grcp042mhs     2         1861.95          930.98           20.36           10.18         1844.59          922.29 14:11:28 DataExchange.exe    
+64gtpnfwx4uqn     1             .09             .09             .06             .06             .02             .02 11:11:29 SQL Developer       
+7hmyj1rctb0bx     2             .18             .09             .11             .06             .05             .02 14:11:04 SQL Developer       
+
 
 
 
@@ -1760,7 +1805,9 @@ FILE_NAME					      FILE_ID ONLINE_
 
 
 -- check sql
+alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';     
 select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 
 
 
