@@ -91,3 +91,31 @@ WantedBy=multi-user.target
 
 
 + Try to **emerge @module-rebuild**.
+
+---
+
+### virtualbox 瘦身
+
+
++ 确认vm的分区没有压缩（如果压缩不能用空文件填空间）, 查找有没有**compress=lzo**
+
+```
+mount | grep compress
+
+```
+
++ 对vm进行0文件填充，并删掉、关机。
+
+```
+sudo dd if=/dev/zero of=/var/tmp/bigemptyfile bs=4096k
+sudo rm -f /var/tmp/bigemptyfile
+sudo systemctl poweroff
+
+```
+
+
++ 对vdi文件进行压缩
+
+```
+VBoxManage modifyhd wini7.vdi compact
+```
