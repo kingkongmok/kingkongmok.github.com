@@ -154,7 +154,7 @@ col DATUM_TIME format a30
 select * from V$DATAGUARD_STATS;
 select VALUE from V$DATAGUARD_STATS where NAME = 'transport lag';
 select VALUE from V$DATAGUARD_STATS where NAME = 'apply lag';
-select to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) Lag_Total from V$DATAGUARD_STATS;
+select to_number(to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) ) Lag_Total from V$DATAGUARD_STATS;
 
 
 -- on master, dg gap
@@ -402,7 +402,7 @@ WHERE tablespace_name = 'SYSTEM'
 -- 数据泵 impdp expdb
 -- expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
 
-expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
+-- expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
 
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 exp ftsp/ftsp owner=ftsp file=20161205ftsp.dmp log=20161205ftsp.log;
@@ -724,6 +724,39 @@ select * from user_ind_columns where table_name='PERSONALINFORMATION';
 select * from user_indexes where table_name='PERSONALINFORMATION';
 select distinct TABLE_NAME,TABLESPACE_NAME from user_indexes;
 
+--  obtain information on index fields etc
+col TABLE_OWNER format a10
+col COLUMN_NAME format a25
+col COLUMN_EXPRESSION format a15
+SELECT
+ i.table_owner,
+ i.table_name,
+ i.index_name,
+ i.uniqueness,
+ c.column_name,
+ f.column_expression
+FROM      all_indexes i
+LEFT JOIN all_ind_columns c
+ ON   i.index_name      = c.index_name
+ AND  i.owner           = c.index_owner
+LEFT JOIN all_ind_expressions f
+ ON   c.index_owner     = f.index_owner
+ AND  c.index_name      = f.index_name
+ AND  c.table_owner     = f.table_owner
+ AND  c.table_name      = f.table_name
+ AND  c.column_position = f.column_position
+WHERE i.table_owner = UPPER('&table_owner')
+ AND  i.table_name  = UPPER('&table_name')
+ORDER BY i.table_owner, i.table_name, i.index_name, c.column_position
+/
+
+TABLE_OWNE TABLE_NAME                     INDEX_NAME                     UNIQUENES COLUMN_NAME               COLUMN_EXPRESSI
+---------- ------------------------------ ------------------------------ --------- ------------------------- ---------------
+CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE1              NONUNIQUE TICKETCODE                
+CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE2              NONUNIQUE TICKETTRANSACTION_ID      
+CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE3              NONUNIQUE SETOFFDATE                
+CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE4              NONUNIQUE INSERTTIME               
+
 
 -- 查询index是否失效；
 select index_name,last_analyzed,status from dba_indexes where owner='CKSP';
@@ -836,13 +869,13 @@ select a.sid, a.username,b.sql_id, b.sql_fulltext from gv$session a, gv$sql b wh
 
 --  SQL ordered by Elapsed Time in 20mins, like awr
 col EXEs format a5;
-col TOTAL_ELAPSED format a15;
-col ELAPSED_PER_EXEC format a15;
-col TOTAL_CPU format a15;
-col CPU_PER_SEC format a15;
-col TOTAL_USER_IO format a15;
-col USER_IO_PER_EXEC format a15;
-col MODULE format a20;
+col TOTAL_ELAPSED format a15; 
+col ELAPSED_PER_EXEC format a15; 
+col TOTAL_CPU format a15; 
+col CPU_PER_SEC format a15; 
+col TOTAL_USER_IO format a15; 
+col USER_IO_PER_EXEC format a15; 
+col MODULE format a20; 
 select * from (
     select
     SQL_ID,
@@ -851,18 +884,16 @@ select * from (
     round(ELAPSED_TIME/1000000,2) TOTAL_ELAPSED,
     round(ELAPSED_TIME/1000000/nullif(executions, 0) ,2) ELAPSED_PER_EXEC,
     round(CPU_TIME/1000000,2) TOTAL_CPU,
-    round(CPU_TIME/1000000/EXECUTIONS,2) CPU_PER_SEC,
+    round(CPU_TIME/1000000/nullif(executions, 0) ,2) CPU_PER_SEC,
     round(user_io_wait_time/1000000,2) TOTAL_USER_IO,
-    round(user_io_wait_time/1000000/EXECUTIONS,2) USER_IO_PER_EXEC,  
+    round(user_io_wait_time/1000000/nullif(executions, 0) ,2) USER_IO_PER_EXEC,  
     to_char(LAST_ACTIVE_TIME , 'hh24:mm:ss') LAST_ACTIVE_TIME,
     module
-    from v$sqlarea a where
+    from gv$sqlarea a where
     LAST_ACTIVE_TIME >=  (sysdate - 20/60*24)
-    and sql_fulltext like '%TICKETRECORD_HIST%'
-    order by ELAPSED_PER_EXEC desc)
+    order by TOTAL_USER_IO desc)
 where ROWNUM < 6
 /
-
 
 SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_SEC   TOTAL_USER_IO USER_IO_PER_EXE LAST_ACT MODULE             
 ------------- ----- --------------- --------------- --------------- --------------- --------------- --------------- -------- --------------------
@@ -873,6 +904,10 @@ SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_
 7hmyj1rctb0bx     2             .18             .09             .11             .06             .05             .02 14:11:04 SQL Developer       
 
 
+-- check sql_text
+select sql_text from gv$sqlarea where sql_id='&sql_id';
+select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV'; 
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
 
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
@@ -883,7 +918,7 @@ column username format a15
 column program format a25
 column logon_time format a25
 column SPID format a15
-select s.inst_id, s.sid, s.serial#, p.spid, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 order by PGA_USED_MEM;
+select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 order by PGA_USED_MEM;
 --
 
 INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  PGA_USED_MEM PGA_ALLOC_MEM
@@ -1973,3 +2008,102 @@ union all
 select 'DROP PROCEDURE '||owner||'."'||a.object_name||'";' from DBA_PROCEDURES a
 where a.object_name like 'DBMS_%_INTERNAL% '
 /
+
+
+-- size of all objects in your schema
+select sum(bytes)/1024/1024 MB from dba_segments where owner = 'CKSP'; 
+
+MB
+----------
+187854.063
+
+
+
+
+-- 查询是否启用自动SQL调优作业
+col CLIENT_NAME format a35
+col CLIENT_NAME format a35
+select client_name,status,consumer_group,window_group from dba_autotask_client order by client_name;
+
+CLIENT_NAME			    STATUS   CONSUMER_GROUP		    WINDOW_GROUP
+----------------------------------- -------- ------------------------------ ------------------------------
+auto optimizer stats collection     ENABLED  ORA$AUTOTASK_STATS_GROUP	    ORA$AT_WGRP_OS
+auto space advisor		    ENABLED  ORA$AUTOTASK_SPACE_GROUP	    ORA$AT_WGRP_SA
+sql tuning advisor		    ENABLED  ORA$AUTOTASK_SQL_GROUP	    ORA$AT_WGRP_SQ
+
+
+
+--  查看SQL调优顾问最近几次的运行情况
+select task_name,status,to_char(execution_end,'DD-MON-YY HH24:MI') from
+dba_advisor_executions where task_name='SYS_AUTO_SQL_TUNING_TASK' order by
+execution_end
+/
+
+TASK_NAME		       STATUS	   TO_CHAR(EXECUTION_END
+------------------------------ ----------- ------------------------
+SYS_AUTO_SQL_TUNING_TASK       COMPLETED   09-NOV-18 22:53
+SYS_AUTO_SQL_TUNING_TASK       COMPLETED   10-NOV-18 06:00
+
+
+
+-- SQL建议
+set  linesize 3000 PAGESIZE 0 LONG 100000
+select DBMS_SQLTUNE.SCRIPT_TUNING_TASK('SYS_AUTO_SQL_TUNING_TASK') from dual;
+
+
+-----------------------------------------------------------------
+-- Script generated by DBMS_SQLTUNE package, advisor framework -
+-
+-- Use this script to implement some of the recommendations    --
+-- made by the SQL tuning advisor.
+ --
+--							       --
+-- NOTE: this script may need to be edited for your system
+   --
+--	 (index names, privileges, etc) before it is executed. --
+----------------------------------------------------------
+-------
+execute dbms_stats.gather_table_stats(ownname => 'SYSMAN', tabname =>
+'MGMT_METRICS_RAW', estimate_percent => DBMS_STATS.A
+UTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE
+ AUTO');
+
+
+
+-- 查看执行计划
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
+
+Enter value for sql_id: db78fxqxwxt7r
+old   1: SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0))
+new   1: SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('db78fxqxwxt7r',0))
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------
+SQL_ID	db78fxqxwxt7r, child number 0
+-------------------------------------
+select /*+ rule */ bucket, endpoint, col#, epvalue from histgrm$ where
+obj#=:1 and intcol#=:2 and row#=:3 order by bucket
+
+Plan hash value: 3312420081
+
+-------------------------------------------------------------
+| Id  | Operation	      | Name	       | Cost (%CPU)|
+-------------------------------------------------------------
+|   0 | SELECT STATEMENT      | 	       |	    |
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------
+|   1 |  SORT ORDER BY	      | 	       |     0	 (0)|
+|*  2 |   TABLE ACCESS CLUSTER| HISTGRM$       |	    |
+|*  3 |    INDEX UNIQUE SCAN  | I_OBJ#_INTCOL# |	    |
+-------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - filter("ROW#"=:3)
+   3 - access("OBJ#"=:1 AND "INTCOL#"=:2)
+
+
+22 rows selected.
+
