@@ -332,10 +332,12 @@ passwd grid
 + mkdir
 
 ```
+mkdir /stage
 mkdir -p /u01/app/11.2.0/grid
 mkdir -p /u01/app/oraInventory
 mkdir -p /u01/app/grid
 chown -R grid.oinstall /u01
+chown -R grid.oinstall /stage
 ```
 
 ```
