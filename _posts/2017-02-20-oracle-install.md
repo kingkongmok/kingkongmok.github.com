@@ -5,21 +5,28 @@ category: linux
 ---
 
 
-## update 
++ update 
 
 
 ```
 yum -y groupinstall "Development Tools"
 ```
 
++ software
 
 ```
-yum -y install compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel glibc-headers ksh libaio libaio-devel libgcc libstdc++ libstdc++-devel make sysstat unixODBC unixODBC-devel
+yum -y install vim screen
+yum -y install smartmontools sysstat
+rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 ```
 
----
 
-##  X11 forward
+```
+yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
+```
+
+
++ X11 forward
 
 ```
 yum -y install xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps
@@ -78,16 +85,6 @@ ulimit -n 65536
 session required /lib64/security/pam_limits.so
 ```
 
-### /etc/hosts
-
-```
-127.0.0.1   rac1 localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         rac1 localhost localhost.localdomain localhost6 localhost6.localdomain6
-10.255.255.21   rac1
-
-```
-
----
 
 ## cmd
 
@@ -229,19 +226,6 @@ netca /silent /responsefile /stage/database/response/netca.rsp
 ```
 
 
-
----
-
-groupadd -g 1000 oinstall
-groupadd -g 1001 asmadmin
-groupadd -g 1002 dba
-groupadd -g 1003 asmdba
-useradd -u 1000 -d /home/oracle -g oinstall -G dba,asmdba,wheel oracle
-useradd -u 1001 -d /home/grid -g oinstall -G asmadmin,asmdba,wheel grid
-passwd oracle
-passwd grid
-
-
 ---
 
 
@@ -325,37 +309,11 @@ session required /lib64/security/pam_limits.so
 EOF
 ```
 
+---
 
-~~
-yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
+### ssh-copy-id 
 
-yum -y install expect
-
-ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
-
-#清除NTP服务
-service ntpd stop
-chkconfig ntpd off
-mv /etc/ntp.conf /etc/ntp.conf.bak
-mv /var/run/ntpd.pid /var/run/ntpd.pid.bak
-
-
-cat >> /home/grid/.bash_profile << EOF
-export TMP=/tmp
-export TMPDIR=$TMP
-export ORACLE_BASE=/u01/app/grid
-export ORACLE_HOME=/u01/app/11.2.0/grid
-export GRID_HOME=/u01/app/11.2.0/grid
-export ORACLE_SID=+ASM1
-export ORACLE_TERM=xterm
-export PATH=/usr/sbin:\$PATH
-export PATH=\$ORACLE_HOME/bin:\$PATH
-export LD_LIBRARY_PATH=\$ORACLE_HOME/bin:/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin/
-export CLASSPATH=\$ORACLE_HOME/JRE:\$ORACLE_HOME/jlib:\$ORACLE_HOME/rdbms/jlib
-ulimit -u 16384 -n 65536
-umask 022
-EOF
-~~
+---
 
 
 + add user 
@@ -375,11 +333,17 @@ passwd grid
 
 ```
 mkdir -p /u01/app/11.2.0/grid
+mkdir -p /u01/app/oraInventory
+mkdir -p /u01/app/grid
 chown -R grid.oinstall /u01
+```
+
+```
 mkdir -p /u01/app/oracle/product/11.2.0/db_1 
 chown -R oracle.oinstall  /u01/app/oracle
 chmod -R 775 /u01
 ```
+
 
 ~~配置iscsi连接openfiler存储,此处要根据实际情况设置,这里是一个40G的盘,分成两个20G的区~~
 ```
