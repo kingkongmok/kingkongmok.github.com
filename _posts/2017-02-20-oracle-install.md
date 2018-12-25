@@ -29,7 +29,7 @@ yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf el
 + X11 forward
 
 ```
-yum -y install xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps
+yum -y install xorg-x11-xauth 
 
 ```
 
@@ -88,29 +88,6 @@ session required /lib64/security/pam_limits.so
 
 ## cmd
 
-
-```
-
-groupadd -g 500 oinstall
-groupadd -g 501 dba
-groupadd -g 502 oper
-groupadd -g 503 asmdba
-groupadd -g 504 asmoper
-groupadd -g 505 asmadmin
-
-useradd -u 500 -g oinstall -G dba,oper,asmdba,asmoper,asmadmin,wheel oracle
-
-
-mkdir -p /u01/app/oraInventory
-mkdir -p /u01/app/oracle/oradata
-mkdir -p /u01/app/oracle/fast_recovery_area
-mkdir -p /stage
-chown -R oracle:oinstall /u01/app/
-chown -R oracle:oinstall /stage/
-chmod -R 775 /u01/app/
-chmod -R 775 /stage/
-
-```
 
 ### .bashrc
 
@@ -207,7 +184,6 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 ./database/runInstaller -silent -responseFile /home/oracle/db_install.rsp
 ```
 
----
 
 ## dbca
 
@@ -217,7 +193,6 @@ dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname orcl -si
 
 然后输入 **SYS**, **SYSTEM**, **SYSMEM** 的密码
 
----
 
 ## netca
 
@@ -225,6 +200,154 @@ dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname orcl -si
 netca /silent /responsefile /stage/database/response/netca.rsp
 ```
 
+---
+
+### grid_single.rsp
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
+ORACLE_HOSTNAME=adg
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+oracle.install.option=HA_CONFIG
+ORACLE_BASE=/u01/app/grid
+ORACLE_HOME=/u01/app/grid/product/11.2.0/grid
+oracle.install.asm.OSDBA=asmdba
+oracle.install.asm.OSOPER=
+oracle.install.asm.OSASM=asmadmin
+oracle.install.crs.config.gpnp.scanName=
+oracle.install.crs.config.gpnp.scanPort=
+oracle.install.crs.config.clusterName=
+oracle.install.crs.config.gpnp.configureGNS=false
+oracle.install.crs.config.gpnp.gnsSubDomain=
+oracle.install.crs.config.gpnp.gnsVIPAddress=
+oracle.install.crs.config.autoConfigureClusterNodeVIP=false
+oracle.install.crs.config.clusterNodes=
+oracle.install.crs.config.networkInterfaceList=
+oracle.install.crs.config.storageOption=
+oracle.install.crs.config.sharedFileSystemStorage.diskDriveMapping=
+oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=
+oracle.install.crs.config.sharedFileSystemStorage.votingDiskRedundancy=NORMAL
+oracle.install.crs.config.sharedFileSystemStorage.ocrLocations=
+oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
+oracle.install.crs.config.useIPMI=false
+oracle.install.crs.config.ipmi.bmcUsername=
+oracle.install.crs.config.ipmi.bmcPassword=
+oracle.install.asm.SYSASMPassword=
+oracle.install.asm.diskGroup.name=DATA
+oracle.install.asm.diskGroup.redundancy=EXTERNAL
+oracle.install.asm.diskGroup.AUSize=1
+oracle.install.asm.diskGroup.disks=/dev/raw/raw1
+oracle.install.asm.diskGroup.diskDiscoveryString=
+oracle.install.asm.monitorPassword=
+oracle.install.crs.upgrade.clusterNodes=
+oracle.install.asm.upgradeASM=false
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+PROXY_HOST=
+PROXY_PORT=0
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+```
+
+配合上面的rsp文件，静默安装。建议grid安装的时候把库安装上。
+
+```
+./grid/runInstaller -ignorePrereq -silent -force -responseFile /home/grid/grid_install.rsp
+./grid/runInstaller -silent -responseFile /home/grid/grid_install.rsp
+```
+
+grid/.bash_profile
+
+```
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/11.2.0/grid_1
+export ORACLE_SID=+ASM
+export PATH=$ORACLE_HOME/bin:$PATH
+```
+
+grid 静默安装后，执行完root安装后会用grid用户再执行一次cfgrsp的密码相关配置
+[Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
+
+
+
+```
+cat >> cfgrsp.properties << EOF
+oracle.assistants.asm|S_ASMPASSWORD=password
+oracle.assistants.asm|S_ASMMONITORPASSWORD=password
+oracle.crs|S_BMCPASSWORD=password
+EOF
+```
+
+```
+/u01/app/grid/product/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=cfgrsp.properties
+```
+
+### 安装grid成功后，再用oracle安装库，同样使用 **single_grid_db.rsp** 进行静默安装
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
+oracle.install.option=INSTALL_DB_AND_CONFIG
+ORACLE_HOSTNAME=adg
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
+ORACLE_BASE=/u01/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.EEOptionsSelection=false
+oracle.install.db.optionalComponents=
+oracle.install.db.DBA_GROUP=dba
+oracle.install.db.OPER_GROUP=
+oracle.install.db.CLUSTER_NODES=
+oracle.install.db.isRACOneInstall=false
+oracle.install.db.racOneServiceName=
+oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
+oracle.install.db.config.starterdb.globalDBName=orcl
+oracle.install.db.config.starterdb.SID=orcl
+oracle.install.db.config.starterdb.characterSet=AL32UTF8
+oracle.install.db.config.starterdb.memoryOption=true
+oracle.install.db.config.starterdb.memoryLimit=802
+oracle.install.db.config.starterdb.installExampleSchemas=false
+oracle.install.db.config.starterdb.enableSecuritySettings=true
+oracle.install.db.config.starterdb.password.ALL=
+oracle.install.db.config.starterdb.password.SYS=
+oracle.install.db.config.starterdb.password.SYSTEM=
+oracle.install.db.config.starterdb.password.SYSMAN=
+oracle.install.db.config.starterdb.password.DBSNMP=
+oracle.install.db.config.starterdb.control=DB_CONTROL
+oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
+oracle.install.db.config.starterdb.automatedBackup.enable=false
+oracle.install.db.config.starterdb.automatedBackup.osuid=
+oracle.install.db.config.starterdb.automatedBackup.ospwd=
+oracle.install.db.config.starterdb.storageType=ASM_STORAGE
+oracle.install.db.config.starterdb.fileSystemStorage.dataLocation=
+oracle.install.db.config.starterdb.fileSystemStorage.recoveryLocation=
+oracle.install.db.config.asm.diskGroup=DATA
+oracle.install.db.config.asm.ASMSNMPPassword=
+MYORACLESUPPORT_USERNAME=
+MYORACLESUPPORT_PASSWORD=
+SECURITY_UPDATES_VIA_MYORACLESUPPORT=false
+DECLINE_SECURITY_UPDATES=true
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+COLLECTOR_SUPPORTHUB_URL=
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+```
+
+```
+cd /stage
+./database/runInstaller -silent -responseFile /home/oracle/db_install.rsp
+```
 
 ---
 
@@ -309,6 +432,12 @@ session required /lib64/security/pam_limits.so
 EOF
 ```
 
+change lib name
+
+```
+ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
+```
+
 ---
 
 ### ssh-copy-id 
@@ -363,7 +492,7 @@ ACTION=="add", KERNEL=="/dev/sdb1",RUN+="/bin/raw /dev/raw/raw1 %N"
 ACTION=="add", ENV{MAJOR}=="8",ENV{MINOR}=="17",RUN+="/bin/raw /dev/raw/raw1 %M %m"
 ACTION=="add", KERNEL=="/dev/sdb2",RUN+="/bin/raw /dev/raw/raw2 %N"
 ACTION=="add", ENV{MAJOR}=="8",ENV{MINOR}=="18",RUN+="/bin/raw /dev/raw/raw2 %M %m"
-KERNEL=="raw[1-2]", OWNER="grid", GROUP="oinstall", MODE="660"
+KERNEL=="raw[1-2]", OWNER="grid", GROUP="asmadmin", MODE="660"
 EOF
 
 start_udev
