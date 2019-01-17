@@ -59,6 +59,15 @@ show parameter spfile;
 select distinct owner from dba_segments where owner in (select username from dba_users where default_tablespace not in ('SYSTEM','SYSAUX') );
 
 
+-- change memory setting
+
+alter system set memory_max_target=32G scope=spfile; 
+alter system set memory_max_target=32G scope=spfile sid='*'; 
+alter system set memory_target=32G scope=spfile; 
+alter system set sga_target=0 scope=spfile; 
+alter system set pga_aggregate_target=0 scope=spfile; 
+alter system set sga_max_size=0 scope=spfile; 
+
 -- list objects
 -- Tables
 select TABLE_NAME, OWNER from SYS.ALL_TABLES order by OWNER, TABLE_NAME;
@@ -404,6 +413,7 @@ WHERE tablespace_name = 'SYSTEM'
 
 -- expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
 
+expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott logfile=expdp_scott.log parallel=2 job_name=expdp_scott.job
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 exp ftsp/ftsp owner=ftsp file=20161205ftsp.dmp log=20161205ftsp.log;
 
@@ -457,7 +467,7 @@ CREATE TABLE employees
 
 create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
 
--- drop dataspaces
+-- drop tablespaces
 DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS; 
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
 
@@ -554,6 +564,19 @@ BEGIN
   END LOOP;
 END;
 
+
+-- asm creating DATA disk group
+
+CREATE DISKGROUP DATA NORMAL REDUNDANCY DISK '/dev/raw/raw1';
+CREATE DISKGROUP FRA EXTERNAL REDUNDANCY DISK 'dev/raw/raw2';
+
+-- diskgroup add disk
+ALTER DISKGROUP DATA ADD DISK '/dev/raw/raw4';
+
+-- diskgroup 
+DROP DISKGROUP dgroup_01 INCLUDING CONTENTS;
+
+
 -- dg关库:
 lsnrctl stop
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;   
@@ -646,11 +669,61 @@ SELECT LOG_MODE FROM SYS.V$DATABASE;
 ARCHIVE LOG LIST;
 select * from v$standby_log;
 
+
+-- 日志组
+SELECT GROUP#, ARCHIVED, STATUS FROM V$LOG;
+
+    GROUP# ARC STATUS         
+---------- --- ----------------
+         1 YES INACTIVE        
+         2 YES INACTIVE        
+         3 YES ACTIVE          
+         4 NO  CURRENT         
+         9 NO  CURRENT         
+        10 YES INACTIVE        
+        11 YES INACTIVE        
+        12 YES INACTIVE        
+        13 YES INACTIVE        
+        14 YES INACTIVE        
+
+col FIRST_CHANGE# format a15
+col NEXT_CHANGE# format a15
+SELECT * FROM V$LOG;
+
+
+    GROUP#    THREAD#  SEQUENCE#      BYTES  BLOCKSIZE    MEMBERS ARC STATUS             FIRST_CHANGE# FIRST_TIME    NEXT_CHANGE# NEXT_TIME
+---------- ---------- ---------- ---------- ---------- ---------- --- ---------------- --------------- ---------- --------------- ---------
+         1          1     110645  104857600        512          1 YES INACTIVE                 1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+         2          1     110646  104857600        512          1 YES INACTIVE                 1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+         3          2      67970  104857600        512          1 YES ACTIVE                   1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+         4          2      67971  104857600        512          1 YES ACTIVE                   1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+         9          1     110650  209715200        512          2 NO  CURRENT                  1.2E+10 28-DEC-18          2.8E+14          
+        10          2      67972  209715200        512          2 NO  CURRENT                  1.2E+10 28-DEC-18          2.8E+14          
+        11          1     110647  209715200        512          2 YES INACTIVE                 1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+        12          2      67967  209715200        512          2 YES INACTIVE                 1.2E+10 28-DEC-18          1.2E+10 28-DEC-18
+
+
+col MEMBER format a25
+SELECT * FROM V$LOGFILE;
+
+    GROUP# STATUS  TYPE    MEMBER                                        IS_
+---------- ------- ------- --------------------------------------------- ---
+        13         ONLINE  +DATADG1/zjzzdb/group13_2                     NO 
+        14         ONLINE  +DATADG1/zjzzdb/group14_1                     NO 
+        14         ONLINE  +DATADG1/zjzzdb/group14_2                     NO 
+        15         ONLINE  +DATADG1/zjzzdb/group15_1                     NO 
+        15         ONLINE  +DATADG1/zjzzdb/group15_2                     NO 
+        16         ONLINE  +DATADG1/zjzzdb/group16_1                     NO 
+
+
 	
 -- 验证adg
 --   主库 
 select * from v$log;
 alter system switch logfile;  
+
+-- will switch the logs on all RAC nodes (instances)
+ALTER SYSTEM ARCHIVE LOG CURRENT
 
 
 -- master adg ckecking

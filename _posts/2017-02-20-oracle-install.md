@@ -5,93 +5,164 @@ category: linux
 ---
 
 
-+ update 
+### Oracle Database Preinstallation Requirements
 
-
-```
-yum -y groupinstall "Development Tools"
-```
-
-+ software
-
-```
-yum -y install vim screen
-yum -y install smartmontools sysstat
-rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
-```
-
-
-```
-yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
-```
-
-
-+ X11 forward
-
-```
-yum -y install xorg-x11-xauth 
-
-```
-
-at xshell:
+#### xshell:
 
 + SSH: use Xagent, launch Xagent automatic
 + Tunnerling: Forward X11 
 
----
-
-### sysctl.conf
+#### install software
 
 ```
-fs.aio-max-nr = 1048576
-fs.file-max = 6815744
-kernel.shmall = 2097152
-kernel.shmmax = 4294967295
+yum -y groupinstall "Development Tools"
+yum -y install vim screen smartmontools sysstat
+yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
+yum -y install xorg-x11-xauth 
+rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
+
+```
+
+
+
+#### hosts
+
+```
+cat >> /etc/hosts << EOF
+10.255.255.21   orcl
+EOF
+```
+
+
+#### disable firewall and selinux 
+
+```
+chkconfig iptables off
+service iptables stop
+setenforce 0
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+```
+
+#### sysctl
+
+```
+cat >> /etc/sysctl.conf << EOF
 kernel.shmmni = 4096
 kernel.sem = 250 32000 100 128
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
 net.ipv4.ip_local_port_range = 9000 65500
-net.core.rmem_default = 262144
+net.core.rmem_default = 1048576
 net.core.rmem_max = 4194304
 net.core.wmem_default = 262144
 net.core.wmem_max = 1048576
+EOF
 
+sysctl -p
 ```
 
-### /etc/security/limits.conf
+#### ulimit
 
 ```
-oracle   soft   nproc    131072
-oracle   hard   nproc    131072
-oracle   soft   nofile   131072
-oracle   hard   nofile   131072
-oracle   soft   core     unlimited
-oracle   hard   core     unlimited
-oracle   soft   memlock  50000000
-oracle   hard   memlock  50000000
+cat >> /etc/security/limits.conf  << EOF
+oracle soft nproc 2047
+oracle hard nproc 16384
+oracle soft nofile 1024
+oracle hard nofile 65536
+grid soft nproc 2047
+grid hard nproc 16384
+grid soft nofile 1024
+grid hard nofile 65536
+EOF
 ```
 
-### /etc/profile
+#### pam
 
 ```
+cat >> /etc/pam.d/login << EOF
+session required /lib64/security/pam_limits.so
+EOF
+```
+
+#### ~~profile~~
+
+```
+cat >> /etc/profile << EOF
 ulimit -p 16384
 ulimit -n 65536
+EOF
 ```
 
-### /etc/sudoers
-
-###  /etc/pam.d/login
+#### change lib name
 
 ```
-session required /lib64/security/pam_limits.so
+ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
+```
+
+####  add user 
+
+```
+groupadd -g 1000 oinstall
+groupadd -g 1001 asmadmin
+groupadd -g 1002 dba
+groupadd -g 1003 asmdba 
+useradd -u 1000 -d /home/grid -g oinstall -G dba,asmadmin,asmdba,wheel grid
+useradd -u 1001 -d /home/oracle -g oinstall -G dba,asmdba,wheel oracle 
+passwd grid
+passwd oracle
+```
+
+#### mkdir
+
+```
+mkdir /stage
+mkdir -p /u01/app/11.2.0/grid
+mkdir -p /u01/app/oraInventory
+mkdir -p /u01/app/grid
+chown -R grid.oinstall /u01
+chown -R grid.oinstall /stage
+```
+
+```
+mkdir -p /u01/app/oracle/product/11.2.0/db_1 
+chown -R oracle.oinstall  /u01/app/oracle
+chmod -R 775 /u01
 ```
 
 
-## cmd
+~~配置iscsi连接openfiler存储,此处要根据实际情况设置,这里是一个40G的盘,分成两个20G的区~~
+```
+yum -y install iscsi-initiator-utils
+iscsiadm -m discovery -t sendtargets -p 192.108.26.100:3260
+service iscsi restart
+```
 
 
-### .bashrc
++ raw the device
 
 ```
+cat >> /etc/udev/rules.d/60-raw.rules << EOF
+ACTION=="add", KERNEL=="/dev/sdb1",RUN+="/bin/raw /dev/raw/raw1 %N"
+ACTION=="add", ENV{MAJOR}=="8",ENV{MINOR}=="17",RUN+="/bin/raw /dev/raw/raw1 %M %m"
+ACTION=="add", KERNEL=="/dev/sdb2",RUN+="/bin/raw /dev/raw/raw2 %N"
+ACTION=="add", ENV{MAJOR}=="8",ENV{MINOR}=="18",RUN+="/bin/raw /dev/raw/raw2 %M %m"
+KERNEL=="raw[1-2]", OWNER="grid", GROUP="asmadmin", MODE="660"
+EOF
+
+start_udev
+ls /dev/raw/ -l
+```
+
+
+#### /etc/sudoers
+
+
+
+#### .bashrc
+
+```
+cat >> ~/.bashrc << EOF
+
 PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
@@ -105,22 +176,26 @@ export EDITOR="vim"
 
 # User specific aliases and functions
 TMOUT=18000
+EOF
 ```
 
 
 ## .bash_profile
 
 ```
+cat >> ~/.bash_profile << EOF
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
 export ORACLE_SID=orcl
 export PATH=$ORACLE_HOME/bin:$PATH
-
+EOF
 ```
 
-## Error with responseFile config
+--- 
 
-### db_install.rsp 文件内容：
+### single node with db software only，dbca，netca
+
+#### db_install.rsp 文件内容：
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
@@ -179,13 +254,14 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 
 ```
 
+#### 安装
 
 ```
 ./database/runInstaller -silent -responseFile /home/oracle/db_install.rsp
 ```
 
 
-## dbca
+#### dbca
 
 ```
 dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname orcl -sid orcl -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage 50 -emConfiguration LOCAL
@@ -194,7 +270,7 @@ dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname orcl -si
 然后输入 **SYS**, **SYSTEM**, **SYSMEM** 的密码
 
 
-## netca
+#### netca
 
 ```
 netca /silent /responsefile /stage/database/response/netca.rsp
@@ -202,7 +278,9 @@ netca /silent /responsefile /stage/database/response/netca.rsp
 
 ---
 
-### grid_single.rsp
+### grid+asm, database in single node.
+
+#### grid
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
@@ -260,22 +338,13 @@ PROXY_REALM=
 ./grid/runInstaller -silent -responseFile /home/grid/grid_install.rsp
 ```
 
-grid/.bash_profile
-
-```
-export ORACLE_BASE=/u01/app/grid
-export ORACLE_HOME=/u01/app/11.2.0/grid_1
-export ORACLE_SID=+ASM
-export PATH=$ORACLE_HOME/bin:$PATH
-```
 
 grid 静默安装后，执行完root安装后会用grid用户再执行一次cfgrsp的密码相关配置
 [Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
 
 
-
 ```
-cat >> cfgrsp.properties << EOF
+cat >> ~/cfgrsp.properties << EOF
 oracle.assistants.asm|S_ASMPASSWORD=password
 oracle.assistants.asm|S_ASMMONITORPASSWORD=password
 oracle.crs|S_BMCPASSWORD=password
@@ -283,10 +352,10 @@ EOF
 ```
 
 ```
-/u01/app/grid/product/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=cfgrsp.properties
+/u01/app/grid/product/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/cfgrsp.properties
 ```
 
-### 安装grid成功后，再用oracle安装库，同样使用 **single_grid_db.rsp** 进行静默安装
+#### 安装grid成功后，再用oracle安装库，同样使用 **single_grid_db.rsp** 进行静默安装
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
@@ -355,7 +424,7 @@ cd /stage
 ## [RAC](https://www.linuxidc.com/Linux/2015-10/124127.htm)
 
 
-### add raw
+### add raw devices
 
 + [root@rac1 stage]# cat /etc/udev/rules.d/60-raw.rules 
 
