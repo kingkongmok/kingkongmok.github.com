@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "install openvpn"
+title: "install openvpn with OpenVPN-Admin"
 category: linux
 tags: [vpn]
 ---
