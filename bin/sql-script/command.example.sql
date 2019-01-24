@@ -797,6 +797,10 @@ select * from user_ind_columns where table_name='PERSONALINFORMATION';
 select * from user_indexes where table_name='PERSONALINFORMATION';
 select distinct TABLE_NAME,TABLESPACE_NAME from user_indexes;
 
+
+-- 查询columan
+select COLUMN_NAME from all_tab_columns where TABLE_NAME='&table_name' ;
+
 --  obtain information on index fields etc
 col TABLE_OWNER format a10
 col COLUMN_NAME format a25
