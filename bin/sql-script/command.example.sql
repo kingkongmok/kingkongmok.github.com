@@ -27,6 +27,7 @@ $ lsnrctl stop
 -- EM/oem start 
 $ emctl start dbconsole
 $ emctl stop dbconsole
+$ emctl status agent
 
 
 -- sid / service name / user
@@ -262,8 +263,7 @@ col sql_id format a25
 col FIRST_LOAD_TIME format a25
 col LAST_LOAD_TIME format a25
 SELECT * FROM
-(SELECT sql_fulltext, sql_id, elapsed_time, child_number, disk_reads, executions, first_load_time, last_load_time
-    FROM    gv$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
+(SELECT sql_fulltext, sql_id, elapsed_time, child_number, disk_reads, executions, first_load_time, last_load_time FROM gv$sql ORDER BY elapsed_time DESC) WHERE ROWNUM < 10 ; 
 
 --
 SQL_FULLTEXT		       SQL_ID	       ELAPSED_TIME CHILD_NUMBER DISK_READS EXECUTIONS FIRST_LOAD_TIME		 LAST_LOAD_TIME
@@ -470,6 +470,20 @@ create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
 -- drop tablespaces
 DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS; 
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
+
+
+-- check user privileges 
+-- Granted Roles:
+SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = 'USER';
+
+-- Privileges Granted Directly To User:
+SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = 'USER';
+
+-- Privileges Granted to Role Granted to User:
+SELECT * FROM DBA_TAB_PRIVS  WHERE GRANTEE IN (SELECT granted_role FROM DBA_ROLE_PRIVS WHERE GRANTEE = 'USER');
+
+-- Granted System Privileges:
+SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'USER'; 
 
 
 -- create user/schema
@@ -982,7 +996,7 @@ SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_
 
 
 -- check sql_text
-select sql_text from gv$sqlarea where sql_id='&sql_id';
+select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
 select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV'; 
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
@@ -995,7 +1009,7 @@ column username format a15
 column program format a25
 column logon_time format a25
 column SPID format a15
-select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 order by PGA_USED_MEM;
+select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 and s.username is not null order by PGA_USED_MEM;
 --
 
 INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  PGA_USED_MEM PGA_ALLOC_MEM
