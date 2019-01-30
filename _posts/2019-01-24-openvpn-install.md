@@ -158,7 +158,7 @@ Please, report any issues here https://github.com/Chocobozzz/OpenVPN-Admin
 
 ---
 
-### openvpn 配置
+### [openvpn 配置](https://openvpn.net/community-resources/how-to/)
 
 运行网卡转发
 
@@ -206,7 +206,6 @@ date.timezone = PRC
 ```
 
 ---
-
 
 
 
