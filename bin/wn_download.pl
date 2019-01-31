@@ -68,7 +68,7 @@ foreach my $line ( @lines ){
                 #  check http header, NEXT if not 200  
                 #-------------------------------------------------------------------------------
                 my $httpcode = `/usr/bin/proxychains4 -q curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36" -s -o /dev/null -I -w '%{http_code}' \"$DownloadUrl\"`;
-                sleep 5;
+                sleep 10;
                 #-------------------------------------------------------------------------------
                 #  download comic with curl/aria if http coder = 200
                 #-------------------------------------------------------------------------------
