@@ -1,4 +1,4 @@
-CREATE USER "ZABBIX" IDENTIFIED BY "5uZGdsftmcPCA";
+CREATE USER "ZABBIX" IDENTIFIED BY "pass";
 GRANT "CONNECT" TO "ZABBIX";
 grant select on v_$instance to zabbix;
 grant select on v_$sysstat to zabbix;
@@ -14,3 +14,6 @@ grant select on v_$event_name to zabbix;
 grant select on v_$locked_object to zabbix;
 grant select on v_$process to zabbix;
 grant select on DBA_TABLESPACE_USAGE_METRICS to zabbix;
+-- adg lag
+grant select on V_$DATAGUARD_STATS to zabbix;
+

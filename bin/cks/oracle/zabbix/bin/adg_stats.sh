@@ -11,16 +11,9 @@ fi
 
 case $1 in
 
-'active')
-	sql="Select count(1) From V\$session where status='ACTIVE' and username <> 'ZABBIX';"
-	;;
-
-'lock')
-	sql="select count(1) from V\$locked_object;"
-	;;
-
-'process')
-	sql="select count(*) from v\$process;"
+'finishlag')
+        # 获取lag的时间
+	sql="select value from  V\$DATAGUARD_STATS where name='apply finish time';"
 	;;
 
 *)
@@ -33,7 +26,8 @@ esac
 
 if [ a"$sql" != a"" ]; then
 	result=`echo "$sql" | sqlplus -s /nolog @/var/lib/zabbix/bin/cont.sql`
-	echo $result
+        # 转换时间为秒 +00 00:01:14.678 更换为 74
+	echo $result | perl -nae '@a=split/:/,$F[1]; print $a[0]*60*60 + $a[1]*60 + int($a[2]). "\n"'
 fi
 rval=$?
 
