@@ -51,9 +51,3 @@ screen -S lame bash -c 'for i in *mp3; do lame --preset phon+ "$i"; done'
 ```
 for i in *srt *ass *ssa ; do mkvmerge -o ./done/"${i%.*}.mkv" "${i%.*}.mkv" "$i" ; done
 ```
-
-### [ffmpeg convert mp4](https://superuser.com/questions/520510/combining-video-and-subtitle-files-as-one-video)
-
-```
-ffmpeg -i input.mp4 -i subtitles.srt -c:s mov_text -c:v copy -c:a copy output.mp4
-```
