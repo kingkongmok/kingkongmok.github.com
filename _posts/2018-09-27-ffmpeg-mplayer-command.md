@@ -43,3 +43,17 @@ ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
 ```
 screen -S lame bash -c 'for i in *mp3; do lame --preset phon+ "$i"; done'
 ```
+
+---
+
+### [Merge MKV and ASS](https://www.flynsarmy.com/2015/01/bulk-merge-mkv-ass-subtitle-files/)
+
+```
+for i in *srt *ass *ssa ; do mkvmerge -o ./done/"${i%.*}.mkv" "${i%.*}.mkv" "$i" ; done
+```
+
+### [ffmpeg convert mp4](https://superuser.com/questions/520510/combining-video-and-subtitle-files-as-one-video)
+
+```
+ffmpeg -i input.mp4 -i subtitles.srt -c:s mov_text -c:v copy -c:a copy output.mp4
+```
