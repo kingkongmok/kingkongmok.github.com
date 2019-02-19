@@ -172,6 +172,8 @@ sysctl -p
 
 ```
 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -d 10.255.255.0/24 -o enp0s8 -j MASQUERADE
+iptables -I FORWARD -s 10.8.0.0/24 -d 10.255.255.0/24 -i tun0 -o enp0s8 -m conntrack --ctstate NEW -j ACCEPT
+iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 iptables-save > /etc/sysconfig/iptables
 ```
 
