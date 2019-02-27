@@ -17,9 +17,10 @@ rm -f index.php
 mkdir txt
 for i in `grep 送交者 index.php* -l ` ; do cp "$i" txt ; done
 cd txt
-perl-rename 's/.*/sprintf"%02d.txt",++$i/e' * -i
+perl-rename 's/.*/sprintf"%03d.txt",++$i/e' * -i
 for i in *txt ; do perl -i.bak -00ne 'while(/\<pre\>(.*)\<\/pre\>/gsm){print $1}' "$i"; done
 cat *.txt > all.txt
 perl -i.bak -pe 's/<font color=#\w+?>\w+?\.\w+<\/font><p><\/p>//g; s/\r\n//g; s/　　/\n　　/g; s/    /\n　　/g' all.txt
 perl -i -ne 'print unless /^[\s　]+\r?$/' all.txt
+mv -i all.txt /tmp && cd /tmp && find /tmp/ -name "www\.*\.com" -type d -mtime -1 -exec rm -rf {} \;
 ```
