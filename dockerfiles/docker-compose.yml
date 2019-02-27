@@ -13,6 +13,16 @@
 #     ports:
 #         - "80:80"
 #         - "443:443"
+#
+tomcat:
+    image: tomcat
+    container_name: tomcat
+    volumes:
+        - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
+        - /home/kk/containers/tomcat/conf:/usr/local/tomcat/conf
+    ports:
+        - "8080:8080"
+        - "8443:8443"
 
 # tomcat:
 #     image: tomcat
@@ -24,7 +34,7 @@
 #     volumes:
 #         - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
 #         - /opt/apache-tomcat-7.0.85/webapps:/usr/local/tomcat/webapps:ro
-
+#
 # mariadb:
 #     image: mariadb
 #     container_name: mariadb
@@ -38,7 +48,7 @@
 #     volumes:
 #         - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
 #         - /var/lib/mysql:/var/lib/mysql
-
+#
 # logstash:
 #         image: docker.elastic.co/logstash/logstash:6.4.2
 #         container_name: logstash
@@ -47,29 +57,29 @@
 #                 - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro
 #
 
-oracle:
-    image: sath89/oracle-ee-11g
-    container_name: oracle
-    restart: always
-    environment:
-        - CHARACTER_SET=AL32UTF8
-        - DEFAULT_SYS_PASS=oracle
-        - processes=1000
-        - sessions=1105
-        - transactions=1215
-    ports:
-        - 1521:1521
-    volumes:
-        - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
-        - /etc/localtime:/etc/localtime:ro
-        # restore datafile using 
-        - ./containers/oracle_env:/u01/app/oracle
-        - ./containers/oracle_env/dockerfile/.bash_profile:/home/oracle/.bash_profile:ro
-        - ./containers/oracle_env/dockerfile/libncurses.so.6.1:/lib64/libncurses.so.6:ro
-        - ./containers/oracle_env/dockerfile/libreadline.so.7.0:/lib64/libreadline.so.7:ro
-        - ./containers/oracle_env/dockerfile/rlwrap:/usr/bin/rlwrap:ro
-        - ./containers/oracle_env/dockerfile/login.sql:/home/oracle/login.sql:ro
-        - ./containers/oracle_env/dockerfile/oracle_archive_backup.sh:/home/oracle/oracle_archive_backup.sh:ro
-        - ./containers/oracle_env/dockerfile/oracle_full_backup.sh:/home/oracle/oracle_full_backup.sh:ro
-        - ./containers/oracle_env/dockerfile/rman_arch:/home/oracle/rman_arch:ro
-        - ./containers/oracle_env/dockerfile/rman_full:/home/oracle/rman_full:ro
+#oracle:
+#    image: sath89/oracle-ee-11g
+#    container_name: oracle
+#    restart: always
+#    environment:
+#        - CHARACTER_SET=AL32UTF8
+#        - DEFAULT_SYS_PASS=oracle
+#        - processes=1000
+#        - sessions=1105
+#        - transactions=1215
+#    ports:
+#        - 1521:1521
+#    volumes:
+#        - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime
+#        - /etc/localtime:/etc/localtime:ro
+#        # restore datafile using 
+#        - ./containers/oracle_env:/u01/app/oracle
+#        - ./containers/oracle_env/dockerfile/.bash_profile:/home/oracle/.bash_profile:ro
+#        - ./containers/oracle_env/dockerfile/libncurses.so.6.1:/lib64/libncurses.so.6:ro
+#        - ./containers/oracle_env/dockerfile/libreadline.so.7.0:/lib64/libreadline.so.7:ro
+#        - ./containers/oracle_env/dockerfile/rlwrap:/usr/bin/rlwrap:ro
+#        - ./containers/oracle_env/dockerfile/login.sql:/home/oracle/login.sql:ro
+#        - ./containers/oracle_env/dockerfile/oracle_archive_backup.sh:/home/oracle/oracle_archive_backup.sh:ro
+#        - ./containers/oracle_env/dockerfile/oracle_full_backup.sh:/home/oracle/oracle_full_backup.sh:ro
+#        - ./containers/oracle_env/dockerfile/rman_arch:/home/oracle/rman_arch:ro
+#        - ./containers/oracle_env/dockerfile/rman_full:/home/oracle/rman_full:ro
