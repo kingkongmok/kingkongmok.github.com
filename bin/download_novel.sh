@@ -32,7 +32,7 @@ cd /tmp/novel-done/$TIMESTAMP
 enca -L zh -x utf8 name.html
 TITLE=`perl -nE 'say $1 if /\<title\>.*?-(.*)-/' name.html`
 
-cd www*/bbs*/
+cd www*/bbs4/
 enca -L zh -x utf8 *
 rm -f index.php
 mkdir txt
