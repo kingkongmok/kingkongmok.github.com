@@ -51,3 +51,11 @@ screen -S lame bash -c 'for i in *mp3; do lame --preset phon+ "$i"; done'
 ```
 for i in *srt *ass *ssa ; do mkvmerge -o ./done/"${i%.*}.mkv" "${i%.*}.mkv" "$i" ; done
 ```
+
+---
+
+### [docker](https://hub.docker.com/r/jrottenberg/ffmpeg/)
+
+```
+docker run -it --rm -v $PWD:/tmp/workdir  jrottenberg/ffmpeg -i output.mp4
+```
