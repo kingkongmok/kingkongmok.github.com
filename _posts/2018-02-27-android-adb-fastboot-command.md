@@ -44,6 +44,11 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="05c6", ATTR{idProduct}=="9025",SYMLINK+="andr
 SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee7",SYMLINK+="android_adb", OWNER="kk"
 ```
 
++ [udev修改生效](https://unix.stackexchange.com/questions/39370/how-to-reload-udev-rules-without-reboot)
+
+```
+sudo sh -c 'udevadm control --reload-rules && udevadm trigger'
+```
 
 ---
 
