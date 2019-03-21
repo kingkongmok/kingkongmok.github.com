@@ -59,8 +59,9 @@ sudo nice -n 19 emerge --keep-going --update --deep --with-bdeps=y --newuse @wor
 sudo nice -n 19 emerge --depclean && \
 sudo nice -n 19 revdep-rebuild.sh
 
+
+# https://forums.gentoo.org/viewtopic-t-564143-start-0.html
 if [ -d "/usr/portage/packages" ] ; then
     sudo nice eclean -C -q packages 
 fi
-
 sudo nice eclean -C -q -d -t1w distfiles
