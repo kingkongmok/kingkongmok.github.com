@@ -54,6 +54,15 @@ for i in *srt *ass *ssa ; do mkvmerge -o ./done/"${i%.*}.mkv" "${i%.*}.mkv" "$i"
 
 ---
 
+### wmv to mp4
+
+
+```
+screen -S ffmpeg sh -c 'for i in *wmv ; do ffmpeg -i "$i" -c:v libx264 -crf 23 -profile:v high -r 30 -c:a aac -q:a 100 -ar 48000 "${i}.mp4" ; done'
+```
+
+---
+
 ### [docker](https://hub.docker.com/r/jrottenberg/ffmpeg/)
 
 ```
