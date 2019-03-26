@@ -46,13 +46,9 @@ screen -S lame bash -c 'for i in *mp3; do lame --preset phon+ "$i"; done'
 
 ---
 
-### ~~[Merge MKV and ASS](https://www.flynsarmy.com/2015/01/bulk-merge-mkv-ass-subtitle-files/)~~
+~~[Merge MKV and ASS](https://www.flynsarmy.com/2015/01/bulk-merge-mkv-ass-subtitle-files/)~~
 
-```
-~~for i in *srt *ass *ssa ; do mkvmerge -o ./done/"${i%.*}.mkv" "${i%.*}.mkv" "$i" ; done~~
-```
-
-[Use ffmpeg to add text subtitles](https://stackoverflow.com/questions/8672809/use-ffmpeg-to-add-text-subtitles)
+### [Use ffmpeg to add text subtitles](https://stackoverflow.com/questions/8672809/use-ffmpeg-to-add-text-subtitles)
 
 ```
 ffmpeg -i infile.mp4 -i infile.srt -c copy -c:s mov_text outfile.mp4
