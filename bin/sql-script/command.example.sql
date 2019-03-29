@@ -287,43 +287,6 @@ where rownum<11 ;
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR( &sql_id, &child ));
 
 
--- the average buffer gets per execution during a period of activity 
---
-SELECT username,
-buffer_gets,
-disk_reads,
-executions,
-buffer_get_per_exec,
-parse_calls,
-sorts,
-rows_processed,
-hit_ratio,
-module,
-sql_text
--- elapsed_time, cpu_time, user_io_wait_time, ,
-FROM (SELECT sql_text,
-    b.username,
-    a.disk_reads,
-    a.buffer_gets,
-    trunc(a.buffer_gets / a.executions) buffer_get_per_exec,
-    a.parse_calls,
-    a.sorts,
-    a.executions,
-    a.rows_processed,
-    100 - ROUND (100 * a.disk_reads / a.buffer_gets, 2) hit_ratio,
-    module
-    -- cpu_time, elapsed_time, user_io_wait_time
-    FROM v$sqlarea a, dba_users b
-    WHERE a.parsing_user_id = b.user_id
-    AND b.username NOT IN ('SYS', 'SYSTEM', 'RMAN','SYSMAN')
-    AND a.buffer_gets > 10000
-    ORDER BY buffer_get_per_exec DESC)
-WHERE ROWNUM <= 20 
-/
-
- 
-
-
 
 
 --  查看锁
@@ -370,17 +333,24 @@ select * from DBA_TABLESPACE_USAGE_METRICS;
 select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
 select TABLESPACE_NAME, round(USED_PERCENT,2) from DBA_TABLESPACE_USAGE_METRICS;
 select TABLESPACE_NAME, TABLESPACE_SIZE, round(100-USED_PERCENT,0) "free percent" from DBA_TABLESPACE_USAGE_METRICS;
+
 -- 查询tablespaces
 select * from dba_tablespaces;
+
 -- 使用以下方式添加数据文件
 alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+
 -- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 
--- show datafile usage
+-- show all datafile space , 计算所有数据大小
+select round(sum(user_bytes)/(1024*1024*1024),2) "TotalSpace GB" from dba_data_files;
+
+
+-- show specific datafile and info
 col 'Tablespace Name' format a15
 col 'File Name' format a50
 SELECT Substr(df.tablespace_name, 1, 30) "Tablespace Name",
@@ -958,6 +928,43 @@ select s.username, s.inst_id, s.sid, s.serial#, s.program, s.machine, p.spid, s.
 select a.sid, a.username,b.sql_id, b.sql_fulltext from gv$session a, gv$sql b where a.sql_id = b.sql_id and a.status = 'ACTIVE' and a.username != 'SYS';
 
 
+
+-- the average buffer gets per execution during a period of activity 
+--
+col username format a10;
+col BUFFER_GETS format a10;
+col BUFFER_GET_PER_EXEC format a10;
+col PARSE_CALLS format a5;
+col ROWS_PROCESSED format a5;
+col ELAPSED_TIME format a15;
+col USER_IO_WAIT_TIME format a15;
+--
+SELECT username, buffer_gets, disk_reads, executions, buffer_get_per_exec, parse_calls, sorts, rows_processed, hit_ratio, module, 
+elapsed_time, cpu_time, user_io_wait_time, sql_id
+FROM (SELECT b.username, a.disk_reads, a.buffer_gets, trunc(a.buffer_gets / a.executions) buffer_get_per_exec,
+    a.parse_calls, a.sorts, a.executions, a.rows_processed, 100 - ROUND (100 * a.disk_reads / a.buffer_gets, 2) hit_ratio,
+    module, a.sql_id, a.cpu_time, a.elapsed_time, a.user_io_wait_time FROM v$sqlarea a, dba_users b
+    WHERE a.parsing_user_id = b.user_id AND b.username NOT IN ('SYS', 'SYSTEM', 'RMAN','SYSMAN')
+    AND a.buffer_gets > 10000 ORDER BY buffer_get_per_exec DESC)
+WHERE ROWNUM <= 20
+/
+
+USERNAME   BUFFER_GET DISK_READS EXECUTIONS BUFFER_GET PARSE      SORTS ROWS_  HIT_RATIO MODULE                  ELAPSED_TIME   CPU_TIME USER_IO_WAIT_TI SQL_ID      
+---------- ---------- ---------- ---------- ---------- ----- ---------- ----- ---------- -------------------- --------------- ---------- --------------- -------------
+CKSP           679865          0          5     135973     3          0  3280        100 w3wp.exe                     4853590    4839809               0 bkyhj7d2tnqf6
+CKSP           135860        144          1     135860     1          3    35      99.89 w3wp.exe                     6559070    5499213         1024303 5cnvm98z4qymc
+CKSP           109667       9143          1     109667     1          0     1      91.66 w3wp.exe                    63641391    1764796        62136512 b6b8c4m9wkkwp
+CKSP          1132174          0         11     102924    11       1187  1155        100 JDBC Thin Client            31109674   15640651               0 bu0nutzj85suh
+CKSP          1234419          0         12     102868    11       1296  1260        100 JDBC Thin Client            29616894   16872859               0 4hmnu6zc3pq7g
+CKSP          1231533          0         12     102627    12       1296  1260        100 JDBC Thin Client            32128512   16536738               0 5mg64zmn18044
+CKSP           820772          0          8     102596     8        862   840        100 JDBC Thin Client            20041473   11875764               0 b6ghuyrz8jyyw
+CKSP          1025923          0         10     102592    10       1080  1050        100 JDBC Thin Client            24871521   14010661               0 12vdq6g1ufj8r
+CKSP           718133          0          7     102590     7        750   735        100 JDBC Thin Client            15720771   10633514               0 57gat07ptzmzu
+
+ 20 rows selected 
+
+
+
 --  SQL ordered by Elapsed Time in 20mins, like awr
 col EXEs format a5;
 col TOTAL_ELAPSED format a15; 
@@ -999,7 +1006,6 @@ SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_
 select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
 select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV'; 
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
-
 
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
 column pgA_ALLOC_MEM format 99,990
@@ -1161,6 +1167,18 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 
 -- rman
 $ rman target /
+
+
+-- 查看rman备份状态
+select
+    operation, status, object_type, to_char(start_time,'mm/dd/yyyy:hh24:mi:ss') as start_time, to_char(end_time,'mm/dd/yyyy:hh24:mi:ss') as end_time
+from
+      v$rman_status 
+where 
+    start_time > SYSDATE - 7 and operation = 'BACKUP' and object_type = 'DB FULL' 
+order by
+    start_time desc 
+/
 
 -- 异常和建议
 RMAN> list failure;  
