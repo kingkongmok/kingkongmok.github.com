@@ -62,6 +62,11 @@ ffmpeg -i infile.mp4 -i infile.srt -c copy -c:s mov_text outfile.mp4
 
 
 ```
+ffmpeg -i input.mkv -c copy -c:s mov_text output.mp4
+```
+
+
+```
 screen -S ffmpeg sh -c 'for i in *wmv ; do ffmpeg -i "$i" -c:v libx264 -crf 23 -profile:v high -r 30 -c:a aac -q:a 100 -ar 48000 "${i}.mp4" ; done'
 ```
 
