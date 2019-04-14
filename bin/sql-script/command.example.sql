@@ -888,8 +888,20 @@ SELECT TO_CHAR (SYSDATE, 'MM-DD-YYYY HH24:MI:SS') "NOW" FROM DUAL;
 
 -- rman backup info
 col OUTPUT_BYTES_DISPLAY format a20
+col STATUS format a20
+col INPUT_TYPE format a20
 col TIME_TAKEN_DISPLAY format a20
 select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details order by start_time desc;
+--
+--
+START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DISPLAY
+------------------- -------------------- -------------------- -------------------- --------------------
+2019-04-06_21:30:15 COMPLETED        DB FULL         97.54G        02:40:20
+2019-03-30_21:30:15 COMPLETED        DB FULL         96.91G        02:41:30
+2019-03-23_21:30:14 COMPLETED        DB FULL         96.67G        02:39:20
+2019-03-16_21:30:15 COMPLETED        DB FULL         96.29G        02:40:30
+2019-03-09_21:30:14 COMPLETED        DB FULL         96.11G        02:40:30
+
 
 
 -- dba directory
@@ -1168,17 +1180,6 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 -- rman
 $ rman target /
 
-
--- 查看rman备份状态
-select
-    operation, status, object_type, to_char(start_time,'mm/dd/yyyy:hh24:mi:ss') as start_time, to_char(end_time,'mm/dd/yyyy:hh24:mi:ss') as end_time
-from
-      v$rman_status 
-where 
-    start_time > SYSDATE - 7 and operation = 'BACKUP' and object_type = 'DB FULL' 
-order by
-    start_time desc 
-/
 
 -- 异常和建议
 RMAN> list failure;  
@@ -2172,10 +2173,8 @@ select DBMS_SQLTUNE.SCRIPT_TUNING_TASK('SYS_AUTO_SQL_TUNING_TASK') from dual;
 --	 (index names, privileges, etc) before it is executed. --
 ----------------------------------------------------------
 -------
-execute dbms_stats.gather_table_stats(ownname => 'SYSMAN', tabname =>
-'MGMT_METRICS_RAW', estimate_percent => DBMS_STATS.A
-UTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE
- AUTO');
+execute dbms_stats.gather_table_stats(ownname => 'SYSMAN', tabname => 'MGMT_METRICS_RAW', estimate_percent => DBMS_STATS.A
+UTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE AUTO');
 
 
 
@@ -2215,4 +2214,3 @@ Predicate Information (identified by operation id):
 
 
 22 rows selected.
-
