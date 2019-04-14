@@ -134,3 +134,19 @@ perl -MPOSIX -nE 'BEGIN{$l=strftime "%T",localtime time - 3600 }  if (/:(\S+?)\s
 $ perl -MPOSIX -MDate::Parse -E 'say strftime "%F %T", localtime str2time"12/Nov/2014:15:47:20 +0800"'
 2014-11-12 15:47:20
 ```
+
+* emerge.log
+
+
+```
+$ sudo grep docker /var/log/emerge.log | perl -MPOSIX -npE 's/^\d+/strftime"%F_%T",localtime $&/e'
+```
+
+```
+2019-03-30_00:05:48:  >>> unmerge success: app-emulation/docker-proxy-0.8.0_p20181207
+2019-03-30_00:05:50:  === (1 of 6) Post-Build Cleaning (app-emulation/docker-proxy-0.8.0_p20190301::/usr/portage/app-emulation/docker-proxy/docker-proxy-0.8.0_p20190301.ebuild)
+2019-03-30_00:05:50:  ::: completed emerge (1 of 6) app-emulation/docker-proxy-0.8.0_p20190301 to /
+2019-03-30_00:11:38:  >>> emerge (6 of 6) app-emulation/docker-18.09.4 to /
+2019-03-30_00:11:38:  === (6 of 6) Cleaning (app-emulation/docker-18.09.4::/usr/portage/app-emulation/docker/docker-18.09.4.ebuild)
+2019-03-30_00:11:38:  === (6 of 6) Compiling/Merging (app-emulation/docker-18.09.4::/usr/portage/app-emulation/docker/docker-18.09.4.ebuild)
+```
