@@ -283,3 +283,59 @@ filter {
 }
 
 ```
+
+---
+
+### 使用**if**来进行grok匹配
+
+```
+filter {
+    grok {
+        match => { "message" => '^%{DATA:logdate} %{TIME:logtime} %{WORD:loglvl}' }
+    }
+    if [loglvl] =~ /INFO/  { 
+        grok {
+            match => { "message" => '^%{DATA:logdate} %{TIME:logtime} %{WORD:loglvl}\[%{DATA:eventCause}\(%{DATA:eventMethod}\)\]%{DATA:eventjob} boid:%{WORD:boid} botype:%{WORD:botype} operation:%{NOTSPACE:operation}' }
+        } 
+    }
+}
+```
+
+---
+
+### [FORBIDDEN/12/index read-only](https://discuss.elastic.co/t/forbidden-12-index-read-only-allow-delete-api/110282)
+
+**low storage**,  go to your dev tools console and run below command:
+
+```
+PUT .kibana/_settings
+{
+"index": {
+"blocks": {
+"read_only_allow_delete": "false"
+}
+}
+}
+```
+
+---
+
+### command
+
+#### show indexes
+
+```
+curl -s "http://127.0.0.1:9200/_cat/indices?v"
+```
+
+#### show health
+
+```
+curl http://127.0.0.1:9200/_cat/health
+```
+
+#### delete indexes
+
+```
+curl -XDELETE localhost:9200/api*
+```
