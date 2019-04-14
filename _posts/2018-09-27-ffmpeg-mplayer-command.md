@@ -5,6 +5,15 @@ category: linux
 tags: [ffmpeg, mplayer, media]
 ---
 
+
+### [meaning of ffmpeg output tbc/tbn/tbr](https://stackoverflow.com/questions/3199489/meaning-of-ffmpeg-output-tbc-tbn-tbr)
+
++ **tbn** = the time base in AVStream that has come from the container
++ **tbc** = the time base in AVCodecContext for the codec used for a particular stream
++ **tbr** = tbr is guessed from the video stream and is the value users want to see when they look for the video frame rate
+
+---
+
 ###  [reduce video size](https://unix.stackexchange.com/questions/28803/how-can-i-reduce-a-videos-size-with-ffmpeg)
 
 
