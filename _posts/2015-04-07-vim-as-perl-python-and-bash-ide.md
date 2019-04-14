@@ -180,9 +180,27 @@ set shiftwidth=4
 
 ---
 
-## [Vim delete blank
-lines](https://stackoverflow.com/questions/706076/vim-delete-blank-lines)
+## [Vim delete blank lines](https://stackoverflow.com/questions/706076/vim-delete-blank-lines)
 
 ```
 :g/^$/d
+```
+
+--- 
+
+##  [json pretty](https://stackoverflow.com/questions/26214156/how-to-auto-format-json-on-save-in-vim)
+
+
+```
+execute '%!python -m json.tool' | w 
+```
+
+---
+
+### [sql pretty](https://stackoverflow.com/questions/8577367/can-vim-autoindent-sql)
+
+pip install --user sqlparse
+
+```
+%!sqlformat --reindent --keywords upper --identifiers lower -
 ```
