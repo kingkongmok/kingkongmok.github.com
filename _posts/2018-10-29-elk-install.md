@@ -83,10 +83,6 @@ filter {
    convert => ["response_code", "integer"]
    convert => ["request_time_ms", "integer"]
  }
- date {
-   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
-   remove_field => [ "timestamp" ]
- }
  useragent {
    source => "agent"
  }
@@ -175,10 +171,6 @@ filter {
    target => "geoip"
    add_tag => [ "nginx-geoip" ]
  }
- date {
-   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
-   remove_field => [ "timestamp" ]
- }
  useragent {
    source => "agent"
  }
@@ -212,10 +204,6 @@ filter {
    convert => ["reqestTime", "integer"]
    convert => ["respCode", "integer"]
  }
- date {
-   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
-   remove_field => [ "timestamp" ]
- }
  useragent {
    source => "agent"
  }
@@ -234,10 +222,6 @@ filter {
  mutate {
    convert => ["response_code", "integer"]
    convert => ["request_time_ms", "integer"]
- }
- date {
-   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
-   remove_field => [ "timestamp" ]
  }
  useragent {
    source => "agent"
@@ -273,10 +257,6 @@ filter {
  }
 
 
- date {
-   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
-   remove_field => [ "timestamp" ]
- }
  useragent {
    source => "agent"
  }
@@ -310,11 +290,11 @@ filter {
 ```
 PUT .kibana/_settings
 {
-"index": {
-"blocks": {
-"read_only_allow_delete": "false"
-}
-}
+    "index": {
+        "blocks": {
+            "read_only_allow_delete": "false"
+        }
+    }
 }
 ```
 
@@ -331,11 +311,17 @@ curl -s "http://127.0.0.1:9200/_cat/indices?v"
 #### show health
 
 ```
-curl http://127.0.0.1:9200/_cat/health
+curl -s http://127.0.0.1:9200/_cat/health
 ```
 
 #### delete indexes
 
 ```
 curl -XDELETE localhost:9200/api*
+```
+
+#### mapping
+
+```
+curl -s http://localhost:9200/api_access_logs-2019-04-12/_mapping
 ```
