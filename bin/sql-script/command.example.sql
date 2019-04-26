@@ -191,9 +191,6 @@ SELECT SID, SERIAL#, MACHINE FROM gv$SESSION;
 select s.sid, s.serial#, p.spid processid, s.process clientpid from gv$process p, gv$session s where p.addr = s.paddr 
 
 
-
-
-
 -- count process.
 select count(*) from gv$process;
 select value from v$parameter where name ='processes' ;
@@ -752,7 +749,7 @@ select to_char(first_time),to_char(first_change#),to_char(next_change#),sequence
 set linesize 200
 col thread#||'_'||SEQUENCE# for a10
 col name for a50
-select thread#||'_'||SEQUENCE#,name,STATUS,applied,to_char(COMPLETION_TIME,'yyyy-mon-dd hh24:mi:ss') from v$archived_log order by thread#,sequence# asc;
+select thread#||'_'||SEQUENCE#,name,STATUS,applied,to_char(COMPLETION_TIME,'yyyy-mm-dd hh24:mi:ss') from v$archived_log order by thread#,sequence# asc;
 
 select thread#,max(sequence#) as "last_applied_log" from v$log_history group by thread#;
 
