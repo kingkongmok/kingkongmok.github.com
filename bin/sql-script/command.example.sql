@@ -197,57 +197,62 @@ select value from v$parameter where name ='processes' ;
 
 
 -- event_names
-col WAIT_CLASS format a15                                                          
-SELECT wait_class#,wait_class_id,wait_class,COUNT(1) AS "count" FROM gv$event_name GROUP BY wait_class#, wait_class_id, wait_class ORDER BY wait_class#;     
+et pagesize 200 ;
+col WAIT_CLASS# format a10     
+col WAIT_CLASS_ID format a15
+col wait_class format a15
+SELECT wait_class#,wait_class_id,wait_class,COUNT(1) AS "count" 
+FROM gv$event_name 
+GROUP BY wait_class#, wait_class_id, wait_class ORDER BY wait_class#;
 --
---
-WAIT_CLASS# WAIT_CLASS_ID WAIT_CLASS	       count
------------ ------------- --------------- ----------
-	  0    1893977003 Other 		 958
-	  1    4217450380 Application		  17
-	  2    3290255840 Configuration 	  24
-	  3    4166625743 Administrative	  55
-	  4    3875070507 Concurrency		  33
-	  5    3386400367 Commit		   2
-	  6    2723168908 Idle			  96
-	  7    2000153315 Network		  35
-	  8    1740759767 User I/O		  48
-	  9    4108307767 System I/O		  32
-	 10    2396326234 Scheduler		   8
-
-
-
--- get CURRENT session 
-col OBJECT_NAME format a20
-select object_name, session_id, 
-decode(LMODE,
-    0, 'None',
-    1, 'Null',
-    2, 'Row-S (SS)',
-    3, 'Row-X (SX)',
-    4, 'Share',
-    5, 'S/Row-X (SSX)',
-    6, 'Exclusive') lock_type ,        -- lock mode in which session holds lock
-decode(REQUEST,
-    0, 'None',
-    1, 'Null',
-    2, 'Row-S (SS)',
-    3, 'Row-X (SX)',
-    4, 'Share',
-    5, 'S/Row-X (SSX)',
-    6, 'Exclusive') lock_requested ,
-block, 
-ctime         -- Time since current mode was granted
-from gv$locked_object, all_objects, gv$lock where gv$locked_object.object_id = all_objects.object_id AND
-gv$lock.id1 = all_objects.object_id AND gv$lock.sid = gv$locked_object.session_id order by session_id, ctime desc, object_name ;
---
---
-OBJECT_NAME	     SESSION_ID LOCK_TYPE     LOCK_REQUESTE	 BLOCK	    CTIME
--------------------- ---------- ------------- ------------- ---------- ----------
-RP_EXCH_RATE		   2210 Row-X (SX)    None		     2		1
-RP_FREIGHT		   2210 Row-X (SX)    None		     2		1
-RP_FREIGHT_CONFIRM	   2210 Row-X (SX)    None		     2		1
-RP_FREIGHT_CONFIRM_D	   2210 Row-X (SX)    None		     2		1
+-- single instance
+WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
+---------- --------------- --------------- ----------
+         0      1893977003 Other                  745
+         1      4217450380 Application             17
+         2      3290255840 Configuration           24
+         3      4166625743 Administrative          55
+         4      3875070507 Concurrency             33
+         5      3386400367 Commit                   2
+         6      2723168908 Idle                    95
+         7      2000153315 Network                 35
+         8      1740759767 User I/O                48
+         9      4108307767 System I/O              31
+        10      2396326234 Scheduler                8
+        11      3871361733 Cluster                 50
+        12       644977587 Queueing                 9
+-- zjzz rac
+WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
+---------- --------------- --------------- ----------
+         0      1893977003 Other                 1916
+         1      4217450380 Application             34
+         2      3290255840 Configuration           48
+         3      4166625743 Administrative         110
+         4      3875070507 Concurrency             66
+         5      3386400367 Commit                   4
+         6      2723168908 Idle                   192
+         7      2000153315 Network                 70
+         8      1740759767 User I/O                96
+         9      4108307767 System I/O              64
+        10      2396326234 Scheduler               16
+        11      3871361733 Cluster                100
+        12       644977587 Queueing                18
+-- oltp rac
+WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
+---------- --------------- --------------- ----------
+         0      1893977003 Other                 1490
+         1      4217450380 Application             34
+         2      3290255840 Configuration           48
+         3      4166625743 Administrative         110
+         4      3875070507 Concurrency             66
+         5      3386400367 Commit                   4
+         6      2723168908 Idle                   190
+         7      2000153315 Network                 70
+         8      1740759767 User I/O                96
+         9      4108307767 System I/O              62
+        10      2396326234 Scheduler               16
+        11      3871361733 Cluster                100
+        12       644977587 Queueing                18
 
 
 
@@ -282,12 +287,6 @@ where rownum<11 ;
 --
 -- actual plan from the SQL cache and the full text of the SQL.
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR( &sql_id, &child ));
-
-
-
-
---  查看锁
-select * from gv$lock where type in ('tx', 'tm');
 
 
 -- use asmcmd
@@ -475,36 +474,51 @@ select text from user_source where name='BATCHINPUTMEMBERINFO';
 select distinct name from user_source where name like 'P_IMPORT_TICKETINFO_%'; 
 
 
+-- 查询上述超过1分钟以上会话的SQL ID对应的SQL语句
+select distinct piece,sql_text from gv$sqltext where sql_id='&sql_id' order by piece asc;
 
--- current session id, process id, client process id?
-select b.sid, b.serial#, a.spid processid, b.process clientpid from v$process a, v$session b where a.addr = b.paddr and b.audsid = USERENV('SESSIONID') ;
+-- 查询到当时的传入参数
+select name,position,datatype_string,value_string from dba_hist_sqlbind
+where sql_id='&sqlid' order by snap_id,name,position;
 
-SID SERIAL# PROCESSID CLIENTPID
-———- ———- ——— ———
-43 52612 420734 5852:5460
+-- 观察超过1分钟以上的holder会话 (holder不能被查询sql_id)
+SELECT l.inst_id,DECODE(l.request,0,'Holder: ','Waiter: ')||l.sid sid ,s.serial#, s.machine, s.program,to_char(s.logon_time,'yyyy-mm-dd hh24:mi:ss'),l.id1, l.id2, l.lmode, l.request, l.type, s.sql_id,s.sql_child_number, s.prev_sql_id,s.prev_child_number
+FROM gV$LOCK l , gv$session s 
+ WHERE (l.id1, l.id2, l.type) IN (SELECT id1, id2, type FROM GV$LOCK WHERE request>0)
+ and l.inst_id=s.inst_id and l.sid=s.sid
+ORDER BY l.inst_id,l.id1, l.request
+/
 
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
 
--- check session and process, get PID
-col MACHINE fomat a30
-col PROGRAM fomat a25
-col CLIENTPID fomat a25
-select distinct s.sid, s.serial#, s.machine, s.program,  s.process clientpid from gv$session s where s.sid=&sid ; 
+-- get session, spid is OS process id.
+COLUMN spid FORMAT A10
+COLUMN username FORMAT A10
+COLUMN MACHINE FORMAT A25
+COLUMN program FORMAT A25
+SELECT s.inst_id, s.sid, s.serial#, s.sql_id, p.spid, s.username, s.machine, s.program
+FROM   gv$session s
+       JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id
+WHERE  s.type != 'BACKGROUND' 
+and s.sid='&sid'
+/
 
-       SID    SERIAL# MACHINE			PROGRAM 		  CLIENTPID
----------- ---------- ------------------------- ------------------------- -------------------------
-       630	53521 WORKGROUP\PTMSB2B-212	w3wp.exe		  2080:3652
+   INST_ID        SID    SERIAL# SQL_ID        SPID       USERNAME   PROGRAM                                     
+---------- ---------- ---------- ------------- ---------- ---------- ---------------------------------------------
+         1        141      21812 d7y679cgur3qq 17274      SCOTT      sqlplus@f1259e845a55 (TNS V1-V3)        
+
+
+-- check sql_text
+select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
+select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV';
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
 
 -- kill session
-
-select * from gv$lock where BLOCK!=0;
-select sid,serial# from gv$session where sid=&sid; 
-alter system kill session '&sid,&serial' immediate;
-
 select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
+alter system kill session '&sid,&serial' immediate;
 
 -- 杀所有来自相同machine的session
 begin     
@@ -905,38 +919,11 @@ START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DI
 SELECT * FROM SYS.DBA_DIRECTORIES;
 
 
--- get session, spid is OS process id.
-COLUMN spid FORMAT A10
-COLUMN username FORMAT A10
-COLUMN MACHINE FORMAT A25
-COLUMN program FORMAT A25
-SELECT s.inst_id, s.sid, s.serial#, s.MACHINE, p.spid, s.username, s.program
-FROM   gv$session s JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id
-WHERE  s.type != 'BACKGROUND';
---
---
-   INST_ID	  SID	 SERIAL# SPID	    USERNAME   PROGRAM
----------- ---------- ---------- ---------- ---------- ---------------------------------------------
-	 1	   44	    4599 1994	    SYS        sqlplus@kenneth (TNS V1-V3)
-	 1	   50	    2249 2022	    TEST       sqlplus@kenneth (TNS V1-V3)
 
 
 
 --  显示gv$session超过60s的查询 queries currently running for more than 60 seconds
-select s.username,s.sid,s.serial#,s.last_call_et/60 mins_running from gv$session s where status='ACTIVE' and type <>'BACKGROUND' and last_call_et> 60 order by sid,serial#;
-
-
---
-column USERNAME format a15
-column spid format a15
-select s.username, s.inst_id, s.sid, s.serial#, s.program, s.machine, p.spid, s.last_call_et/60 mins_running from gv$session s, gv$process p where p.addr = s.paddr and s.status='ACTIVE' and s.type <>'BACKGROUND' and s.last_call_et> 60 order by sid,serial# ;
-
-
--- 查看在跑什么
--- https://community.oracle.com/thread/2354739?start=0&tstart=0
-select a.sid, a.username,b.sql_id, b.sql_fulltext from gv$session a, gv$sql b where a.sql_id = b.sql_id and a.status = 'ACTIVE' and a.username != 'SYS';
-
-
+select s.username,s.sid,s.serial#, s.sql_id, round ( s.last_call_et/60, 2) mins_running from gv$session s where status='ACTIVE' and type <>'BACKGROUND' and last_call_et> 60 order  by mins_running desc ,sid,serial# ;
 
 -- the average buffer gets per execution during a period of activity 
 --
@@ -957,22 +944,6 @@ FROM (SELECT b.username, a.disk_reads, a.buffer_gets, trunc(a.buffer_gets / a.ex
     AND a.buffer_gets > 10000 ORDER BY buffer_get_per_exec DESC)
 WHERE ROWNUM <= 20
 /
-
-USERNAME   BUFFER_GET DISK_READS EXECUTIONS BUFFER_GET PARSE      SORTS ROWS_  HIT_RATIO MODULE                  ELAPSED_TIME   CPU_TIME USER_IO_WAIT_TI SQL_ID      
----------- ---------- ---------- ---------- ---------- ----- ---------- ----- ---------- -------------------- --------------- ---------- --------------- -------------
-CKSP           679865          0          5     135973     3          0  3280        100 w3wp.exe                     4853590    4839809               0 bkyhj7d2tnqf6
-CKSP           135860        144          1     135860     1          3    35      99.89 w3wp.exe                     6559070    5499213         1024303 5cnvm98z4qymc
-CKSP           109667       9143          1     109667     1          0     1      91.66 w3wp.exe                    63641391    1764796        62136512 b6b8c4m9wkkwp
-CKSP          1132174          0         11     102924    11       1187  1155        100 JDBC Thin Client            31109674   15640651               0 bu0nutzj85suh
-CKSP          1234419          0         12     102868    11       1296  1260        100 JDBC Thin Client            29616894   16872859               0 4hmnu6zc3pq7g
-CKSP          1231533          0         12     102627    12       1296  1260        100 JDBC Thin Client            32128512   16536738               0 5mg64zmn18044
-CKSP           820772          0          8     102596     8        862   840        100 JDBC Thin Client            20041473   11875764               0 b6ghuyrz8jyyw
-CKSP          1025923          0         10     102592    10       1080  1050        100 JDBC Thin Client            24871521   14010661               0 12vdq6g1ufj8r
-CKSP           718133          0          7     102590     7        750   735        100 JDBC Thin Client            15720771   10633514               0 57gat07ptzmzu
-
- 20 rows selected 
-
-
 
 --  SQL ordered by Elapsed Time in 20mins, like awr
 col EXEs format a5;
@@ -1001,15 +972,6 @@ select * from (
     order by TOTAL_USER_IO desc)
 where ROWNUM < 6
 /
-
-SQL_ID         EXES   TOTAL_ELAPSED ELAPSED_PER_EXE       TOTAL_CPU     CPU_PER_SEC   TOTAL_USER_IO USER_IO_PER_EXE LAST_ACT MODULE             
-------------- ----- --------------- --------------- --------------- --------------- --------------- --------------- -------- --------------------
-4z1xp5zx99mr7     2         18730.2          9365.1           96.45           48.22        16529.86         8264.93 14:11:11 DataExchange.exe    
-98sz9txr8z1m4     7        24956.02         3565.15          381.22           54.46        24567.53         3509.65 14:11:56 DataExchange.exe    
-9j5grcp042mhs     2         1861.95          930.98           20.36           10.18         1844.59          922.29 14:11:28 DataExchange.exe    
-64gtpnfwx4uqn     1             .09             .09             .06             .06             .02             .02 11:11:29 SQL Developer       
-7hmyj1rctb0bx     2             .18             .09             .11             .06             .05             .02 14:11:04 SQL Developer       
-
 
 -- check sql_text
 select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
@@ -1154,7 +1116,8 @@ select SEQUENCE_NAME,to_char(LAST_NUMBER),to_char(MAX_VALUE) from user_sequences
 
 
 -- check session
-select s.sid, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.sid = '&sid' ;
+select s.sid, s.serial#, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.  sql_id and s.sid = '&sid' ;
+
 --
 --
        SID USERNAME   MACHINE			OSUSER	     CPU_TIME	 MINUTES
@@ -2094,19 +2057,6 @@ ora.scan1.vip  ora....ip.type ONLINE    ONLINE    db2
 ora.zjzzdb.db  ora....se.type ONLINE    ONLINE    db1 
 
 
--- 观察超过1分钟以上的holder会话
-SELECT l.inst_id,DECODE(l.request,0,'Holder: ','Waiter: ')||l.sid,s.serial#, s.machine, s.program,to_char(s.logon_time,'yyyy-mm-dd hh24:mi:ss'),l.id1, l.id2, l.lmode, l.request, l.type, s.sql_id,s.sql_child_number, s.prev_sql_id,s.prev_child_number
-FROM gV$LOCK l , gv$session s 
- WHERE (l.id1, l.id2, l.type) IN (SELECT id1, id2, type FROM GV$LOCK WHERE request>0)
- and l.inst_id=s.inst_id and l.sid=s.sid
-ORDER BY l.inst_id,l.id1, l.request;
-
--- 查询上述超过1分钟以上会话的SQL ID对应的SQL语句
-select distinct piece,sql_text from gv$sqltext where sql_id='&sql_id' order by piece asc;
-
--- 查询到当时的传入参数
-select name,position,datatype_string,value_string from dba_hist_sqlbind
-where sql_id='&sqlid' order by snap_id,name,position;
 
 -- 勒索病毒
 select 'DROP TRIGGER '||owner||'."'||TRIGGER_NAME||'";' from dba_triggers where
@@ -2177,37 +2127,3 @@ UTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE AUTO');
 
 -- 查看执行计划
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
-
-Enter value for sql_id: db78fxqxwxt7r
-old   1: SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0))
-new   1: SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('db78fxqxwxt7r',0))
-
-PLAN_TABLE_OUTPUT
---------------------------------------------------------------------------------------------------------------------------------------------
-SQL_ID	db78fxqxwxt7r, child number 0
--------------------------------------
-select /*+ rule */ bucket, endpoint, col#, epvalue from histgrm$ where
-obj#=:1 and intcol#=:2 and row#=:3 order by bucket
-
-Plan hash value: 3312420081
-
--------------------------------------------------------------
-| Id  | Operation	      | Name	       | Cost (%CPU)|
--------------------------------------------------------------
-|   0 | SELECT STATEMENT      | 	       |	    |
-
-PLAN_TABLE_OUTPUT
---------------------------------------------------------------------------------------------------------------------------------------------
-|   1 |  SORT ORDER BY	      | 	       |     0	 (0)|
-|*  2 |   TABLE ACCESS CLUSTER| HISTGRM$       |	    |
-|*  3 |    INDEX UNIQUE SCAN  | I_OBJ#_INTCOL# |	    |
--------------------------------------------------------------
-
-Predicate Information (identified by operation id):
----------------------------------------------------
-
-   2 - filter("ROW#"=:3)
-   3 - access("OBJ#"=:1 AND "INTCOL#"=:2)
-
-
-22 rows selected.
