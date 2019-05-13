@@ -28,7 +28,7 @@ use Getopt::Std;
 getopts('f');
 our($opt_f);
 
-my $record_file = "/home/kk/Dropbox/Documents/comic.done"; 
+my $record_file = "/home/kk/Dropbox/home/kk/Downloads/comic/comic.done"; 
 my%downloaded_url ;
 my$k;
 my$v;
@@ -42,7 +42,7 @@ while ( <$fh> ) {
 close $fh;
 
 use Tie::File; 
-tie my @lines , "Tie::File", "/home/kk/Dropbox/comic_download.list" or die $!; 
+tie my @lines , "Tie::File", "/home/kk/Dropbox/home/kk/Downloads/comic/comic_download.list" or die $!; 
 # tie my @lines , "Tie::File", "/tmp/list.txt" or die $! ; 
 
 # while ( @lines ){
