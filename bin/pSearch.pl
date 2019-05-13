@@ -64,7 +64,7 @@ sub md5FileSearch {
     my	( $keyword )	= @_;
     my @md5File= [
         '/home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5',
-        '/home/kk/Dropbox/Documents/comic.done',
+        '/home/kk/Dropbox/home/kk/Downloads/comic/comic.done',
     ];
     foreach my $md5File ( @md5File ) {
     if ( -r $md5File ) {
@@ -84,7 +84,7 @@ sub md5FileSearch {
 sub comicSearch {
     my %comicResult;
     my	( $keyword )	= @_;
-    my $comicFile= '/home/kk/Dropbox/Documents/comic.done';
+    my $comicFile= '/home/kk/Dropbox/home/kk/Downloads/comic/comic.done';
     if ( -r $comicFile ) {
         foreach my $word ( @{$keyword} ) {
             my @comicResult;
