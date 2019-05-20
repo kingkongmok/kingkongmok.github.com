@@ -128,7 +128,7 @@ show parameter fal_server;
 -- show active archive log destinations 
 archive log list;
 show parameter db_recovery_file_dest
-select dest_name,status,destination from V$ARCHIVE_DEST;
+select dest_name,status,destination from V$ARCHIVE_DEST where DESTINATION is not null;
 show parameter recover
 show parameter log_archive_dest
 
