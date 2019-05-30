@@ -30,7 +30,8 @@ proxychains -q wget -q --user-agent="Mozilla/4.0 (compatible; MSIE 6.0; Windows 
 
 cd /tmp/novel-done/$TIMESTAMP
 enca -L zh -x utf8 name.html
-TITLE=`perl -nE 'say $1 if /\<title\>.*?-(.*)-/' name.html`
+#TITLE=`perl -nE 'say $1 if /\<title\>.*?-(.*)-/' name.html`
+TITLE=`perl -nE 'say $1 if /<title>.*?【(.*)】.*?<\/title>/' name.html`
 
 cd www*/bbs4/
 enca -L zh -x utf8 *
@@ -39,14 +40,12 @@ mkdir txt
 for i in `grep 送交者 index.php* -l ` ; do cp "$i" txt ; done
 cd txt
 perl-rename 's/.*/sprintf"%03d.txt",++$i/e' * -i
-for i in *txt ; do perl -i.bak -00ne 'while(/\<pre\>(.*)\<\/pre\>/gsm){print $1}' "$i"; done
-cat *.txt > all.txt
+# 抓取title和正文内容
+for i in *txt ; do perl -i.bak -00nE 'while(/<title>(.*?)<\/title>.*?\<pre\>(.*)\<\/pre\>/gsm){print $1, "\n",  $2}' "$i"; done
+# 匹配一下是否有title再合并
+for i in *txt ; do head -n1 "$i" | grep -q "$TITLE" && cat "$i" >> all.txt ; done 
 perl -i.bak -pe 's/<font color=#\w+?>\w+?\.\w+<\/font><p><\/p>//g; s/\r\n//g; s/　　/\n　　/g; s/    /\n　　/g' all.txt
+perl -i.bak2 -pe 's#<font \S+?</font>##g; s#<p></p>#\n#g; s#<br />##g' all.txt
 perl -i -ne 'print unless /^[\s　]+\r?$/' all.txt
-cp all.txt /tmp/"$TITLE".txt
+cp -f all.txt /tmp/"$TITLE".txt
 echo /tmp/"$TITLE".txt done
-#mkdir -p /tmp/novel-done/$TIMESTAMP
-#mv www.* /tmp/novel-done/$TIMESTAMP
-#mv -i all.txt /tmp/"$NAME".txt
-#find /tmp/ -name "www\.*\.com" -type d -mtime -1 -exec rm -rf {} \;
-
