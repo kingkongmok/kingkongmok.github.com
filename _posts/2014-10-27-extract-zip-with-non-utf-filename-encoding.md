@@ -24,3 +24,12 @@ perl -MFile::Find  -MEncode -e 'finddepth({postprocess=>sub{my $new=encode("utf8
 perl -MFile::Basename -MFile::Find  -MEncode -e 'finddepth({postprocess=>sub{my $new=dirname($File::Find::dir) . "/". encode("utf8",decode("gbk",basename($File::Find::dir)));print "rename $File::Find::dir to $new " . (rename($File::Find::dir,$new)?"ok\n":"fail: $!\n");},no_chdir=>1,wanted=>sub{return if -d $File::Find::name;my $new=dirname($File::Find::name) . "/".encode("utf8",decode("gbk",basename($File::Find::name)));print "rename $File::Find::name to $new " . (rename($File::Find::name,$new)?"ok\n":"fail: $!\n");} },@ARGV)' 
 
 ```
+
+---
+
+[example](https://www.zhihu.com/question/20523036)
+
+```
+LANG=C 7za x your-zip-file.zip
+convmv -f GBK -t utf8 --notest -r .
+``` 
