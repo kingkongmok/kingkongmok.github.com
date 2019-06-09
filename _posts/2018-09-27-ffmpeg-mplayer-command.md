@@ -91,3 +91,11 @@ screen -S ffmpeg sh -c 'for i in *wmv ; do ffmpeg -i "$i" -c:v libx264 -crf 23 -
 ```
 docker run -it --rm -v $PWD:/tmp/workdir  jrottenberg/ffmpeg -i output.mp4
 ```
+
+---
+
+[reindex](https://video.stackexchange.com/questions/18220/fix-bad-files-and-streams-with-ffmpeg-so-vlc-and-other-players-would-not-crash)
+
+```
+ffmpeg -err_detect ignore_err -i video.mkv -c copy video_fixed.mkv
+```

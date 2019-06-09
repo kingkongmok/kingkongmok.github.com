@@ -56,7 +56,7 @@ foreach my $line ( @lines ){
         if ( $message =~ /download_filename\"\>(.*?.zip)\<\/p\>
             .*?
             # (http:\/\/wnacg.download\/down.*?zip)
-            (http:\/\/(?:d3\.)?wnacg.download\/down.*?zip)
+            (http:\/\/(?:d4\.)?wnacg.download\/down.*?zip)
             /sxm ){
             my $DownloadUrl = $2 ; 
             my $DownloadFilename = $1 ; 
@@ -74,7 +74,7 @@ foreach my $line ( @lines ){
                 #-------------------------------------------------------------------------------
                 if ( $httpcode == 200 ) {
                     $result = system("/usr/bin/proxychains4 -q curl -H \"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36\" -C -  \"$DownloadUrl\"" . 
-                        " -o /home/kk/Downloads/\"$DownloadFilename\""); 
+                        " -o /home/kk/Downloads/comic/\"$DownloadFilename\""); 
                     if ( $result == 0 ) {
                         system("echo $DownloadUrl \"$DownloadFilename\"" .
                             " >> $record_file")   ; 
