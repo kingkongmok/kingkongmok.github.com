@@ -32,90 +32,86 @@ END
     ;
 } ## --- end sub usage
 
-sub locateSearch {
-    my	( $keyword )	= @_;
-    return ;
-} ## --- end sub locateSearch
-
-sub getLocateFile {
-    my	( $par1 )	= @_;
-    return ;
-} ## --- end sub getLocateFile
-
-sub getMd5File {
-    my	( $par1 )	= @_;
-    return ;
-} ## --- end sub getMd5File
-
 sub mlocateSearch {
     my	( $keyword )	= @_;
-    say "\n\nFiles match:\n";
-    my %mlocateResult;
+    my @mlocateResultArray;
     foreach my $word ( @{$keyword} ) {
         my $searchCommand = "locate -i -r '$word' | grep -P \"Videos|Pictures\"";
-        my @mlocateResult = system($searchCommand);
-        $mlocateResult{$word}=[@mlocateResult];
+        @mlocateResultArray = `$searchCommand`;
     }
-    return %mlocateResult;
+    return @mlocateResultArray;
 } 
 
-sub md5FileSearch {
-    my %md5Result;
+sub baidupanFileSearch {
+    my @baidupanResultArray;
     my	( $keyword )	= @_;
-    my @md5File= [
-        '/home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5',
-        '/home/kk/Dropbox/home/kk/Downloads/comic/comic.done',
-    ];
-    foreach my $md5File ( @md5File ) {
+    my @baidupanFiles = glob("~/Dropbox/pan/*");
+    foreach my $baidupanFile ( @baidupanFiles ) {
+    if ( -r $baidupanFile ) {
+        foreach my $word ( @{$keyword} ) {
+            open my $fh , "< $baidupanFile";
+            while ( <$fh> ) {
+                push @baidupanResultArray,$_ if /$word/i ;
+            }
+        }
+    }
+}
+    return @baidupanResultArray;
+} ## --- end sub baidupanFileSearch
+
+sub md5FileSearch {
+    my	( $keyword )	= @_;
+    my @md5Result;
+    my @md5Files = glob("~/Dropbox/home/kk/Downloads/mldonkey/*");
+    foreach my $md5File ( @md5Files ) {
     if ( -r $md5File ) {
         foreach my $word ( @{$keyword} ) {
-            my @md5Result;
             open my $fh , "< $md5File";
             while ( <$fh> ) {
                 push @md5Result,$_ if /$word/i ;
             }
-            $md5Result{$word}=[@md5Result];
         }
     }
 }
-    return %md5Result;
+    return @md5Result;
 } ## --- end sub md5FileSearch
 
 sub comicSearch {
-    my %comicResult;
     my	( $keyword )	= @_;
+    my @comicResult;
     my $comicFile= '/home/kk/Dropbox/home/kk/Downloads/comic/comic.done';
     if ( -r $comicFile ) {
         foreach my $word ( @{$keyword} ) {
-            my @comicResult;
             open my $fh , "< $comicFile";
             while ( <$fh> ) {
                 push @comicResult,$_ if /$word/i ;
             }
-            $comicResult{$word}=[@comicResult];
         }
     }
-    return %comicResult;
+    return @comicResult;
 } ## --- end sub comicFileSearch
 
 
 if ( @ARGV ) {
-    my %md5FileResult = &md5FileSearch(\@ARGV) ;
-    my %mlocateResult = &mlocateSearch(\@ARGV) ;
-    my %comicResult = &comicSearch(\@ARGV) ;
-    if ( keys %md5FileResult ) {
-        say "\n\ntorrent match:\n";
-        foreach my $keys ( @ARGV ) {
-            say $keys , " :";
-            say @{$md5FileResult{$keys}};
-        }
+    my @md5FileResult = &md5FileSearch(\@ARGV) ;
+    my @baidupanFileResult = &baidupanFileSearch(\@ARGV) ;
+    my @mlocateResult = &mlocateSearch(\@ARGV) ;
+    my @comicResult = &comicSearch(\@ARGV) ;
+    if ( @md5FileResult ) {
+        say "\n[33;1mDownloaded torrent match[0;49m ";
+        say @md5FileResult
     }
-    if ( keys %comicResult ) {
-        say "\n\ncomic match:\n";
-        foreach my $keys ( @ARGV ) {
-            say $keys , " :";
-            say @{$comicResult{$keys}};
-        }
+    if ( @baidupanFileResult ) {
+        say "\n[33;1mBaidupan match[0;49m ";
+        say @baidupanFileResult
+    }
+    if ( @mlocateResult ) {
+        say "\n[33;1mMlocate match[0;49m ";
+        say @mlocateResult
+    }
+    if ( @comicResult ) {
+        say "\n[33;1mDownloaded Comic match[0;49m ";
+        say @comicResult
     }
 }
 else {
