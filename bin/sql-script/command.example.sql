@@ -133,6 +133,28 @@ show parameter recover
 show parameter log_archive_dest
 
 
+-- ADG 同步情况
+
+alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
+col NAME format a40
+col COMPLETION_TIME format a20
+col APPLIED format a40
+select * from ( select distinct name,completion_time,applied from
+    v$archived_log order by 2 desc ) where rownum < 20 ;
+--
+NAME                                     COMPLETION_TIME      APPLIED                                
+---------------------------------------- -------------------- ----------------------------------------
+ZJZZDR                                   2019-06-10_08:54:26  NO                                      
++ARCDG1/zjzzdb/2_79245_859476641.arc     2019-06-10_08:54:21  NO                                      
+standby                                  2019-06-10_08:54:21  NO                                      
+ZJZZDR                                   2019-06-10_08:51:42  YES                                     
++ARCDG1/zjzzdb/1_122578_859476641.arc    2019-06-10_08:51:40  NO                                      
+standby                                  2019-06-10_08:51:40  YES                                     
+ZJZZDR                                   2019-06-10_08:51:34  YES                                     
++ARCDG1/zjzzdb/2_79244_859476641.arc     2019-06-10_08:51:33  NO                                      
+standby                                  2019-06-10_08:51:32  YES                        
+
+
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
 SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD#;
 
