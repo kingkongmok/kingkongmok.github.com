@@ -24,7 +24,27 @@ use utf8;
 use Data::Dumper;
 use feature 'say';
 
-my $videoPath = "/home/kk/Downloads/videos"; 
+
+#-------------------------------------------------------------------------------
+#  usage
+#-------------------------------------------------------------------------------
+use Getopt::Std;
+getopts('ht');
+our($opt_h, $opt_t);
+
+sub usage {
+    print <<HELPTEXT;                                                           
+    mplayer the videos and ask for delete
+    options:
+            -h          print this help                      
+    exmaple:
+            $0       # defualt dir ~/Downloads/videos
+            $0 .     # this dir
+
+HELPTEXT
+}
+
+my $videoPath = shift // "/home/kk/Downloads/videos"; 
 
 
 sub confirm{
@@ -41,20 +61,25 @@ sub confirm{
 #  main
 #-------------------------------------------------------------------------------
 
+if ( $opt_h ) {
+    usage;
+    exit 23;
+}
+
 opendir (my $dh, $videoPath) || die $!; 
 my %h; 
 my @videoFiles =  
 grep { !$h{$_}++ }
-map{s/-\d+?\.(?:mp4|flv)//; $_}
+map{s/-\d+?\.(?:mp4|flv|avi|mkv)//; $_}
 map $_->[0],
 sort { $a->[1] <=> $b->[1] }
 map [ $_, +(stat "$videoPath/$_")[9] ],
-grep{/\.(?:mp4|flv)$/} readdir $dh ; 
+grep{/\.(?:mp4|flv|avi|mkv)$/} readdir $dh ; 
 
 foreach my $file ( @videoFiles ) {
-    system("mplayer $videoPath/\'$file\'\*");
-    if ( confirm("remove file $file") ) {
-        system("rm $videoPath/\'$file\'\*");
+    my $fileprefixname = $videoPath . "/" . $file ; 
+    system("mplayer \"$fileprefixname\"\*");
+    if ( confirm("remove file $file\*") ) {
+        system("rm \"$fileprefixname\"\*");
     }
-
 }
