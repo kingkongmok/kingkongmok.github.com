@@ -7,9 +7,40 @@ set pagesize 100
 col 1 format a15
 
 
+-- DB_NAME, DB_UNIQUE_NAME, SERVICE_NAMES, INSTANCE_NAME, and $ORACLE_SID
+-- http://logic.edchen.org/db_name-db_unique_name-service_names-instance_name-and-oracle_sid/
+
+DB_NAME (Enterprise-wide Name) = $ORACLE_SID (Installation-time)
+DB_UNIQUE_NAME (Site-wide Name) = DB_NAME (Startup-time) SERVICE_NAMES = DB_UNIQUE_NAME
+INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
+-- 
+
+└── COMPDB 			-- DB_NAME, DB_UNIQUE_NAME, SERVICE_NAMES, INSTANCE_NAME, and $ORACLE_SID
+    ├── PRIMDB		-- DB_UNIQUE_NAME (Site-wide Name) = DB_NAME (Startup-time) SERVICE_NAMES = DB_UNIQUE_NAME
+    │   ├── PRIMDB1		-- INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
+    │   └── PRIMDB2
+    └── STANDB
+        ├── STANDB1
+        └── STANDB2
+
+
+-- alert log location
+$ORACLE_BASE/diag/rdbms/<dbname_in_lower_case>/$ORACLE_SID/trace/alert_ORACLE_SID.log
+
+-- pfile 
+$ORACLE_HOME/dbs/init/init$PID.ora
+
+-- tnsnames
+$ORACLE_HOME/network/admin/tnsnames.ora
+
+
 -- startup  启动数据库实例
 sqlplus / as sysdba
 startup
+
+SQL> startup nomount         ------------started, instance up with spfile
+SQL> alter database mount   ------------mounted, instance mount with controlfile
+SQL> alter database open     ------------open,  instance open with datafiles
 
 
 -- shutdown 关闭数据库实例：
@@ -60,6 +91,9 @@ show parameter spfile;
 select distinct owner from dba_segments where owner in (select username from dba_users where default_tablespace not in ('SYSTEM','SYSAUX') );
 
 
+-- aix 挂载nfs
+mount -o rw,bg,hard,intr,proto=tcp,vers=3,rsize=65536,wsize=65536,timeo=600 172.16.45.200:/volume1/Server_nfs01/dg83 /mnt/nas
+
 -- change memory setting
 
 alter system set memory_max_target=32G scope=spfile; 
@@ -95,6 +129,17 @@ select INDEX_NAME, TABLE_NAME, TABLE_OWNER from SYS.ALL_INDEXES order by TABLE_O
 ALTER USER user_name IDENTIFIED BY NEWPASSWORD;
 -- change user unlock
 ALTER USER user_name account unlock;
+
+
+-- turn off Oracle password expiration?
+--  https://stackoverflow.com/questions/1095871/how-do-i-turn-off-oracle-password-expiration
+select profile from DBA_USERS where username = '<username>';
+alter profile <profile_name> limit password_life_time UNLIMITED;
+select resource_name,limit from dba_profiles where profile='<profile_name>';
+-- for developer
+ALTER PROFILE "DEFAULT" LIMIT PASSWORD_VERIFY_FUNCTION NULL;
+ALTER user user_name identified by new_password account unlock;
+
 
 -- show tables
 SELECT owner, table_name FROM dba_tables;
@@ -132,9 +177,11 @@ select dest_name,status,destination from V$ARCHIVE_DEST where DESTINATION is not
 show parameter recover
 show parameter log_archive_dest
 
+-- change recover location
+alter system set db_recovery_file_dest='+DATA' scope=spfile sid='*'; 
+
 
 -- ADG 同步情况
-
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a40
 col COMPLETION_TIME format a20
@@ -218,7 +265,7 @@ select count(*) from gv$process;
 select value from v$parameter where name ='processes' ;
 
 
--- event_names
+-- show evnets wait
 et pagesize 200 ;
 col WAIT_CLASS# format a10     
 col WAIT_CLASS_ID format a15
@@ -226,23 +273,6 @@ col wait_class format a15
 SELECT wait_class#,wait_class_id,wait_class,COUNT(1) AS "count" 
 FROM gv$event_name 
 GROUP BY wait_class#, wait_class_id, wait_class ORDER BY wait_class#;
---
--- single instance
-WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
----------- --------------- --------------- ----------
-         0      1893977003 Other                  745
-         1      4217450380 Application             17
-         2      3290255840 Configuration           24
-         3      4166625743 Administrative          55
-         4      3875070507 Concurrency             33
-         5      3386400367 Commit                   2
-         6      2723168908 Idle                    95
-         7      2000153315 Network                 35
-         8      1740759767 User I/O                48
-         9      4108307767 System I/O              31
-        10      2396326234 Scheduler                8
-        11      3871361733 Cluster                 50
-        12       644977587 Queueing                 9
 -- zjzz rac
 WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
 ---------- --------------- --------------- ----------
@@ -397,14 +427,15 @@ WHERE tablespace_name = 'SYSTEM'
 
 
 -- 数据泵 impdp expdb
--- expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
-
--- expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
-
+--example
+expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
+--example
+expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83_1.log parallel=2 job_name=expdpjob_1 
+--example
 expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott logfile=expdp_scott.log parallel=2 job_name=expdp_scott.job
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 exp ftsp/ftsp owner=ftsp file=20161205ftsp.dmp log=20161205ftsp.log;
-
+--example
 create tablespace TICKET_TABLESPACES datafile '/u01/app/oracle/oradata/oltp/ticket_tablespace01.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 create tablespace INDEX_TABLESPACES datafile '/u01/app/oracle/oradata/oltp/index_tablespace01.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 CREATE TEMPORARY TABLESPACE TEMP_NEW TEMPFILE '/DATA/database/ifsprod/temp_01.dbf' SIZE 500m autoextend on next 10m maxsize unlimited;
@@ -415,6 +446,10 @@ GRANT resource,connect,dba TO CKSP;
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 
 --revoke dba TO CKSP;       
+
+-- 默认新建datafiles文件位置
+db_create_file_dest                  string      /tmp/nas/oracle/oltp
+
 
 -- create table
 CREATE TABLE suppliers
@@ -942,8 +977,6 @@ SELECT * FROM SYS.DBA_DIRECTORIES;
 
 
 
-
-
 --  显示gv$session超过60s的查询 queries currently running for more than 60 seconds
 select s.username,s.sid,s.serial#, s.sql_id, round ( s.last_call_et/60, 2) mins_running from gv$session s where status='ACTIVE' and type <>'BACKGROUND' and last_call_et> 60 order  by mins_running desc ,sid,serial# ;
 
@@ -1365,18 +1398,16 @@ remotedb =
     (CONNECT_DATA = (SERVICE_NAME = ORCL))
   )
 -- Then create a dblink referencing that alias:
-drop database link remotedb;
-CREATE DATABASE LINK remotedb
+drop database link remote_dblinnk;
+CREATE DATABASE LINK remote_dblink
     CONNECT TO SYSTEM IDENTIFIED BY <password>
     USING 'remotedb';
--- Or facilitate the same inline with:
-CREATE DATABASE LINK remotedb
-CONNECT TO SYSTEM IDENTIFIED BY <password>
-USING'(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = remotedb.fqdn.com)(PORT = 1521))(CONNECT_DATA = (SERVICE_NAME = ORCL)))';
+-- check it
+select * from remotedb.testtable@remote_dblink ; 
 
 
 -- 查看是否有权限进程dblink操作
-select * from user_sys_privs where privilege like upper('%DATABASE LINK%');  
+select * from user_sys_privs where privilege like upper('&db_link');  
 
 
 
@@ -1389,7 +1420,7 @@ select * from user_sys_privs where privilege like upper('%DATABASE LINK%');
 
 -- a、rman模式删除
 --rman target用户名/密码@实例名
-rman >DELETE ARCHIVELOG UNTIL TIME 'SYSDATE-7';删除7前的所有归档日志。
+rman >DELETE ARCHIVELOG UNTIL TIME 'SYSDATE-7'; --删除7前的所有归档日志。
 rman >crosscheck archivelog all;
 rman >delete noprompt expired archivelog all;
 rman>crosscheck archivelog all;
@@ -1481,7 +1512,7 @@ release channel ch4 ;
 }
 
 --备注：设置控制文件的自动备份路径命令为：
-set controlfile autobackup format for device type disk to ‘/u01/xxx/%F’;
+set controlfile autobackup format for device type disk to '/u01/xxx/%F';
 -- 这样恢复时可以直接：
 Restore controlfile autobackup;
 
@@ -1694,32 +1725,18 @@ impdp mylcpt/mylcpt directory=dump_file_dir dumpfile=allfile.dmp nologfile=y con
 
 -- crs 命令
 
-$ source  profile_grid
-
-
 -- 启动 crs
-/oracle/11.2.0/grid/gridhome/bin/crsctl start cluster
-
+[root@rac1 ~]# /oracle/11.2.0/grid/gridhome/bin/crsctl start cluster
+-- 停止
+[root@rac1 ~]# /u01/app/11.2.0/grid/bin/crsctl stop cluster
 -- 查看当前的服务器启动情况，
 $ crs_stat -t
-Name           Type           Target    State     Host        
-------------------------------------------------------------
-ora.DATA.dg    ora....up.type ONLINE    ONLINE    orcl        
-ora.INIT.dg    ora....up.type ONLINE    ONLINE    orcl        
-ora....ER.lsnr ora....er.type OFFLINE   OFFLINE               
-ora.asm        ora.asm.type   ONLINE    ONLINE    orcl        
-ora.cssd       ora.cssd.type  ONLINE    ONLINE    orcl        
-ora.diskmon    ora....on.type OFFLINE   OFFLINE               
-ora.evmd       ora.evm.type   ONLINE    ONLINE    orcl        
-ora.ons        ora.ons.type   OFFLINE   OFFLINE               
-ora.orcl.db    ora....se.type OFFLINE   OFFLINE              
-
 -- 删除旧服务
 $ srvctl remove database -d orcl
-Remove the database orcl? (y/[n]) y
-
 -- 添加服务
 $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
+
+
 
 
 -- 检查是否重启生效
@@ -1801,7 +1818,7 @@ NAME			       HEADER_STATUS	    PATH
 ASMDISK1		       MEMBER		    ORCL:ASMDISK1
 
 
-SQL>  create pfile=’/tmp/init.ora‘  from spfile;
+SQL>  create pfile='/tmp/init.ora'  from spfile;
 
 SQL> 
 SQL> shutdown immediate; 
@@ -1873,6 +1890,10 @@ DATA/
 FRA/
 OCR/
 ASMCMD [+] > exit
+
+-- copy
+ASMCMD> cp /u01/oracle/oradata/test1.dbf +DATA/LONDON/DATAFILE/test.dbf
+copying /u01/oracle/oradata/test1.dbf -> +DATA/LONDON/DATAFILE/test.dbf
 
 -- 更换数据文件到asm
 -- https://www.thegeekdiary.com/how-to-move-a-datafile-from-filesystem-to-asm-using-asmcmd-cp-command/
@@ -2049,36 +2070,7 @@ CRS-2676: Start of 'ora.crsd' on 'db2' succeeded
 
 
 -- 处理最终结果，target和state一致，并且有rac1和rac2的信息
-
 [oragrid]$crs_stat -t
-Name           Type           Target    State     Host        
-------------------------------------------------------------
-ora.ARCDG1.dg  ora....up.type ONLINE    ONLINE    db1 
-ora.DATADG1.dg ora....up.type ONLINE    ONLINE    db1 
-ora....ER.lsnr ora....er.type ONLINE    ONLINE    db1 
-ora....N1.lsnr ora....er.type ONLINE    ONLINE    db2 
-ora.OCR.dg     ora....up.type ONLINE    ONLINE    db1 
-ora.asm        ora.asm.type   ONLINE    ONLINE    db1 
-ora....SM1.asm application    ONLINE    ONLINE    db1 
-ora....B1.lsnr application    ONLINE    ONLINE    db1 
-ora....db1.gsd application    OFFLINE   OFFLINE               
-ora....db1.ons application    ONLINE    ONLINE    db1 
-ora....db1.vip ora....t1.type ONLINE    ONLINE    db1 
-ora....SM2.asm application    ONLINE    ONLINE    db2 
-ora....B2.lsnr application    ONLINE    ONLINE    db2 
-ora....db2.gsd application    OFFLINE   OFFLINE               
-ora....db2.ons application    ONLINE    ONLINE    db2 
-ora....db2.vip ora....t1.type ONLINE    ONLINE    db2 
-ora.cvu        ora.cvu.type   ONLINE    ONLINE    db1 
-ora.gsd        ora.gsd.type   OFFLINE   OFFLINE               
-ora....network ora....rk.type ONLINE    ONLINE    db1 
-ora.oc4j       ora.oc4j.type  ONLINE    ONLINE    db2 
-ora.ons        ora.ons.type   ONLINE    ONLINE    db1 
-ora....ry.acfs ora....fs.type ONLINE    ONLINE    db1 
-ora.scan1.vip  ora....ip.type ONLINE    ONLINE    db2 
-ora.zjzzdb.db  ora....se.type ONLINE    ONLINE    db1 
-
-
 
 -- 勒索病毒
 select 'DROP TRIGGER '||owner||'."'||TRIGGER_NAME||'";' from dba_triggers where
@@ -2149,3 +2141,25 @@ UTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE AUTO');
 
 -- 查看执行计划
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
+
+-- change db_namem, db_unique_name, instance_name
+-- https://docs.oracle.com/database/121/SUTIL/GUID-6CC9CA73-8C0C-4750-8D0E-ADFDB047E4AE.htm#SUTIL1546
+STARTUP MOUNT
+oracle $> nid TARGET=SYS DBNAME=test_db SETNAME=YES
+-- change ORACLE_SID and pfile
+startup 
+
+-- change service_name (https://dba.stackexchange.com/questions/49245/cannot-change-service-name-for-oracle)
+alter system set db_domain='' scope=spfile; 
+alter system set service_names = 'mydb' scope = both;
+
+
+-- adg recover
+
+ORA-10458: standby database requires recovery
+ORA-01196: file 1 is inconsistent due to a failed media recovery session
+ORA-01110: data file 1: '+DATA/dg/datafile/system.282.1011541117'
+-- 开启日志实时应用
+recover managed standby database using current logfile disconnect from session;
+
+
