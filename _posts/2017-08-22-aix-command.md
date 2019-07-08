@@ -4,8 +4,7 @@ layout: post
 category: linux
 ---
 
-## [How to check which shell am I
-using?](https://askubuntu.com/questions/590899/how-to-check-which-shell-am-i-using)
+## [How to check which shell am I using?](https://askubuntu.com/questions/590899/how-to-check-which-shell-am-i-using)
 
 ```
 $ echo $0
@@ -24,6 +23,8 @@ set -o vi
 
 ---
 
+### 登陆失败
+
 I try different account to login system, grant sudo right to this account,
 change the password using pwdadm and passwd, but when I login with putty, found
 that Access denied. When I run su - user, found “3004-303 There have been too
@@ -33,4 +34,31 @@ the root cause, after google, easy two steps can sovle it.
 ```
 - /usr/sbin/lsuser -a unsuccessful_login_count user
 - /usr/bin/chsec -f /etc/security/lastlog -a unsuccessful_login_count=0 -s user
+```
+
+
+---
+
+
+### netstat command
+
+in linux
+
+```
+netstat -nltp | grep 22
+```
+
+in aix
+
+```
+netstat -Aan|grep 22
+```
+
+
+---
+
+### 查看配置 prtconf
+
+```
+prtconf |grep disk
 ```

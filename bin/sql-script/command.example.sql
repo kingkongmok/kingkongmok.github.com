@@ -373,6 +373,16 @@ ARCDG1			1023986     420989     602997	      41.1
 DATADG1 		2559965     645474    1914491	      25.2
 OCR			   3069        926	 2143	      30.2
 
+-- asm create vg
+SQL> select path,header_status,state,os_mb from v$asm_disk;
+
+PATH                 HEADER_STATU      STATE              OS_MB
+-------------------- ------------ -------- ----------     ---------------------------
+ORCL:DISK5           FORMER              NORMAL         4094
+ORCL:DISK1           FORMER              NORMAL         4094
+ORCL:DISK2           FORMER              NORMAL         4094
+ORCL:DISK10         PROVISIONED  NORMAL         4094
+ORCL:DISK4           FORMER              NORMAL         4094
 
 
 -- tablespaces
@@ -617,6 +627,10 @@ BEGIN
 END;
 
 
+-- 查看存储裸设备
+
+fdisk -l 和 powermt display dev=all 确认存储盘信息
+
 -- asm creating DATA disk group
 
 CREATE DISKGROUP DATA NORMAL REDUNDANCY DISK '/dev/raw/raw1';
@@ -641,6 +655,10 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
   
   
 -- dg开库
+
+-- 查路径
+select path from v$asm_disk
+
 -- grid
 $ sqlplus / as sysasm
 select STATE,REDUNDANCY,TOTAL_MB,FREE_MB,NAME,FAILGROUP from v$asm_disk;
@@ -816,6 +834,7 @@ MAX(SEQUENCE#)
    
 -- 查询standby库中所有已被应用的归档文件的信息 
 select to_char(first_time),to_char(first_change#),to_char(next_change#),sequence# from v$log_history;
+select to_char(first_time),to_char(first_change#),to_char(next_change#),sequence# from v$log_history where rownum < 5 order by RECID desc;
 	
 set linesize 200
 col thread#||'_'||SEQUENCE# for a10
@@ -831,6 +850,7 @@ select max(sequence#) from v$log;   ---检查发现一致
 
 -- 2、备库执行，查看是否有数据未应用
 select name,SEQUENCE#,APPLIED from v$archived_log order by sequence#;
+select name,SEQUENCE#,APPLIED from v$archived_log where rownum < 10 order by sequence#;
 
 select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
 
@@ -959,7 +979,7 @@ col OUTPUT_BYTES_DISPLAY format a20
 col STATUS format a20
 col INPUT_TYPE format a20
 col TIME_TAKEN_DISPLAY format a20
-select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details order by start_time desc;
+select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details where rownum < 5 order by start_time desc;
 --
 --
 START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DISPLAY
@@ -1112,27 +1132,6 @@ select TABLE_NAME, TABLESPACE_NAME, LAST_ANALYZED, NUM_ROWS from user_tables whe
 --
 TABLE_NAME		       TABLESPACE_NAME		      LAST_ANALYZED	    NUM_ROWS
 ------------------------------ ------------------------------ ------------------- ----------
-PERSONALINFORMATION	       USERS			      2018-01-29 03:09:33    6799208
-PASSENGERINFO		       USERS			      2018-01-29 03:06:12    7168242
-VSSDETAIL		       USERS			      2018-02-14 03:02:07    7866170
-RELEASELOG		       USERS			      2017-11-18 00:19:47   10551477
-TICKETPICK		       USERS			      2018-01-18 03:04:19   11429994
-PASSENGERCHECKINRECORD	       USERS			      2018-01-18 03:06:49   11647350
-EXCHANGETICKETDETAIL	       USERS			      2017-11-17 23:51:39   12316605
-TICKETREMARK		       USERS			      2017-11-18 02:48:19   13952353
-CHECKINLIST_HIST	       USERS			      2018-01-29 03:08:34   14966093
-TMP_LOGONRECORD 	       TICKET_TABLESPACES	      2017-11-18 02:53:32   15092424
-TICKETRECORD_CV 	       USERS			      2017-11-18 02:35:20   16416358
-WEBTICKETRECORD 	       TICKET_TABLESPACES	      2018-01-07 06:06:25   16691654
-FARERECORDDETAIL_HIST	       TICKET_TABLESPACES	      2017-11-18 00:00:45   22112106
-GROUPTICKETDETAIL	       USERS			      2017-11-18 00:05:11   22573738
-TMP_MESSAGE		       TICKET_TABLESPACES	      2018-02-11 06:05:26   25050012
-TICKETSUPPLEMENT	       TICKET_TABLESPACES	      2017-11-18 02:49:26   26260661
-OPERATIONLOG		       USERS			      2018-01-27 06:07:05   27760317
-REPORTRECORD		       USERS			      2017-11-18 00:23:21   28932702
-RESERVERECORD		       USERS			      2018-02-05 03:13:23   42263888
-TICKETTRANSACTION	       TICKET_TABLESPACES	      2017-11-18 02:52:03   47389709
-SWAPVOYAGELOG		       USERS			      2017-11-18 00:35:35   72325035
 TICKETRECORD_ARCH	       TICKET_TABLESPACES	      2018-01-17 03:25:41  103176198
 TICKETRECORD		       TICKET_TABLESPACES	      2018-01-24 06:21:31  115035999
 TICKETRECORD_HIST	       USERS			      2017-11-18 02:46:58  142669418
@@ -1141,16 +1140,6 @@ VOYAGEMAPDETAIL 	       USERS			      2018-01-18 03:10:56  354257297
 -- oltp PE 299个非空表 42个空表, POE 59个非空表
 -- zjzz PE 335个非空表, 88 个空表
 
-
--- 启动时报错 
-ERROR at line 1:  
-ORA-01113: file 8 needs media recovery  
-ORA-01110: data file 8: 'D:\APP\ASUS\ORADATA\WAREHOUSE\TEST03.DBF'  
-
-
-SQL>alter database datafile 8 offline;  
-SQL>alter database recover datafile 8;  
-SQL>alter database datafile 8 online;  
 
 
 -- 当前错误
@@ -1203,29 +1192,8 @@ RMAN> advise failure;
 -- 列出rman备份
 RMAN> list backup; 
 
-List of Backup Sets
-===================
-
-
-BS Key  Type LV Size       Device Type Elapsed Time Completion Time
-------- ---- -- ---------- ----------- ------------ ---------------
-6       Full    1011.96M   DISK        00:00:13     27-JUN-18      
-        BP Key: 6   Status: AVAILABLE  Compressed: NO  Tag: TAG20180627T162419
-        Piece Name: /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_nnndf_TAG20180627T162419_fm6lfn2j_.bkp
-  List of Datafiles in backup set 6
-  File LV Type Ckp SCN    Ckp Time  Name
-  ---- -- ---- ---------- --------- ----
-  1       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/system01.dbf
-  2       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/sysaux01.dbf
-  3       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/undotbs01.dbf
-  4       Full 997322     27-JUN-18 /u01/app/oracle/oradata/EE/users01.dbf
-  5       Full 997322     27-JUN-18 /u01/app/oracle/product/11.2.0/EE/dbs/test01.dbf
-
-
-
 -- 列出 配置
 RMAN> show all; 
-
 
 -- 基于时间的备份保留策略 ( 3天 )
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 3 DAYS;
@@ -1236,23 +1204,6 @@ CONFIGURE RETENTION POLICY TO REDUNDANCY 3;
 
 --  查看当前处于废弃状态的备份文件
 RMAN> report obsolete;
-
-RMAN retention policy will be applied to the command
-RMAN retention policy is set to redundancy 1
-Report of obsolete backups and copies
-Type                 Key    Completion Time    Filename/Handle
--------------------- ------ ------------------ --------------------
-Backup Set           6      27-JUN-18         
-  Backup Piece       6      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_nnndf_TAG20180627T162419_fm6lfn2j_.bkp
-Backup Set           7      27-JUN-18         
-  Backup Piece       7      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_ncsnf_TAG20180627T162419_fm6lg45q_.bkp
-Archive Log          5      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_06_27/o1_mf_1_9_fm6lg588_.arc
-Backup Set           8      27-JUN-18         
-  Backup Piece       8      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_annnn_TAG20180627T162437_fm6lg5g0_.bkp
-Archive Log          6      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_06_27/o1_mf_1_10_fm6m69cs_.arc
-Backup Set           9      27-JUN-18         
-  Backup Piece       9      27-JUN-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_06_27/o1_mf_annnn_TAG20180627T163729_fm6m69l2_.bkp
-
 
 -- 删除废弃备份
 RMAN> delete obsolete;
@@ -1282,110 +1233,10 @@ new RMAN configuration parameters are successfully stored
 
 RMAN> delete obsolete ; 
 
-RMAN retention policy will be applied to the command
-RMAN retention policy is set to redundancy 2
-allocated channel: ORA_DISK_1
-channel ORA_DISK_1: SID=71 device type=DISK
-Deleting the following obsolete backups and copies:
-Type                 Key    Completion Time    Filename/Handle
--------------------- ------ ------------------ --------------------
-Archive Log          248    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_1_fmvr3bjx_.arc
-Archive Log          249    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_2_fmvr3dk2_.arc
-Archive Log          250    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_3_fmvr3gfz_.arc
-Archive Log          251    05-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_4_fmvr3s6b_.arc
-Archive Log          252    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_5_fmwmh5gr_.arc
-Archive Log          253    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_6_fmxgd05w_.arc
-Archive Log          254    06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_7_fmxgd70l_.arc
-Backup Set           79     06-JUL-18         
-  Backup Piece       79     06-JUL-18          /u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_06/o1_mf_nnndf_TAG20180706T083948_fmxglo4w_.bkp
-Backup Set           80     06-JUL-18         
-  Backup Piece       80     06-JUL-18          /u01/app/oracle/product/11.2.0/EE/dbs/c-1893248064-20180706-00
-
-Do you really want to delete the above objects (enter YES or NO)? yes
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_1_fmvr3bjx_.arc RECID=248 STAMP=980701802
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_2_fmvr3dk2_.arc RECID=249 STAMP=980701804
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_3_fmvr3gfz_.arc RECID=250 STAMP=980701806
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_05/o1_mf_1_4_fmvr3s6b_.arc RECID=251 STAMP=980701817
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_5_fmwmh5gr_.arc RECID=252 STAMP=980729829
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_6_fmxgd05w_.arc RECID=253 STAMP=980757376
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_7_fmxgd70l_.arc RECID=254 STAMP=980757383
-deleted backup piece
-backup piece handle=/u01/app/oracle/flash_recovery_area/EE/backupset/2018_07_06/o1_mf_nnndf_TAG20180706T083948_fmxglo4w_.bkp RECID=79 STAMP=980757589
-deleted backup piece
-backup piece handle=/u01/app/oracle/product/11.2.0/EE/dbs/c-1893248064-20180706-00 RECID=80 STAMP=980757644
-Deleted 9 objects
-
-
 -- delete expired
 
 RMAN> crosscheck archivelog all ;
-
-released channel: ORA_DISK_1
-allocated channel: ORA_DISK_1
-channel ORA_DISK_1: SID=71 device type=DISK
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_9_fmxkgtn2_.arc RECID=256 STAMP=980760538
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_10_fmxkgwwn_.arc RECID=257 STAMP=980760540
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_11_fmxl00kb_.arc RECID=258 STAMP=980761088
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_12_fmxl0qdz_.arc RECID=259 STAMP=980761111
-Crosschecked 5 objects
-
-
-RMAN> host;
-
-[oracle@dfcc11b5e819 ~]$ rm -f /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc
-[oracle@dfcc11b5e819 ~]$ exit
-host command complete
-
-RMAN> crosscheck archivelog all ;
-
-released channel: ORA_DISK_1
-allocated channel: ORA_DISK_1
-channel ORA_DISK_1: SID=71 device type=DISK
-validation failed for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_9_fmxkgtn2_.arc RECID=256 STAMP=980760538
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_10_fmxkgwwn_.arc RECID=257 STAMP=980760540
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_11_fmxl00kb_.arc RECID=258 STAMP=980761088
-validation succeeded for archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_12_fmxl0qdz_.arc RECID=259 STAMP=980761111
-Crosschecked 5 objects
-
-
 RMAN> delete expired archivelog all ; 
-
-released channel: ORA_DISK_1
-allocated channel: ORA_DISK_1
-channel ORA_DISK_1: SID=71 device type=DISK
-List of Archived Log Copies for database with db_unique_name EE
-=====================================================================
-
-Key     Thrd Seq     S Low Time 
-------- ---- ------- - ---------
-255     1    8       X 06-JUL-18
-        Name: /u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc
-
-
-Do you really want to delete the above objects (enter YES or NO)? yes
-deleted archived log
-archived log file name=/u01/app/oracle/flash_recovery_area/EE/archivelog/2018_07_06/o1_mf_1_8_fmxkgsdd_.arc RECID=255 STAMP=980760537
-Deleted 1 EXPIRED objects
-
 
 -- create dblink
 -- https://dba.stackexchange.com/questions/54185/create-database-link-on-oracle-database-with-2-databases-on-different-machines
@@ -1559,19 +1410,34 @@ cp -p /home/inithzxzdb.ora /u01/app/oracle/product/11.2.0/dbhome_1/dbs
 
 -- 7、rman恢复
 
-sqlplus / as sysdba
-startup nomount pfile='/u01/app/oracle/product/11.2.0/dbhome_1/dbs/inithzxzdb.ora';
+--  copy pfile and edit 
++DATA/oradb, +DATA/oradr
+-- or
+*.db_file_name_convert='+DATA','/u01/app/oracle/oradata'
+*.log_file_name_convert='+DATA','/u01/app/oracle/oradata','+ARCH','/u01/app/oracle/flash_recovery_area'
+-- change unique_name and service name, change instance name
 
+sqlplus / as sysdba
+startup nomount pfile='/home/oracle/inithzxzdb.ora';
+
+
+--
 rman target /
 RMAN> set dbid xxxx;
 RMAN> restore spfile from autobackup;  --目录相同的话可以直接拷贝，若目录不同的话需要由修改后的pfile生成spfile；
 restore controlfile from autobackup;
-shutdown immediate;
-startup mount;
 
 
---注册备份集信息，把最新的备份集信息（即路径）注册到控制文件中，这样restore database时可以自动发现备份集。若备份集路径和原始的路径一致，则不需要注册备份集：
+--注册备份集信息，把最新的备份集信息（即路径）注册到控制文件中，这样restore database时可以自动发现备份集。若备份集路径和原始的路径一致，则不需要注册备份集： 
+
+-- nomount
+restore controfile with 'backuppiecename';
+alter database mount ; 
 catalog start with '/expdp/'
+restore
+recover
+alter database open resetlogs
+create spfile from pfile 
 
 -- 恢复数据文件（数据文件路径一致）
 run{
@@ -1737,8 +1603,6 @@ $ srvctl remove database -d orcl
 $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
 
 
-
-
 -- 检查是否重启生效
 
 -- https://oracleracdba1.wordpress.com/2013/01/29/how-to-set-auto-start-resources-in-11g-rac/
@@ -1805,6 +1669,11 @@ ORA-15027: active use of diskgroup "INIT" precludes its dismount (DBD ERROR: OCI
 ASMCMD> lsdg
 State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
 MOUNTED  EXTERN  N         512   4096  1048576      1019      960                0             960              0             N  INIT/
+
+-- asm create disgroup
+sudo /etc/init.d/oracleasm createdisk ASMDISK /dev/sdf1
+select path,header_status from v$asm_disk;
+CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK' ;
 
 -- 无法删除INIT ,
 
@@ -2159,7 +2028,280 @@ alter system set service_names = 'mydb' scope = both;
 ORA-10458: standby database requires recovery
 ORA-01196: file 1 is inconsistent due to a failed media recovery session
 ORA-01110: data file 1: '+DATA/dg/datafile/system.282.1011541117'
+
 -- 开启日志实时应用
 recover managed standby database using current logfile disconnect from session;
 
 
+-- rac command  (https://www.oracle-scripts.net/useful-oracle-rac-commands/)
+-- RAC  Real Application Clusters
+-- CRSCTL Oracle Clusterware Control Utility
+-- SRVCTL
+-- ASM Automatic Storage Management 
+-- ONL  Oracle Net listeners
+-- GSD Global Service Daemon
+-- ONS Oracle Notification Service
+
+-- How to stop Oracle RAC (11g, 12c)?
+1. emctl stop dbconsole (11c only. In 12c DB Express replaces dbconsole and doesn’t have to be stopped )
+2. srvctl stop listener [-listener listener_name] [-node node_name] [-force] (stops all listener services)
+3. srvctl stop database -db db_unique_name [-stopoption stop_options] [-eval(12c only)] [-force] [-verbose]
+4. srvctl stop asm [-proxy] [-node node_name] [-stopoption stop_options] [-force]
+5. srvctl stop nodeapps [-node node_name] [-gsdonly] [-adminhelper] [-force] [-relocate] [-verbose]
+6. crsctl stop crs
+
+-- How to Start Oracle RAC (11g, 12c)?
+1. crsctl start crs
+2. crsctl start res ora.crsd -init
+3. srvctl start nodeapps [-node node_name] [-gsdonly] [-adminhelper] [-verbose]
+4. srvctl start asm [-proxy] [-node node_name [-startoption start_options]]
+5. srvctl start database -db db_unique_name [-eval(12c only)]] [-startoption start_options] [-node node_name]
+6. srvctl start listener [-node node_name] [-listener listener_name] (start all listener services)
+7. emctl start dbconsole (11c only)
+--  To start resources  of your HA environment if that are still down(e.g. ora.ons, Listener):
+crsctl start resource -all
+
+-- DEBUG
+-- Starting with Oracle 12c, the log and trace files of the clusterware files are stored in the Automatic Diagnostic Repository (ADR) under the ADR_HOME location $ADR_BASE/diag/crs/`hostname`/crs.
+-- $ adrci
+-- adrci> show homes
+
+-- Manage low level cluster resources: CRS, HAS, cluster
+-- How to display the status of resources in RAC?
+-- Clusterware Resource Status Check : 
+crsctl status resource -t -- (or shorter: crsctl stat res -t)
+-- Find offline resources: 
+crs_stat -t | grep -i offline
+
+-- How to check the current status of a cluster?
+crsctl check cluster
+CRS-4537: Cluster Ready Services is online
+CRS-4529: Cluster Synchronization Services is online
+CRS-4533: Event Manager is online
+
+-- To know the cluster name: 
+olsnodes -c
+
+-- How to check the current status of CRS?
+crsctl check crs
+CRS-4638: Oracle High Availability Services is online (has)
+CRS-4537: Cluster Ready Services is online (crs)
+CRS-4529: Cluster Synchronization Services is online (css)
+CRS-4533: Event Manager is online
+
+-- How to Stop/Start the local node?
+crsctl stop has
+--This command will also abort the database and CRS. Local Listeners will stop and VIP listeners will migrate elsewhere.
+crsctl start has
+--This command will start all the CRS components, listeners and the database.
+
+-- How to Stop/Start the whole cluster?
+crsctl stop cluster -all
+crsctl start cluster -all
+
+-- How to To start and stop oracle clusterware (CRS)?
+crsctl stop crs
+crsctl start crs
+
+-- Manage Network components
+
+-- How to display global public and global cluster_interconnect?
+-- ??? oifcfg ge34f
+-- ??? Heartbeat 194.56.67.0 global cluster_interconnect,asm
+-- ??? Production 10.356.3.0 global public
+
+-- How to check if nodeapps running on a node?
+srvctl status nodeapps [-n my-node]
+--report
+VIP rac1-vip is enabled				-- VIP
+VIP rac1-vip is running on node: rac1
+VIP rac2-vip is enabled
+VIP rac2-vip is running on node: rac2
+Network is enabled 				-- Oracle Net listeners
+Network is running on node: rac1
+Network is running on node: rac2
+GSD is disabled 				-- Global Service Daemon
+GSD is not running on node: rac1
+GSD is not running on node: rac2
+ONS is enabled					-- Oracle Notification Service
+ONS daemon is running on node: rac1
+ONS daemon is running on node: rac2
+
+
+-- How to check the SCAN Configuration?
+-- The SCAN makes it possible to add or remove nodes from the cluster without needing to reconfigure clients.
+-- Using CLUVFY to Confirm DNS is Correctly Associating the SCAN addresses.
+cluvfy comp scan
+--result
+Verifying scan 
+Checking Single Client Access Name (SCAN)...
+Checking TCP connectivity to SCAN Listeners...
+TCP connectivity to SCAN Listeners exists on all cluster nodes
+Checking name resolution setup for "rac-scan"...
+Checking integrity of name service switch configuration file "/etc/nsswitch.conf" ...
+Check for integrity of name service switch configuration file "/etc/nsswitch.conf" passed
+ERROR: 
+PRVG-1101 : SCAN name "rac-scan" failed to resolve
+ERROR: 
+PRVF-4657 : Name resolution setup check for "rac-scan" (IP address: 10.255.255.25) failed
+ERROR: 
+PRVF-4664 : Found inconsistent name resolution entries for SCAN name "rac-scan"
+Verification of SCAN VIP and Listener setup failed
+Verification of scan was unsuccessful on all the specified nodes. 
+
+
+-- How to display the current configuration of the SCAN VIPs?
+srvctl config scan
+--report
+SCAN name: rac-scan, Network: 1/10.255.255.0/255.255.255.0/eth1
+SCAN VIP name: scan1, IP: /rac-scan/10.255.255.25
+
+-- How to display the status of SCAN VIPs and SCAN listeners?
+srvctl status scan
+SCAN VIP scan1 is enabled
+SCAN VIP scan1 is running on node rac1
+
+
+-- If you want to add or modify a scan VIP: 
+srvctl add | modify scan -n my-scan
+-- To delete it: 
+srvctl remove scan
+
+-- How to display the status of SCAN listeners?
+srvctl status scan_listener
+SCAN Listener LISTENER_SCAN1 is enabled
+SCAN listener LISTENER_SCAN1 is running on node rac1
+
+
+-- If you want to add or remove a scan_listener: 
+srvctl add | remove scan_listener
+-- To change the port: 
+srvctl modify scan_listener -p
+
+-- Manage the Oracle Cluster Registry (OCR)
+
+-- How to verify the integrity of OCR?
+cluvfy comp ocr -n all -verbose
+--resport:
+Verifying OCR integrity 
+Checking OCR integrity...
+Checking the absence of a non-clustered configuration...
+All nodes free of non-clustered, local-only configurations
+ASM Running check passed. ASM is running on all specified nodes
+Checking OCR config file "/etc/oracle/ocr.loc"...
+OCR config file "/etc/oracle/ocr.loc" check successful
+Disk group for ocr location "+DATA" available on all the nodes
+NOTE: 
+This check does not verify the integrity of the OCR contents. Execute 'ocrcheck' as a privileged user to verify the contents of OCR.
+OCR integrity check passed
+Verification of OCR integrity was successful. 
+--
+cat /etc/oracle/ocr.loc
+ocrconfig_loc=+DATA
+local_only=FALSE
+--
+ASMCMD> ls -l +DATA/rac-cluster/OCRFILE/REGISTRY.255.995375047
+Type     Redund  Striped  Time             Sys  Name
+OCRFILE  UNPROT  COARSE   JUL 01 09:00:00  Y    REGISTRY.255.995375047
+
+
+--How to backup the OCR?
+--Oracle takes physical backup of OCR automatically every 3 hours. Default location is CRS_home/cdata/my_cluster_name/OCRBackup.
+--The ocrconfig tool is used to make daily copies of the automatically generated backup files.
+
+--Show OCR backups:
+ocrconfig -showbackup
+--report:
+rac2     2019/07/01 07:00:57     /u01/app/11.2.0/grid/cdata/rac-cluster/backup00.ocr
+rac2     2019/07/01 03:00:22     /u01/app/11.2.0/grid/cdata/rac-cluster/backup01.ocr
+rac2     2019/06/30 23:00:11     /u01/app/11.2.0/grid/cdata/rac-cluster/backup02.ocr
+rac2     2019/06/30 02:59:46     /u01/app/11.2.0/grid/cdata/rac-cluster/day.ocr
+rac1     2019/06/24 13:30:56     /u01/app/11.2.0/grid/cdata/rac-cluster/week.ocr
+PROT-25: Manual backups for the Oracle Cluster Registry are not available
+
+
+--Change default location of physical OCR copies:
+ocrconfig -backuploc
+--After that, you have to copy these files on tape or in another backup location (cp -p -R CRS_home/cdata/my_cluster_name /u03/backups )
+
+--To do a manual backup:
+ocrconfig -export /u03/backups/exports/OCR_exportBackup.dmp
+
+-- How to recover OCR from physical or export backup?
+--Pre-requisite: All RAC components shutdow
+-- Recover OCR from automatic physical backups:
+crconfig -restore CRS_home/cdata/my_cluster_name/OCRBackup/backup00.ocr
+
+--Recover OCR from export backup:
+ocrconfig -import /u03/backups/exports/OCR_exportBackup.dmp
+
+-- How to backup the Voting disks?
+--In older versions of Oracle Clusterware you have to backup voting disks with the dd command.
+--Starting with Oracle Clusterware 11g Release 2 you no longer need to backup them. Voting disks are automatically backed up as a part of the OCR.
+
+-- Manage database components
+
+-- How to find the name of the database?
+SQL> show parameter db_unique_name
+crsctl status resource -t | grep db
+
+-- How to inspect the database configuration?
+srvctl config database -d oradb
+--report:
+Database unique name: oradb
+Database name: oradb
+Oracle home: /u01/app/oracle/product/11.2.0/db_1
+Oracle user: oracle
+Spfile: +DATA/oradb/spfileorsid.ora
+Domain: 
+Start options: open
+Stop options: immediate
+Database role: PRIMARY
+Management policy: AUTOMATIC
+Server pools: oradb
+Database instances: orsid1,orsid2
+Disk Groups: DATA
+Mount point paths: 
+Services: 
+Type: RAC
+Database is administrator managed
+
+--How to display the name and the status of the instances in the RAC?
+srvctl status database -d oradb
+--report
+Instance orsid1 is running on node rac1
+Instance orsid2 is running on node rac2
+
+-- To list just active nodes: 
+olsnodes -s -t
+--report:
+rac1    Active  Unpinned
+rac2    Active  Unpinned
+
+
+-- how to start|stop the database?
+srvctl stop database -d my-db-name -o immediate
+srvctl start database -d my-db-name
+
+-- How to start|stop one instance of the RAC?
+srvctl start instance -d my-db-name -i my-db-name1
+srvctl stop instance -d my-db-name -i my-db-name1 
+srvctl stop instance -d my-db-name -i my-db-name1 -force
+-- Use -force if the instance to stop is not on the local server
+
+-- How to start and stop a PDB in Oracle RAC?
+-- ???
+--Stop a PDB
+--On the current node [or on all the nodes]:
+ALTER PLUGGABLE DATABASE my-PDB-name CLOSE IMMEDIATE [Instances=all];
+--This will stop the associated service too.
+--Manually stopping the associated service will not close the PDB. You have to use this SQL command.
+--Start a PDB
+--On the current node [or on all the nodes]:
+ALTER PLUGGABLE DATABASE my-PDB-name OPEN [Instances=all;]
+--You can also start the PDB with the associated service
+--This will NOT start the service(s) associated with this PDB.
+
+--How to stop and start a Listener?
+srvctl stop listener -l LISTENER_NAME
+srvctl start listener -l LISTENER_NAME
