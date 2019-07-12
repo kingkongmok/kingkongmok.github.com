@@ -19,13 +19,13 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-BAIDU_SHARE="~/Baidu"
-TMP_WORKSPACE="~/Downloads/tmp"
-RECORD_WORKSPACE="~/Dropbox/pan"
+BAIDU_SHARE="$HOME/Baidu"
+TMP_WORKSPACE="$HOME/Downloads/tmp"
+RECORD_WORKSPACE="$HOME/Dropbox/pan"
 
 
-[[ ! -d $BAIDU_SHARE ]] && echo "BAIDU_SHARE not exists" && exit 23
-[[ ! -d $TMP_WORKSPACE ]] && echo "TMP_WORKSPACE not exists" && exit 23
+[[ ! -d "$BAIDU_SHARE" ]] && echo "BAIDU_SHARE not exists" && exit 23
+[[ ! -d "$TMP_WORKSPACE" ]] && echo "TMP_WORKSPACE not exists" && exit 23
 
 
 if [[ ! -z "`find "$TMP_WORKSPACE" -type f`" ]] ; then
@@ -44,6 +44,6 @@ for FILE in `find * -maxdepth 1 -type d ! -empty` ; do
     [[  ! -d "$BAIDU_SHARE"/"$FILE" ]] && mkdir "$BAIDU_SHARE"/"$FILE"
     mv *gpg "$BAIDU_SHARE"/"$FILE" 
     # 备份
-    mv * ~/.p/"$FILE"
+    mv * "$HOME"/.p/"$FILE"
     cd ..
 done

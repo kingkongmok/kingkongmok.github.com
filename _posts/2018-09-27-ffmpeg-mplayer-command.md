@@ -36,6 +36,7 @@ screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:540 small/"
 ```
 mkdir small
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:720 small/"$i" ; done'
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:640 small/"$i" ; done'
 ```
 
 + **Constant Rate Factor**, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24
@@ -99,3 +100,7 @@ docker run -it --rm -v $PWD:/tmp/workdir  jrottenberg/ffmpeg -i output.mp4
 ```
 ffmpeg -err_detect ignore_err -i video.mkv -c copy video_fixed.mkv
 ```
+
+---
+
+ffmpeg -i action.mp4 -vf scale=-1:720 -b:v 2600k small_action.mp4
