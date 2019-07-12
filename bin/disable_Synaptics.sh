@@ -24,7 +24,7 @@ inputDeviceNumber=`/usr/bin/xinput | grep "^[^ ]" -c`
 if [ $inputDeviceNumber -gt 4 ]  ; then
 
     # if plug device, disable synaptics
-    SynapticsNumber=`/usr/bin/xinput list | grep Synaptics | perl -naE 'say $1 if $F[4]=~/id=(\d+)/'`
+    SynapticsNumber=`/usr/bin/xinput list | grep TouchPad | perl -naE 'say $1 if $F[5]=~/id=(\d+)/'`
     /usr/bin/xinput set-prop $SynapticsNumber "Device Enabled" 0
 
 fi

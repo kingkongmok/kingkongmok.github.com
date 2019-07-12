@@ -51,7 +51,7 @@ my @deleteLines;
 foreach my $line ( @lines ){
     my $result = 1;
     $line =~ s/photos/download/;
-    my $message = `/usr/bin/proxychains4 -q curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36" -s $line`; 
+    my $message = `/usr/bin/proxychains -q curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36" -s $line`; 
     if ($message){
         if ( $message =~ /download_filename\"\>(.*?.zip)\<\/p\>
             .*?
@@ -67,13 +67,13 @@ foreach my $line ( @lines ){
                 #-------------------------------------------------------------------------------
                 #  check http header, NEXT if not 200  
                 #-------------------------------------------------------------------------------
-                my $httpcode = `/usr/bin/proxychains4 -q curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36" -s -o /dev/null -I -w '%{http_code}' \"$DownloadUrl\"`;
+                my $httpcode = `/usr/bin/proxychains -q curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36" -s -o /dev/null -I -w '%{http_code}' \"$DownloadUrl\"`;
                 sleep 10;
                 #-------------------------------------------------------------------------------
                 #  download comic with curl/aria if http coder = 200
                 #-------------------------------------------------------------------------------
                 if ( $httpcode == 200 ) {
-                    $result = system("/usr/bin/proxychains4 -q curl -H \"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36\" -C -  \"$DownloadUrl\"" . 
+                    $result = system("/usr/bin/proxychains -q curl -H \"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36\" -C -  \"$DownloadUrl\"" . 
                         " -o /home/kk/Downloads/comic/\"$DownloadFilename\""); 
                     if ( $result == 0 ) {
                         system("echo $DownloadUrl \"$DownloadFilename\"" .

@@ -2072,8 +2072,8 @@ SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = oradg)
-     (GLOBAL_DBNAME=dg)
+     (SID_NAME = orasid )
+     (GLOBAL_DBNAME= oradb )
     )    
  )
 EOF
