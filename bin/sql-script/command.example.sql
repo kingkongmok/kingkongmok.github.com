@@ -7,6 +7,10 @@ set pagesize 100
 col 1 format a15
 
 
+-- clear buffer and cache
+alter system flush buffer_cache
+
+
 -- DB_NAME, DB_UNIQUE_NAME, SERVICE_NAMES, INSTANCE_NAME, and $ORACLE_SID
 -- http://logic.edchen.org/db_name-db_unique_name-service_names-instance_name-and-oracle_sid/
 
@@ -53,6 +57,19 @@ shutdown abort
 $ lsnrctl start
 $ lsnrctl status
 $ lsnrctl stop
+-- 检查谁在运行监听
+ps -ef | grep tnslsnr
+-- 增加静态监听  $ORACLE_HOME/admin/network/listener.ora 添加
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = oradg)
+     (GLOBAL_DBNAME=dg)
+    )    
+ )
+
+
 
 
 -- EM/oem start 
@@ -127,8 +144,25 @@ select INDEX_NAME, TABLE_NAME, TABLE_OWNER from SYS.ALL_INDEXES order by TABLE_O
 
 -- change password
 ALTER USER user_name IDENTIFIED BY NEWPASSWORD;
+ALTER USER user_name IDENTIFIED BY NEWPASSWORD account unlock;
 -- change user unlock
 ALTER USER user_name account unlock;
+
+-- show account not work
+SELECT username, account_status, created, lock_date, expiry_date
+  FROM dba_users WHERE account_status != 'OPEN';
+
+-- oracle password file, 用于判断是否让远程登陆sys用户
+-- 首先确定 parameter remote_login_passwordfile, 一般要EXCLUSIVE， none就密码文件不生效
+-- 然后用语句查询当前有没有密码文件, 例如下列情况就有sys已经使用密码文件
+SQL> select * from v$pwfile_users; 
+
+USERNAME                       SYSDB SYSOP SYSAS
+------------------------------ ----- ----- -----
+SYS                            TRUE  TRUE  FALSE
+
+-- 如果没有，就创建密码文件, default location $ORACLE_HOME/dbs/orapw$ORACLE_SID 
+orapwd file=orapw[SID] password=oracle
 
 
 -- turn off Oracle password expiration?
@@ -179,6 +213,14 @@ show parameter log_archive_dest
 
 -- change recover location
 alter system set db_recovery_file_dest='+DATA' scope=spfile sid='*'; 
+
+--check recovery space usage
+select * from v$recover_area_usage ; 
+
+-- show parameter 
+show parameter db_rec
+show parameter db_create
+
 
 
 -- ADG 同步情况
@@ -497,12 +539,28 @@ CREATE TABLE employees
 
 
 -- create tablespace
-
 create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
+
+-- create test table
+create table test_table tablespace TEST as select * from dba_data_files ; 
 
 -- drop tablespaces
 DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS; 
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
+
+
+-- create and replace tempfile
+-- 注意，重启实例temporary的datafile会自动重建不会报警，但在线丢失或者异常会导致sort用不了，处理就如下：
+create temporary tablespace TEMP2 tempfile '/u01/app/oracle/oradata/ORADB/temp02.dbf' size 100m autoextend on;
+alter database default temporary tablespace TEMP2 ; 
+-- check which session using old temp
+SELECT USERNAME, SESSION_NUM, SESSION_ADDR FROM V$SORT_USAGE;
+drop tablespace TEMP including contents and datafiles ; 
+create temporary tablespace TEMP tempfile '+DATA/oradb/tempfile/temp01.dbf' size 100m autoextend on;
+alter database default temporary tablespace TEMP;
+
+
+
 
 
 -- check user privileges 
@@ -1185,15 +1243,14 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 $ rman target /
 
 
--- 异常和建议
-RMAN> list failure;  
-RMAN> advise failure;  
-
 -- 列出rman备份
 RMAN> list backup; 
 
 -- 列出 配置
 RMAN> show all; 
+
+--enable controlfile autobackup, ( spfile autobackup by default );
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
 
 -- 基于时间的备份保留策略 ( 3天 )
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 3 DAYS;
@@ -1201,12 +1258,19 @@ CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 3 DAYS;
 -- 基于备份份数保留策略 ( 3份 )
 CONFIGURE RETENTION POLICY TO REDUNDANCY 3;
 
-
---  查看当前处于废弃状态的备份文件
+--  查看
 RMAN> report obsolete;
+RMAN> report need backup ; 
+RMAN> report schema; 
+RMAN> validate database plus archivelog ; 
+RMAN> list incarnation ; 
+RMAN> list backup summary; 
 
--- 删除废弃备份
-RMAN> delete obsolete;
+-- 异常和建议, 自动执行
+RMAN> list failure;  
+RMAN> advise failure;  
+RMAN> repair failure preview;
+RMAN> repair failure;
 
 
 -- 完全恢复
@@ -1328,132 +1392,30 @@ mount /oradata
 --  方案二  RMAN备份恢复
 -- Rman备份再恢复
 
--- 1、数据库做全备
-Shutdown immediate;
-Startup mount;
-Alter database open read only;   -- 这几步可以省略
-
-rman target /
-
--- 并记录下dbid： --完全恢复可以不需要
-
--- 检查database错误（物理和逻辑）
-backup validate check logical database;    --这一步最好事先检查一下
-
-backup as compressed backupset full database include current controlfile plus archivelog;
-
-
--- 备份脚本如下：
-
-RMAN> 
-run{
-allocate channel ch1 device type disk;
-allocate channel ch2 device type disk;
-allocate channel ch3 device type disk;
-allocate channel ch4 device type disk;
-crosscheck archivelog all;
-delete expired archivelog all;  --若手工没删除控制文件，这两行可以取消
-backup as compressed backupset format '/expdp/FULL_%U' database include current controlfile;
-sql 'alter system archive log current';  --这一步其实完全不需要，全备会执行三次
-backup archivelog all format '/expdp/ARC_%U';
-release channel ch1 ;
-release channel ch2 ;
-release channel ch3 ;
-release channel ch4 ;
-}
-
---备注：设置控制文件的自动备份路径命令为：
-set controlfile autobackup format for device type disk to '/u01/xxx/%F';
--- 这样恢复时可以直接：
-Restore controlfile autobackup;
-
-sqlplus / as sysdba
-create pfile from spfile;
-
-RMAN> report schema; --可以查看原数据文件信息，并登记
-
-
--- 2、备份文件拷贝
-
--- 把pfile(inithzxzdb.ora)、redolog、rman备份集文件夹 拷贝到其他的目录：
-
-cp -R -p /u01/app/oracle/fast_recovery_area/HZXZDB/ /home
-cp -p /oradata/hzxzdb/redo* /home
-cp -p /oradata/hzxzdb/control* /home
-cp -R -p $ORACLE_HOME/dbs/ /home
-cp -p /u01/app/oracle/product/11.2.0/db_1/network/admin/listener.ora /home
-cp -p /u01/app/oracle/product/11.2.0/db_1/network/admin/tnsnames.ora /home
+-- 1 copy backupset and autobackup to /home/oracle
+-- 2 create pfile, db_name需一致
+cat > ~/initorsid1.ora << EOF
+*.db_recovery_file_dest_size=10g
+*.db_recovery_file_dest='+DATA'
+*.compatible='11.2.0.4.0'
+*.db_name=oradb
+EOF
+-- 3 startup nomount
+SQL> startup nomount pfile='/home/oracle/initorsid1.ora';
+-- 4 restore controlfile from backup piece
+rman target / 
+RMAN> set dbid 2748650428
+RMAN> restore controlfile from '/home/oracle/backup/ORADB/AUTOBACKUP/s_1012151711.288.1012151711';
+-- 5 startup mount
+SQL> alter system set control_files='+DATA/xxxx';
+SQL> alter database mount;
+-- 6 restore recover database
+RMAN> restore database; 
+RMAN> recover database [ until SCN xxx ];
+RMAN> alter database open resetlogs
 
 
 
--- 3、删除lv、vg、pv，卸载磁盘（不知道需不需要先dbca把库给干掉） 其实可以简单的 直接umount /u01 ;  umount /oradata，然后修改文件系统挂载点，从自动挂载改为手动挂载。
---
--- 4、新的磁盘挂载，建3.2章节
---
--- 5、安装oracle数据库软件，安装监听等；
---
--- 6、创建目录，并把备份的数据拷贝过去
-
-mkdir -p /u01/app/oracle/admin/hzxzdb/adump
-chown -R oracle:dba /u01/app/oracle/admin/
-
-cd /u01/app/oracle/fast_recovery_area/
-mkdir hzxzdb
-chmod -R 750 /u01/app/oracle/fast_recovery_area/
-chown -R oracle:oinstall /u01/app/oracle/fast_recovery_area/
-cp -R -p /home/HZXZDB /u01/app/oracle/fast_recovery_area/
-
-
-cd /oradata/hzxzdb
-cp -p /home/redo* /oradata/hzxzdb
-cp -p /home/inithzxzdb.ora /u01/app/oracle/product/11.2.0/dbhome_1/dbs
-
--- 7、rman恢复
-
---  copy pfile and edit 
-+DATA/oradb, +DATA/oradr
--- or
-*.db_file_name_convert='+DATA','/u01/app/oracle/oradata'
-*.log_file_name_convert='+DATA','/u01/app/oracle/oradata','+ARCH','/u01/app/oracle/flash_recovery_area'
--- change unique_name and service name, change instance name
-
-sqlplus / as sysdba
-startup nomount pfile='/home/oracle/inithzxzdb.ora';
-
-
---
-rman target /
-RMAN> set dbid xxxx;
-RMAN> restore spfile from autobackup;  --目录相同的话可以直接拷贝，若目录不同的话需要由修改后的pfile生成spfile；
-restore controlfile from autobackup;
-
-
---注册备份集信息，把最新的备份集信息（即路径）注册到控制文件中，这样restore database时可以自动发现备份集。若备份集路径和原始的路径一致，则不需要注册备份集： 
-
--- nomount
-restore controfile with 'backuppiecename';
-alter database mount ; 
-catalog start with '/expdp/'
-restore
-recover
-alter database open resetlogs
-create spfile from pfile 
-
--- 恢复数据文件（数据文件路径一致）
-run{
-allocate channel ch1 device type disk;
-allocate channel ch2 device type disk;
-allocate channel ch3 device type disk;
-allocate channel ch4 device type disk;
-restore database;
-release channel ch1;
-release channel ch2;
-release channel ch3;
-release channel ch4;
-}
-
-recover database;  --上面的这个方式下，根本不需要recover，即不需要redolog；
-alter database open resetlogs;  
 
 -- 注：AIX系统oracle数据库自动启动：
 -- 1、vi /etc/oratab  并添加：
@@ -1764,6 +1726,11 @@ ASMCMD [+] > exit
 ASMCMD> cp /u01/oracle/oradata/test1.dbf +DATA/LONDON/DATAFILE/test.dbf
 copying /u01/oracle/oradata/test1.dbf -> +DATA/LONDON/DATAFILE/test.dbf
 
+-- copy multiple
+for i in $(asmcmd ls +DG_AL/EMREP/ARCHIVELOG/2012_12_04); do
+  asmcmd cp +DG_AL/EMREP/ARCHIVELOG/2012_12_04/$i /u01
+done
+
 -- 更换数据文件到asm
 -- https://www.thegeekdiary.com/how-to-move-a-datafile-from-filesystem-to-asm-using-asmcmd-cp-command/
 
@@ -2023,14 +1990,95 @@ alter system set db_domain='' scope=spfile;
 alter system set service_names = 'mydb' scope = both;
 
 
--- adg recover
-
-ORA-10458: standby database requires recovery
-ORA-01196: file 1 is inconsistent due to a failed media recovery session
-ORA-01110: data file 1: '+DATA/dg/datafile/system.282.1011541117'
 
 -- 开启日志实时应用
-recover managed standby database using current logfile disconnect from session;
+-- 首先开启实例
+SQL> startup;
+-- 检查
+SQL> select open_mode from v$database ; 
+
+OPEN_MODE
+--------------------
+READ ONLY
+
+-- dg开启应用
+SQL> recover managed standby database using current logfile disconnect from session;
+Media recovery complete.
+-- 检查
+SQL> select open_mode from v$database ; 
+
+OPEN_MODE
+--------------------
+READ ONLY WITH APPLY
+
+
+-- dg 关闭应用
+SQL> alter database recover managed standby database cancel;
+
+Database altered.
+
+SQL> select open_mode from v$database ; 
+
+OPEN_MODE
+--------------------
+READ ONLY
+
+
+
+
+-- 从现有dg添加另外一个adg1
+
+-- pridb修改参数
+-- 从原来dg添加一个adg1 DG_CONFIG=(oradb,dg) 改为 DG_CONFIG=(oradb,dg,adg1)
+alter system set LOG_ARCHIVE_CONFIG='DG_CONFIG=(oradb,dg,adg1)' sid='*' scope=both;
+-- 添加一个LOG_ARCHIVE_DEST
+alter system set LOG_ARCHIVE_DEST_3='SERVICE=adg1 LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=adg1' sid='*' scope=both;
+
+
+-- stbydb的设置， 先将recovery、fal、log、name的参数设置好
+--db_unique_name=adg1
+cat > ~/init.ora <<EOF
+*.compatible='11.2.0.4.0'
+*.control_files='+DATA/adg1/controlfile/current.256.1013424367'
+*.db_recovery_file_dest='+DATA'
+*.db_recovery_file_dest_size=10G
+*.db_name='oradb'
+*.memory_max_target=400M
+*.memory_target=400M
+*.db_unique_name='adg1'
+*.db_file_name_convert='+DATA','+DATA'
+*.fal_client=adg1
+*.fal_server=oradb
+*.log_archive_config='DG_CONFIG=(adg1,oradb)'
+*.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=adg1'
+*.log_archive_dest_2='SERVICE=oradb LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=oradb'
+*.log_file_name_convert='+DATA','+DATA','+ARCH','+ARCH'
+EOF
+
+SQL> startup nomount pfile='/home/oracle/init.ora';
+
+
+--增加静态监听， 修改 grid的 $ORACLE_HOME/network/admin/listener.ora，添加以下内容
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = oradg)
+     (GLOBAL_DBNAME=dg)
+    )
+ )
+
+-- 用于rman的auxiliary(clone from source instance to auxiliary instance), 这里需要1、nomount状态、并且开启监听（也就是静态）
+$ rman target sys/oracle@oradb auxiliary sys/oracle@adg1
+SQL> startup nomount pfile='/home/oracle/init.ora';
+RMAN> duplicate target database for standby from active database nofilenamecheck;
+SQL> alter database add standby logfile;
+SQL> alter database open;
+SQL> recover managed standby database using current logfile disconnect from session;
+SQL> alter database recover managed standby database cancel;
+
+
+
 
 
 -- rac command  (https://www.oracle-scripts.net/useful-oracle-rac-commands/)
