@@ -2025,6 +2025,63 @@ READ ONLY
 
 
 
+-- create db by manual 手动建库
+--https://www.oracle-dba-online.com/creating_the_database.htm
+--create pfile
+cat > init.ora <<EOF
+DB_NAME=oradb
+DB_BLOCK_SIZE=8192
+CONTROL_FILES=/u01/app/oracle/oradata/ORADB/controlfile.ora
+UNDO_TABLESPACE=undotbs
+UNDO_MANAGEMENT=AUTO
+SGA_TARGET=500M
+PGA_AGGREGATE_TARGET=100M
+LOG_BUFFER=5242880
+DB_RECOVERY_FILE_DEST=/u01/app/oracle/flash_recovery_area
+DB_RECOVERY_FILE_DEST_SIZE=2G
+EOF
+--createdb.sql
+cat > createdb.sql <<EOF
+create database oradb 
+    datafile '/u01/app/oracle/oradata/ORADB/sys.dbf' size 500M 
+    sysaux datafile '/u01/app/oracle/oradata/ORADB/sysaux.dbf' size 100m
+    undo tablespace undotbs 
+    datafile '/u01/app/oracle/oradata/ORADB/undo.dbf' size 100m
+    default temporary tablespace temp
+    tempfile '/u01/app/oracle/oradata/ORADB/tmp.dbf' size 100m
+    logfile
+            group 1 '/u01/app/oracle/oradata/ORADB/log1.ora' size 50m,
+            group 2 '/u01/app/oracle/oradata/ORADB/log2.ora' size 50m,
+            group 3 '/u01/app/oracle/oradata/ORADB/log3.ora' size 50m;
+EOF
+-- create the db in start
+SQL> startup nomount pfile='/home/oracle/init.ora';
+SQL> @/home/oracle/createdb.sql
+SQL> create tablespace users datafile '/u01/app/oracle/oradata/ORADB/user01.dbf' size 100m; 
+SQL> create tablespace index_data datafile '/u01/app/oracle/oradata/ORADB/index.dbf' size 100M; 
+SQL> create spfile from pfile='/home/oracle/init.ora'; 
+SQL> @?/rdbms/admin/catalog.sql
+SQL> @?/rdbms/admin/catproc.sql
+SQL> alter user sys identified by oracle ; 
+SQL> alter user system identified by oracle ; 
+SQL> create user scott default tablespace users identified by scott quota 10M on users;
+SQL> grant connect to scott;
+-- create listener
+cat >> $ORACLE_HOME/network/admin/listener.ora <<EOF
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = oradg)
+     (GLOBAL_DBNAME=dg)
+    )    
+ )
+EOF
+-- and config the /etc/oratab
+
+
+
+
 
 -- 从现有dg添加另外一个adg1
 
