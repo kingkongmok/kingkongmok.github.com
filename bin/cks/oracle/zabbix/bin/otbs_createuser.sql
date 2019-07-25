@@ -16,4 +16,7 @@ grant select on v_$process to zabbix;
 grant select on DBA_TABLESPACE_USAGE_METRICS to zabbix;
 -- adg lag
 grant select on V_$DATAGUARD_STATS to zabbix;
-
+--backup
+grant select on v_$rman_backup_job_details to zabbix ;
+-- check temporary tablespace usage
+grant select on dba_temp_free_space to zabbix ;

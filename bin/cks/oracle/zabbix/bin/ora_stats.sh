@@ -22,6 +22,10 @@ case $1 in
 'process')
 	sql="select count(*) from v\$process;"
 	;;
+'tmptbs')
+        sql="select round(100*(free_space / Tablespace_size) ,0) perc  from dba_temp_free_space;"
+        ;;
+
 
 *)
         echo "ZBX_NOTSUPPORTED"

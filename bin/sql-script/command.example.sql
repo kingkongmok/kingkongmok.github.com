@@ -104,6 +104,10 @@ SELECT * FROM V$VERSION;
 show parameter spfile;
 
 
+-- check character set
+select value from nls_database_parameters where parameter='NLS_CHARACTERSET';
+
+
 -- show schemas
 select distinct owner from dba_segments where owner in (select username from dba_users where default_tablespace not in ('SYSTEM','SYSAUX') );
 
@@ -165,6 +169,30 @@ SYS                            TRUE  TRUE  FALSE
 orapwd file=orapw[SID] password=oracle
 
 
+--Oracle / PLSQL: Grant/Revoke Privileges
+-- Grant Privileges on Table
+GRANT privileges ON object TO user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON suppliers TO smithj;
+GRANT SELECT ON suppliers TO public;
+-- Revoke Privileges on Table
+REVOKE privileges ON object FROM user;
+REVOKE DELETE ON suppliers FROM anderson;
+REVOKE ALL ON suppliers FROM public;
+-- Grant Privileges on Functions/Procedures
+GRANT EXECUTE ON object TO user;
+GRANT EXECUTE ON Find_Value TO smithj;
+GRANT EXECUTE ON Find_Value TO public;
+-- Revoke Privileges on Functions/Procedures
+REVOKE EXECUTE ON object FROM user;
+REVOKE execute ON Find_Value FROM anderson;
+REVOKE EXECUTE ON Find_Value FROM public;
+
+
+-- autotrace
+set autotrace traceonly statistics; 
+set autotrace off;
+
+
 -- turn off Oracle password expiration?
 --  https://stackoverflow.com/questions/1095871/how-do-i-turn-off-oracle-password-expiration
 select profile from DBA_USERS where username = '<username>';
@@ -218,9 +246,8 @@ alter system set db_recovery_file_dest='+DATA' scope=spfile sid='*';
 select * from v$recover_area_usage ; 
 
 -- show parameter 
-show parameter db_rec
+show parameter db_recovery
 show parameter db_create
-
 
 
 -- ADG 同步情况
@@ -228,8 +255,7 @@ alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a40
 col COMPLETION_TIME format a20
 col APPLIED format a40
-select * from ( select distinct name,completion_time,applied from
-    v$archived_log order by 2 desc ) where rownum < 20 ;
+select * from ( select distinct name,completion_time,applied from v$archived_log order by 2 desc ) where rownum < 20 ;
 --
 NAME                                     COMPLETION_TIME      APPLIED                                
 ---------------------------------------- -------------------- ----------------------------------------
@@ -299,7 +325,7 @@ select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/t
 SELECT SID, SERIAL#, MACHINE FROM gv$SESSION;
 
 -- check session and process, get PID
-select s.sid, s.serial#, p.spid processid, s.process clientpid from gv$process p, gv$session s where p.addr = s.paddr 
+select s.sid, s.serial#, p.spid processid, s.process clientpid from gv$process p, gv$session s where p.addr = s.paddr ;
 
 
 -- count process.
@@ -472,10 +498,31 @@ WHERE df.file_id = f.file_id(+) ORDER BY df.tablespace_name, df.file_name;
 select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
 
 
--- default datafile location
-SELECT DISTINCT SUBSTR (file_name, 1, INSTR (file_name, '/', -1, 1))
-FROM DBA_DATA_FILES
-WHERE tablespace_name = 'SYSTEM'
+--  Temporary Tablespace Usage
+
+select round(100*(  free_space / Tablespace_size) ,0) perc  from dba_temp_free_space;
+
+COL TABLESPACE_SIZE FOR 999,999,999,999
+COL ALLOCATED_SPACE FOR 999,999,999,999
+COL FREE_SPACE FOR 999,999,999,999
+ 
+SELECT *
+FROM   dba_temp_free_space
+/
+ 
+SELECT 
+   A.tablespace_name tablespace, D.mb_total,
+   SUM (A.used_blocks * D.block_size) / 1024 / 1024 mb_used, D.mb_total - SUM (A.used_blocks * D.block_size) / 1024 / 1024 mb_free
+FROM 
+   v$sort_segment A,
+    (
+    SELECT B.name, C.block_size, SUM (C.bytes) / 1024 / 1024 mb_total
+    FROM v$tablespace B, v$tempfile C
+    WHERE B.ts#= C.ts# 
+    GROUP BY B.name, C.block_size) D
+WHERE A.tablespace_name = D.name 
+GROUP by A.tablespace_name, D.mb_total
+/
 
 
 -- 数据泵 impdp expdb
@@ -918,7 +965,20 @@ select recovery_mode from v$archive_dest_status where dest_id=2;
 
 
 -- 4、检查备库状态
-select switchover_status from v$database; --发现状态not allowed 
+select switchover_status from v$database; 
+
+--standby应该是not allowed 
+
+--主库异常的时候出现：
+SWITCHOVER_STATUS
+--------------------
+FAILED DESTINATION
+
+
+
+
+SELECT distinct  DESTINATION, ERROR FROM V$ARCHIVE_DEST;
+
 
 
 
@@ -1134,6 +1194,14 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
       1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
 
 
+-- 群里大神的推荐查询
+set lines 150
+col event for a50
+set pages 1000
+col username for a30
+select inst_id,username,event,count(*) from gv$session where wait_class#<>6 group by inst_id,username,event order by 1,3 desc;
+select inst_id,username,event,sql_id,count(*) from gv$session where wait_class#<>6 group by inst_id,username,event,sql_id order by 1,5;
+
 
 --
 --
@@ -1198,6 +1266,10 @@ VOYAGEMAPDETAIL 	       USERS			      2018-01-18 03:10:56  354257297
 -- oltp PE 299个非空表 42个空表, POE 59个非空表
 -- zjzz PE 335个非空表, 88 个空表
 
+
+
+-- DDL
+TRUNCATE TABLE employees_demo; 
 
 
 -- 当前错误
@@ -1271,6 +1343,14 @@ RMAN> list failure;
 RMAN> advise failure;  
 RMAN> repair failure preview;
 RMAN> repair failure;
+
+
+-- reset to a specific incarnation;
+startup mount force
+reset database to incarnation 4;
+restore database; 
+recover database until SCN 1010384 ; 
+alter database open resetlogs ; 
 
 
 -- 完全恢复
@@ -1990,6 +2070,143 @@ alter system set db_domain='' scope=spfile;
 alter system set service_names = 'mydb' scope = both;
 
 
+-- rename or moving oracle files
+alter tablespace users offline normal ; 
+! mkdir -p /u01/app/oracle/datafiles/ORADB/
+! mv '/u01/app/oracle/oradata/ORADB/user01.dbf' '/u01/app/oracle/datafiles/ORADB/user01.dbf'
+ALTER TABLESPACE users RENAME DATAFILE '/u01/app/oracle/oradata/ORADB/user01.dbf' TO '/u01/app/oracle/datafiles/ORADB/user01.dbf';
+alter tablespace users online ; 
+
+--start mount;
+!mv /u01/app/oracle/oradata/ORADB/sys.dbf /u01/app/oracle/datafiles/ORADB/sys.dbf
+ALTER DATABASE RENAME FILE '/u01/app/oracle/oradata/ORADB/sys.dbf' TO '/u01/app/oracle/datafiles/ORADB/sys.dbf'; 
+ALTER DATABASE RENAME FILE '/u01/app/oracle/oradata/ORADB/sysaux.dbf' TO '/u01/app/oracle/datafiles/ORADB/sysaux.dbf';
+
+
+
+-- redo log add new member
+alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo01.log' to group 1 ; 
+alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo02.log' to group 2 ; 
+alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo03.log' to group 3 ; 
+
+
+-- Multiplexed redolog recover
+
+select * from v$logfile where status = 'INVALID'; 
+--
+    GROUP# STATUS  TYPE    MEMBER                                                                 IS_
+---------- ------- ------- ---------------------------------------------------------------------- ---
+         1 INVALID ONLINE  /u01/app/oracle/oradata/EE/redo01.log                                  NO
+
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/app/oracle/oradata/EE/redo01.log';
+ALTER DATABASE ADD LOGFILE MEMBER '/u01/app/oracle/oradata/EE/redo01.log' TO GROUP 1;
+alter system switch logfile;
+/
+/
+
+
+
+-- remove logfile / file 1 needs more recovery to be consistent
+
+--  from most difficult to least difficult, follows:
+--1 The current online redo log
+--2 An active online redo log
+--3 An unarchived online redo log
+--4 An inactive online redo log
+--5 recover database using backup controlfile until cancel;
+
+
+-- Status  Description
+-- UNUSED: The online redo log has never been written to.
+-- CURRENT: The online redo log is active, that is, needed for instance recovery, and it is the log to which the database is currently writing. The redo log can be open or closed.
+-- ACTIVE: The online redo log is active, that is, needed for instance recovery, but is not the log to which the database is currently writing.It may be in use for block recovery, and may or may not be archived.
+-- CLEARING: The log is being re-created as an empty log after an ALTER DATABASE CLEAR LOGFILE statement. After the log is cleared, then the status changes to UNUSED.
+-- CLEARING_CURRENT: The current log is being cleared of a closed thread. The log can stay in this status if there is some failure in the switch such as an I/O error writing the new log header.
+-- INACTIVE: The log is no longer needed for instance recovery. It may be in use for media recovery, and may or may not be archived.
+
+-- https://docs.oracle.com/cd/B10501_01/server.920/a96572/recoscenarios.htm
+-- Clearing Inactive, Archived Redo
+alter database mount
+alter database clear logfile group 2;
+
+-- Clearing Inactive, Not-Yet-Archived Redo
+-- 首先备份  否则执行 clean logfile 会删除 redolog的内容
+! cp /disk1/oracle/dbs/log  /disk2/backup
+ALTER DATABASE BACKUP CONTROLFILE TO '/oracle/dbs/cf_backup.f';
+alter database clear unarchived logfile group 2;
+recover using backup controlfile until cancel;
+alter database open resetlogs ; 
+
+
+
+
+
+Specify log: {<RET>=suggested | filename | AUTO | CANCEL}
+AUTO
+--
+alter database open resetlogs;
+shutdown immediate
+startup mount
+-- 由于undo和redo的异常，需要设置参数 _allow_resetlogs_corruption, 并且手动处理undo
+ALTER SYSTEM SET "_allow_resetlogs_corruption"= TRUE SCOPE = SPFILE;
+ALTER SYSTEM SET undo_management=MANUAL SCOPE = SPFILE;
+shutdown immediate
+startup mount
+alter database open resetlogs;
+CREATE UNDO TABLESPACE undo2 datafile '/u01/app/oracle/oradata/RTS_NEW/undo2_df1.dbf' size 200m autoextend on;
+alter system set undo_tablespace = undo2 scope=spfile;
+alter system set undo_management=auto scope=spfile;
+shutdown immediate
+startup
+
+
+-- 这里应该是没有做undo处理的异常, 应该是undo和redo/ system的一致性问题
+
+SYS@EE> insert into t1 select * from t1 ; 
+insert into t1 select * from t1
+            *
+ERROR at line 1:
+ORA-01552: cannot use system rollback segment for non-system tablespace 'USERS'
+
+
+SYS@EE> select segment_name, status from dba_rollback_segs;
+
+SEGMENT_NAME                   STATUS
+------------------------------ ----------------
+SYSTEM                         ONLINE
+_SYSSMU10_3550978943$          OFFLINE
+_SYSSMU9_1424341975$           OFFLINE
+_SYSSMU8_2012382730$           OFFLINE
+_SYSSMU7_3286610060$           OFFLINE
+_SYSSMU6_2443381498$           OFFLINE
+_SYSSMU5_1527469038$           OFFLINE
+_SYSSMU4_1152005954$           OFFLINE
+_SYSSMU3_2097677531$           OFFLINE
+_SYSSMU2_2232571081$           OFFLINE
+_SYSSMU1_3780397527$           OFFLINE
+
+-- 解决方法：http://dbarohit.blogspot.com/2013/08/ora-01552-cannot-use-system-rollback.html
+alter system set "_system_trig_enabled" = FALSE;
+alter trigger sys.cdc_alter_ctable_before DISABLE;
+alter trigger sys.cdc_create_ctable_after DISABLE;
+alter trigger sys.cdc_create_ctable_before DISABLE;
+alter trigger sys.cdc_drop_ctable_before DISABLE;
+create undo tablespace UNDOTBS2 datafile '/u01/app/oracle/oradata/EE/undotbs02.dbf' size 200m;
+alter system set undo_tablespace=UNDOTBS2 scope=spfile;
+drop tablespace UNDOTBS1 including contents;
+alter trigger sys.cdc_alter_ctable_before ENABLE;
+alter trigger sys.cdc_create_ctable_after ENABLE;
+alter trigger sys.cdc_create_ctable_before ENABLE;
+alter trigger sys.cdc_drop_ctable_before ENABLE;
+alter system set "_system_trig_enabled" = TRUE;
+alter system set undo_management=AUTO scope=spfile;
+shutdown immediate ; 
+startup 
+show parameter undo
+select name,status from v$datafile
+ where name like '%undo%';
+
+
 
 -- 开启日志实时应用
 -- 首先开启实例
@@ -2024,15 +2241,60 @@ OPEN_MODE
 READ ONLY
 
 
+-- dg broker
+-- broker配置需放置shared storage中，以便RAC能顺利读取配置。
+alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  scope=both sid='*';
+alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=both sid='*';
+-- 在primary和standby中启动
+alter system set dg_broker_start=TRUE scope=both sid='*';
+-- 在primary和standby中添加lintener
+-- 注意GLOBAL_DBNAME为<DB_UNIQUE_NAME>_DGMGRL.<DB_DOMAIN>
+--
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1 )
+     (SID_NAME = orsid1 )
+     (GLOBAL_DBNAME=oradb )
+    )
+    (SID_DESC =
+      (GLOBAL_DBNAME = oradb_DGMGRL)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = orsid1)
+      (SERVICE_NAME = oradb)
+    )
+  )
+--
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = ADG)
+     (GLOBAL_DBNAME=ADG)
+    )
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = ADG)
+     (GLOBAL_DBNAME=ADG_DGMGRL )
+     (SERVICE_NAME=ADG )
+    )
+ )
+-- 在primary中添加dgmgrl的配置
+DGMGRL> connect sys/oracle
+DGMGRL> CREATE CONFIGURATION 'oradb_config' as PRIMARY DATABASE IS 'oradb' connect identifier is 'oradb' ;
+DGMGRL> add database 'ADG' AS CONNECT IDENTIFIER IS 'ADG' MAINTAINED AS PHYSICAL;   
+DGMGRL> enable configuration
+
+
 
 -- create db by manual 手动建库
 --https://www.oracle-dba-online.com/creating_the_database.htm
 --create pfile
 cat > init.ora <<EOF
-DB_NAME=oradb
+DB_NAME=ORADB
 DB_BLOCK_SIZE=8192
-CONTROL_FILES=/u01/app/oracle/oradata/ORADB/controlfile.ora
-UNDO_TABLESPACE=undotbs
+CONTROL_FILES='/u01/app/oracle/oradata/ORADB/controlfileORADR.ctl','/u01/app/oracle/flash_recovery_area/ORADB/controlfileORADR.ctl'
+UNDO_TABLESPACE=UNDOTBS
 UNDO_MANAGEMENT=AUTO
 SGA_TARGET=500M
 PGA_AGGREGATE_TARGET=100M
@@ -2042,42 +2304,52 @@ DB_RECOVERY_FILE_DEST_SIZE=2G
 EOF
 --createdb.sql
 cat > createdb.sql <<EOF
-create database oradb 
-    datafile '/u01/app/oracle/oradata/ORADB/sys.dbf' size 500M 
-    sysaux datafile '/u01/app/oracle/oradata/ORADB/sysaux.dbf' size 100m
-    undo tablespace undotbs 
-    datafile '/u01/app/oracle/oradata/ORADB/undo.dbf' size 100m
-    default temporary tablespace temp
-    tempfile '/u01/app/oracle/oradata/ORADB/tmp.dbf' size 100m
+create database ORADB
+    CHARACTER SET AL32UTF8
+    DATAFILE '/u01/app/oracle/oradata/ORADB/sys.dbf' size 500M
+    SYSAUX datafile '/u01/app/oracle/oradata/ORADB/sysaux.dbf' size 100m
+    UNDO tablespace UNDOTBS datafile '/u01/app/oracle/oradata/ORADB/undo.dbf' size 100m
+    default temporary tablespace TEMP tempfile '/u01/app/oracle/oradata/ORADB/tmp.dbf' size 100m
     logfile
-            group 1 '/u01/app/oracle/oradata/ORADB/log1.ora' size 50m,
-            group 2 '/u01/app/oracle/oradata/ORADB/log2.ora' size 50m,
-            group 3 '/u01/app/oracle/oradata/ORADB/log3.ora' size 50m;
+            group 1 '/u01/app/oracle/oradata/ORADB/log1.log' size 50m,
+            group 2 '/u01/app/oracle/oradata/ORADB/log2.log' size 50m,
+            group 3 '/u01/app/oracle/oradata/ORADB/log3.log' size 50m;
 EOF
 -- create the db in start
-SQL> startup nomount pfile='/home/oracle/init.ora';
-SQL> @/home/oracle/createdb.sql
-SQL> create tablespace users datafile '/u01/app/oracle/oradata/ORADB/user01.dbf' size 100m; 
-SQL> create tablespace index_data datafile '/u01/app/oracle/oradata/ORADB/index.dbf' size 100M; 
-SQL> create spfile from pfile='/home/oracle/init.ora'; 
-SQL> @?/rdbms/admin/catalog.sql
-SQL> @?/rdbms/admin/catproc.sql
-SQL> alter user sys identified by oracle ; 
-SQL> alter user system identified by oracle ; 
-SQL> create user scott default tablespace users identified by scott quota 10M on users;
-SQL> grant connect to scott;
+startup nomount pfile='/home/oracle/init.ora';
+@/home/oracle/createdb.sql
+create tablespace users datafile '/u01/app/oracle/oradata/ORADB/user01.dbf' size 100m; 
+create spfile from pfile='/home/oracle/init.ora'; 
+-- creates all the data dictionary views,
+@?/rdbms/admin/catalog.sql
+-- creates system specified stored procedures
+@?/rdbms/admin/catproc.sql
+-- creates the default roles and profiles.
+@?/rdbms/admin/pupbld.sql
+-- The utlrp.sql script can be called to recompile all objects within the database 
+@?/rdbms/admin/utlrp.sql
+alter user sys identified by oracle ; 
+alter user system identified by oracle ; 
+CREATE USER SCOTT IDENTIFIED BY scott DEFAULT TABLESPACE users PROFILE DEFAULT ACCOUNT UNLOCK;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO SCOTT;
+GRANT CONNECT, RESOURCE TO SCOTT ;
+GRANT UNLIMITED TABLESPACE TO SCOTT;
 -- create listener
 cat >> $ORACLE_HOME/network/admin/listener.ora <<EOF
 SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = orasid )
-     (GLOBAL_DBNAME= oradb )
+     (SID_NAME = ORADR )
+     (GLOBAL_DBNAME= ORADB )
     )    
  )
 EOF
 -- and config the /etc/oratab
+orapwd file=${ORACLE_HOME}/dbs/orapwORADR password=oracle
+-- config
+srvctl remove database -d oradr
+srvctl add database -d ORADR -o /u01/app/oracle/product/11.2.0/dbhome_1
 
 
 
@@ -2133,9 +2405,7 @@ SQL> alter database add standby logfile;
 SQL> alter database open;
 SQL> recover managed standby database using current logfile disconnect from session;
 SQL> alter database recover managed standby database cancel;
-
-
-
+SQL> shutdown immediate
 
 
 -- rac command  (https://www.oracle-scripts.net/useful-oracle-rac-commands/)
