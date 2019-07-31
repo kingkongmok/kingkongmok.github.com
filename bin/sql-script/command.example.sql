@@ -116,13 +116,11 @@ select distinct owner from dba_segments where owner in (select username from dba
 mount -o rw,bg,hard,intr,proto=tcp,vers=3,rsize=65536,wsize=65536,timeo=600 172.16.45.200:/volume1/Server_nfs01/dg83 /mnt/nas
 
 -- change memory setting
-
-alter system set memory_max_target=32G scope=spfile; 
 alter system set memory_max_target=32G scope=spfile sid='*'; 
-alter system set memory_target=32G scope=spfile; 
-alter system set sga_target=0 scope=spfile; 
-alter system set pga_aggregate_target=0 scope=spfile; 
-alter system set sga_max_size=0 scope=spfile; 
+alter system set memory_target=32G scope=spfile sid='*'; 
+alter system set sga_target=0 scope=spfile sid='*'; 
+alter system set pga_aggregate_target=0 scope=spfile sid='*'; 
+alter system set sga_max_size=0 scope=spfile sid='*'; 
 
 -- list objects
 -- Tables
@@ -252,7 +250,7 @@ show parameter db_create
 
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
-col NAME format a40
+col NAME format a80
 col COMPLETION_TIME format a20
 col APPLIED format a40
 select * from ( select distinct name,completion_time,applied from v$archived_log order by 2 desc ) where rownum < 20 ;
@@ -279,16 +277,28 @@ SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD#;
          2                                   21242
 
 
--- ADG status; 观察status，看看MRP0是否有waiting的出现（有的话异常）
-select process, status, thread#, sequence#  from v$managed_standby where STATUS<>'IDLE';
-
+-- 从 standby中查看 v$managed_standby ; 观察status，看看MRP0是否有waiting的出现（有的话异常）
+--RFS: 备库接收从主库LNS进程或ARCH进程投递过来的归档日志
+--ARCH: 用于复制从主库同步过来的归档日志
+--MRP: 用于应用归档日志
+select process, status, thread#, sequence#  from v$managed_standby;
+--
 PROCESS   STATUS          THREAD#  SEQUENCE#
 --------- ------------ ---------- ----------
-ARCH      CLOSING               1      85682
-ARCH      CLOSING               1      85681
+ARCH      CLOSING               1        191
+ARCH      CLOSING               2        154
+RFS       IDLE                  0          0
 ARCH      CONNECTED             0          0
-ARCH      CLOSING               2      54360
-MRP0      APPLYING_LOG          1      85683
+ARCH      CLOSING               1        192
+RFS       IDLE                  0          0
+RFS       IDLE                  1        193
+RFS       IDLE                  0          0
+RFS       IDLE                  2        155
+RFS       IDLE                  0          0
+RFS       IDLE                  0          0
+RFS       IDLE                  0          0
+MRP0      APPLYING_LOG          2        155
+
 
 
 -- on slave, V$DATAGUARD_STATS
@@ -501,14 +511,7 @@ select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
 --  Temporary Tablespace Usage
 
 select round(100*(  free_space / Tablespace_size) ,0) perc  from dba_temp_free_space;
-
-COL TABLESPACE_SIZE FOR 999,999,999,999
-COL ALLOCATED_SPACE FOR 999,999,999,999
-COL FREE_SPACE FOR 999,999,999,999
- 
-SELECT *
-FROM   dba_temp_free_space
-/
+SELECT * FROM   dba_temp_free_space ;
  
 SELECT 
    A.tablespace_name tablespace, D.mb_total,
@@ -750,12 +753,12 @@ DROP DISKGROUP dgroup_01 INCLUDING CONTENTS;
 
 -- dg关库:
 lsnrctl stop
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;   
- SHUTDOWN IMMEDIATE;  
+alter database recover managed standby database cancel;   
+ shutdown immediate;  
  
 -- grid
- sqlplus / as sysasm
- SHUTDOWN IMMEDIATE;  
+sqlplus / as sysasm
+shutdown immediate;  
   
   
   
@@ -766,10 +769,10 @@ select path from v$asm_disk
 
 -- grid
 $ sqlplus / as sysasm
-select STATE,REDUNDANCY,TOTAL_MB,FREE_MB,NAME,FAILGROUP from v$asm_disk;
+select state,redundancy,total_mb,free_mb,name,failgroup from v$asm_disk;
    
 startup mount
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+alter database recover managed standby database disconnect from session;
 
 $ lsnrctl start
 
@@ -797,22 +800,6 @@ PROCESS 		    STATUS				    THREAD#  SEQUENCE#	   BLOCK#     BLOCKS DELAY_MINS
 --------------------------- ------------------------------------ ---------- ---------- ---------- ---------- ----------
 ARCH			    CLOSING					  2	 56592	     2048	1258	      0
 ARCH			    CLOSING					  2	 56593	   356352	1011	      0
-ARCH			    CONNECTED					  0	     0		0	   0	      0
-ARCH			    CLOSING					  2	 56594	   303104	 751	      0
-ARCH			    CLOSING					  2	 56595	   311296	 440	      0
-ARCH			    CLOSING					  2	 56596	   124928	1928	      0
-ARCH			    CLOSING					  2	 56597	    26624	1082	      0
-ARCH			    CLOSING					  2	 56598	   237568	1034	      0
-ARCH			    CLOSING					  2	 56599	   210944	 916	      0
-ARCH			    CLOSING					  2	 56600	   301056	1784	      0
-ARCH			    CLOSING					  2	 56601	   229376	 579	      0
-ARCH			    CLOSING					  2	 56602	   301056	 638	      0
-ARCH			    CLOSING					  2	 56603	   303104	 666	      0
-ARCH			    CLOSING					  2	 56604	   307200	  13	      0
-ARCH			    CLOSING					  2	 56605	   208896	 476	      0
-ARCH			    CLOSING					  2	 56606	   303104	1900	      0
-ARCH			    CLOSING					  2	 56607	   198656	 930	      0
-ARCH			    CLOSING					  2	 56589	   299008	1176	      0
 ARCH			    CLOSING					  2	 56590	    20480	 625	      0
 ARCH			    CLOSING					  2	 56591	   301056	1649	      0
 LNS			    WRITING					  2	 56608	     4373	   1	      0
@@ -826,13 +813,7 @@ ARCH			    CLOSING					  1	 90936	   303104	2003	      0
 ARCH			    CONNECTED					  0	     0		0	   0	      0
 ARCH			    CLOSING					  2	 56607	   198656	 930	      0
 RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  0	     0		0	   0	      0
 RFS			    IDLE					  2	 56608	     3887	   1	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  0	     0		0	   0	      0
 RFS			    IDLE					  0	     0		0	   0	      0
 RFS			    IDLE					  1	 90937	    59713	2048	      0
 RFS			    IDLE					  0	     0		0	   0	      0
@@ -902,39 +883,15 @@ ALTER SYSTEM ARCHIVE LOG CURRENT
 
 
 -- master adg ckecking
-col DB_UNIQUE_NAME format a15
-col PROTECTION_MODE format a25
-col DATABASE_ROLE format a25
-col OPEN_MODE format a25
-select DB_UNIQUE_NAME,PROTECTION_MODE,database_role,open_mode from v$database;
+select distinct instance_name,db_unique_name,database_role,open_mode,status,switchover_status from gv$instance,gv$database;
 --
---
-DB_UNIQUE_NAME	PROTECTION_MODE 	  DATABASE_ROLE 	    OPEN_MODE
---------------- ------------------------- ------------------------- -------------------------
-ZJZZDB		MAXIMUM PERFORMANCE	  PRIMARY		    READ WRITE
+INSTANCE_NAME    DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            STATUS       SWITCHOVER_STATUS
+---------------- ------------------------------ ---------------- -------------------- ------------ --------------------
+ADG              ADG                            SNAPSHOT STANDBY MOUNTED              MOUNTED      NOT ALLOWED
 
-
--- 两个节点都切后  
 
 -- 看时间是否同步
 select to_char(checkpoint_time,'yyyy-hh-dd hh24:mi:ss') from v$datafile;
-   
-   
--- 观察主，从库的归档序列号是否一致
-select max(sequence#) from v$log;
---
---
---master:
-MAX(SEQUENCE#)
---------------
-	 90938
---
---
---slave:
-MAX(SEQUENCE#)
---------------
-	 90938
-
 
    
 -- 查询standby库中所有已被应用的归档文件的信息 
@@ -942,21 +899,48 @@ select to_char(first_time),to_char(first_change#),to_char(next_change#),sequence
 select to_char(first_time),to_char(first_change#),to_char(next_change#),sequence# from v$log_history where rownum < 5 order by RECID desc;
 	
 set linesize 200
-col thread#||'_'||SEQUENCE# for a10
+col thread# ||'_'||SEQUENCE# for a10
 col name for a50
-select thread#||'_'||SEQUENCE#,name,STATUS,applied,to_char(COMPLETION_TIME,'yyyy-mm-dd hh24:mi:ss') from v$archived_log order by thread#,sequence# asc;
+select thread#||'_'||sequence#,name,status,applied,to_char(completion_time,'yyyy-mm-dd hh24:mi:ss') from v$archived_log order by thread#,sequence# asc;
+--
+THREAD#|| NAME                                               S APPLIED   TO_CHAR(COMPLETION_
+---------- -------------------------------------------------- - --------- -------------------
+1_52       +DATA/adg1/archivelog/2019_07_31/thread_1_seq_52.3 A YES       2019-07-31 11:07:48
+           16.1015067259
 
-select thread#,max(sequence#) as "last_applied_log" from v$log_history group by thread#;
+1_53       +DATA/adg1/archivelog/2019_07_31/thread_1_seq_53.3 A YES       2019-07-31 11:07:48
+           14.1015067259
 
--- 成华提供
+1_54       +DATA/adg1/archivelog/2019_07_31/thread_1_seq_54.3 A YES       2019-07-31 11:07:48
+           15.1015067259
 
--- 1、检查主备两边的序号
-select max(sequence#) from v$log;   ---检查发现一致
+1_55       +DATA/adg1/archivelog/2019_07_31/thread_1_seq_55.3 A IN-MEMORY 2019-07-31 11:07:56
+
+
+
+select thread#,max(sequence#) from v$log_history group by thread#;
+
 
 -- 2、备库执行，查看是否有数据未应用
-select name,SEQUENCE#,APPLIED from v$archived_log order by sequence#;
-select name,SEQUENCE#,APPLIED from v$archived_log where rownum < 10 order by sequence#;
 
+set linesize 140
+col name format a80
+select * from ( select name,SEQUENCE#,APPLIED from v$archived_log order by sequence# desc ) where rownum < 5 ;
+--
+NAME                                                                              SEQUENCE# APPLIED
+-------------------------------------------------------------------------------- ---------- ---------
++DATA/adg1/archivelog/2019_07_26/thread_1_seq_192.410.1014648249                        192 YES
++DATA/adg1/archivelog/2019_07_26/thread_1_seq_191.409.1014638477                        191 YES
++DATA/adg1/archivelog/2019_07_26/thread_1_seq_190.407.1014613257                        190 YES
++DATA/adg1/archivelog/2019_07_25/thread_1_seq_189.405.1014584509                        189 YES
+
+
+-- regesiter archivelog file to database;
+alter database register physical logfile '/tmp/archivelogfile.dbf';
+-- apply it
+alter database recover automatic standby database;
+
+--
 select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
 
 
@@ -975,9 +959,8 @@ SWITCHOVER_STATUS
 FAILED DESTINATION
 
 
-
-
-SELECT distinct  DESTINATION, ERROR FROM V$ARCHIVE_DEST;
+-- error archive log
+select distinct  destination, error from v$archive_dest;
 
 
 
@@ -1097,7 +1080,7 @@ col OUTPUT_BYTES_DISPLAY format a20
 col STATUS format a20
 col INPUT_TYPE format a20
 col TIME_TAKEN_DISPLAY format a20
-select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details where rownum < 5 order by start_time desc;
+select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details order by start_time desc;
 --
 --
 START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DISPLAY
@@ -1204,14 +1187,22 @@ select inst_id,username,event,sql_id,count(*) from gv$session where wait_class#<
 
 
 --
---
+-- sid & sql_id
 column USERNAME format a10;
 column 2 format a10;
 column OSUSER format a10;
-column SQL_ID format a10;
+column SQL_ID format a15;
 select S.USERNAME, s.sid, s.osuser, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s
-where t.address =s.sql_address and t.hash_value = s.sql_hash_value and s.status = 'ACTIVE'
+where t.address =s.sql_address and t.hash_value = s.sql_hash_value and s.status = 'ACTIVE' and s.sid='&sid'
 and s.username <> 'SYSTEM' order by s.sid,t.piece ;
+--
+USERNAME          SID OSUSER     SQL_ID          SQL_TEXT
+---------- ---------- ---------- --------------- ----------------------------------------------------------------
+SYS                 1 oracle     1h50ks4ncswfn   ALTER DATABASE OPEN
+SYS                33 oracle     5tc4frsnvrv64   select S.USERNAME, s.sid, s.osuser, t.sql_id, sql_text from v$sq
+SYS                33 oracle     5tc4frsnvrv64   ltext_with_newlines t,V$SESSION s
+                                                 where t.address =s.sql_address
+
 --
 select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
 
@@ -1320,6 +1311,9 @@ RMAN> list backup;
 
 -- 列出 配置
 RMAN> show all; 
+
+--backup
+RMAN> BACKUP AS COMPRESSED BACKUPSET DATABASE PLUS ARCHIVELOG;
 
 --enable controlfile autobackup, ( spfile autobackup by default );
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
@@ -1641,8 +1635,8 @@ impdp mylcpt/mylcpt directory=dump_file_dir dumpfile=allfile.dmp nologfile=y con
 $ crs_stat -t
 -- 删除旧服务
 $ srvctl remove database -d orcl
--- 添加服务
-$ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
+-- 添加服务 用oracle用户
+oracle@host ~ $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
 
 
 -- 检查是否重启生效
@@ -2209,36 +2203,12 @@ select name,status from v$datafile
 
 
 -- 开启日志实时应用
--- 首先开启实例
-SQL> startup;
 -- 检查
-SQL> select open_mode from v$database ; 
-
-OPEN_MODE
---------------------
-READ ONLY
-
+select instance_name, db_unique_name, database_role,  open_mode,status,switchover_status from v$instance,v$database;
 -- dg开启应用
 SQL> recover managed standby database using current logfile disconnect from session;
-Media recovery complete.
--- 检查
-SQL> select open_mode from v$database ; 
-
-OPEN_MODE
---------------------
-READ ONLY WITH APPLY
-
-
 -- dg 关闭应用
 SQL> alter database recover managed standby database cancel;
-
-Database altered.
-
-SQL> select open_mode from v$database ; 
-
-OPEN_MODE
---------------------
-READ ONLY
 
 
 -- dg broker
@@ -2680,3 +2650,130 @@ ALTER PLUGGABLE DATABASE my-PDB-name OPEN [Instances=all;]
 --How to stop and start a Listener?
 srvctl stop listener -l LISTENER_NAME
 srvctl start listener -l LISTENER_NAME
+
+
+
+
+-- dg setup
+-- https://oracle-base.com/articles/11g/data-guard-setup-11gr2#backup_primary_database
+
+-- Start Apply Process
+
+-- Foreground redo apply. Session never returns until cancel. 
+alter database recover managed standby database;
+
+-- Background redo apply. Control is returned to the session once the apply process is started.
+alter database recover managed standby database disconnect from session;
+
+-- cancel the apply process
+alter database recover managed standby database cancel;
+
+
+-- set a delay between the arrival of the archived redo log and it being applied on the standby server
+alter database recover managed standby database cancel;
+alter database recover managed standby database delay 30 disconnect from session;
+
+alter database recover managed standby database cancel;
+alter database recover managed standby database nodelay disconnect from session;
+
+
+
+-- Test Log Transport
+-- primary server, check the latest archived redo log and force a log switch.
+alter session set nls_date_format='dd-mon-yyyy hh24:mi:ss';
+select sequence#, first_time, next_time from v$archived_log order by first_change#;
+alter system switch logfile;
+
+-- Check the new archived redo log has arrived at the standby server and been applied.
+alter session set nls_date_format='DD-MON-YYYY HH24:MI:SS';
+select sequence#, first_time, next_time, applied from v$archived_log order by first_change#;
+
+
+-- Protection Mode
+-- Maximum Availability: Transactions on the primary do not commit until redo information has been written to the online redo log and the standby redo logs of at least one standby location. If no standby location is available, it acts in the same manner as maximum performance mode until a standby becomes available again.
+-- Maximum Performance: Transactions on the primary commit as soon as redo information has been written to the online redo log. Transfer of redo information to the standby server is asynchronous, so it does not impact on performance of the primary.
+-- Maximum Protection: Transactions on the primary do not commit until redo information has been written to the online redo log and the standby redo logs of at least one standby location. If not suitable standby location is available, the primary database shuts down.
+select protection_mode from v$database;
+
+-- Maximum Availability.
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE AVAILABILITY;
+
+-- Maximum Performance.
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby NOAFFIRM ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PERFORMANCE;
+
+-- Maximum Protection.
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PROTECTION;
+
+
+-- Database Switchover
+--
+--primary , 先做，完成后再做standby节点
+-- Convert primary database to standby 
+-- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: TO STANDBY)
+connect / as sysdba
+alter database commit to switchover to standby;
+-- Shutdown primary database
+shutdown immediate;
+-- Mount old primary database as standby database
+startup nomount;
+alter database mount standby database;
+-- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: RECOVERY NEEDED)
+alter database recover managed standby database disconnect from session;
+-- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: NOT ALLOWED)
+alter database open;
+-- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY WITH APPLY, SWITCHOVER_STATUS: NOT ALLOWED)
+--
+-- standby, 后做， 待primary切换后再进行
+-- Convert standby database to primary
+-- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY WITH APPLY, SWITCHOVER_STATUS: NOT ALLOWED)
+-- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY, SWITCHOVER_STATUS: TO PRIMARY)
+connect / as sysdba
+alter database commit to switchover to primary;
+-- (DATABASE_ROLE: PRIMARY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: NOT ALLOWED)
+-- Shutdown standby database
+shutdown immediate;
+-- Open old standby database as primary
+startup;
+-- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: RESOLVABLE GAP)
+-- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: TO STANDBY)
+-- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: SESSIONS ACTIVE)
+
+
+-- Failover
+alter database recover managed standby database finish;
+alter database activate standby database;
+
+
+-- Read-Only Standby (10G) and Active Data Guard(11G)
+
+
+-- 10G
+-- To switch the standby database into read-only mode, do the following.
+shutdown immediate;
+startup mount;
+alter database open read only;
+-- To resume managed recovery, do the following.
+shutdown immediate;
+startup mount;
+alter database recover managed standby database disconnect from session;
+
+-- 11G
+shutdown immediate;
+startup mount;
+alter database open read only;
+alter database recover managed standby database disconnect from session;
+
+
+-- Snapshot Standby
+shutdown immediate;
+startup mount;      -- flashback_on: no
+alter database recover managed standby database cancel;
+alter database convert to snapshot standby;  
+alter database open; -- flashback_on: restore point only
+
+
