@@ -70,6 +70,10 @@ SID_LIST_LISTENER =
  )
 
 
+-- enable flashback
+ALTER SYSTEM SET DB_FLASHBACK_RETENTION_TARGET=4320;
+ALTER DATABASE FLASHBACK ON;
+SELECT FLASHBACK_ON FROM V$DATABASE;
 
 
 -- EM/oem start 
@@ -314,8 +318,23 @@ select VALUE from V$DATAGUARD_STATS where NAME = 'apply lag';
 select to_number(to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) ) Lag_Total from V$DATAGUARD_STATS;
 
 
--- on master, dg gap
-select * from v$archive_gap;
+
+-- on physical standby, check gaps:
+SYS@STANDBY> select * from v$archive_gap;
+--
+   THREAD# LOW_SEQUENCE# HIGH_SEQUENCE#
+---------- ------------- --------------
+         1            36             36
+--
+-- copy file file primary
+SYS@PRIMAY> select sequence#, name, applied from v$archived_log where sequence#=36;
+--
+ SEQUENCE# NAME                                                                   APPLIED
+---------- ---------------------------------------------------------------------- ---------
+        36 +DATA/orcl/archivelog/2019_08_01/thread_1_seq_36.271.1015159981        NO
+-- copy archive log and register to standby
+SYS@STANDBY> ALTER DATABASE REGISTER LOGFILE '/tmp/thread_1_seq_36.271.1015159981';
+
 
 
 -- check oracle health
@@ -948,15 +967,6 @@ select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
 select recovery_mode from v$archive_dest_status where dest_id=2;
 
 
--- 4、检查备库状态
-select switchover_status from v$database; 
-
---standby应该是not allowed 
-
---主库异常的时候出现：
-SWITCHOVER_STATUS
---------------------
-FAILED DESTINATION
 
 
 -- error archive log
@@ -2095,8 +2105,6 @@ select * from v$logfile where status = 'INVALID';
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/app/oracle/oradata/EE/redo01.log';
 ALTER DATABASE ADD LOGFILE MEMBER '/u01/app/oracle/oradata/EE/redo01.log' TO GROUP 1;
 alter system switch logfile;
-/
-/
 
 
 
@@ -2210,50 +2218,6 @@ SQL> recover managed standby database using current logfile disconnect from sess
 -- dg 关闭应用
 SQL> alter database recover managed standby database cancel;
 
-
--- dg broker
--- broker配置需放置shared storage中，以便RAC能顺利读取配置。
-alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  scope=both sid='*';
-alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=both sid='*';
--- 在primary和standby中启动
-alter system set dg_broker_start=TRUE scope=both sid='*';
--- 在primary和standby中添加lintener
--- 注意GLOBAL_DBNAME为<DB_UNIQUE_NAME>_DGMGRL.<DB_DOMAIN>
---
-SID_LIST_LISTENER =
-  (SID_LIST =
-    (SID_DESC =
-     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1 )
-     (SID_NAME = orsid1 )
-     (GLOBAL_DBNAME=oradb )
-    )
-    (SID_DESC =
-      (GLOBAL_DBNAME = oradb_DGMGRL)
-      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
-      (SID_NAME = orsid1)
-      (SERVICE_NAME = oradb)
-    )
-  )
---
-SID_LIST_LISTENER =
-  (SID_LIST =
-    (SID_DESC =
-     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = ADG)
-     (GLOBAL_DBNAME=ADG)
-    )
-    (SID_DESC =
-     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = ADG)
-     (GLOBAL_DBNAME=ADG_DGMGRL )
-     (SERVICE_NAME=ADG )
-    )
- )
--- 在primary中添加dgmgrl的配置
-DGMGRL> connect sys/oracle
-DGMGRL> CREATE CONFIGURATION 'oradb_config' as PRIMARY DATABASE IS 'oradb' connect identifier is 'oradb' ;
-DGMGRL> add database 'ADG' AS CONNECT IDENTIFIER IS 'ADG' MAINTAINED AS PHYSICAL;   
-DGMGRL> enable configuration
 
 
 
@@ -2668,15 +2632,12 @@ alter database recover managed standby database disconnect from session;
 -- cancel the apply process
 alter database recover managed standby database cancel;
 
-
 -- set a delay between the arrival of the archived redo log and it being applied on the standby server
 alter database recover managed standby database cancel;
 alter database recover managed standby database delay 30 disconnect from session;
 
 alter database recover managed standby database cancel;
 alter database recover managed standby database nodelay disconnect from session;
-
-
 
 -- Test Log Transport
 -- primary server, check the latest archived redo log and force a log switch.
@@ -2687,7 +2648,6 @@ alter system switch logfile;
 -- Check the new archived redo log has arrived at the standby server and been applied.
 alter session set nls_date_format='DD-MON-YYYY HH24:MI:SS';
 select sequence#, first_time, next_time, applied from v$archived_log order by first_change#;
-
 
 -- Protection Mode
 -- Maximum Availability: Transactions on the primary do not commit until redo information has been written to the online redo log and the standby redo logs of at least one standby location. If no standby location is available, it acts in the same manner as maximum performance mode until a standby becomes available again.
@@ -2750,8 +2710,6 @@ alter database activate standby database;
 
 
 -- Read-Only Standby (10G) and Active Data Guard(11G)
-
-
 -- 10G
 -- To switch the standby database into read-only mode, do the following.
 shutdown immediate;
@@ -2776,4 +2734,68 @@ alter database recover managed standby database cancel;
 alter database convert to snapshot standby;  
 alter database open; -- flashback_on: restore point only
 
+
+
+-- dg broker settup
+-- https://oracle-base.com/articles/11g/data-guard-setup-using-broker-11gr2#switchover
+-- broker配置需放置shared storage中，以便RAC能顺利读取配置。
+alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  scope=both sid='*';
+alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=both sid='*';
+-- 在primary和standby中启动
+alter system set dg_broker_start=TRUE scope=both sid='*';
+-- 在primary和standby中添加lintener
+-- 注意GLOBAL_DBNAME为<DB_UNIQUE_NAME>_DGMGRL.<DB_DOMAIN>
+--
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1 )
+     (SID_NAME = orsid1 )
+     (GLOBAL_DBNAME=oradb )
+    )
+    (SID_DESC =
+      (GLOBAL_DBNAME = oradb_DGMGRL)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = orsid1)
+      (SERVICE_NAME = oradb)
+    )
+  )
+--
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = ADG)
+     (GLOBAL_DBNAME=ADG)
+    )
+    (SID_DESC =
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
+     (SID_NAME = ADG)
+     (GLOBAL_DBNAME=ADG_DGMGRL )
+     (SERVICE_NAME=ADG )
+    )
+ )
+-- 在primary中添加dgmgrl的配置
+DGMGRL> connect sys/oracle
+DGMGRL> CREATE CONFIGURATION 'oradb_config' as PRIMARY DATABASE IS 'oradb' connect identifier is 'oradb' ;
+DGMGRL> add database 'ADG' AS CONNECT IDENTIFIER IS 'ADG' MAINTAINED AS PHYSICAL;   
+DGMGRL> enable configuration
+--
+DGMGRL> show configuration;
+DGMGRL> show database 'ADG';
+
+-- switchover
+DGMGRL> SWITCHOVER TO 'ADG';
+-- switch back
+DGMGRL> SWITCHOVER TO 'ORCL';
+
+-- failover 注意primary要启用flashback, 否则要重做standby
+oracle@ADG $ dgmgrl sys/oracle@ADG
+DGMGRL> FAILOVER TO 'ADG';
+DGMGRL> REINSTATE DATABASE 'ORCL';
+
+-- Snapshot Standby
+$ dgmgrl sys/oracle@ORCL
+DGMGRL> CONVERT DATABASE 'ADG' TO SNAPSHOT STANDBY;
+DGMGRL> CONVERT DATABASE 'ADG' TO PHYSICAL STANDBY;
 
