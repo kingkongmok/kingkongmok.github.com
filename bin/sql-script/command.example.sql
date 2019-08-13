@@ -147,16 +147,17 @@ select TRIGGER_NAME, OWNER from SYS.ALL_TRIGGERS order by OWNER, TRIGGER_NAME
 select INDEX_NAME, TABLE_NAME, TABLE_OWNER from SYS.ALL_INDEXES order by TABLE_OWNER, TABLE_NAME, INDEX_NAME;
 
 
-
 -- change password
 ALTER USER user_name IDENTIFIED BY NEWPASSWORD;
 ALTER USER user_name IDENTIFIED BY NEWPASSWORD account unlock;
 -- change user unlock
 ALTER USER user_name account unlock;
 
+
 -- show account not work
 SELECT username, account_status, created, lock_date, expiry_date
   FROM dba_users WHERE account_status != 'OPEN';
+
 
 -- oracle password file, 用于判断是否让远程登陆sys用户
 -- 首先确定 parameter remote_login_passwordfile, 一般要EXCLUSIVE， none就密码文件不生效
@@ -166,6 +167,7 @@ SQL> select * from v$pwfile_users;
 USERNAME                       SYSDB SYSOP SYSAS
 ------------------------------ ----- ----- -----
 SYS                            TRUE  TRUE  FALSE
+
 
 -- 如果没有，就创建密码文件, default location $ORACLE_HOME/dbs/orapw$ORACLE_SID 
 orapwd file=orapw[SID] password=oracle
@@ -2863,4 +2865,16 @@ commit;
 commit;
 
 -- ORA-02264: name already used by an existing constraint
+--drop constraint
 alter table xxx drop constraint owner_tp_car_vin_nn; 
+--create constraint while creating table
+CREATE TABLE Orders (
+    OrderID int NOT NULL PRIMARY KEY,
+    OrderNumber int NOT NULL,
+    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+);
+-- alter table
+ALTER TABLE Orders
+ADD CONSTRAINT FK_PersonOrder
+FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+

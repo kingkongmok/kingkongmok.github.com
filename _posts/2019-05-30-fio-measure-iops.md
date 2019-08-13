@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "fio measure iops"
+title: "使用fio计量iops"
 category: linux
-tags: [iops]
+tags: [linux, iops]
 ---
 
 ### [HOW TO MEASURE DISK PERFORMANCE IOPS WITH FIO IN LINUX](https://arstech.net/how-to-measure-disk-performance-iops-with-fio-in-linux/)
