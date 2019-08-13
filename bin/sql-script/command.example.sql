@@ -363,45 +363,45 @@ select value from v$parameter where name ='processes' ;
 
 
 -- show evnets wait
-et pagesize 200 ;
-col WAIT_CLASS# format a10     
-col WAIT_CLASS_ID format a15
-col wait_class format a15
-SELECT wait_class#,wait_class_id,wait_class,COUNT(1) AS "count" 
-FROM gv$event_name 
-GROUP BY wait_class#, wait_class_id, wait_class ORDER BY wait_class#;
--- zjzz rac
-WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
----------- --------------- --------------- ----------
-         0      1893977003 Other                 1916
-         1      4217450380 Application             34
-         2      3290255840 Configuration           48
-         3      4166625743 Administrative         110
-         4      3875070507 Concurrency             66
-         5      3386400367 Commit                   4
-         6      2723168908 Idle                   192
-         7      2000153315 Network                 70
-         8      1740759767 User I/O                96
-         9      4108307767 System I/O              64
-        10      2396326234 Scheduler               16
-        11      3871361733 Cluster                100
-        12       644977587 Queueing                18
--- oltp rac
-WAIT_CLASS   WAIT_CLASS_ID WAIT_CLASS           count
----------- --------------- --------------- ----------
-         0      1893977003 Other                 1490
-         1      4217450380 Application             34
-         2      3290255840 Configuration           48
-         3      4166625743 Administrative         110
-         4      3875070507 Concurrency             66
-         5      3386400367 Commit                   4
-         6      2723168908 Idle                   190
-         7      2000153315 Network                 70
-         8      1740759767 User I/O                96
-         9      4108307767 System I/O              62
-        10      2396326234 Scheduler               16
-        11      3871361733 Cluster                100
-        12       644977587 Queueing                18
+SELECT wait_class#,wait_class_id,wait_class,COUNT(1) AS "count"
+FROM gv$event_name
+GROUP BY wait_class#, wait_class_id, wait_class ORDER BY 4 desc
+/
+--
+WAIT_CLASS# WAIT_CLASS_ID WAIT_CLASS             count
+----------- ------------- -----------------------
+          0    1893977003 Other                   1916
+          6    2723168908 Idle                     192
+          3    4166625743 Administrative           110
+         11    3871361733 Cluster                  100
+          8    1740759767 User I/O                  96
+          7    2000153315 Network                   70
+          4    3875070507 Concurrency               66
+          9    4108307767 System I/O                64
+          2    3290255840 Configuration             48
+          1    4217450380 Application               34
+         12     644977587 Queueing                  18
+         10    2396326234 Scheduler                 16
+          5    3386400367 Commit                     4
+
+
+-- wait_class
+select wait_class, sum(time_waited), sum(time_waited)/sum(total_waits) Sum_Waits From gv$system_wait_class Group by wait_class Order by 3 desc;
+--
+WAIT_CLASS                               SUM(TIME_WAITED)  SUM_WAITS
+---------------------------------------- ---------------- ----------
+Idle                                            285769886 59.4932023
+Scheduler                                            3285 4.80263158
+Commit                                               1108 3.14772727
+Configuration                                          23 .638888889
+Network                                             24623  .38554764
+User I/O                                            28608 .378347639
+Cluster                                              7022 .160642387
+System I/O                                          48519 .124515286
+Concurrency                                         21799 .024855081
+Application                                           173 .018716867
+Other                                              126192 .016133969
+
 
 
 
@@ -499,6 +499,11 @@ alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf'
 
 -- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+
+
+-- alter datafile
+ALTER DATABASE DATAFILE '/u02/oracle/rbdb1/users03.dbf' AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+
 
 
 -- show all datafile space , 计算所有数据大小
@@ -1164,6 +1169,12 @@ select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
 select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV'; 
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
+-- sga/pga 比例 
+-- 假设主机的总物理内存是100G。
+-- 20G -- 操作系统及其他预留
+-- 64G -- Oracle的SGA
+-- 16G -- Oracle的PGA
+
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
 column pgA_ALLOC_MEM format 99,990
 column PGA_USED_MEM format 99,990
@@ -1186,8 +1197,12 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
       1       1990	22249 26260	      CKS	      2018-10-19_10:19:34	JDBC Thin Client		    83		  92
       1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
 
+-- sid and seria#
+select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
 
--- 群里大神的推荐查询
+
+
+-- 群里大神的推荐查询 event
 set lines 150
 col event for a50
 set pages 1000
@@ -1212,10 +1227,6 @@ SYS                 1 oracle     1h50ks4ncswfn   ALTER DATABASE OPEN
 SYS                33 oracle     5tc4frsnvrv64   select S.USERNAME, s.sid, s.osuser, t.sql_id, sql_text from v$sq
 SYS                33 oracle     5tc4frsnvrv64   ltext_with_newlines t,V$SESSION s
                                                  where t.address =s.sql_address
-
---
-select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
-
 
 
 
@@ -1397,10 +1408,10 @@ remotedb =
     (CONNECT_DATA = (SERVICE_NAME = ORCL))
   )
 -- Then create a dblink referencing that alias:
-drop database link remote_dblinnk;
-CREATE DATABASE LINK remote_dblink
-    CONNECT TO SYSTEM IDENTIFIED BY <password>
-    USING 'remotedb';
+select DB_LINK from all_db_links;
+drop database link remote_dblink;
+DROP PUBLIC DATABASE LINK remote_dblink;
+CREATE DATABASE LINK remote_dblink CONNECT TO SYSTEM IDENTIFIED BY <password> USING 'remotedb';
 -- check it
 select * from remotedb.testtable@remote_dblink ; 
 
@@ -1625,6 +1636,7 @@ grant connect,resource to HZTB;
 SQL> create directory dump_file_dir as '/u01test';
 Directory created.
 SQL> grant read,write on directory dump_file_dir to gabsj,hztb,xttb,mylcpt;
+SQL> grant read,write on directory DATA_PUMP_DIR to scott;
 Grant succeeded.
 
 
@@ -1647,6 +1659,7 @@ $ crs_stat -t
 $ srvctl remove database -d orcl
 -- 添加服务 用oracle用户
 oracle@host ~ $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
+srvctl add database -d $ORACLE_SID -o $ORACLE_HOME
 
 
 -- 检查是否重启生效
@@ -2799,3 +2812,55 @@ $ dgmgrl sys/oracle@ORCL
 DGMGRL> CONVERT DATABASE 'ADG' TO SNAPSHOT STANDBY;
 DGMGRL> CONVERT DATABASE 'ADG' TO PHYSICAL STANDBY;
 
+
+-- ORA-28002: the password will expire within 7 days
+SELECT profile FROM dba_users WHERE username = '&currentuser'; 
+--
+SYS> select resource_name,liMit from dba_profiles where profile='DEFAULT' and RESOURCE_NAME='PASSWORD_LIFE_TIME';
+ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
+
+
+-- duplicate large table
+1. Get DDL + partitions + indexes of The original table.
+2. Renamed all indexes related to the original table. and trigers, and constraint
+3. Renamed the original table
+4. Created the new table using the ddl script collected in point 1 + all indexes and partitions. 
+( alter table T1 nologging ; )
+5. Inserted 59k rows as select from the original table in parallel 4.
+( alter table T1 logging ; )
+6. Recompiled all dependencies.
+7. Collected fresh statistics.
+
+-- What is the purpose of logging/nologging option in Oracle
+-- https://stackoverflow.com/questions/34073532/what-is-the-purpose-of-logging-nologging-option-in-oracle
+SQL> alter table user1.LDM_table1 nologging; 
+1. nologging option is set redo logs will NOT be generated while inserting data
+2. never to use nologging option under Data guard setup
+
+-- test
+
+-- copy with where
+create table TESTTICKETTRANSACTION as select * from TICKETTRANSACTION where SOLDDATE > sysdate - 3*365  ; 
+
+
+-- startup upgrade ORA-39700: database must be opened with UPGRADE option
+-- https://dba.stackexchange.com/questions/169403/how-to-solve-ora-39710-problem
+startup upgrade
+@$ORACLE_HOME/rdbms/admin/catupgrd.sql
+@$ORACLE_HOME/rdbms/admin/utlrp.sql
+-- https://dba010.com/2017/05/20/upgrading-timezone-manually-in-12c/
+select * from sys.registry$database;
+create table registry$database_b as select * from registry$database;
+INSERT into registry$database
+  (platform_id, platform_name, edition, tz_version)
+ VALUES ((select platform_id from v$database),
+     (select platform_name from v$database),
+      NULL,
+      (select version from v$timezone_file));
+select * from sys.registry$database;
+commit;
+ delete from sys.registry$database where TZ_VERSION is NULL;
+commit;
+
+-- ORA-02264: name already used by an existing constraint
+alter table xxx drop constraint owner_tp_car_vin_nn; 
