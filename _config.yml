@@ -9,7 +9,7 @@
 title: 莫庆强的运维笔记
 email: kingkongmok@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-    Gentoo, Perl的爱好者
+    数据库, Gentoo, Perl的爱好者
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://www.datlet.com" # the base hostname & protocol for your site
 # twitter_username: kingkongmok
