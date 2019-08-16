@@ -364,7 +364,8 @@ As a root user, execute the following script(s):
         1. /u01/app/oraInventory/orainstRoot.sh
         2. /u01/app/grid/11.2.0/root.sh
 
-As install user, execute the following script. to complete the configuration.
-        1. /u01/app/grid/11.2.0/cfgtoollogs/configToolAllCommands
+As install user, execute the following script to complete the configuration.
+        1. /u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/grid/response/grid_install.rsp
+
 ```
 
