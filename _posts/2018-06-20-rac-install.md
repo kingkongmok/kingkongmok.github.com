@@ -1,5 +1,5 @@
 ---
-title: "oracle install"
+title: "rac silent install"
 layout: post
 category: linux
 ---
