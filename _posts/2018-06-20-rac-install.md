@@ -348,13 +348,13 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 检验环境是否OK
 
 ```
-./runcluvfy.sh stage -pre crsinst -n rac1,rac2 -r 11gR2 -verbose
+./runcluvfy.sh stage -pre crsinst -n stb1,stb2 -verbose
 ```
 
 安装
 
 ```
-./runInstaller -responseFile /u01/soft/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
+./runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
 ```
 
 注册/安装
