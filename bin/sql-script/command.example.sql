@@ -620,6 +620,13 @@ create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
 -- create test table
 create table test_table tablespace TEST as select * from dba_data_files ; 
 
+
+-- drop table
+DROP TABLE brands;
+--ORA-02449: unique/primary keys in table referenced by foreign keys
+DROP TABLE brands CASCADE CONSTRAINTS;
+
+
 -- drop tablespaces
 DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS; 
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
@@ -1047,6 +1054,10 @@ create index cksp.TICKETTRANSACTION_ID_IDX on cksp.PERSONALINFORMATION(TICKETTRA
 select table_name, tablespace_name from user_tables where table_name='RP_FREIGHT';
 select owner, table_name, tablespace_name from dba_tables where OWNER='CKSP'
 select name FROM V$DATAFILE;
+
+--drop index
+drop index TICKETRECORD_PK; 
+
 
 
 -- directory for datadump
@@ -2824,14 +2835,18 @@ ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
 
 -- duplicate large table
 1. Get DDL + partitions + indexes of The original table.
-2. Renamed all indexes related to the original table. and trigers, and constraint
-3. Renamed the original table
+2. create new table using DDL
+create table SMALL_TABLE as select * from TABLE where CHECKINTIME > sysdate - 3*365;
+create table SMALL_TABLE as select * from ( select * from TABLE order by id ) where rownum < 20000000; 
+3. drop old table and rename small_table to old.
 4. Created the new table using the ddl script collected in point 1 + all indexes and partitions. 
-( alter table T1 nologging ; )
-5. Inserted 59k rows as select from the original table in parallel 4.
-( alter table T1 logging ; )
-6. Recompiled all dependencies.
-7. Collected fresh statistics.
+a. constraint
+ALTER TABLE TABLE_NAME ADD CONSTRAINT "CONSTRAINT_NAME" FOREIGN KEY (FK_ID) REFERENCES OTHER_TABLE(FK_ID);
+ALTER TABLE TABLE_NAME ADD CONSTRAINT "CONSTRAINT_NAME" PRIMARY KEY ("ID");
+b. index
+c. default value
+alter table TABLE modify( "INSERTTIME" DATE DEFAULT SYSDATE );
+5. Collected fresh statistics.
 
 -- What is the purpose of logging/nologging option in Oracle
 -- https://stackoverflow.com/questions/34073532/what-is-the-purpose-of-logging-nologging-option-in-oracle
@@ -2873,8 +2888,25 @@ CREATE TABLE Orders (
     OrderNumber int NOT NULL,
     PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
 );
--- alter table
-ALTER TABLE Orders
-ADD CONSTRAINT FK_PersonOrder
-FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+-- add constraint
+ALTER TABLE Orders ADD CONSTRAINT "KEY_NAME" FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+ALTER TABLE Orders ADD CONSTRAINT "KEY_NAME" PRIMARY KEY ("ID");
 
+
+alter table VOYAGEMAPDETAIL add CONSTRAINT "VOYAGEMAPDETAIL_PK" PRIMARY KEY ("ID")
+EXEC sp_rename N'schema.MyIOldConstraint', N'MyNewConstraint', N'OBJECT'
+sp_rename 'HumanResources.PK_Employee_BusinessEntityID', 'PK_EmployeeID';
+
+
+-- 需要 dbms_crypto
+-- 检查
+select DBMS_CRYPTO.RandomInteger from dual;
+-- install
+@?/rdbms/admin/dbmsobtk.sql
+@?/rdbms/admin/prvtobtk.plb
+-- grant to user
+Grant execute on dbms_crypto to USER;
+Grant execute on dbms_sqlhash to USER;
+Grant execute on dbms_obfuscation_toolkit to USER;
+Grant execute on dbms_obfuscation_toolkit_ffi to USER;
+Grant execute on dbms_crypto_ffi to USER;

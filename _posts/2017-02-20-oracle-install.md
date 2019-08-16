@@ -21,6 +21,10 @@ yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf el
 yum -y install xorg-x11-xauth 
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 
+
+yum -y install kmod-oracleasm oracleasm-support
+rpm -ivh oracleasmlib*rpm
+
 ```
 
 
@@ -353,6 +357,48 @@ cd /stage
 
 
 ## [RAC](https://www.linuxidc.com/Linux/2015-10/124127.htm)
+
+
+---
+
+grid user
+
+```
+cat > ~/.bash_profile << EOF
+export PATH
+export TMP=/tmp
+export TMPDIR=$TMP
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/11.2.0/grid
+export GRID_HOME=/u01/app/11.2.0/grid
+export ORACLE_SID=+ASM2
+umask 022
+
+alias sqlplus='rlwrap -A sqlplus'
+alias asmcmd='rlwrap -A asmcmd'
+EOF
+```
+
+oracle user
+
+```
+cat > ~/.bashrc << EOF
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+HISTCONTROL=ignoredups:ignorespace
+shopt -s histappend
+HISTSIZE=30000
+HISTFILESIZE=300000
+HISTTIMEFORMAT="%F %T "
+
+LANG="en_US.utf8"
+LC_ALL="en_US.utf8"
+export EDITOR="vim"
+EOF
+
+```
+
+---
+
 
 
 ### add raw devices
