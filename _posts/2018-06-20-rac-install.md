@@ -232,6 +232,20 @@ start_udev
 ls /dev/raw/ -l
 ```
 
+
+### [create asmdisk](https://www.oracle.com/linux/downloads/linux-asmlib-rhel6-downloads.html)
+
+```
+oracleasm init
+oracleasm createdisk DISK1 /dev/sdb1
+oracleasm createdisk DISK2 /dev/sdb2
+oracleasm createdisk DISK3 /dev/sdb3
+oracleasm scandisks
+oracleasm listdisks
+```
+
+
+
 --- 
 
 ### grid_install.rsp
