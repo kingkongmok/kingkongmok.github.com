@@ -27,7 +27,7 @@ rpm -ivh oracleasmlib*rpm
 grid user
 
 ```
-cat > ~/.bash_profile << EOF
+cat >> ~/.bash_profile << EOF
 PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
@@ -44,44 +44,15 @@ export TMPDIR=$TMP
 export ORACLE_BASE=/u01/app/grid
 export ORACLE_HOME=/u01/app/11.2.0/grid
 export GRID_HOME=/u01/app/11.2.0/grid
-export ORACLE_SID=+ASM2
+export ORACLE_SID=+ASM1
 umask 022
+
+PATH=$ORACLE_HOME/bin:PATH
 
 alias sqlplus='rlwrap -A sqlplus'
 alias rman='rlwrap -A rman'
 alias dgmgrl='rlwrap -A dgmgrl'
 alias asmcmd='rlwrap -A asmcmd'
-EOF
-```
-
----
-
-oracle user
-
-```
-cat >> ~/.bash_profile << EOF
-PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
-HISTCONTROL=ignoredups:ignorespace
-shopt -s histappend
-HISTSIZE=30000
-HISTFILESIZE=300000
-HISTTIMEFORMAT="%F %T "
-
-LANG="en_US.utf8"
-LC_ALL="en_US.utf8"
-export EDITOR="vim"
-
-export TMP=/tmp
-export TMPDIR=$TMP
-export ORACLE_BASE=/u01/app/oracle
-export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
-export ORACLE_SID=orsid2
-export PATH=$ORACLE_HOME/bin:$PATH
-umask 022
-
-alias sqlplus='rlwrap -A sqlplus'
-alias dgmgrl='rlwrap -A dgmgrl'
-alias rman='rlwrap -A rman'
 EOF
 ```
 
@@ -217,7 +188,7 @@ service iscsi restart
 
 + raw the device
 
-+ [使用udev的原因](https://blog.csdn.net/u010098331/article/details/51623371)
++ [使用udev的原因,但是12开始淘汰](https://blog.csdn.net/u010098331/article/details/51623371)
 
 ```
 cat >> /etc/udev/rules.d/60-raw.rules << EOF
@@ -237,6 +208,16 @@ ls /dev/raw/ -l
 
 ```
 oracleasm init
+
+oracleasm configure 
+ORACLEASM_ENABLED=true
+ORACLEASM_UID=grid
+ORACLEASM_GID=asmadmin
+ORACLEASM_SCANBOOT=true
+ORACLEASM_SCANORDER=""
+ORACLEASM_SCANEXCLUDE=""
+ORACLEASM_USE_LOGICAL_BLOCK_SIZE="false"
+
 oracleasm createdisk DISK1 /dev/sdb1
 oracleasm createdisk DISK2 /dev/sdb2
 oracleasm createdisk DISK3 /dev/sdb3
@@ -252,7 +233,7 @@ oracleasm listdisks
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
-ORACLE_HOSTNAME=rac1
+ORACLE_HOSTNAME=stb1
 INVENTORY_LOCATION=/u01/app/oraInventory
 SELECTED_LANGUAGES=en
 oracle.install.option=CRS_CONFIG
@@ -261,15 +242,15 @@ ORACLE_HOME=/u01/app/11.2.0/grid
 oracle.install.asm.OSDBA=asmdba
 oracle.install.asm.OSOPER=
 oracle.install.asm.OSASM=asmadmin
-oracle.install.crs.config.gpnp.scanName=rac-scan
+oracle.install.crs.config.gpnp.scanName=stb-scan
 oracle.install.crs.config.gpnp.scanPort=1521
-oracle.install.crs.config.clusterName=rac-cluster
+oracle.install.crs.config.clusterName=stb-cluster
 oracle.install.crs.config.gpnp.configureGNS=false
 oracle.install.crs.config.gpnp.gnsSubDomain=
 oracle.install.crs.config.gpnp.gnsVIPAddress=
 oracle.install.crs.config.autoConfigureClusterNodeVIP=false
-oracle.install.crs.config.clusterNodes=rac1:rac1-vip,rac2:rac2-vip
-oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.0.0:2
+oracle.install.crs.config.clusterNodes=stb1:stb1-vip,stb2:stb2-vip
+oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.255.0:2
 oracle.install.crs.config.storageOption=ASM_STORAGE
 oracle.install.crs.config.sharedFileSystemStorage.diskDriveMapping=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=
@@ -279,13 +260,13 @@ oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
 oracle.install.crs.config.useIPMI=false
 oracle.install.crs.config.ipmi.bmcUsername=
 oracle.install.crs.config.ipmi.bmcPassword=
-oracle.install.asm.SYSASMPassword=
+oracle.install.asm.SYSASMPassword=oracle
 oracle.install.asm.diskGroup.name=DATA
 oracle.install.asm.diskGroup.redundancy=EXTERNAL
 oracle.install.asm.diskGroup.AUSize=1
-oracle.install.asm.diskGroup.disks=/dev/raw/raw1
-oracle.install.asm.diskGroup.diskDiscoveryString=
-oracle.install.asm.monitorPassword=
+oracle.install.asm.diskGroup.disks=/dev/oracleasm/disks/DISK1
+oracle.install.asm.diskGroup.diskDiscoveryString=/dev/oracleasm/disks/DISK*
+oracle.install.asm.monitorPassword=oracle
 oracle.install.crs.upgrade.clusterNodes=
 oracle.install.asm.upgradeASM=false
 oracle.installer.autoupdates.option=SKIP_UPDATES
@@ -297,64 +278,6 @@ PROXY_PORT=0
 PROXY_USER=
 PROXY_PWD=
 PROXY_REALM=
-```
-
-### db_install.rsp
-
-```
-oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
-oracle.install.option=INSTALL_DB_AND_CONFIG
-ORACLE_HOSTNAME=rac1
-UNIX_GROUP_NAME=oinstall
-INVENTORY_LOCATION=/u01/app/oraInventory
-SELECTED_LANGUAGES=en
-ORACLE_HOME=/u01/app/oracle/product/11.2.0/db_1
-ORACLE_BASE=/u01/app/oracle
-oracle.install.db.InstallEdition=EE
-oracle.install.db.EEOptionsSelection=false
-oracle.install.db.optionalComponents=
-oracle.install.db.DBA_GROUP=dba
-oracle.install.db.OPER_GROUP=
-oracle.install.db.CLUSTER_NODES=rac1,rac2
-oracle.install.db.isRACOneInstall=false
-oracle.install.db.racOneServiceName=
-oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
-oracle.install.db.config.starterdb.globalDBName=oradb
-oracle.install.db.config.starterdb.SID=orsid
-oracle.install.db.config.starterdb.characterSet=AL32UTF8
-oracle.install.db.config.starterdb.memoryOption=true
-oracle.install.db.config.starterdb.memoryLimit=802
-oracle.install.db.config.starterdb.installExampleSchemas=false
-oracle.install.db.config.starterdb.enableSecuritySettings=true
-oracle.install.db.config.starterdb.password.ALL=
-oracle.install.db.config.starterdb.password.SYS=
-oracle.install.db.config.starterdb.password.SYSTEM=
-oracle.install.db.config.starterdb.password.SYSMAN=
-oracle.install.db.config.starterdb.password.DBSNMP=
-oracle.install.db.config.starterdb.control=DB_CONTROL
-oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
-oracle.install.db.config.starterdb.automatedBackup.enable=false
-oracle.install.db.config.starterdb.automatedBackup.osuid=
-oracle.install.db.config.starterdb.automatedBackup.ospwd=
-oracle.install.db.config.starterdb.storageType=ASM_STORAGE
-oracle.install.db.config.starterdb.fileSystemStorage.dataLocation=
-oracle.install.db.config.starterdb.fileSystemStorage.recoveryLocation=
-oracle.install.db.config.asm.diskGroup=DATA
-oracle.install.db.config.asm.ASMSNMPPassword=
-MYORACLESUPPORT_USERNAME=
-MYORACLESUPPORT_PASSWORD=
-SECURITY_UPDATES_VIA_MYORACLESUPPORT=false
-DECLINE_SECURITY_UPDATES=true
-PROXY_HOST=
-PROXY_PORT=
-PROXY_USER=
-PROXY_PWD=
-PROXY_REALM=
-COLLECTOR_SUPPORTHUB_URL=
-oracle.installer.autoupdates.option=SKIP_UPDATES
-oracle.installer.autoupdates.downloadUpdatesLoc=
-AUTOUPDATES_MYORACLESUPPORT_USERNAME=
-AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 ```
 
 ---
@@ -371,17 +294,35 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 ./runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
 ```
 
-注册/安装
+注册/安装, 这里注意要先完成node1，再去完成node2，否则sid会乱，而且脑裂争抢OCR
 
 ```
 As a root user, execute the following script(s):
         1. /u01/app/oraInventory/orainstRoot.sh
-        2. /u01/app/grid/11.2.0/root.sh
+        2. /u01/app/11.2.0/grid/root.sh
 
 As install user, execute the following script to complete the configuration.
-        1. /u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/grid/response/grid_install.rsp
+        1. /u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=response_file_location
 
 ```
+
+
+grid 静默安装后，执行完root安装后会用grid用户再执行一次cfgrsp的密码相关配置
+[Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
+
+
+```
+cat >> ~/cfgrsp.properties << EOF 
+oracle.assistants.asm|S_ASMPASSWORD=password
+oracle.assistants.asm|S_ASMMONITORPASSWORD=password
+oracle.crs|S_BMCPASSWORD=password
+EOF
+```
+
+```
+/u01/app/grid/product/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/cfgrsp.properties
+```
+
 
 
 ---
@@ -413,4 +354,107 @@ This final command will blank the OCR configuration and voting disk.
 
 # /etc/init.d/oracleasm deletedisk DATA /dev/sdb1
 # /etc/init.d/oracleasm createdisk DATA /dev/sdb1
+```
+
+---
+
+
+### oracle user
+
+```
+cat >> ~/.bash_profile << EOF
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+HISTCONTROL=ignoredups:ignorespace
+shopt -s histappend
+HISTSIZE=30000
+HISTFILESIZE=300000
+HISTTIMEFORMAT="%F %T "
+
+LANG="en_US.utf8"
+LC_ALL="en_US.utf8"
+export EDITOR="vim"
+
+export ORACLE_BASE=/u01/app/oracle
+ORACLE_BASE=/u01/app/oracle
+ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1
+export ORACLE_SID=stbsid1
+export PATH=$ORACLE_HOME/bin:$PATH
+umask 022
+
+alias sqlplus='rlwrap -A sqlplus'
+alias dgmgrl='rlwrap -A dgmgrl'
+alias rman='rlwrap -A rman'
+EOF
+```
+
+
+
+### db_install.rsp
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
+oracle.install.option=INSTALL_DB_AND_CONFIG
+ORACLE_HOSTNAME=stb1
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
+ORACLE_BASE=/u01/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.EEOptionsSelection=false
+oracle.install.db.optionalComponents=
+oracle.install.db.DBA_GROUP=dba
+oracle.install.db.OPER_GROUP=
+oracle.install.db.CLUSTER_NODES=stb1,stb2
+oracle.install.db.isRACOneInstall=false
+oracle.install.db.racOneServiceName=
+oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
+oracle.install.db.config.starterdb.globalDBName=oradb
+oracle.install.db.config.starterdb.SID=stbsid
+oracle.install.db.config.starterdb.characterSet=AL32UTF8
+oracle.install.db.config.starterdb.memoryOption=true
+oracle.install.db.config.starterdb.memoryLimit=350
+oracle.install.db.config.starterdb.installExampleSchemas=false
+oracle.install.db.config.starterdb.enableSecuritySettings=true
+oracle.install.db.config.starterdb.password.ALL=oracle
+oracle.install.db.config.starterdb.password.SYS=oracle
+oracle.install.db.config.starterdb.password.SYSTEM=oracle
+oracle.install.db.config.starterdb.password.SYSMAN=oracle
+oracle.install.db.config.starterdb.password.DBSNMP=oracle
+oracle.install.db.config.starterdb.control=DB_CONTROL
+oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
+oracle.install.db.config.starterdb.automatedBackup.enable=false
+oracle.install.db.config.starterdb.automatedBackup.osuid=
+oracle.install.db.config.starterdb.automatedBackup.ospwd=
+oracle.install.db.config.starterdb.storageType=ASM_STORAGE
+oracle.install.db.config.starterdb.fileSystemStorage.dataLocation=
+oracle.install.db.config.starterdb.fileSystemStorage.recoveryLocation=
+oracle.install.db.config.asm.diskGroup=DATA
+oracle.install.db.config.asm.ASMSNMPPassword=oracle
+MYORACLESUPPORT_USERNAME=
+MYORACLESUPPORT_PASSWORD=
+SECURITY_UPDATES_VIA_MYORACLESUPPORT=false
+DECLINE_SECURITY_UPDATES=true
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+COLLECTOR_SUPPORTHUB_URL=
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+```
+
+check
+
+```
+./runcluvfy.sh stage -pre dbinst -n stb1,stb2 -verbose
+```
+
+install rdbms
+
+```
+./runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
 ```
