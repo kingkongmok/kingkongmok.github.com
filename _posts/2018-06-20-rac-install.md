@@ -369,3 +369,34 @@ As install user, execute the following script to complete the configuration.
 
 ```
 
+
+---
+
+### [Clean Up a Failed Grid Infrastruture Installation](https://oracle-base.com/articles/rac/clean-up-a-failed-grid-infrastructure-installation)
+
+#### grid
+
+On all cluster nodes except the last, run the following command as the "root" user.
+
+```
+# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force
+```
+
+On the last cluster node, run the following command as the "root" user.
+
+```
+# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force -lastnode
+```
+
+This final command will blank the OCR configuration and voting disk.
+
+
+#### asm disks
+
+
+```
+# dd if=/dev/zero of=/dev/sdb1 bs=1024 count=100
+
+# /etc/init.d/oracleasm deletedisk DATA /dev/sdb1
+# /etc/init.d/oracleasm createdisk DATA /dev/sdb1
+```
