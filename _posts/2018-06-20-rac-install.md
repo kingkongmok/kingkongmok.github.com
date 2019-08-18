@@ -27,7 +27,6 @@ rpm -ivh oracleasmlib*rpm
 grid user
 
 ```
-cat >> ~/.bash_profile << EOF
 PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
@@ -47,13 +46,12 @@ export GRID_HOME=/u01/app/11.2.0/grid
 export ORACLE_SID=+ASM1
 umask 022
 
-PATH=$ORACLE_HOME/bin:PATH
+PATH=$ORACLE_HOME/bin:$PATH
 
 alias sqlplus='rlwrap -A sqlplus'
 alias rman='rlwrap -A rman'
 alias dgmgrl='rlwrap -A dgmgrl'
 alias asmcmd='rlwrap -A asmcmd'
-EOF
 ```
 
 ---
@@ -360,11 +358,9 @@ This final command will blank the OCR configuration and voting disk.
 ---
 
 
-### oracle user
+### oracle user profile
 
 ```
-cat >> ~/.bash_profile << EOF
-
 PATH=$PATH:$HOME/bin
 PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
@@ -386,8 +382,6 @@ umask 022
 alias sqlplus='rlwrap -A sqlplus'
 alias dgmgrl='rlwrap -A dgmgrl'
 alias rman='rlwrap -A rman'
-
-EOF
 ```
 
 
