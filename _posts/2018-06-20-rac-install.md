@@ -364,7 +364,9 @@ This final command will blank the OCR configuration and voting disk.
 
 ```
 cat >> ~/.bash_profile << EOF
-PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+
+PATH=$PATH:$HOME/bin
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]$\[\e[m\] \[\e[1;37m\]'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
@@ -376,15 +378,15 @@ LC_ALL="en_US.utf8"
 export EDITOR="vim"
 
 export ORACLE_BASE=/u01/app/oracle
-ORACLE_BASE=/u01/app/oracle
-ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1
-export ORACLE_SID=stbsid1
+export ORACLE_HOME=$ORACLE_HOME/product/11.2.0/dbhome_1
+export ORACLE_SID=stbsid2
 export PATH=$ORACLE_HOME/bin:$PATH
 umask 022
 
 alias sqlplus='rlwrap -A sqlplus'
 alias dgmgrl='rlwrap -A dgmgrl'
 alias rman='rlwrap -A rman'
+
 EOF
 ```
 
