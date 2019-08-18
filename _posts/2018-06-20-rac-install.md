@@ -312,15 +312,16 @@ grid 静默安装后，执行完root安装后会用grid用户再执行一次cfgr
 
 
 ```
-cat >> ~/cfgrsp.properties << EOF 
-oracle.assistants.asm|S_ASMPASSWORD=password
-oracle.assistants.asm|S_ASMMONITORPASSWORD=password
-oracle.crs|S_BMCPASSWORD=password
+cat >> /stage/grid/response/pwdrsp.properties << EOF 
+grid.crs|S_ASMPASSWORD=oracle
+grid.crs|S_OMSPASSWORD=oracle
+grid.crs|S_BMCPASSWORD=oracle
+grid.crs|S_ASMMONITORPASSWORD=oracle
 EOF
 ```
 
 ```
-/u01/app/grid/product/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/cfgrsp.properties
+/u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/grid/response/pwdrsp.properties
 ```
 
 
@@ -457,4 +458,44 @@ install rdbms
 
 ```
 ./runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
+```
+
+---
+
+### dbca 
+
+```
+$ORACLE_HOME/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc  -gdbName oradb -sid stbsid -sysPassword oracle -systemPassword  oracle -storageType ASM -diskGroupName DATA -datafileJarLocation $ORACLE_HOME/assistants/dbca/templates -nodeinfo stb1,stb2 -characterset AL32UTF8 -obfuscatedPasswords false-sampleSchema -false-asmSysPassword oracle -database files
+```
+
+```
+dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname ora11g -sid ora11g -sysPassword lhr -systemPassword lhr -responseFile NO_VALUE -datafileDestination /u01/app/oracle/oradata/ -redoLogFileSize 50 -recoveryAreaDestination /u01/app/oracle/flash_recovery_area -storageType FS -characterSet ZHS16GBK -nationalCharacterSet AL16UTF16 -sampleSchema true -memoryPercentage 30 -totalMemory 200 -databaseType OLTP -emConfiguration NONE
+```
+
+```
+$ORACLE_HOME/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc  -gdbName www.luocs.com -sid luocs -sysPassword oracle_12345 -systemPassword  oracle_12345 -storageType ASM -diskGroupName MYDATA -datafileJarLocation $ORACLE_HOME/assistants/dbca/templates -nodeinfo rac1,rac2 -characterset AL32UTF8 -obfuscatedPasswords false-sampleSchema false-asmSysPassword Oracle_12345Copying database files
+```
+
+---
+
+### cfgrsp
+
+安装完毕后,执行完root安装后会用oracle用户再执行一次cfgrsp的密码相关配置
+[Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
+
+
+```
+cat >> /stage/database/response/pwdrsp.properties << EOF 
+oracle.server|S_SYSPASSWORD=oracle
+oracle.server|S_SYSTEMPASSWORD=oracle
+oracle.server|S_EMADMINPASSWORD=oracle
+oracle.server|S_DBSNMPPASSWORD=oracle
+oracle.server|S_ASMSNMPPASSWORD=oracle
+oracle.server|S_PDBADMINPASSWORD=oracle
+EOF
+```
+
+```
+/u01/app/oracle/product/11.2.0/dbhome_1/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/database/response/pwdrsp.properties
+$ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/database/response/pwdrsp.properties
 ```
