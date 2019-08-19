@@ -9,7 +9,7 @@ tags: [oracle, rac]
 ### [Basic Things in RAC](https://dbasanthosh.wordpress.com/2016/01/10/basic-things-in-rac/)
 
 
-#### inittab
+#### **inittab**
 
 **/etc/init/oracle-ohasd.conf** -> respawn -> **/etc/init.d/init.ohasd** 
 
@@ -29,7 +29,7 @@ crsctl disable has
 
 ---
 
-#### Oracle High Availability Services Daemon(OHASD) 
+#### **OHASD** Oracle High Availability Services Daemon
 
 
 OHASD无法kill，一旦kill，立马又会被拉起了
@@ -60,7 +60,7 @@ cat /etc/oracle/scls_scr/<Node_name>/root/ohasdrun
 
 ---
 
-#### OCR & OLR Oracle Cluster Registry,  Oracle Local Registry
+#### **OCR & OLR** Oracle Cluster Registry,  Oracle Local Registry
 
 **OLR** -> ASM -> **OCR**
 
@@ -92,7 +92,7 @@ ocrdump <File_Name_with_Full_Location.ocr>
 
 ---
 
-### Voting Disk
+### **Voting Disk**
 
 两个主要作用：
 
@@ -124,7 +124,7 @@ crsctl replace votedisk <+ASM_Disk_Group>
 
 ---
 
-#### CRSD stands for Cluster Resource Service Daemon 
+#### **CRSD** stands for Cluster Resource Service Daemon 
 
 起停服务，及维护**OCR**
 
@@ -175,7 +175,7 @@ cat $CRS_HOME/crs/init/<node_name>.pid
 
 ---
 
-#### CSSD Cluster Synchronization Service Daemon
+#### **CSSD** Cluster Synchronization Service Daemon
 
 如果两个节点都已启动并正在运行。并且由于其中一个通信通道，CSSD进程获得了另一个节点关闭的信息。因此，在这种情况下，无法将新事务分配给该节点。节点驱逐将完成。现在运行的节点将所有权作为主节点。
 
@@ -189,7 +189,7 @@ crsctl disable css
 
 ---
 
-####  CTTSD Cluster Time Synchronization Service Daemon
+####  **CTTSD** Cluster Time Synchronization Service Daemon
 
 ```
 #检查所有节点的时钟同步
@@ -200,7 +200,7 @@ crsctl check ctts
 
 --- 
 
-#### VIP
+#### **VIP**
 
 ```
 #To start VIP
@@ -346,7 +346,7 @@ $ORACLE_HOME/opmn/logs
 当任何rac节点关闭时，select语句需要故障转移到活动节点。
 
 ```
-SELECT machine, failover_type, failover_method, failed_over, COUNT(*) FROM gv$session GROUP BY machine, failover_type, failover_method, failed_over;
+SELECT machine, failover_type, failover_method, failed_over, COUNT(1) FROM gv$session GROUP BY machine, failover_type, failover_method, failed_over;
 ```
 
 ---
