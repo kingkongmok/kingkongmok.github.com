@@ -280,7 +280,7 @@ srvctl relocate scan_listener -i <Ordinal_Number> -n <node_name>
 
 ```
 #Find which is the master node
-Oclumon manage -get master 
+oclumon manage -get master 
 
 #Will get the path of the repository logs
 oclumon manage -get reppath 
@@ -289,16 +289,16 @@ oclumon manage -get reppath
 oclumon manage -get repsize 
 
 #find which nodes are connected to loggerd
-Oclumon showobjects
+oclumon showobjects
 
 #This will give a detail view including system, topconsumers, processes, devices, nics, filesystems status, protocol errors.
-Oclumon dumpnodeview 
+oclumon dumpnodeview 
 
 #you can view all the details in c. column from a specific time you mentioned.
-oclumon dumpnodeview -n <node_1 node_2 node_3> -last “HH:MM:SS” 
+oclumon dumpnodeview -n <node_1 node_2 node_3> -last "HH:MM:SS" 
 
 #If we need info from all the nodes.11.What is sysmon?
-oclumon dumpnodeview allnodes -last “HH:MM:SS” 
+oclumon dumpnodeview allnodes -last "HH:MM:SS" 
 ```
 
 ---
@@ -310,9 +310,9 @@ oclumon dumpnodeview allnodes -last “HH:MM:SS”
 
 ```
 #获取evmd中生成的事件。
-evmwatch -A -t “@timestamp @@” 
+evmwatch -A -t "@timestamp @@" 
 #这将在上述节点的evmd日志中发布消息。
-Evmpost -u“<Message here>” - h <node_name> 
+evmpost -u "<message here>" -h <node_name> 
 ```
 
 ---
