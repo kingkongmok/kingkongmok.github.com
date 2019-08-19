@@ -2910,3 +2910,14 @@ Grant execute on dbms_sqlhash to USER;
 Grant execute on dbms_obfuscation_toolkit to USER;
 Grant execute on dbms_obfuscation_toolkit_ffi to USER;
 Grant execute on dbms_crypto_ffi to USER;
+
+-- disalbe Cluster Health Monitory process CHM (ORA.CRF)
+-- boot status
+crsctl stat res -t -init
+-- 
+
+-- disable tfa
+-- status
+/u01/app/11.2.0/grid/tfa/bin/tfactl print status
+-- stop
+/etc/init.d/init.tfa stop
