@@ -15,10 +15,11 @@ yum -y groupinstall "Development Tools"
 yum -y install vim screen smartmontools sysstat
 yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel       libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
 yum -y install xorg-x11-xauth 
-rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
+yum -y install tcpdump strace lsof
 
+rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 yum -y install kmod-oracleasm oracleasm-support
-rpm -ivh oracleasmlib*rpm
+rpm -ivh /stage/grid/rpm/oracleasmlib*rpm
 ```
 
 
@@ -61,13 +62,13 @@ alias asmcmd='rlwrap -A asmcmd'
 
 ```
 cat >> /etc/hosts << EOF
-10.255.255.21   rac1
-10.255.255.22   rac2
-10.255.255.23   rac1-vip
-10.255.255.24   rac2-vip
-10.255.255.25   rac-scan
-192.168.0.1     rac1-priv
-192.168.0.2     rac2-priv
+10.255.255.21   prim1
+10.255.255.22   prim2
+10.255.255.23   prim-vip
+10.255.255.24   prim2-vip
+10.255.255.25   prim-scan
+192.168.0.1     prim1-priv
+192.168.0.2     prim2-priv
 
 10.255.255.121  stb1
 10.255.255.122  stb2
@@ -184,9 +185,9 @@ service iscsi restart
 ```
 
 
-+ raw the device
+~~raw the device~~
 
-+ [使用udev的原因,但是12开始淘汰](https://blog.csdn.net/u010098331/article/details/51623371)
+~~[使用udev的原因,但是12开始淘汰](https://blog.csdn.net/u010098331/article/details/51623371)~~
 
 ```
 cat >> /etc/udev/rules.d/60-raw.rules << EOF
@@ -201,6 +202,7 @@ start_udev
 ls /dev/raw/ -l
 ```
 
+---
 
 ### [create asmdisk](https://www.oracle.com/linux/downloads/linux-asmlib-rhel6-downloads.html)
 
@@ -286,7 +288,7 @@ PROXY_REALM=
 ./runcluvfy.sh stage -pre crsinst -n stb1,stb2 -verbose
 ```
 
-安装
+安装, 只在stb1
 
 ```
 ./runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
@@ -305,7 +307,7 @@ As install user, execute the following script to complete the configuration.
 ```
 
 
-grid 静默安装后，执行完root安装后会用grid用户再执行一次cfgrsp的密码相关配置
+grid 静默安装后，执行完root安装后，用stb1的grid用户再执行一次cfgrsp的密码相关配置
 [Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
 
 
@@ -326,7 +328,8 @@ EOF
 
 ---
 
-### [Clean Up a Failed Grid Infrastruture Installation](https://oracle-base.com/articles/rac/clean-up-a-failed-grid-infrastructure-installation)
+
+### grid卸载 [Clean Up a Failed Grid Infrastruture Installation](https://oracle-base.com/articles/rac/clean-up-a-failed-grid-infrastructure-installation)
 
 #### grid
 
@@ -345,7 +348,7 @@ On the last cluster node, run the following command as the "root" user.
 This final command will blank the OCR configuration and voting disk.
 
 
-#### asm disks
+#### asm disks 卸载/重建
 
 
 ```
@@ -450,48 +453,16 @@ check
 ./runcluvfy.sh stage -pre dbinst -n stb1,stb2 -verbose
 ```
 
-install rdbms
+install rdbms,  和grid的runInstaller一样，只在stb1
 
 ```
 ./runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
 ```
 
----
-
 ### dbca 
 
-```
-$ORACLE_HOME/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc  -gdbName oradb -sid stbsid -sysPassword oracle -systemPassword  oracle -storageType ASM -diskGroupName DATA -datafileJarLocation $ORACLE_HOME/assistants/dbca/templates -nodeinfo stb1,stb2 -characterset AL32UTF8 -obfuscatedPasswords false-sampleSchema -false-asmSysPassword oracle -database files
-```
+上面的runInstall会自动完成DBCA如下
 
 ```
-dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname ora11g -sid ora11g -sysPassword lhr -systemPassword lhr -responseFile NO_VALUE -datafileDestination /u01/app/oracle/oradata/ -redoLogFileSize 50 -recoveryAreaDestination /u01/app/oracle/flash_recovery_area -storageType FS -characterSet ZHS16GBK -nationalCharacterSet AL16UTF16 -sampleSchema true -memoryPercentage 30 -totalMemory 200 -databaseType OLTP -emConfiguration NONE
-```
-
-```
-$ORACLE_HOME/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc  -gdbName www.luocs.com -sid luocs -sysPassword oracle_12345 -systemPassword  oracle_12345 -storageType ASM -diskGroupName MYDATA -datafileJarLocation $ORACLE_HOME/assistants/dbca/templates -nodeinfo rac1,rac2 -characterset AL32UTF8 -obfuscatedPasswords false-sampleSchema false-asmSysPassword Oracle_12345Copying database files
-```
-
----
-
-### cfgrsp
-
-安装完毕后,执行完root安装后会用oracle用户再执行一次cfgrsp的密码相关配置
-[Running Postinstallation Configuration Using a Response File](https://docs.oracle.com/cd/E11882_01/install.112/e41961/app_nonint.htm#CWLIN379)
-
-
-```
-cat >> /stage/database/response/pwdrsp.properties << EOF 
-oracle.server|S_SYSPASSWORD=oracle
-oracle.server|S_SYSTEMPASSWORD=oracle
-oracle.server|S_EMADMINPASSWORD=oracle
-oracle.server|S_DBSNMPPASSWORD=oracle
-oracle.server|S_ASMSNMPPASSWORD=oracle
-oracle.server|S_PDBADMINPASSWORD=oracle
-EOF
-```
-
-```
-/u01/app/oracle/product/11.2.0/dbhome_1/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/database/response/pwdrsp.properties
-$ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/stage/database/response/pwdrsp.properties
+/u01/app/oracle/product/11.2.0/dbhome_1/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc -sid stbsid -gdbName oradb -emConfiguration LOCAL -storageType ASM -diskGroupName DATA -datafileJarLocation /u01/app/oracle/product/11.2.0/dbhome_1/assistants/dbca/templates -responseFile /stage/database/response/db_install.rsp -nodeinfo stb1,stb2 -characterset AL32UTF8 -obfuscatedPasswords false -oratabLocation /u01/app/oracle/product/11.2.0/dbhome_1/install/oratab -automaticMemoryManagement true -totalMemory 1024 -maskPasswords false -oui_internal
 ```
