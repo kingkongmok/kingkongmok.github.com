@@ -13,6 +13,30 @@ tags: [oracle, rac]
 
 **/etc/init/oracle-ohasd.conf** -> respawn -> **/etc/init.d/init.ohasd** 
 
+
+```
+/u01/app/11.2.0/grid/bin/crsctl lsmodules 
+Usage:
+  crsctl lsmodules {mdns|gpnp|css|crf|crs|ctss|evm|gipc}
+ where
+   mdns  multicast Domain Name Server
+   gpnp  Grid Plug-n-Play Service
+   css   Cluster Synchronization Services
+   crf   Cluster Health Monitor
+   crs   Cluster Ready Services
+   ctss  Cluster Time Synchronization Service
+   evm   EventManager
+   gipc  Grid Interprocess Communications
+```
+
+```
+crsctl status resource -t -init
+```
+
+---
+
+#### **OHASD** Oracle High Availability Services Daemon
+
 相关命令
 
 Enable Automatic start of Oracle High Availability services after reboot
@@ -22,14 +46,6 @@ crsctl enable has
 ```
 
 Disable Automatic start of Oracle High Availability services after reboot
-
-```
-crsctl disable has 
-```
-
----
-
-#### **OHASD** Oracle High Availability Services Daemon
 
 
 OHASD无法kill，一旦kill，立马又会被拉起了
@@ -405,5 +421,159 @@ GES控制所有节点上的库和字典缓存。GES管理事务锁，表锁，�
 就是ONS
 
 
+---
+
+## [命令](https://blog.51cto.com/xiaocao13140/1930501)
+
++ 节点层：osnodes 
++ 网络层：oifcfg 
++ 集群层：crsctl, ocrcheck,ocrdump,ocrconfig 
++ 应用层：srvctl,onsctl,crs_stat 
+
+---
+
+### 节点层
+
+```
+grid@stb1 ~ $ $ORACLE_HOME/bin/!!
+$ORACLE_HOME/bin/olsnodes -n
+stb2    1
+stb1    2
+```
+
+### 网络层
+
+```
+grid@stb1 ~ $ $ORACLE_HOME/bin/oifcfg getif
+eth1  10.255.255.0  global  public
+eth2  192.168.255.0  global  cluster_interconnect
+```
 
 
+```
+[root@rac1 bin]# ./oifcfg setif -global eth0/192.168.1.119:public 
+[root@rac1 bin]# ./oifcfg setif -globaleth1/10.85.10.119:cluster_interconnect
+[root@rac1 bin]# ./oifcfg getif -type public 
+[root@rac1 bin]# ./oifcfg delif -global 
+```
+
+### 集群层
+
+```
+grid@stb1 ~ $ crsctl status resource -t
+grid@stb1 ~ $ crsctl status resource -t -init
+```
+
+CRS进程栈默认随着操作系统的启动而自启动，有时出于维护目的需要关闭这个特性，可以用root用户执行下面命令。 
+
+```
+[root@rac1 bin]# ./crsctl disable crs 
+[root@rac1 bin]# ./crsctl enable crs 
+```
+
+这个命令实际是修改了以下两个文件内容,disable后**ohasd.bin reboot**不能启动，也就没有后面的一系列进程。但**/bin/sh /etc/init.d/init.tfa run** 和 **/bin/sh /etc/init.d/init.ohasd run**由init启动。
+
+```
+/etc/oracle/scls_scr/$(HOSTNAME)/root/ohasdstr
+/etc/oracle/scls_scr/$(HOSTNAME)/root/ohasdrun
+```
+
+
+手动启动crs
+
+```
+[root@stb1 bin]# ./crsctl start crs
+CRS-4123: Oracle High Availability Services has been started.
+```
+
+```
+ /u01/app/11.2.0/grid/bin/ohasd.bin reboot
+ /u01/app/11.2.0/grid/bin/oraagent.bin
+ /u01/app/11.2.0/grid/bin/mdnsd.bin
+ /u01/app/11.2.0/grid/bin/gpnpd.bin
+ /u01/app/11.2.0/grid/bin/gipcd.bin
+ /u01/app/11.2.0/grid/bin/cssdmonitor
+ /u01/app/11.2.0/grid/bin/cssdagent
+ /u01/app/11.2.0/grid/bin/ocssd.bin 
+ /u01/app/11.2.0/grid/bin/orarootagent.bin
+ /u01/app/11.2.0/grid/bin/octssd.bin reboot
+ /u01/app/11.2.0/grid/bin/evmd.bin
+  \_ /u01/app/11.2.0/grid/bin/evmlogger.bin -o /u01/app/11.2.0/grid/evm/log/evmlogger.info -l /u01/app/11.2.0/grid/evm/log/evmlogge
+ asm_pmon_+ASM2
+ asm_psp0_+ASM2
+ asm_vktm_+ASM2
+ asm_gen0_+ASM2
+ asm_diag_+ASM2
+ asm_ping_+ASM2
+ asm_dia0_+ASM2
+ asm_lmon_+ASM2
+ asm_lmd0_+ASM2
+ asm_lms0_+ASM2
+ asm_lmhb_+ASM2
+ asm_mman_+ASM2
+ asm_dbw0_+ASM2
+ asm_lgwr_+ASM2
+ asm_ckpt_+ASM2
+ asm_smon_+ASM2
+ asm_rbal_+ASM2
+ asm_gmon_+ASM2
+ asm_mmon_+ASM2
+ asm_mmnl_+ASM2
+ asm_lck0_+ASM2
+ oracle+ASM2 (DESCRIPTION=(LOCAL=YES)(ADDRESS=(PROTOCOL=beq)))
+ /u01/app/11.2.0/grid/bin/crsd.bin reboot
+ oracle+ASM2_ocr (DESCRIPTION=(LOCAL=YES)(ADDRESS=(PROTOCOL=beq)))
+ asm_asmb_+ASM2
+ oracle+ASM2_asmb_+asm2 (DESCRIPTION=(LOCAL=YES)(ADDRESS=(PROTOCOL=beq)))
+ asm_o000_+ASM2
+ oracle+ASM2_o000_+asm2 (DESCRIPTION=(LOCAL=YES)(ADDRESS=(PROTOCOL=beq)))
+ /u01/app/11.2.0/grid/bin/oraagent.bin
+ /u01/app/11.2.0/grid/bin/orarootagent.bin
+ oracle+ASM2 (DESCRIPTION=(LOCAL=YES)(ADDRESS=(PROTOCOL=beq)))
+ /u01/app/11.2.0/grid/opmn/bin/ons -d
+  \_ /u01/app/11.2.0/grid/opmn/bin/ons -d
+ /u01/app/11.2.0/grid/bin/tnslsnr LISTENER 
+```
+
+
+影响 **/etc/oracle/scls_scr/stb1/root/ohasdstr**
+
+```
+[root@stb1 bin]# ./crsctl disable has
+CRS-4621: Oracle High Availability Services autostart is disabled.
+```
+
+效果和 **./crsctl disable crs**相似，就是启动不了。
+
+
+
+```
+crsctl query css votedisk
+##  STATE    File Universal Id                File Name Disk group
+--  -----    -----------------                --------- ---------
+ 1. ONLINE   67fbe885438c4f4cbf85a68076a2aa68 (/dev/oracleasm/disks/DISK1) [DATA]
+ Located 1 voting disk(s).
+```
+
+#### OCR 的备份
+
+```
+grid@stb2 ~ $ ls -lh /u01/app/11.2.0/grid/cdata/stb-cluster/
+total 20M
+-rw------- 1 root root 6.6M Aug 17 21:41 backup00.ocr
+-rw------- 1 root root 6.6M Aug 17 21:41 day.ocr
+-rw------- 1 root root 6.6M Aug 17 21:41 week.ocr
+
+grid@stb2 /u01/app/11.2.0/grid/cdata/stb-cluster $ sudo md5sum *
+4dc00b7f877a0f0b7aa8fbaa2a91a6aa  backup00.ocr
+4dc00b7f877a0f0b7aa8fbaa2a91a6aa  day.ocr
+4dc00b7f877a0f0b7aa8fbaa2a91a6aa  week.ocr
+```
+
+---
+
+### 应用层
+
+crsctl, srvctl 略
+
+onsctl
