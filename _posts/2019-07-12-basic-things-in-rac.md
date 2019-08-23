@@ -577,3 +577,36 @@ grid@stb2 /u01/app/11.2.0/grid/cdata/stb-cluster $ sudo md5sum *
 crsctl, srvctl 略
 
 onsctl
+
+---
+
+## srvctl add database
+
+
+#### standalone db
+
+```
+sudo $GRID_HOME/bin/crsctl delete resource  ora.oradb.db
+```
+
+####  rac
+
+```
+srvctl add database -d db_unique_name -r PRIMARY -n db_name -o $ORACLE_HOME 
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+```
+
+
+```
+srvctl add database -d db_unique_name -o ORACLE_HOME [-x node_name] [-m domain_name] [-p spfile] [-r {PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY}] [-s start_options] [-t stop_options] [-n db_name] [-y {AUTOMATIC|MANUAL}] [-g server_pool_list] [-a "diskgroup_list"]
+
+srvctl modify database -d db_unique_name [-n db_name] [-o ORACLE_HOME] [-u oracle_user] [-m domain] [-p spfile] [-r {PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY}] [-s start_options] [-t stop_options] [-y {AUTOMATIC|MANUAL}] [-g "server_pool_list"] [-a "diskgroup_list"|-z]
+
+srvctl add service -d db_unique_name -s service_name -r preferred_list [-a available_list] [-P {BASIC|NONE|PRECONNECT}]
+[-l [PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY]
+[-y {AUTOMATIC|MANUAL}] [-q {TRUE|FALSE}] [-j {SHORT|LONG}]
+[-B {NONE|SERVICE_TIME|THROUGHPUT}] [-e {NONE|SESSION|SELECT}]
+[-m {NONE|BASIC}] [-x {TRUE|FALSE}] [-z failover_retries] [-w failover_delay]
+```
+

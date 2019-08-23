@@ -466,3 +466,21 @@ install rdbms,  和grid的runInstaller一样，只在stb1
 ```
 /u01/app/oracle/product/11.2.0/dbhome_1/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc -sid stbsid -gdbName oradb -emConfiguration LOCAL -storageType ASM -diskGroupName DATA -datafileJarLocation /u01/app/oracle/product/11.2.0/dbhome_1/assistants/dbca/templates -responseFile /stage/database/response/db_install.rsp -nodeinfo stb1,stb2 -characterset AL32UTF8 -obfuscatedPasswords false -oratabLocation /u01/app/oracle/product/11.2.0/dbhome_1/install/oratab -automaticMemoryManagement true -totalMemory 1024 -maskPasswords false -oui_internal
 ```
+
+
+---
+
+## rac as physical standby
+
+stbsid1 在rman duplicate后，开启stbsid2后出现 **ORA-00304: requested INSTANCE_NUMBER is busy** 异常
+
+
+先调整pfile， 注意 **sid** 和 **thread**
+
+然后在调整 参数，例如已经启动stbsid1，就在stbsid1中设置：
+
+
+```
+alter system set INSTANCE_NUMBER=1 scope=spfile sid='stbsid1';
+alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
+```
