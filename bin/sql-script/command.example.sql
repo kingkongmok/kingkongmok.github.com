@@ -1674,6 +1674,25 @@ $ srvctl remove database -d orcl
 oracle@host ~ $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1 
 srvctl add database -d $ORACLE_SID -o $ORACLE_HOME
 
+-- standalone db
+sudo $GRID_HOME/bin/crsctl delete resource  ora.oradb.db
+-- rac
+srvctl add database -d db_unique_name -r PRIMARY -n db_name -o $ORACLE_HOME 
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+
+
+srvctl add database -d db_unique_name -o ORACLE_HOME [-x node_name] [-m domain_name] [-p spfile] [-r {PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY}] [-s start_options] [-t stop_options] [-n db_name] [-y {AUTOMATIC|MANUAL}] [-g server_pool_list] [-a "diskgroup_list"]
+
+srvctl modify database -d db_unique_name [-n db_name] [-o ORACLE_HOME] [-u oracle_user] [-m domain] [-p spfile] [-r {PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY}] [-s start_options] [-t stop_options] [-y {AUTOMATIC|MANUAL}] [-g "server_pool_list"] [-a "diskgroup_list"|-z]
+
+srvctl add service -d db_unique_name -s service_name -r preferred_list [-a available_list] [-P {BASIC|NONE|PRECONNECT}]
+[-l [PRIMARY|PHYSICAL_STANDBY|LOGICAL_STANDBY|SNAPSHOT_STANDBY]
+[-y {AUTOMATIC|MANUAL}] [-q {TRUE|FALSE}] [-j {SHORT|LONG}]
+[-B {NONE|SERVICE_TIME|THROUGHPUT}] [-e {NONE|SESSION|SELECT}]
+[-m {NONE|BASIC}] [-x {TRUE|FALSE}] [-z failover_retries] [-w failover_delay]
+
+
 
 -- 检查是否重启生效
 
@@ -2111,6 +2130,33 @@ alter tablespace users online ;
 !mv /u01/app/oracle/oradata/ORADB/sys.dbf /u01/app/oracle/datafiles/ORADB/sys.dbf
 ALTER DATABASE RENAME FILE '/u01/app/oracle/oradata/ORADB/sys.dbf' TO '/u01/app/oracle/datafiles/ORADB/sys.dbf'; 
 ALTER DATABASE RENAME FILE '/u01/app/oracle/oradata/ORADB/sysaux.dbf' TO '/u01/app/oracle/datafiles/ORADB/sysaux.dbf';
+
+
+--rename table
+ALTER TABLE test1 ADD ( CONSTRAINT test1_pk PRIMARY KEY (col1));
+ALTER TABLE test1 RENAME TO test;
+ALTER TABLE test RENAME COLUMN col1 TO id;
+ALTER TABLE test RENAME COLUMN col2 TO description;
+ALTER TABLE test RENAME CONSTRAINT test1_pk TO test_pk;
+ALTER INDEX test1_pk RENAME TO test_pk;
+
+
+--
+SELECT 'alter table T1 rename constraint ' ||  CONSTRAINT_NAME || ' to ' ||  CONSTRAINT_NAME || '_bak;'
+FROM user_constraints 
+WHERE 
+table_name = 'T1';
+
+SELECT 'alter index ' ||  INDEX_NAME || ' rename to ' ||  INDEX_NAME || '_bak;'
+FROM user_indexes
+WHERE 
+table_name = 'T1';
+
+SELECT 'alter tigger ' ||  TRIGGER_NAME || ' rename to ' ||  TRIGGER_NAME || '_bak;'
+FROM user_triggers
+WHERE 
+table_name = 'T1';
+
 
 
 
