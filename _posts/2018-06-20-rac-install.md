@@ -484,3 +484,9 @@ stbsid1 在rman duplicate后，开启stbsid2后出现 **ORA-00304: requested INS
 alter system set INSTANCE_NUMBER=1 scope=spfile sid='stbsid1';
 alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
 ```
+
+---
+
+### instance change thread number
+
+首先需要确认的是spfile是一致的，controlfile是一致的。调整**$ORACLE_SID**即可
