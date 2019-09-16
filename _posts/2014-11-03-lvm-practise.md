@@ -78,6 +78,9 @@ xfs_growfs /dev/dm-0
 
 lvdisplay 
 resize2fs /dev/vgloop01/lvloop01 50M
+
+# 如果提示  exfsck lv_root is mounted.  e2fsck: Cannot continue, aborting.
+resize2fs /dev/vg/lv_root
 ```
 
 ### ==========减小============

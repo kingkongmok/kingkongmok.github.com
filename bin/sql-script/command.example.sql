@@ -28,6 +28,12 @@ INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
         └── STANDB2
 
 
+-- sga/pga 比例 
+-- 假设主机的总物理内存是100G。
+-- 20G -- 操作系统及其他预留
+-- 64G -- Oracle的SGA 100*0.8*0.8
+-- 16G -- Oracle的PGA 100*0.8*0.2
+
 -- alert log location
 $ORACLE_BASE/diag/rdbms/<dbname_in_lower_case>/$ORACLE_SID/trace/alert_ORACLE_SID.log
 
@@ -71,6 +77,7 @@ SID_LIST_LISTENER =
 
 
 -- enable flashback
+-- minutes 1440 minutes = 1day
 ALTER SYSTEM SET DB_FLASHBACK_RETENTION_TARGET=4320;
 ALTER DATABASE FLASHBACK ON;
 SELECT FLASHBACK_ON FROM V$DATABASE;
@@ -499,7 +506,7 @@ alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.d
 alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
--- 如果 db_create_file_dest 有设置，例如“+DATA”的时候，使用以下方式添加数据文件
+-- 如果 db_create_file_dest 有设置，例如"+DATA"的时候，使用以下方式添加数据文件
 alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 
@@ -536,7 +543,7 @@ select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
 
 --  Temporary Tablespace Usage
 
-select round(100*(  free_space / Tablespace_size) ,0) perc  from dba_temp_free_space;
+select round(100*(  free_space / Tablespace_size) ,0) free_perc  from dba_temp_free_space;
 SELECT * FROM   dba_temp_free_space ;
  
 SELECT 
@@ -572,6 +579,8 @@ create user CKSP identified by NEWPASSWORD default tablespace TICKET_TABLESPACES
 create user ckscjc identified by NEWPASSWORD default tablespace USERS TEMPORARY TABLESPACE temp profile default account unlock;
 GRANT resource,connect,dba TO CKSP;       
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
+ALTER TABLESPACE TEMP ADD TEMPFILE '/u01/app/oracle/oradata/ABCDEFG/temp02.dbf' SIZE 1024M REUSE AUTOEXTEND ON NEXT 50M  MAXSIZE 4096M;
+
 
 --revoke dba TO CKSP;       
 
@@ -639,7 +648,10 @@ alter database default temporary tablespace TEMP2 ;
 -- check which session using old temp
 SELECT USERNAME, SESSION_NUM, SESSION_ADDR FROM V$SORT_USAGE;
 drop tablespace TEMP including contents and datafiles ; 
+--
 create temporary tablespace TEMP tempfile '+DATA/oradb/tempfile/temp01.dbf' size 100m autoextend on;
+ALTER TABLESPACE TEMP ADD TEMPFILE '/u01/app/oracle/oradata/OLTP/temp01.dbf' SIZE 1024M REUSE AUTOEXTEND ON NEXT 50M  MAXSIZE unlimited;
+--
 alter database default temporary tablespace TEMP;
 
 
@@ -661,10 +673,10 @@ SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'USER';
 
 
 -- create user/schema
-CREATE USER USERNAME IDENTIFIED BY NEWPASSWORD DEFAULT TABLESPACE USERDEFAULTSPACE TEMPORARY TABLESPACE USERDEFAULTSPACE PROFILE DEFAULT ACCOUNT UNLOCK;
-GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TEST;  
-GRANT CONNECT, RESOURCE TO USERNAME ; 
-GRANT UNLIMITED TABLESPACE TO TEST;
+CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TEMP USERDEFAULTSPACE PROFILE default ACCOUNT unlock;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO username;  
+GRANT CONNECT, RESOURCE TO username ; 
+GRANT UNLIMITED TABLESPACE TO users;
 -- CONNECT to assign privileges to the user through attaching the account to various roles
 -- RESOURCE role (allowing the user to create named types for custom schemas)
 -- DBA  which allows the user to not only create custom named types but alter and destroy them as well
@@ -1035,7 +1047,6 @@ CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE4              NONUNIQ
 -- 查询index是否失效；
 select index_name,last_analyzed,status from dba_indexes where owner='CKSP';
 select index_name,last_analyzed,status, NUM_ROWS from user_indexes;
-
 alter index user1.indx rebuild;
 
 -- index, constraints
@@ -1062,7 +1073,10 @@ drop index TICKETRECORD_PK;
 
 -- directory for datadump
 select DIRECTORY_NAME, DIRECTORY_PATH from dba_directories;
-
+create directory dump_file_dir as '/u01test';
+grant read,write on directory dump_file_dir to gabsj, hztb, xttb,mylcpt;
+-- dba directory
+SELECT * FROM SYS.DBA_DIRECTORIES;
 
 -- To check table statistics use:
 select owner, table_name, num_rows, sample_size, last_analyzed, tablespace_name from dba_tables where owner='HR' order by owner;
@@ -1100,7 +1114,7 @@ select p.program,s.server from v$session s , v$process p where s.paddr = p.addr 
 
 
 -- check time now
-SELECT TO_CHAR (SYSDATE, 'MM-DD-YYYY HH24:MI:SS') "NOW" FROM DUAL;
+SELECT TO_CHAR(SYSDATE, 'MM-DD-YYYY HH24:MI:SS') "NOW" FROM DUAL;
 
 
 -- rman backup info
@@ -1118,12 +1132,6 @@ START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DI
 2019-03-23_21:30:14 COMPLETED        DB FULL         96.67G        02:39:20
 2019-03-16_21:30:15 COMPLETED        DB FULL         96.29G        02:40:30
 2019-03-09_21:30:14 COMPLETED        DB FULL         96.11G        02:40:30
-
-
-
--- dba directory
-SELECT * FROM SYS.DBA_DIRECTORIES;
-
 
 
 --  显示gv$session超过60s的查询 queries currently running for more than 60 seconds
@@ -1177,17 +1185,6 @@ select * from (
 where ROWNUM < 6
 /
 
--- check sql_text
-select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
-select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV'; 
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
-
--- sga/pga 比例 
--- 假设主机的总物理内存是100G。
--- 20G -- 操作系统及其他预留
--- 64G -- Oracle的SGA
--- 16G -- Oracle的PGA
-
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
 column pgA_ALLOC_MEM format 99,990
 column PGA_USED_MEM format 99,990
@@ -1198,7 +1195,6 @@ column logon_time format a25
 column SPID format a15
 select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 and s.username is not null order by PGA_USED_MEM;
 --
-
 INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  PGA_USED_MEM PGA_ALLOC_MEM
 ------- ---------- ---------- --------------- --------------- ------------------------- ------------------------- ------------ -------------
       2       4474	    1 12275			      2018-10-12_12:02:58	oracle@ckstmis-db2 (ARCH)	    41		  44
@@ -1209,6 +1205,16 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
       1       3764	    1 10855			      2018-10-12_12:14:28	oracle@ckstmis-db1 (ARC7)	    52		  56
       1       1990	22249 26260	      CKS	      2018-10-19_10:19:34	JDBC Thin Client		    83		  92
       1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
+--
+-- 自定义pga数，例如输入20就是pga20M的查询
+select s.inst_id, s.sid, s.serial#, p.spid, s.sql_id, s.machine, s.username, s.logon_time, s.program, round(PGA_USED_MEM/1024/1024,2) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,2) PGA_ALLOC_MEM from gv$session s, gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &memsize and s.username is not null order by PGA_USED_MEM;
+
+
+-- check sql_text
+select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
+select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIVE'; 
+select s.sid, s.serial#, s.user, s.machine from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id;
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
 -- sid and seria#
 select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
@@ -1278,7 +1284,7 @@ exec SP_UPDATE_AGE('jack',1);
 
 
 -- 统计行数最多的表 the table with the most rows in the database
-select TABLE_NAME, TABLESPACE_NAME, LAST_ANALYZED, NUM_ROWS from user_tables where TABLESPACE_NAME in ('TICKET_TABLESPACES', 'USERS') order by NUM_ROWS;
+select TABLE_NAME, TABLESPACE_NAME, LAST_ANALYZED, NUM_ROWS from user_tables where TABLESPACE_NAME not in ('SYSTEM','SYSAUX') order by NUM_ROWS;
 --
 --
 TABLE_NAME		       TABLESPACE_NAME		      LAST_ANALYZED	    NUM_ROWS
@@ -1406,100 +1412,29 @@ new RMAN configuration parameters are successfully stored
 RMAN> delete obsolete ; 
 
 -- delete expired
-
 RMAN> crosscheck archivelog all ;
 RMAN> delete expired archivelog all ; 
+
 
 -- create dblink
 -- https://dba.stackexchange.com/questions/54185/create-database-link-on-oracle-database-with-2-databases-on-different-machines
 --list dblik
 SELECT * FROM ALL_DB_LINKS;
--- You can define the connection string via tnsnames.ora ( $ORACLE_HOME/network/admin/tnsnames.ora ) then reference the alias
-remotedb =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = remotedb.fqdn.com)(PORT = 1521))
-    (CONNECT_DATA = (SERVICE_NAME = ORCL))
-  )
--- Then create a dblink referencing that alias:
-select DB_LINK from all_db_links;
-drop database link remote_dblink;
+SELECT DB_LINK FROM all_db_links;
+-- drop
+DROP DATABASE LINK remote_dblink;
 DROP PUBLIC DATABASE LINK remote_dblink;
-CREATE DATABASE LINK remote_dblink CONNECT TO SYSTEM IDENTIFIED BY <password> USING 'remotedb';
+-- create
+CREATE DATABASE LINK remote_dblink CONNECT TO SYSTEM IDENTIFIED BY oracle USING 'remotedb';
+CREATE PUBLIC DATABASE LINK remote_dblink CONNECT TO SYSTEM IDENTIFIED BY oracle USING 'remotedb';
 -- check it
-select * from remotedb.testtable@remote_dblink ; 
+select count(1) from schema.testtable@remote_dblink ; 
 
 
 -- 查看是否有权限进程dblink操作
 select * from user_sys_privs where privilege like upper('&db_link');  
 
-
-
-
--- XX数据迁移方案 - 副本
-
--- 方案一  冷库直接拷贝
-
--- 1首先删除以前的归档（可保留七天）
-
--- a、rman模式删除
---rman target用户名/密码@实例名
-rman >DELETE ARCHIVELOG UNTIL TIME 'SYSDATE-7'; --删除7前的所有归档日志。
-rman >crosscheck archivelog all;
-rman >delete noprompt expired archivelog all;
-rman>crosscheck archivelog all;
-rman> delete expired archivelog all;
-
- -- 或
-
-rman target /
-RMAN> crosscheck archivelog all; --验证的DB的归档日志
-RMAN> delete expired archivelog all; --删除所有失效归档日志
-RMAN> DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';--保留7天的归档日志
-RMAN>DELETE ARCHIVELOG ALL; --完全删除归档
-
-
--- b、使用操作系统命令删除
-su - oracle
-cd /oradata/arch
-find . -xdev -mtime +7 -name "*.dbf" -exec rm -f {} \;
-然后rman target /
-RMAN> crosscheck archivelog all; --验证的DB的归档日志
-RMAN> delete expired archivelog all; --删除所有失效归档日志
-
--- 关闭归档命令如下：
--- 关闭归档
-SQL> alter system set log_archive_start=false scope=spfile; --禁用自归档 oracle10g以后 这条命令就不需要了。。
-SQL> shutdown immediate; --强制关闭数据库
-SQL> startup mount; --重启数据库到mount模式
-SQL> alter database noarchivelog; --修改为非归档模式
-SQL> alter database open; --打数据文件
-SQL> archive log list; --再次查看前归档模式
-
--- 2、数据复制
-find /u01 -type s
-cp -R -p  /u01  /u01_2
-cp -R -p /oradata /oradata_2    
-
--- 3、文件系统重新挂载
-
-umount /u01
-umount /oradata
-umount /u01_2
-umount /oradata_2
-
---需要修改文件系统挂载参数，即把原来的两个文件系统的自动挂载改为手动挂载，把新建的两个文件系统的自动挂载点改为/u01和/oradata
---（需做实验）
-
--- 然后挂载：
-mount /u01
-mount /oradata
-
-
-
-
---  方案二  RMAN备份恢复
 -- Rman备份再恢复
-
 -- 1 copy backupset and autobackup to /home/oracle
 -- 2 create pfile, db_name需一致
 cat > ~/initorsid1.ora << EOF
@@ -1522,9 +1457,6 @@ RMAN> restore database;
 RMAN> recover database [ until SCN xxx ];
 RMAN> alter database open resetlogs
 
-
-
-
 -- 注：AIX系统oracle数据库自动启动：
 -- 1、vi /etc/oratab  并添加：
 ORACLE_SID:ORACLE_HOME:Y
@@ -1532,133 +1464,14 @@ ORACLE_SID:ORACLE_HOME:Y
 -- 对ORACLE_HOME_LISTENER一行进行修改，使其等于$ORACLE_HOME
 -- 3、编写数据库启动脚本  vi /etc/rc.startdb
 -- 添加：
-su - oracle “-c /u01/app/oracle/product/11.2.0/db_1/bin/dbstart”
+su - oracle "-c /u01/app/oracle/product/11.2.0/db_1/bin/dbstart"
 -- 4、为此文件授予可执行的权限：chmod +x /etc/rc.startdb
 -- 5、vi /etc/inittab
 -- 添加：
 startdb:2:once:/etc/rc.startdb
 -- 或者使用mkitab命令将启动条目添加到/etc/initab文件中
-#mkitab “startdb:2:once:/etc/rc.startdb > /dev/null 2>&1”
+#mkitab "startdb:2:once:/etc/rc.startdb > /dev/null 2>&1"
 
-
--- 2.4.3 方案三  数据泵导入导出
--- 1、导出
--- A、创建directory域，分配dump文件目录
--- 然后给需要导出的模式（用户）分配读写权限给directory域。
-SQL> create directory dump_file_dir as '/u01test';
-Directory created.
-SQL> grant read,write on directory dump_file_dir to gabsj, hztb, xttb,mylcpt;
-Grant succeeded.
--- B、以每一个用户去执行全库导出
--- （导出整个数据）
-expdp sys/oracle@10.118.137.9/hzxzdb as sysdba directory=dump_file_dir full=y dumpfile=allfile.dmp logfile=allfile.log 
-
--- 针对用户去导出：
-expdp gabsj/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= gabsj _file.dmp logfile=gabsj _file.log 
-
-expdp hztb/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= hztb _file.dmp logfile=hztb _file.log 
-
-expdp xttb/xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= xttb _file.dmp logfile=xttb _file.log 
-
-expdp mylcpt /xxx@10.118.137.9/hzxzdb directory=dump_file_dir full=y dumpfile= mylcpt _file.dmp logfile=mylcpt _file.log 
-
-
--- 2、原数据库删除，数据库软件删除
---
--- 3、安装oracle软件，并新建数据库
---
--- 4、导入
---
--- 第一步：新建所有模式（用户）
--- 并建表空间，给用户赋予表空间
--- 需要知道这四个用户的密码：gabsj,hztb,xttb,mylcpt
-create user GABSJ
-identified by values ''
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT;
-
-grant RESOURCE to GABSJ;
-grant CONNECT to GABSJ;
-
-
-create user HZTB
-identified by values ''
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT;
-
-grant CONNECT to HZTB;
-grant RESOURCE to HZTB;
-
-create user XTTB
-identified by values ''
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT;
-
-grant CONNECT to XTTB;
-grant RESOURCE to XTTB;
-
-create user MYLCPT
-identified by values ''
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT;
-
-grant RESOURCE to MYLCPT;
-grant CONNECT to MYLCPT;
-
--- 依照上面的模板去创建用户和表空间，命令如下：
-create tablespace ts_mylcpt datafile '/oradata/oradata/hzxzdb/ts_mylcpt01.dbf' size 30G autoextend off; 
-alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt02.dbf' size 30G autoextend off;
-alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt03.dbf' size 30G autoextend off;
-alter tablespace ts_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_mylcpt04.dbf' size 30G autoextend off;
-create temporary tablespace ts_temp_mylcpt tempfile '/oradata/oradata/hzxzdb/ts_temp_mylcpt01.dbf' size 30G autoextend off;
-alter tablespace ts_temp_mylcpt add tempfile  '/oradata/oradata/hzxzdb/ts_temp_mylcpt02.dbf' size 30G autoextend off;
-create  tablespace ts_idx_mylcpt datafile '/oradata/oradata/hzxzdb/ts_idx_mylcpt01.dbf' size 30G autoextend off; 
-alter tablespace ts_idx_mylcpt add datafile '/oradata/oradata/hzxzdb/ts_idx_mylcpt02.dbf' size 30G autoextend off;
-
--- 创建用户：
-create user MYLCPT identified by hzxzzd321 
-default tablespace ts_mylcpt
-temporary tablespace ts_temp_mylcpt
-profile default
-account unlock;
-grant connect,resource to MYLCPT;
-
-create user GABSJ identified by XXXX
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT
-profile default
-account unlock;
-grant connect,resource to GABSJ;
-
-create user XTTB identified by XXXX
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT
-profile default
-account unlock;
-grant connect,resource to XTTB;
-
-create user HZTB identified by XXXX
-default tablespace TS_MYLCPT
-temporary tablespace TS_TEMP_MYLCPT
-profile default
-account unlock;
-grant connect,resource to HZTB;
-
--- 第二步：创建directory域，分配dump文件目录
--- 然后给需要导出的模式（用户）分配读写权限给directory域。
-SQL> create directory dump_file_dir as '/u01test';
-Directory created.
-SQL> grant read,write on directory dump_file_dir to gabsj,hztb,xttb,mylcpt;
-SQL> grant read,write on directory DATA_PUMP_DIR to scott;
-Grant succeeded.
-
-
--- 第三步：把dmp文件拷贝至此机
--- 然后导入：以不同的用户进行全部导入
-impdp gabsj/gabsj directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
-impdp hztb/hztb directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
-impdp xttb/xttb directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
-impdp mylcpt/mylcpt directory=dump_file_dir dumpfile=allfile.dmp nologfile=y content=all
 
 -- crs 命令
 
@@ -1863,57 +1676,23 @@ done
 -- 更换数据文件到asm
 -- https://www.thegeekdiary.com/how-to-move-a-datafile-from-filesystem-to-asm-using-asmcmd-cp-command/
 
-col FILE_NAME format a50
-select file_name, file_id from dba_data_files;
+-- check datafile is online or not
+col name format a50
+select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recover, fuzzy from v$datafile_header;
 
-
-FILE_NAME					      FILE_ID
--------------------------------------------------- ----------
-/u01/app/oracle/oradata/EE/users01.dbf			    4
-/u01/app/oracle/oradata/EE/undotbs01.dbf		    3
-/u01/app/oracle/oradata/EE/sysaux01.dbf 		    2
-/u01/app/oracle/oradata/EE/system01.dbf 		    1
-/u01/app/oracle/oradata/EE/test_tablespace01.dbf	    5
-
+-- set offline
 alter database datafile 5 offline;
-Database altered.
 
+-- set online
+recover datafile 5; 
+alter database datafile 5 online; 
 
-select file_name, file_id, online_status from dba_data_files where file_id=5;
-
-FILE_NAME					      FILE_ID ONLINE_
--------------------------------------------------- ---------- -------
-/u01/app/oracle/oradata/EE/test_tablespace01.dbf	    5 RECOVER
-
-
-ASMCMD> mkdir EE/
-ASMCMD> mkdir EE/DATAFILE
-ASMCMD> cd /
-ASMCMD> cp /u01/app/oracle/oradata/EE/test_tablespace01.dbf +DATA/EE/DATAFILE/test_tablespace01.dbf
-copying /u01/app/oracle/oradata/EE/test_tablespace01.dbf -> +DATA/EE/DATAFILE/test_tablespace01.dbf
-ASMCMD> ls -lt +DATA/EE/DATAFILE/
-Type      Redund  Striped  Time             Sys  Name
-                                            N    test_tablespace01.dbf => +DATA/ASM/DATAFILE/test_tablespace01.dbf.256.982344385
-
-
-SQL> alter database rename file '/u01/app/oracle/oradata/EE/test_tablespace01.dbf' to '+DATA/EE/DATAFILE/test_tablespace01.dbf';
-
-Database altered.
-
-SQL> alter database recover datafile 5; 
-
-Database altered.
-
-SQL> alter database datafile 5 online ; 
-
-Database altered.
-
-
-SQL> select file_name, file_id, online_status from dba_data_files where file_id=5;
-
-FILE_NAME					      FILE_ID ONLINE_
--------------------------------------------------- ---------- -------
-+DATA/ee/datafile/test_tablespace01.dbf 		    5 ONLINE
+-- change datafile location
+alter database datafile 5 offline;
+! asmcmd cp /u01/app/oracle/oradata/EE/test_tablespace01.dbf +DATA/EE/DATAFILE/test_tablespace01.dbf
+alter database rename file '/u01/app/oracle/oradata/EE/test_tablespace01.dbf' to '+DATA/EE/DATAFILE/test_tablespace01.dbf';
+alter database recover datafile 5; 
+alter database datafile 5 online ; 
 
 
 
@@ -2321,6 +2100,30 @@ create database ORADB
             group 2 '/u01/app/oracle/oradata/ORADB/log2.log' size 50m,
             group 3 '/u01/app/oracle/oradata/ORADB/log3.log' size 50m;
 EOF
+--
+CREATE DATABASE OLTP3140
+   USER SYS IDENTIFIED BY oracle
+   USER SYSTEM IDENTIFIED BY oracle
+   LOGFILE GROUP 1 ('/u01/app/oracle/oradata/OLTP3140/redo01.log') SIZE 100M,
+           GROUP 2 ('/u01/app/oracle/oradata/OLTP3140/redo02.log') SIZE 100M,
+           GROUP 3 ('/u01/app/oracle/oradata/OLTP3140/redo03.log') SIZE 100M
+   MAXLOGFILES 5
+   MAXLOGMEMBERS 5
+   MAXLOGHISTORY 1
+   MAXDATAFILES 100
+   CHARACTER SET AL32UTF8
+   EXTENT MANAGEMENT LOCAL
+   DATAFILE '/u01/app/oracle/oradata/OLTP3140/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   SYSAUX DATAFILE '/u01/app/oracle/oradata/OLTP3140/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DEFAULT TABLESPACE users
+      DATAFILE '/u01/app/oracle/oradata/OLTP3140/users01.dbf'
+      SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DEFAULT TEMPORARY TABLESPACE tempts1 
+      TEMPFILE '/u01/app/oracle/oradata/OLTP3140/temp01.dbf'
+      SIZE 20M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   UNDO TABLESPACE undotbs
+      DATAFILE '/u01/app/oracle/oradata/OLTP3140/undotbs01.dbf'
+      SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 -- create the db in start
 startup nomount pfile='/home/oracle/init.ora';
 @/home/oracle/createdb.sql
@@ -2331,11 +2134,10 @@ create spfile from pfile='/home/oracle/init.ora';
 -- creates system specified stored procedures
 @?/rdbms/admin/catproc.sql
 -- creates the default roles and profiles.
-@?/rdbms/admin/pupbld.sql
+@?/sqlplus/admin/pupbld.sql
 -- The utlrp.sql script can be called to recompile all objects within the database 
 @?/rdbms/admin/utlrp.sql
-alter user sys identified by oracle ; 
-alter user system identified by oracle ; 
+--
 CREATE USER SCOTT IDENTIFIED BY scott DEFAULT TABLESPACE users PROFILE DEFAULT ACCOUNT UNLOCK;
 GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO SCOTT;
 GRANT CONNECT, RESOURCE TO SCOTT ;
@@ -2352,7 +2154,7 @@ SID_LIST_LISTENER =
  )
 EOF
 -- and config the /etc/oratab
-orapwd file=${ORACLE_HOME}/dbs/orapwORADR password=oracle
+orapwd file=${ORACLE_HOME}/dbs/orapw${ORACLE_SID} password=oracle
 -- config
 srvctl remove database -d oradr
 srvctl add database -d ORADR -o /u01/app/oracle/product/11.2.0/dbhome_1
@@ -2879,6 +2681,11 @@ SYS> select resource_name,liMit from dba_profiles where profile='DEFAULT' and RE
 ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
 
 
+-- check account expire day
+SELECT USERNAME, EXPIRY_DATE FROM DBA_USERS;
+
+
+
 -- duplicate large table
 1. Get DDL + partitions + indexes of The original table.
 2. create new table using DDL
@@ -2962,8 +2769,27 @@ Grant execute on dbms_crypto_ffi to USER;
 crsctl stat res -t -init
 -- 
 
+
 -- disable tfa
 -- status
 /u01/app/11.2.0/grid/tfa/bin/tfactl print status
 -- stop
 /etc/init.d/init.tfa stop
+
+
+-- 从backupset中恢复指定的archivelog file
+declare
+devtype varchar2(256);
+done boolean;
+begin
+    devtype:=sys.dbms_backup_restore.deviceAllocate(type=>'',ident=>'t2');
+    sys.dbms_backup_restore.restoreSetArchivedLog(destination=>'/archivelog02');
+    sys.dbms_backup_restore.restoreArchivedLog(thread=>2,sequence=>51500);
+    sys.dbms_backup_restore.restoreBackupPiece(done=>done,handle=>'/backup/zlhis/rman/AL_ZLHIS_20141030_862336902_23768_1',params=>null);
+    sys.dbms_backup_restore.deviceDeallocate;
+end;
+--
+--destination=>'/archivelog02指定恢复出来归档日志的存放系统目录位置，thread表示rac的thread号，sequence为需要恢复的那个归档日志序列号，handle表示备份集的绝对路径。
+
+-- 抢救
+bbed, resetlogs scn, fuzzy 

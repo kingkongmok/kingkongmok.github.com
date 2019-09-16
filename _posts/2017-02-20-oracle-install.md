@@ -88,13 +88,18 @@ session required /lib64/security/pam_limits.so
 EOF
 ```
 
-#### ~~profile~~
+#### /etc/profile
 
 ```
-cat >> /etc/profile << EOF
-ulimit -p 16384
-ulimit -n 65536
-EOF
+if [ $USER = "oracle" ]; then
+  if [ $SHELL = "/bin/ksh" ]; then
+    ulimit -p 16384
+    ulimit -n 65536
+  else
+    ulimit -u 16384 -n 65536
+  fi
+fi
+
 ```
 
 #### change lib name
@@ -112,8 +117,8 @@ groupadd -g 1002 dba
 groupadd -g 1003 asmdba 
 useradd -u 1000 -d /home/grid -g oinstall -G dba,asmadmin,asmdba,wheel grid
 useradd -u 1001 -d /home/oracle -g oinstall -G dba,asmdba,wheel oracle 
-passwd grid
-passwd oracle
+echo -e "oracle\noracle" | passwd oracle
+echo -e "oracle\noracle" | passwd grid
 ```
 
 #### mkdir
@@ -187,16 +192,73 @@ EOF
 ## .bash_profile
 
 ```
-cat >> /home/oracle/.bash_profile << EOF
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
 export ORACLE_SID=orcl
 export PATH=$ORACLE_HOME/bin:$PATH
-EOF
 ```
 
 --- 
 
+### install database software only
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
+oracle.install.option=INSTALL_DB_SWONLY
+ORACLE_HOSTNAME=OLTP3140
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
+ORACLE_BASE=/u01/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.EEOptionsSelection=false
+oracle.install.db.optionalComponents=
+oracle.install.db.DBA_GROUP=dba
+oracle.install.db.OPER_GROUP=oper
+oracle.install.db.CLUSTER_NODES=
+oracle.install.db.isRACOneInstall=false
+oracle.install.db.racOneServiceName=
+oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
+oracle.install.db.config.starterdb.globalDBName=
+oracle.install.db.config.starterdb.SID=
+oracle.install.db.config.starterdb.characterSet=
+oracle.install.db.config.starterdb.memoryOption=false
+oracle.install.db.config.starterdb.memoryLimit=
+oracle.install.db.config.starterdb.installExampleSchemas=false
+oracle.install.db.config.starterdb.enableSecuritySettings=true
+oracle.install.db.config.starterdb.password.ALL=
+oracle.install.db.config.starterdb.password.SYS=
+oracle.install.db.config.starterdb.password.SYSTEM=
+oracle.install.db.config.starterdb.password.SYSMAN=
+oracle.install.db.config.starterdb.password.DBSNMP=
+oracle.install.db.config.starterdb.control=DB_CONTROL
+oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
+oracle.install.db.config.starterdb.automatedBackup.enable=false
+oracle.install.db.config.starterdb.automatedBackup.osuid=
+oracle.install.db.config.starterdb.automatedBackup.ospwd=
+oracle.install.db.config.starterdb.storageType=
+oracle.install.db.config.starterdb.fileSystemStorage.dataLocation=
+oracle.install.db.config.starterdb.fileSystemStorage.recoveryLocation=
+oracle.install.db.config.asm.diskGroup=
+oracle.install.db.config.asm.ASMSNMPPassword=
+MYORACLESUPPORT_USERNAME=
+MYORACLESUPPORT_PASSWORD=
+SECURITY_UPDATES_VIA_MYORACLESUPPORT=false
+DECLINE_SECURITY_UPDATES=true
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+COLLECTOR_SUPPORTHUB_URL=
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+```
+
+---
 
 
 ### grid+asm, database in single node.
@@ -209,12 +271,10 @@ grid 需要 安装、root脚本、后续配置
 #### .bash_profile
 
 ```
-cat >> /home/grid/.bash_profile << EOF
 export ORACLE_BASE=/u01/app/grid
 export ORACLE_HOME=/u01/app/grid/product/11.2.0/grid
 export ORACLE_SID=+ASM
 export PATH=$ORACLE_HOME/bin:$PATH
-EOF
 ```
 
 ```
@@ -350,7 +410,7 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 
 ```
 cd /stage
-./database/runInstaller -silent -responseFile /home/oracle/db_install.rsp
+./database/runInstaller -silent -responseFile /stage/database/response/db_install.rsp
 ```
 
 ---

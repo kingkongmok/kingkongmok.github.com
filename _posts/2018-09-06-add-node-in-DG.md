@@ -87,6 +87,3 @@ SQL> alter database recover managed standby database cancel;
 SQL> shutdown immediate
 ```
 
-
-
-
