@@ -542,7 +542,6 @@ select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
 
 
 --  Temporary Tablespace Usage
-
 select round(100*(  free_space / Tablespace_size) ,0) free_perc  from dba_temp_free_space;
 SELECT * FROM   dba_temp_free_space ;
  
@@ -560,6 +559,18 @@ WHERE A.tablespace_name = D.name
 GROUP by A.tablespace_name, D.mb_total
 /
 
+
+-- tempfile
+
+-- move tempfile
+STARTUP MOUNT
+SELECT name FROM v$tempfile;
+ALTER DATABASE RENAME FILE  '/u01/app/oracle/oradata/EE/temp01.dbf' to '/u01/app/oracle/oradata/new/temp01.dbf';
+SELECT name FROM v$tempfile;
+ALTER DATABASE OPEN;
+
+-- drop tempfile
+ALTER DATABASE TEMPFILE '/u01/app/oracle/oradata/EE/temp01.dbf' DROP INCLUDING DATAFILES;
 
 -- 数据泵 impdp expdb
 --example
@@ -1387,6 +1398,44 @@ recover database until SCN 1010384 ;
 alter database open resetlogs ; 
 
 
+-- change location with SET NEWNAME
+
+RUN
+{
+-- specify the new location for each datafile
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/system01.dbf' TO '/u01/app/oracle/oradata/new/system01.dbf';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/sysaux01.dbf' TO '/u01/app/oracle/oradata/new/sysaux01.dbf';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/undotbs01.dbf' TO '/u01/app/oracle/oradata/new/undotbs01.dbf';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/users01.dbf' TO '/u01/app/oracle/oradata/new/users01.dbf';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo01.log' TO '/u01/app/oracle/oradata/new/redo01.log';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo02.log' TO '/u01/app/oracle/oradata/new/redo02.log';
+SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo03.log' TO '/u01/app/oracle/oradata/new/redo03.log';
+
+RESTORE database ; 
+
+
+-- rman backup archivelog
+
+-- backup archivelog all 和 plus archivelog 的区别
+
+backup archivelog all;
+    1.alter system archive log current;  归档当前日志 
+    2.backup  archivelog all ; 备份所有归档日志
+
+backup database plus archivelog
+    1.alter system archive log current;  归档当前日志
+    2.backup archivelog all；        备份所有归档日志
+    3.backup database;          备份数据库
+    4.alter system archive log current;  归档当前日志
+    5.backup archivelog recently generated ;   备份刚生成的归档日志
+
+-- # update control file with new filenames
+SWITCH DATAFILE ALL;   
+
+RECOVER database ;
+}
+
+
 -- 完全恢复
 
 -- 目标数据库必须是mount 状态
@@ -1679,6 +1728,10 @@ done
 -- check datafile is online or not
 col name format a50
 select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recover, fuzzy from v$datafile_header;
+
+
+-- 检查这个scn的archivelog
+Select sequence#,thread#,name from v$archived_log where 1425909 between first_change# and next_change# ;
 
 -- set offline
 alter database datafile 5 offline;
@@ -2001,6 +2054,11 @@ alter database open resetlogs;
 shutdown immediate
 startup mount
 -- 由于undo和redo的异常，需要设置参数 _allow_resetlogs_corruption, 并且手动处理undo
+
+-- check undo
+select sum(a.bytes) as undo_size from v$datafile a, v$tablespace b, dba_tablespaces c where c.contents = 'UNDO' and c.status = 'ONLINE' and b.name = c.tablespace_name and a.ts# = b.ts#;
+
+-- rebuild undo
 ALTER SYSTEM SET "_allow_resetlogs_corruption"= TRUE SCOPE = SPFILE;
 ALTER SYSTEM SET undo_management=MANUAL SCOPE = SPFILE;
 shutdown immediate
@@ -2060,6 +2118,12 @@ select name,status from v$datafile
  where name like '%undo%';
 
 
+-- undo 查询
+select tablespace_name, status, count(*) from dba_rollback_segs group by tablespace_name, status;
+create undo tablespace UNDOTBS1 datafile '/u01/app/oracle/oradata/EE/undotbs01.dbf' size 200m AUTOEXTEND on MAXSIZE UNLIMITED;
+DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES ;
+
+
 
 -- 开启日志实时应用
 -- 检查
@@ -2088,19 +2152,7 @@ DB_RECOVERY_FILE_DEST=/u01/app/oracle/flash_recovery_area
 DB_RECOVERY_FILE_DEST_SIZE=2G
 EOF
 --createdb.sql
-cat > createdb.sql <<EOF
-create database ORADB
-    CHARACTER SET AL32UTF8
-    DATAFILE '/u01/app/oracle/oradata/ORADB/sys.dbf' size 500M
-    SYSAUX datafile '/u01/app/oracle/oradata/ORADB/sysaux.dbf' size 100m
-    UNDO tablespace UNDOTBS datafile '/u01/app/oracle/oradata/ORADB/undo.dbf' size 100m
-    default temporary tablespace TEMP tempfile '/u01/app/oracle/oradata/ORADB/tmp.dbf' size 100m
-    logfile
-            group 1 '/u01/app/oracle/oradata/ORADB/log1.log' size 50m,
-            group 2 '/u01/app/oracle/oradata/ORADB/log2.log' size 50m,
-            group 3 '/u01/app/oracle/oradata/ORADB/log3.log' size 50m;
-EOF
---
+-- 其中这个database name是db_name
 CREATE DATABASE OLTP3140
    USER SYS IDENTIFIED BY oracle
    USER SYSTEM IDENTIFIED BY oracle
@@ -2793,3 +2845,25 @@ end;
 
 -- 抢救
 bbed, resetlogs scn, fuzzy 
+
+
+-- high water mark HWM
+
+ANALYZE TABLE VOYAGEMAPDETAIL_BAK ESTIMATE/COMPUTE STATISTICS;
+SELECT blocks, empty_blocks, num_rows FROM user_tables WHERE table_name = VOYAGEMAPDETAIL_BAK;
+
+-- kill oracle with ORACLE_SID=EE
+
+-bash-4.2$ pgrep -f ora_.*EE | xargs kill -9
+sql> startup 
+-- 启动的时候报错ORA-01081, 数据库已经启动
+
+-- 使用ipcs查看进程
+-bash-4.2$ ipcs -pmb
+
+------ Shared Memory Creator/Last-op PIDs --------
+shmid      owner      cpid       lpid      
+163840     oracle     2290       17273     
+
+-- 杀掉该进程
+-bash-4.2$ ipcrm -m 163840
