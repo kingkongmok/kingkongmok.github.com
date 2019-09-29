@@ -1444,15 +1444,18 @@ SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ORCL/%b';
 restore database preview;
 }
 
-run
+RMAN> run
 {
 SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ADG/%b'; 
 restore database ;
 SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;  
 }
-
-
+sqlplus> 
+alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
+alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
+alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
+alter database open resetlogs;
 
 
 -- 完全恢复
