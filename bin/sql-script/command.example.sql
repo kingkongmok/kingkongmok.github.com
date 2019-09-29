@@ -1413,6 +1413,7 @@ SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo03.log' TO '/u01/app/or
 
 RESTORE database ; 
 
+https://docs.oracle.com/cd/E18283_01/backup.112/e10642/rcmdupad.htm
 
 -- rman backup archivelog
 
@@ -1431,9 +1432,27 @@ backup database plus archivelog
 
 -- # update control file with new filenames
 SWITCH DATAFILE ALL;   
-
+SWITCH TEMPFILE ALL;  
 RECOVER database ;
 }
+
+
+-- change location
+run
+{
+SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ORCL/%b'; 
+restore database preview;
+}
+
+run
+{
+SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ADG/%b'; 
+restore database ;
+SWITCH DATAFILE ALL;
+SWITCH TEMPFILE ALL;  
+}
+
+
 
 
 -- 完全恢复
@@ -2266,6 +2285,17 @@ SQL> alter database open;
 SQL> recover managed standby database using current logfile disconnect from session;
 SQL> alter database recover managed standby database cancel;
 SQL> shutdown immediate
+
+-- tnsnames.ora
+OLTP=
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 172.16.70.71)(PORT = 1521))
+    )
+    (CONNECT_DATA = (SERVICE_NAME = OLTP))
+  )
+
+
 
 
 -- rac command  (https://www.oracle-scripts.net/useful-oracle-rac-commands/)
