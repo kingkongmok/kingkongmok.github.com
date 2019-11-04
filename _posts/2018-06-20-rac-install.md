@@ -11,52 +11,18 @@ category: linux
 ### install software
 
 ```
+yum -y update
 yum -y groupinstall "Development Tools"
-yum -y install vim screen smartmontools sysstat
-yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel       libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel
-yum -y install xorg-x11-xauth 
-yum -y install tcpdump strace lsof
+yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
+    compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common \
+    glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC \
+    unixODBC-devel xorg-x11-xauth tall tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support
 
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
-yum -y install kmod-oracleasm oracleasm-support
-rpm -ivh /stage/grid/rpm/oracleasmlib*rpm
-```
-
-
----
-
-grid user
-
-```
-PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
-HISTCONTROL=ignoredups:ignorespace
-shopt -s histappend
-HISTSIZE=30000
-HISTFILESIZE=300000
-HISTTIMEFORMAT="%F %T "
-
-LANG="en_US.utf8"
-LC_ALL="en_US.utf8"
-export EDITOR="vim"
-export PATH
-export TMP=/tmp
-export TMPDIR=$TMP
-export ORACLE_BASE=/u01/app/grid
-export ORACLE_HOME=/u01/app/11.2.0/grid
-export GRID_HOME=/u01/app/11.2.0/grid
-export ORACLE_SID=+ASM1
-umask 022
-
-PATH=$ORACLE_HOME/bin:$PATH
-
-alias sqlplus='rlwrap -A sqlplus'
-alias rman='rlwrap -A rman'
-alias dgmgrl='rlwrap -A dgmgrl'
-alias asmcmd='rlwrap -A asmcmd'
+rpm -ivh /stage/software/*rpm
 ```
 
 ---
-
 
 + hosts
 
@@ -79,6 +45,12 @@ cat >> /etc/hosts << EOF
 192.168.255.22  stb2-priv
 EOF
 
+```
+
++ change hostname
+
+```
+sysctl kernel.hostname=primary1
 ```
 
 ---
@@ -108,6 +80,12 @@ net.core.wmem_max = 1048576
 EOF
 
 sysctl -p
+```
+
++ sudoer
+
+```
+sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 ```
 
 + ulimit
@@ -142,6 +120,8 @@ ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
 ---
 
 ### ssh-copy-id 
+
+略
 
 ---
 
@@ -207,9 +187,11 @@ ls /dev/raw/ -l
 ### [create asmdisk](https://www.oracle.com/linux/downloads/linux-asmlib-rhel6-downloads.html)
 
 ```
+# 启动
 oracleasm init
 
-oracleasm configure 
+# 配置
+/etc/init.d/oracleasm configure
 ORACLEASM_ENABLED=true
 ORACLEASM_UID=grid
 ORACLEASM_GID=asmadmin
@@ -218,9 +200,12 @@ ORACLEASM_SCANORDER=""
 ORACLEASM_SCANEXCLUDE=""
 ORACLEASM_USE_LOGICAL_BLOCK_SIZE="false"
 
-oracleasm createdisk DISK1 /dev/sdb1
-oracleasm createdisk DISK2 /dev/sdb2
-oracleasm createdisk DISK3 /dev/sdb3
+# 用asmtool
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/sdb -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/sdc -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/sdd -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n DATA -s /dev/sde -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/sdf -a force=yes
 oracleasm scandisks
 oracleasm listdisks
 ```
@@ -229,43 +214,72 @@ oracleasm listdisks
 
 --- 
 
-### grid_install.rsp
+## grid install
+
+grid user .bash_profile
+
+```
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+HISTCONTROL=ignoredups:ignorespace
+shopt -s histappend
+HISTSIZE=30000
+HISTFILESIZE=300000
+HISTTIMEFORMAT="%F %T "
+LANG="en_US.utf8"
+LC_ALL="en_US.utf8"
+export EDITOR="vim"
+export PATH
+export TMP=/tmp
+export TMPDIR=$TMP
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/11.2.0/grid
+export GRID_HOME=/u01/app/11.2.0/grid
+export ORACLE_SID=+ASM1
+umask 022
+PATH=$ORACLE_HOME/bin:$PATH
+alias sqlplus='rlwrap -A sqlplus'
+alias rman='rlwrap -A rman'
+alias dgmgrl='rlwrap -A dgmgrl'
+alias asmcmd='rlwrap -A asmcmd'
+```
+
+#### /stage/grid/response/grid_install.rsp
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
-ORACLE_HOSTNAME=stb1
+ORACLE_HOSTNAME=primary1
 INVENTORY_LOCATION=/u01/app/oraInventory
 SELECTED_LANGUAGES=en
 oracle.install.option=CRS_CONFIG
 ORACLE_BASE=/u01/app/grid
 ORACLE_HOME=/u01/app/11.2.0/grid
 oracle.install.asm.OSDBA=asmdba
-oracle.install.asm.OSOPER=
+oracle.install.asm.OSOPER=oinstall
 oracle.install.asm.OSASM=asmadmin
-oracle.install.crs.config.gpnp.scanName=stb-scan
+oracle.install.crs.config.gpnp.scanName=primary-scan
 oracle.install.crs.config.gpnp.scanPort=1521
-oracle.install.crs.config.clusterName=stb-cluster
+oracle.install.crs.config.clusterName=primary-cluster
 oracle.install.crs.config.gpnp.configureGNS=false
 oracle.install.crs.config.gpnp.gnsSubDomain=
 oracle.install.crs.config.gpnp.gnsVIPAddress=
 oracle.install.crs.config.autoConfigureClusterNodeVIP=false
-oracle.install.crs.config.clusterNodes=stb1:stb1-vip,stb2:stb2-vip
-oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.255.0:2
+oracle.install.crs.config.clusterNodes=primary1:primary1-vip,primary2:primary2-vip
+oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.1.0:2,eth3:172.26.31.0:3
 oracle.install.crs.config.storageOption=ASM_STORAGE
 oracle.install.crs.config.sharedFileSystemStorage.diskDriveMapping=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskRedundancy=NORMAL
 oracle.install.crs.config.sharedFileSystemStorage.ocrLocations=
-oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
+oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL 
 oracle.install.crs.config.useIPMI=false
 oracle.install.crs.config.ipmi.bmcUsername=
-oracle.install.crs.config.ipmi.bmcPassword=
+oracle.install.crs.config.ipmi.bmcPassword=oracle
 oracle.install.asm.SYSASMPassword=oracle
-oracle.install.asm.diskGroup.name=DATA
-oracle.install.asm.diskGroup.redundancy=EXTERNAL
+oracle.install.asm.diskGroup.name=OCR
+oracle.install.asm.diskGroup.redundancy=NORMAL
 oracle.install.asm.diskGroup.AUSize=1
-oracle.install.asm.diskGroup.disks=/dev/oracleasm/disks/DISK1
-oracle.install.asm.diskGroup.diskDiscoveryString=/dev/oracleasm/disks/DISK*
+oracle.install.asm.diskGroup.disks=ORCL:OCR1,ORCL:OCR2,ORCL:OCR3
+oracle.install.asm.diskGroup.diskDiscoveryString=
 oracle.install.asm.monitorPassword=oracle
 oracle.install.crs.upgrade.clusterNodes=
 oracle.install.asm.upgradeASM=false
@@ -285,13 +299,13 @@ PROXY_REALM=
 检验环境是否OK
 
 ```
-./runcluvfy.sh stage -pre crsinst -n stb1,stb2 -verbose
+/stage/grid/runcluvfy.sh stage -pre crsinst -n stb1,stb2 -verbose
 ```
 
 安装, 只在stb1
 
 ```
-./runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
+/stage/grid/runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
 ```
 
 注册/安装, 这里注意要先完成node1，再去完成node2，否则sid会乱，而且脑裂争抢OCR
@@ -326,42 +340,12 @@ EOF
 
 
 
----
-
-
-### grid卸载 [Clean Up a Failed Grid Infrastruture Installation](https://oracle-base.com/articles/rac/clean-up-a-failed-grid-infrastructure-installation)
-
-#### grid
-
-On all cluster nodes except the last, run the following command as the "root" user.
-
-```
-# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force
-```
-
-On the last cluster node, run the following command as the "root" user.
-
-```
-# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force -lastnode
-```
-
-This final command will blank the OCR configuration and voting disk.
-
-
-#### asm disks 卸载/重建
-
-
-```
-# dd if=/dev/zero of=/dev/sdb1 bs=1024 count=100
-
-# /etc/init.d/oracleasm deletedisk DATA /dev/sdb1
-# /etc/init.d/oracleasm createdisk DATA /dev/sdb1
-```
 
 ---
 
+## rdbms database install
 
-### oracle user profile
+### oracle .bash_profile
 
 ```
 PATH=$PATH:$HOME/bin
@@ -371,30 +355,43 @@ shopt -s histappend
 HISTSIZE=30000
 HISTFILESIZE=300000
 HISTTIMEFORMAT="%F %T "
-
 LANG="en_US.utf8"
 LC_ALL="en_US.utf8"
 export EDITOR="vim"
-
 export ORACLE_BASE=/u01/app/oracle
-export ORACLE_HOME=$ORACLE_HOME/product/11.2.0/dbhome_1
+export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1
 export ORACLE_SID=stbsid2
 export PATH=$ORACLE_HOME/bin:$PATH
 umask 022
-
 alias sqlplus='rlwrap -A sqlplus'
 alias dgmgrl='rlwrap -A dgmgrl'
 alias rman='rlwrap -A rman'
 ```
 
 
+---
 
-### db_install.rsp
+### create disk group
+
+
+```
+CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK 'ORCL:DATA';
+CREATE DISKGROUP FRA  EXTERNAL REDUNDANCY DISK 'ORCL:FRA' ;
+```
+
+or
+
+```
+CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK '/dev/raw/raw4';
+CREATE DISKGROUP FRA  EXTERNAL REDUNDANCY DISK '/dev/raw/raw5';
+```
+
+### /stage/database/response/db_install.rsp
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
 oracle.install.option=INSTALL_DB_AND_CONFIG
-ORACLE_HOSTNAME=stb1
+ORACLE_HOSTNAME=primary1
 UNIX_GROUP_NAME=oinstall
 INVENTORY_LOCATION=/u01/app/oraInventory
 SELECTED_LANGUAGES=en
@@ -405,22 +402,22 @@ oracle.install.db.EEOptionsSelection=false
 oracle.install.db.optionalComponents=
 oracle.install.db.DBA_GROUP=dba
 oracle.install.db.OPER_GROUP=
-oracle.install.db.CLUSTER_NODES=stb1,stb2
+oracle.install.db.CLUSTER_NODES=primary1,primary2
 oracle.install.db.isRACOneInstall=false
 oracle.install.db.racOneServiceName=
 oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
-oracle.install.db.config.starterdb.globalDBName=oradb
-oracle.install.db.config.starterdb.SID=stbsid
+oracle.install.db.config.starterdb.globalDBName=oradata
+oracle.install.db.config.starterdb.SID=primary
 oracle.install.db.config.starterdb.characterSet=AL32UTF8
 oracle.install.db.config.starterdb.memoryOption=true
-oracle.install.db.config.starterdb.memoryLimit=350
+oracle.install.db.config.starterdb.memoryLimit=802
 oracle.install.db.config.starterdb.installExampleSchemas=false
 oracle.install.db.config.starterdb.enableSecuritySettings=true
 oracle.install.db.config.starterdb.password.ALL=oracle
-oracle.install.db.config.starterdb.password.SYS=oracle
-oracle.install.db.config.starterdb.password.SYSTEM=oracle
-oracle.install.db.config.starterdb.password.SYSMAN=oracle
-oracle.install.db.config.starterdb.password.DBSNMP=oracle
+oracle.install.db.config.starterdb.password.SYS=
+oracle.install.db.config.starterdb.password.SYSTEM=
+oracle.install.db.config.starterdb.password.SYSMAN=
+oracle.install.db.config.starterdb.password.DBSNMP=
 oracle.install.db.config.starterdb.control=DB_CONTROL
 oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
 oracle.install.db.config.starterdb.automatedBackup.enable=false
@@ -450,13 +447,13 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 check
 
 ```
-./runcluvfy.sh stage -pre dbinst -n stb1,stb2 -verbose
+/stage/grid/runcluvfy.sh stage -pre dbinst -n stb1,stb2 -verbose
 ```
 
 install rdbms,  和grid的runInstaller一样，只在stb1
 
 ```
-./runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
+/stage/database/runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
 ```
 
 ### dbca 
@@ -490,3 +487,43 @@ alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
 ### instance change thread number
 
 首先需要确认的是spfile是一致的，controlfile是一致的。调整**$ORACLE_SID**即可
+
+
+---
+
+## database and grid uninstall
+
+输入删除命令，然后会有cli向导进行删除
+
+```
+$ORACLE_HOME/deinstall/deinstall
+```
+
+### grid卸载 [Clean Up a Failed Grid Infrastruture Installation](https://oracle-base.com/articles/rac/clean-up-a-failed-grid-infrastructure-installation)
+
+#### grid
+
+On all cluster nodes except the last, run the following command as the "root" user.
+
+```
+# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force
+```
+
+On the last cluster node, run the following command as the "root" user.
+
+```
+# perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force -lastnode
+```
+
+This final command will blank the OCR configuration and voting disk.
+
+### asm disks 卸载/重建
+
+
+```
+# dd if=/dev/zero of=/dev/sdb1 bs=1024 count=100
+
+# /etc/init.d/oracleasm deletedisk DATA /dev/sdb1
+# /etc/init.d/oracleasm createdisk DATA /dev/sdb1
+```
+
