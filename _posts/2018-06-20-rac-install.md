@@ -308,6 +308,13 @@ PROXY_REALM=
 /stage/grid/runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
 ```
 
+
++ log location
+
+```
+/u01/app/oraInventory/logs/installActions<TIMESTAMP>.log
+```
+
 注册/安装, 这里注意要先完成node1，再去完成node2，否则sid会乱，而且脑裂争抢OCR
 
 ```
@@ -455,6 +462,14 @@ install rdbms,  和grid的runInstaller一样，只在stb1
 ```
 /stage/database/runInstaller -ignorePrereq -silent -force -responseFile /stage/database/response/db_install.rsp -showProgress
 ```
+
++ log location
+
+```
+/u01/app/oraInventory/logs/installActions<TIMESTAMP>.log
+```
+
+---
 
 ### dbca 
 
