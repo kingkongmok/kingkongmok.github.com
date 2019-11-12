@@ -273,7 +273,11 @@ show parameter db_create
 SELECT profile FROM dba_users WHERE username = '&currentuser'; 
 --
 SYS> select resource_name,liMit from dba_profiles where profile='DEFAULT' and RESOURCE_NAME='PASSWORD_LIFE_TIME';
+-- 用户不过期
 ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
+-- 尝试不退出
+ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS UNLIMITED;
+
 
 
 -- check account expire day
@@ -520,8 +524,12 @@ repair failure;
 
 -- rman for dataguard
 -- for the site where you don’t backup. It can be the standby or the primary.
-CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
-DELETE ARCHIVELOG ALL COMPLETED BEFORE ‘sysdate-1’;
+-- rman on rac
+RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+DATA/oradb/controlfile/snapcf_ORAPRIMDB.f';
+-- rman on ADG
+RMAN> CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+-- other example
+DELETE ARCHIVELOG ALL COMPLETED BEFORE 'sysdate-1';
 DELETE ARCHIVELOG ALL BACKED UP 2 TIMES to disk;
 DELETE NOPROMPT ARCHIVELOG UNTIL SEQUENCE = 3790;
 
@@ -1242,6 +1250,12 @@ olsnodes -s -t
 rac1    Active  Unpinned
 rac2    Active  Unpinned
 
+
+-- ologgerd process high cpu load
+-- it can be stopped by executing on both nodes:
+crsctl stop resource ora.crf -init
+-- to disable ologgerd permanently, execute:
+crsctl delete resource ora.crf -init
 
 -- how to start|stop the database?
 srvctl stop database -d my-db-name -o immediate
@@ -2329,20 +2343,24 @@ Diskgroup dropped.
 
 
 -- create
-CREATE DISKGROUP FRA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK1' ; 
-CREATE DISKGROUP OCR EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK2' ; 
+CREATE DISKGROUP FRA  EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK1' ; 
+CREATE DISKGROUP OCR  EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK2' ; 
 CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK3', 'ORCL:ASMDISK4' ; 
 
+
 -- check
-col PATH format a40
-select path,header_status from v$asm_disk;
+column path format a20
+select path, group_number group_#, disk_number disk_#, mount_status, header_status, state, total_mb, free_mb from v$asm_disk order by group_number;
 --
-PATH					 HEADER_STATU
----------------------------------------- ------------
-ORCL:ASMDISK1				 MEMBER
-ORCL:ASMDISK2				 MEMBER
-ORCL:ASMDISK3				 MEMBER
-ORCL:ASMDISK4				 MEMBER
+PATH            GROUP_#     DISK_# MOUNT_S HEADER_STATU STATE      TOTAL_MB    FREE_MB
+-------------------- ---------- ---------- ------- ------------ -------- ---------- ----------
+/dev/raw/raw1             1      0 CACHED  MEMBER   NORMAL         1019    710
+/dev/raw/raw2             1      1 CACHED  MEMBER   NORMAL         1019    712
+/dev/raw/raw3             1      2 CACHED  MEMBER   NORMAL         1019    709
+/dev/raw/raw4             2      0 CACHED  MEMBER   NORMAL        20473  20380
+/dev/raw/raw5             3      0 CACHED  MEMBER   NORMAL        20473  20380
+
+
 
 
 -- asmcmd copy
@@ -2541,6 +2559,15 @@ SQL> recover managed standby database using current logfile disconnect from sess
 SQL> alter database recover managed standby database cancel;
 
 
+-- 无法添加tempfile
+-- 由于生产库启用了GGS_DDL_TRIGGER_BEFORE触发器导致，此触发器为OGG的触发器，官方解决方案为：
+-- 1.在生产库禁用GGS_DDL_TRIGGER_BEFORE触发器，
+-- 2.ADG同步禁用触发器  
+-- 3.再次尝试手动添加tempfile
+select owner,trigger_name,status from dba_triggers where trigger_name like '%GGS%';
+alter trigger sys.GGS_DDL_TRIGGER_BEFORE disable;
+
+
 
 
 -- ------------------------------
@@ -2610,6 +2637,11 @@ alter table VOYAGEMAPDETAIL add CONSTRAINT "VOYAGEMAPDETAIL_PK" PRIMARY KEY ("ID
 EXEC sp_rename N'schema.MyIOldConstraint', N'MyNewConstraint', N'OBJECT'
 sp_rename 'HumanResources.PK_Employee_BusinessEntityID', 'PK_EmployeeID';
 
+
+-- ORA-00245
+-- ORA-00245: control file backup failed; target is likely on a local file system
+-- 需要讲控制文件snapshot放置在共享存储中
+RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+<DiskGroup>/snapcf_<DBNAME>.f';
 
 -- 需要 dbms_crypto
 -- 检查

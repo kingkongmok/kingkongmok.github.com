@@ -14,8 +14,8 @@ category: linux
 yum -y update
 yum -y groupinstall "Development Tools"
 yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
-    compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common \
-    glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC \
+    compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc ntpdate glibc-common \
+    glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC mlocate \
     unixODBC-devel xorg-x11-xauth tall tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support
 
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
@@ -111,11 +111,20 @@ session required /lib64/security/pam_limits.so
 EOF
 ```
 
-change lib name
++ change lib name
 
 ```
 ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
 ```
+
++ sshd
+
+```
+sed -i 's/^#UseDNS/UseDNS/' /etc/ssh/sshd_config
+/etc/init.d/sshd restart
+```
+
+
 
 ---
 
@@ -151,7 +160,7 @@ chown -R grid.oinstall /stage
 ```
 
 ```
-mkdir -p /u01/app/oracle/product/11.2.0/db_1 
+mkdir -p /u01/app/oracle/product/11.2.0/dbhome_1 
 chown -R oracle.oinstall  /u01/app/oracle
 chmod -R 775 /u01
 ```
@@ -499,6 +508,16 @@ alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
 
 ---
 
+### ORA-00245 & RMAN-03009
+
+
+需要讲spfile和controlfile snapshot放置在共享存储
+
+```
+RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+<DiskGroup>/snapcf_<DBNAME>.f';
+```
+---
+
 ### instance change thread number
 
 首先需要确认的是spfile是一致的，controlfile是一致的。调整**$ORACLE_SID**即可
@@ -518,13 +537,13 @@ $ORACLE_HOME/deinstall/deinstall
 
 #### grid
 
-On all cluster nodes except the last, run the following command as the "root" user.
++ On all cluster nodes except the last, run the following command as the "root" user.
 
 ```
 # perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force
 ```
 
-On the last cluster node, run the following command as the "root" user.
++ On the last cluster node, run the following command as the "root" user.
 
 ```
 # perl $GRID_HOME/crs/install/rootcrs.pl -verbose -deconfig -force -lastnode
@@ -542,3 +561,23 @@ This final command will blank the OCR configuration and voting disk.
 # /etc/init.d/oracleasm createdisk DATA /dev/sdb1
 ```
 
+
+---
+
+
+## add nodes
+
+```
+export IGNORE_PREADDNODE_CHECKS=Y
+/u01/app/11.2.0/grid/oui/bin/addNode.sh "CLUSTER_NEW_NODES={primary3}" "CLUSTER_NEW_VIRTUAL_HOSTNAMES={primary3-vip}"
+```
+
+```
+As a root user, execute the following script(s):
+    1. /u01/app/oraInventory/orainstRoot.sh
+    2. /u01/app/11.2.0/grid/root.sh
+```
+
+```
+crsctl check cluster -all
+```
