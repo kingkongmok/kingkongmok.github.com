@@ -195,7 +195,11 @@ EOF
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
 export ORACLE_SID=orcl
+export ORACLE_TERM=xterm
+export PATH=/usr/sbin:$PATH
 export PATH=$ORACLE_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export CLASSPATH=$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
 ```
 
 --- 
@@ -715,4 +719,55 @@ oracle.installer.autoupdates.option=SKIP_UPDATES
 oracle.installer.autoupdates.downloadUpdatesLoc=
 AUTOUPDATES_MYORACLESUPPORT_USERNAME=
 AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+```
+
+---
+
+## shell script
+
+**delete_archivelog.sh** for adg client
+
+```
+#!/bin/sh
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
+export ORACLE_SID=orsid1
+export PATH=$ORACLE_HOME/bin:$PATH
+rman target / << __EOF__
+DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+EXIT
+__EOF__
+```
+
+**db_full_backup.sh** for adg server
+
+```
+#! /bin/sh
+
+source /home/oracle/.bash_profile
+export DATE=$(date +%m%d%y_%H%M%S)
+$ORACLE_HOME/bin/rman target / cmdfile=/home/oracle/bin/db_full_backup.rcv log=/home/oracle/backuplog/${DATE}_full.log
+```
+
+**db_full_backup.rcv**
+
+```
+run
+{
+    crosscheck backup;
+    DELETE noprompt OBSOLETE;
+    allocate channel ch1 device type disk format '/home/oracle/backup/%U.bkp';
+    allocate channel ch2 device type disk format '/home/oracle/backup/%U.bkp';
+    allocate channel ch3 device type disk format '/home/oracle/backup/%U.bkp';
+    allocate channel ch4 device type disk format '/home/oracle/backup/%U.bkp';
+    backup database;
+    backup archivelog all delete input;
+    release channel ch1;
+    release channel ch2;
+    release channel ch3;
+    release channel ch4;
+}
+ALLOCATE CHANNEL FOR MAINTENANCE DEVICE TYPE DISK;
+CROSSCHECK BACKUPSET;
+DELETE NOPROMPT OBSOLETE;
 ```
