@@ -16,10 +16,16 @@ yum -y groupinstall "Development Tools"
 yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
     compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc ntpdate glibc-common \
     glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC mlocate \
-    unixODBC-devel xorg-x11-xauth tall tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support
+    unixODBC-devel xorg-x11-xauth tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support
 
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 rpm -ivh /stage/software/*rpm
+```
+
+
+```
+yum -y install screen
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap'
 ```
 
 ---
@@ -228,7 +234,8 @@ oracleasm listdisks
 grid user .bash_profile
 
 ```
-PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;36m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+LS_COLORS=$LS_COLORS:'di=1;36:ln=36'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
@@ -365,7 +372,8 @@ EOF
 
 ```
 PATH=$PATH:$HOME/bin
-PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]$\[\e[m\] \[\e[1;37m\]'
+PS1='\[\e[0;33m\]\u@\h\[\e[m\] \[\e[1;36m\]\w\[\e[m\] \[\e[1;32m\]$\[\e[m\] \[\e[1;37m\]'
+LS_COLORS=$LS_COLORS:'di=1;36:ln=36'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000

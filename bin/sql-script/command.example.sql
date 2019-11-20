@@ -468,7 +468,7 @@ SID_LIST_LISTENER =
 -- 用于rman的auxiliary(clone from source instance to auxiliary instance), 这里需要1、nomount状态、并且开启监听（也就是静态）
 $ rman target sys/oracle@oradb auxiliary sys/oracle@adg1
 SQL> startup nomount pfile='/home/oracle/init.ora';
-RMAN> duplicate target database for standby from active database nofilenamecheck;
+RMAN> duplicate target database for standby from active database;
 SQL> alter database add standby logfile;
 SQL> alter database open;
 SQL> recover managed standby database using current logfile disconnect from session;
@@ -485,6 +485,19 @@ OLTP=
   )
 
 
+--  拷贝数据库：
+
+和上述一样，从standby库中拷贝到remote端的client库, 和dg一样，1 需要设置静态监听，2 convert参数，但不需要设置dest, archive, log参数
+拷贝库的时候应该也一样拷贝为dg只读（以免无意resetlogs）
+拷贝的时候 
+rman target sys/oracle@stbdb:1521/oradb auxiliary sys/oracle@remoteclient:1521/oradb
+duplicate target database for standby from active database;
+然后就可以尝试open，如果提示system不完整错误，就在主库 checkpoint 并将 archivelog拷贝到 remoteclient， 注册后即可。
+
+ERROR at line 1:
+ORA-10458: standby database requires recovery
+ORA-01194: file 1 needs more recovery to be consistent
+ORA-01110: data file 1:
 
 -- rman
 $ rman target /
@@ -494,6 +507,9 @@ list backup;
 
 -- 列出 配置
 show all; 
+
+-- reset
+CONFIGURE CONTROLFILE AUTOBACKUP clear;
 
 --backup
 BACKUP AS COMPRESSED BACKUPSET DATABASE PLUS ARCHIVELOG;
@@ -1145,6 +1161,19 @@ SCAN Listener LISTENER_SCAN1 is enabled
 SCAN listener LISTENER_SCAN1 is running on node rac1
 
 
+
+-- change Listeners
+alter system set remote_listener='(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=pri-scan)(PORT=1522))))' sid='*'; 
+-- change listener on RAC
+-- check
+srvctl config scan_listener
+-- config
+srvctl modify scan_listener -p TCP:1522
+-- restart and enable it
+srvctl stop scan_listener
+srvctl start scan_listener
+
+
 -- If you want to add or remove a scan_listener: 
 srvctl add | remove scan_listener
 -- To change the port: 
@@ -1729,7 +1758,7 @@ DROP TABLESPACE tbs_01 INCLUDING CONTENTS CASCADE CONSTRAINTS;
 DROP TABLESPACE tbs_02 INCLUDING CONTENTS AND DATAFILES;
 
 
--- create and replace tempfile
+-- tempfile
 -- 注意，重启实例temporary的datafile会自动重建不会报警，但在线丢失或者异常会导致sort用不了，处理就如下：
 create temporary tablespace TEMP2 tempfile '/u01/app/oracle/oradata/ORADB/temp02.dbf' size 100m autoextend on;
 alter database default temporary tablespace TEMP2 ; 
@@ -2567,7 +2596,15 @@ SQL> alter database recover managed standby database cancel;
 select owner,trigger_name,status from dba_triggers where trigger_name like '%GGS%';
 alter trigger sys.GGS_DDL_TRIGGER_BEFORE disable;
 
-
+DBA_TEMP_FILES
+DBA_DATA_FILES
+DBA_TABLESPACES
+DBA_TEMP_FREE_SPACE
+V$TEMPFILE
+V$TEMP_SPACE_HEADER
+V$TEMPORARY_LOBS
+V$TEMPSTAT
+V$TEMPSEG_USAGE
 
 
 -- ------------------------------
@@ -2786,3 +2823,4 @@ begin
     member      => 'SPECIAL_WINDOW');
 end;
 /
+

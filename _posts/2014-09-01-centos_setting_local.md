@@ -12,14 +12,15 @@ centos的一些配置和常用环境稍稍不同，需要注意。
 可以先设置一下colorshell。这个是绿色的
 
 ```
-echo "PS1='\[\033[02;32m\]\u@\H:\[\033[02;34m\]\w\$\[\033[00m\] '" >> ~/.bashrc
+echo "PS1='\[\033[02;32m\]\u@\H:\[\033[02;36m\]\w\$\[\033[00m\] '" >> ~/.bashrc
 ```
 
 如果需要设置一下前面为红色,参考[arch](https://wiki.archlinux.org/index.php/Color_Bash_Prompt)的设置
 history也设置一下
 
 ```
-PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;36m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+LS_COLORS=$LS_COLORS:'di=1;36:ln=36'
 ```
 
 ---
@@ -28,8 +29,8 @@ PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1
 
 ```
 
-PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\]
-\[\e[1;37m\]'
+PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;36m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+LS_COLORS=$LS_COLORS:'di=1;36:ln=36'
 HISTCONTROL=ignoredups:ignorespace
 shopt -s histappend
 HISTSIZE=30000
@@ -104,6 +105,7 @@ history也设置一下
 ```
 PS1='\[\e[0;31m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
 PS1='\[\e[0;31m\]\u@\h\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+LS_COLORS=$LS_COLORS:'di=1;36:ln=36'
 ```
 
 
