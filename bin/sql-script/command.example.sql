@@ -210,7 +210,7 @@ set autotrace off;
 
 -- turn off Oracle password expiration?
 --  https://stackoverflow.com/questions/1095871/how-do-i-turn-off-oracle-password-expiration
-select profile from DBA_USERS where username = '<username>';
+SELECT profile FROM dba_users WHERE username = upper('&currentuser');
 alter profile <profile_name> limit password_life_time UNLIMITED;
 select resource_name,limit from dba_profiles where profile='<profile_name>';
 -- for developer
@@ -270,7 +270,7 @@ show parameter db_create
 -- ------------------------------
 
 -- ORA-28002: the password will expire within 7 days
-SELECT profile FROM dba_users WHERE username = '&currentuser'; 
+SELECT profile FROM dba_users WHERE username = upper('&currentuser'); 
 --
 SYS> select resource_name,liMit from dba_profiles where profile='DEFAULT' and RESOURCE_NAME='PASSWORD_LIFE_TIME';
 -- 用户不过期
@@ -498,6 +498,21 @@ ERROR at line 1:
 ORA-10458: standby database requires recovery
 ORA-01194: file 1 needs more recovery to be consistent
 ORA-01110: data file 1:
+
+
+-- backup archivelog today
+run
+{
+allocate channel d1 device type disk format '/home/oracle/archivelog/%U.bkp';
+backup archivelog from time 'sysdate-1';
+}
+
+--restore database with this archivelog
+RMAN> catalog start with '/home/oracle/archivelog/';
+recover database ;
+recover database until SCN 1720014 ;
+alter database open ; 
+
 
 -- rman
 $ rman target /
@@ -887,43 +902,45 @@ STARTUP MOUNT;
 ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PROTECTION;
 
 
--- Database Switchover
+-- Switchover manual
 --
 --primary , 先做，完成后再做standby节点
--- Convert primary database to standby 
--- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: TO STANDBY)
-connect / as sysdba
 alter database commit to switchover to standby;
--- Shutdown primary database
 shutdown immediate;
--- Mount old primary database as standby database
 startup nomount;
 alter database mount standby database;
--- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: RECOVERY NEEDED)
-alter database recover managed standby database disconnect from session;
--- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: NOT ALLOWED)
-alter database open;
--- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY WITH APPLY, SWITCHOVER_STATUS: NOT ALLOWED)
 --
+alter database recover managed standby database disconnect from session;
+alter database open;
 -- standby, 后做， 待primary切换后再进行
--- Convert standby database to primary
--- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY WITH APPLY, SWITCHOVER_STATUS: NOT ALLOWED)
--- (DATABASE_ROLE: PHYSICAL STANDBY, OPEN_MODE: READ ONLY, SWITCHOVER_STATUS: TO PRIMARY)
-connect / as sysdba
 alter database commit to switchover to primary;
--- (DATABASE_ROLE: PRIMARY, OPEN_MODE: MOUNTED, SWITCHOVER_STATUS: NOT ALLOWED)
--- Shutdown standby database
 shutdown immediate;
--- Open old standby database as primary
 startup;
--- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: RESOLVABLE GAP)
--- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: TO STANDBY)
--- (DATABASE_ROLE: PRIMARY, OPEN_MODE: READ WRITE, SWITCHOVER_STATUS: SESSIONS ACTIVE)
 
 
--- Failover
+-- failover manual
+alter database recover managed standby database cancel;
 alter database recover managed standby database finish;
 alter database activate standby database;
+startup force
+-- reinstate manual
+select to_char(standby_became_primary_scn) from v$database;
+shutdown immediate
+startup mount
+flashback database To scn 2569953;
+alter database convert to physical standby;
+alter database open
+alter database recover managed standby database disconnect from session;
+
+
+-- snapshot manual
+alter database flashback on ;
+alter database convert to snapshot standby;
+alter database open;
+-- convert to physical
+shutdown immediate
+startup mount
+alter database convert to physical standby;
 
 
 -- Read-Only Standby (10G) and Active Data Guard(11G)
@@ -956,10 +973,10 @@ alter database open; -- flashback_on: restore point only
 -- dg broker settup
 -- https://oracle-base.com/articles/11g/data-guard-setup-using-broker-11gr2#switchover
 -- broker配置需放置shared storage中，以便RAC能顺利读取配置。
-alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  scope=both sid='*';
-alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=both sid='*';
+alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  scope=spfile sid='*';
+alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=spfile sid='*';
 -- 在primary和standby中启动
-alter system set dg_broker_start=TRUE scope=both sid='*';
+alter system set dg_broker_start=TRUE scope=spfile sid='*';
 -- 在primary和standby中添加lintener
 -- 注意GLOBAL_DBNAME为<DB_UNIQUE_NAME>_DGMGRL.<DB_DOMAIN>
 --
@@ -1219,6 +1236,13 @@ rac2     2019/06/30 23:00:11     /u01/app/11.2.0/grid/cdata/rac-cluster/backup02
 rac2     2019/06/30 02:59:46     /u01/app/11.2.0/grid/cdata/rac-cluster/day.ocr
 rac1     2019/06/24 13:30:56     /u01/app/11.2.0/grid/cdata/rac-cluster/week.ocr
 PROT-25: Manual backups for the Oracle Cluster Registry are not available
+
+
+
+-- orc voting change 
+sudo /u01/app/11.2.0/grid/bin/ocrconfig -add +OCR2
+crsctl replace votedisk +OCR2
+sudo /u01/app/11.2.0/grid/bin/ocrconfig -delete +OCR
 
 
 --Change default location of physical OCR copies:
@@ -2341,6 +2365,16 @@ sudo /etc/init.d/oracleasm createdisk ASMDISK /dev/sdf1
 select path,header_status from v$asm_disk;
 CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK 'ORCL:ASMDISK' ;
 
+CREATE DISKGROUP data NORMAL REDUNDANCY
+  FAILGROUP controller1 DISK '/dev/raw/raw4' NAME data_a1, '/dev/raw/raw5' NAME data_a2
+  FAILGROUP controller2 DISK '/dev/raw/raw6' NAME data_b1, '/dev/raw/raw7' NAME data_b2
+/
+
+CREATE DISKGROUP data NORMAL REDUNDANCY FAILGROUP controller1 DISK 
+'/dev/raw/raw4' NAME data1,
+'/dev/raw/raw5' NAME data2
+/
+
 -- 无法删除INIT ,
 
 SQL> SELECT name, header_status, path FROM V$ASM_DISK; 
@@ -2680,7 +2714,7 @@ sp_rename 'HumanResources.PK_Employee_BusinessEntityID', 'PK_EmployeeID';
 -- 需要讲控制文件snapshot放置在共享存储中
 RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+<DiskGroup>/snapcf_<DBNAME>.f';
 
--- 需要 dbms_crypto
+-- 需要 dbms_crypto 加密
 -- 检查
 select DBMS_CRYPTO.RandomInteger from dual;
 -- install

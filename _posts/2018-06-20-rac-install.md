@@ -149,7 +149,7 @@ groupadd -g 1001 asmadmin
 groupadd -g 1002 dba
 groupadd -g 1003 asmdba 
 useradd -u 1000 -d /home/oracle -g oinstall -G dba,asmdba,wheel oracle 
-useradd -u 1001 -d /home/grid -g oinstall -G asmadmin,asmdba,wheel grid
+useradd -u 1001 -d /home/grid -g oinstall -G asmadmin,asmdba,wheel,dba grid
 echo -e "oracle\noracle" | passwd oracle
 echo -e "oracle\noracle" | passwd grid
 ```
@@ -516,6 +516,8 @@ alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
 
 ---
 
+### **db_recovery_file_dest** 需在共享存储。
+
 ### ORA-00245 & RMAN-03009
 
 
@@ -524,6 +526,7 @@ alter system set INSTANCE_NUMBER=2 scope=spfile sid='stbsid2';
 ```
 RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+<DiskGroup>/snapcf_<DBNAME>.f';
 ```
+
 ---
 
 ### instance change thread number

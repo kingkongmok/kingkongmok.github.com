@@ -10,12 +10,35 @@ category: windows
 NET USER kenneth <password> /ADD
 ```
 
+## delete user
+
+
+```
+net user kenneth /delete
+```
+
 ## change password
 
 ```
 NET USER kenneth <password>
 ```
 
+---
+
+## windows version
+
+```
+winver
+```
+
+---
+
+
+## 计划任务 scheduled tasks
+
+```
+taskschd.msc
+```
 
 ---
 
@@ -35,6 +58,27 @@ icacls "C:\inetpub\logs\LogFiles" /grant kenneth:(OI)(CI)F /T
 NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,READ
 NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,FULL
 ```
+
+---
+
+### 搜索共享
+
+```
+C:\Users\User>net share
+
+共享名       资源                            注解
+
+-------------------------------------------------------------------------------
+C$           C:\                             默认共享
+IPC$                                         远程 IPC
+print$       C:\WINDOWS\system32\spool\drivers
+                                             打印机驱动程序
+ADMIN$       C:\WINDOWS                      远程管理
+Users        C:\Users
+命令成功完成。
+```
+
+
 ---
 
 ## [firewall add port](http://stackoverflow.com/questions/15171255/how-to-open-ports-on-windows-firewall-through-batch-file)
