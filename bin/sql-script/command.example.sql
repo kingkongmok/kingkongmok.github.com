@@ -170,9 +170,11 @@ SELECT username, account_status, created, lock_date, expiry_date
   FROM dba_users WHERE account_status != 'OPEN';
 
 
+-- 查询登陆失败 DBA_AUDIT_TRAIL displays all audit trail entries.
+alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
+select * from DBA_AUDIT_TRAIL where Returncode <> 0 order by Timestamp; 
+
 -- oracle password file, 用于判断是否让远程登陆sys用户
--- 首先确定 parameter remote_login_passwordfile, 一般要EXCLUSIVE， none就密码文件不生效
--- 然后用语句查询当前有没有密码文件, 例如下列情况就有sys已经使用密码文件
 SQL> select * from v$pwfile_users; 
 
 USERNAME                       SYSDB SYSOP SYSAS
@@ -364,30 +366,30 @@ EOF
 CREATE DATABASE OLTP3140
    USER SYS IDENTIFIED BY oracle
    USER SYSTEM IDENTIFIED BY oracle
-   LOGFILE GROUP 1 ('/u01/app/oracle/oradata/OLTP3140/redo01.log') SIZE 100M,
-           GROUP 2 ('/u01/app/oracle/oradata/OLTP3140/redo02.log') SIZE 100M,
-           GROUP 3 ('/u01/app/oracle/oradata/OLTP3140/redo03.log') SIZE 100M
+   LOGFILE GROUP 1 ('/u01/app/oracle/oradata/unique_db_name/onlinelog/redo01.log') SIZE 100M,
+           GROUP 2 ('/u01/app/oracle/oradata/unique_db_name/onlinelog/redo02.log') SIZE 100M,
+           GROUP 3 ('/u01/app/oracle/oradata/unique_db_name/onlinelog/redo03.log') SIZE 100M
    MAXLOGFILES 5
    MAXLOGMEMBERS 5
    MAXLOGHISTORY 1
    MAXDATAFILES 100
    CHARACTER SET AL32UTF8
    EXTENT MANAGEMENT LOCAL
-   DATAFILE '/u01/app/oracle/oradata/OLTP3140/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
-   SYSAUX DATAFILE '/u01/app/oracle/oradata/OLTP3140/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   SYSAUX DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
    DEFAULT TABLESPACE users
-      DATAFILE '/u01/app/oracle/oradata/OLTP3140/users01.dbf'
+      DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/users01.dbf'
       SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
    DEFAULT TEMPORARY TABLESPACE tempts1 
-      TEMPFILE '/u01/app/oracle/oradata/OLTP3140/temp01.dbf'
+      TEMPFILE '/u01/app/oracle/oradata/unique_db_name/datafile/temp01.dbf'
       SIZE 20M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
    UNDO TABLESPACE undotbs
-      DATAFILE '/u01/app/oracle/oradata/OLTP3140/undotbs01.dbf'
+      DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/undotbs01.dbf'
       SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 -- create the db in start
 startup nomount pfile='/home/oracle/init.ora';
 @/home/oracle/createdb.sql
-create tablespace users datafile '/u01/app/oracle/oradata/ORADB/user01.dbf' size 100m; 
+create tablespace users datafile '/u01/app/oracle/oradata/unique_db_name/datafile/user01.dbf' size 100m; 
 create spfile from pfile='/home/oracle/init.ora'; 
 -- creates all the data dictionary views,
 @?/rdbms/admin/catalog.sql
@@ -418,6 +420,113 @@ orapwd file=${ORACLE_HOME}/dbs/orapw${ORACLE_SID} password=oracle
 -- config
 srvctl remove database -d oradr
 srvctl add database -d ORADR -o /u01/app/oracle/product/11.2.0/dbhome_1
+
+-- rac
+-- init.ora
+rac2.__db_cache_size=41943040
+rac1.__db_cache_size=41943040
+rac2.__java_pool_size=4194304
+rac1.__java_pool_size=4194304
+rac2.__large_pool_size=8388608
+rac1.__large_pool_size=8388608
+rac2.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
+rac1.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
+rac2.__pga_aggregate_target=184549376
+rac1.__pga_aggregate_target=184549376
+rac1.__sga_target=213909504
+rac2.__sga_target=213909504
+rac2.__shared_io_pool_size=0
+rac1.__shared_io_pool_size=0
+rac2.__shared_pool_size=150994944
+rac1.__shared_pool_size=150994944
+rac2.__streams_pool_size=0
+rac1.__streams_pool_size=0
+*.archive_lag_target=0
+*.audit_file_dest='/u01/app/oracle/admin/PRIDB/adump'
+*.audit_trail='db'
+*.cluster_database=false
+*.compatible='11.2.0.4.0'
+*.control_files='+DATA/PRIDB/CONTROLFILE/control.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='+DATA'
+*.db_domain=''
+*.db_file_name_convert='+DATA','+DATA'
+*.db_name='ORCL'
+*.db_recovery_file_dest_size=10g
+*.db_recovery_file_dest='+DATA'
+*.db_unique_name='PRIDB'
+*.dg_broker_config_file1='+DATA/PRIDB/datafile/dgbroker1PRIDB.dat'
+*.dg_broker_config_file2='+DATA/PRIDB/datafile/dgbroker2PRIDB.dat'
+*.dg_broker_start=TRUE
+*.diagnostic_dest='/u01/app/oracle'
+*.fal_client='PRIDB'
+*.fal_server='STBDB'
+rac2.instance_number=2
+rac1.instance_number=1
+*.log_archive_config='DG_CONFIG=(PRIDB,STBDB)'
+*.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=PRIDB'
+*.log_archive_dest_2='SERVICE=ORASTBDB LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=STBDB'
+*.log_archive_dest_3=''
+*.log_archive_dest_state_2='ENABLE'
+rac1.log_archive_format='%t_%s_%r.dbf'
+rac2.log_archive_format='%t_%s_%r.dbf'
+*.log_archive_max_processes=10
+*.log_archive_min_succeed_dest=1
+rac1.log_archive_trace=0
+rac2.log_archive_trace=0
+*.log_file_name_convert='+DATA','+DATA'
+*.memory_max_target=421527552
+*.memory_target=421527552
+*.open_cursors=300
+*.processes=150
+*.remote_listener='rac-scan:1521'
+*.remote_login_passwordfile='exclusive'
+*.sga_max_size=0
+*.standby_file_management='AUTO'
+rac2.thread=2
+rac1.thread=1
+rac2.undo_tablespace='UNDOTBS2'
+rac1.undo_tablespace='UNDOTBS1'
+
+-- createdb.sql
+CREATE DATABASE orcl
+   USER SYS IDENTIFIED BY oracle
+   USER SYSTEM IDENTIFIED BY oracle
+   LOGFILE GROUP 1 ('+DATA/PRIDB/onlinelog/redo01.log') SIZE 100M,
+           GROUP 2 ('+DATA/PRIDB/onlinelog/redo02.log') SIZE 100M,
+           GROUP 3 ('+DATA/PRIDB/onlinelog/redo03.log') SIZE 100M,
+           GROUP 4 ('+DATA/PRIDB/onlinelog/redo04.log') SIZE 100M
+   MAXLOGFILES 5
+   MAXLOGMEMBERS 5
+   MAXLOGHISTORY 1
+   MAXDATAFILES 100
+   CHARACTER SET AL32UTF8
+   EXTENT MANAGEMENT LOCAL
+   DATAFILE '+DATA/PRIDB/DATAFILE/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   SYSAUX DATAFILE '+DATA/PRIDB/DATAFILE/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DEFAULT TABLESPACE users
+      DATAFILE '+DATA/PRIDB/DATAFILE/users01.dbf'
+      SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DEFAULT TEMPORARY TABLESPACE tempts1
+      TEMPFILE '+DATA/PRIDB/TEMPFILE/temp01.dbf'
+      SIZE 20M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   UNDO TABLESPACE UNDOTBS1
+      DATAFILE '+DATA/PRIDB/DATAFILE/undotbs01.dbf'
+      SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+-- add undo to rac2
+create UNDO TABLESPACE UNDOTBS2 DATAFILE '+data/PRIDB/datafile/undotbs02.dbf' SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+-- add logfile
+alter database add logfile thread 2 group 5 ('+DATA/pridb/onlinelog/redo05.log') size 100M ,group 6 ('+DATA/pridb/onlinelog/redo06.log') size 100M, group 7 ('+DATA/pridb/onlinelog/redo07.log') size 100M, group 8 ('+DATA/pridb/onlinelog/redo08.log') size 100M ;
+-- define cluster database
+alter system set cluster_database=TRUE sid='*' scope=spfile ;
+alter system set cluster_database_instances=2 sid='*' scope=spfile;
+alter database enable public thread 2;
+-- archivelog 
+alter database archivelog mode;
+-- register in crs
+srvctl add database -d pridb -r PRIMARY -n orcl -o $ORACLE_HOME
+srvctl add instance -d pridb -i rac1 -n rac1
+srvctl add instance -d pridb -i rac2 -n rac2
 
 
 
@@ -670,11 +779,11 @@ delete expired archivelog all ;
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
-select * from ( select distinct name,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by completion_time desc ) where rownum < 15 ;
+select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by completion_time desc ) where rownum < 15 ;
 
 
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
-SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD#;
+SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD# order by THREAD#;
 
    THREAD#                          MAX(SEQUENCE#)
 ---------- ---------------------------------------
@@ -919,10 +1028,12 @@ startup;
 
 
 -- failover manual
+alter database flashback on ;
+select flashback_on from v$database;
 alter database recover managed standby database cancel;
 alter database recover managed standby database finish;
 alter database activate standby database;
-startup force
+alter database open;
 -- reinstate manual
 select to_char(standby_became_primary_scn) from v$database;
 shutdown immediate
@@ -1047,42 +1158,6 @@ DGMGRL> CONVERT DATABASE 'ADG' TO PHYSICAL STANDBY;
 -- GSD Global Service Daemon
 -- ONS Oracle Notification Service
 
--- How to stop Oracle RAC (11g, 12c)?
-1. emctl stop dbconsole (11c only. In 12c DB Express replaces dbconsole and doesn’t have to be stopped )
-2. srvctl stop listener [-listener listener_name] [-node node_name] [-force] (stops all listener services)
-3. srvctl stop database -db db_unique_name [-stopoption stop_options] [-eval(12c only)] [-force] [-verbose]
-4. srvctl stop asm [-proxy] [-node node_name] [-stopoption stop_options] [-force]
-5. srvctl stop nodeapps [-node node_name] [-gsdonly] [-adminhelper] [-force] [-relocate] [-verbose]
-6. crsctl stop crs
-
--- How to Start Oracle RAC (11g, 12c)?
-1. crsctl start crs
-2. crsctl start res ora.crsd -init
-3. srvctl start nodeapps [-node node_name] [-gsdonly] [-adminhelper] [-verbose]
-4. srvctl start asm [-proxy] [-node node_name [-startoption start_options]]
-5. srvctl start database -db db_unique_name [-eval(12c only)]] [-startoption start_options] [-node node_name]
-6. srvctl start listener [-node node_name] [-listener listener_name] (start all listener services)
-7. emctl start dbconsole (11c only)
---  To start resources  of your HA environment if that are still down(e.g. ora.ons, Listener):
-crsctl start resource -all
-
--- DEBUG
--- Starting with Oracle 12c, the log and trace files of the clusterware files are stored in the Automatic Diagnostic Repository (ADR) under the ADR_HOME location $ADR_BASE/diag/crs/`hostname`/crs.
--- $ adrci
--- adrci> show homes
-
--- Manage low level cluster resources: CRS, HAS, cluster
--- How to display the status of resources in RAC?
--- Clusterware Resource Status Check : 
-crsctl status resource -t -- (or shorter: crsctl stat res -t)
--- Find offline resources: 
-crs_stat -t | grep -i offline
-
--- How to check the current status of a cluster?
-crsctl check cluster
-CRS-4537: Cluster Ready Services is online
-CRS-4529: Cluster Synchronization Services is online
-CRS-4533: Event Manager is online
 
 -- To know the cluster name: 
 olsnodes -c
@@ -1094,66 +1169,11 @@ CRS-4537: Cluster Ready Services is online (crs)
 CRS-4529: Cluster Synchronization Services is online (css)
 CRS-4533: Event Manager is online
 
--- How to Stop/Start the local node?
-crsctl stop has
---This command will also abort the database and CRS. Local Listeners will stop and VIP listeners will migrate elsewhere.
-crsctl start has
---This command will start all the CRS components, listeners and the database.
-
--- How to Stop/Start the whole cluster?
-crsctl stop cluster -all
-crsctl start cluster -all
 
 -- How to To start and stop oracle clusterware (CRS)?
 crsctl stop crs
+crsctl stop crs -f 
 crsctl start crs
-
--- Manage Network components
-
--- How to display global public and global cluster_interconnect?
--- ??? oifcfg ge34f
--- ??? Heartbeat 194.56.67.0 global cluster_interconnect,asm
--- ??? Production 10.356.3.0 global public
-
--- How to check if nodeapps running on a node?
-srvctl status nodeapps [-n my-node]
---report
-VIP rac1-vip is enabled				-- VIP
-VIP rac1-vip is running on node: rac1
-VIP rac2-vip is enabled
-VIP rac2-vip is running on node: rac2
-Network is enabled 				-- Oracle Net listeners
-Network is running on node: rac1
-Network is running on node: rac2
-GSD is disabled 				-- Global Service Daemon
-GSD is not running on node: rac1
-GSD is not running on node: rac2
-ONS is enabled					-- Oracle Notification Service
-ONS daemon is running on node: rac1
-ONS daemon is running on node: rac2
-
-
--- How to check the SCAN Configuration?
--- The SCAN makes it possible to add or remove nodes from the cluster without needing to reconfigure clients.
--- Using CLUVFY to Confirm DNS is Correctly Associating the SCAN addresses.
-cluvfy comp scan
---result
-Verifying scan 
-Checking Single Client Access Name (SCAN)...
-Checking TCP connectivity to SCAN Listeners...
-TCP connectivity to SCAN Listeners exists on all cluster nodes
-Checking name resolution setup for "rac-scan"...
-Checking integrity of name service switch configuration file "/etc/nsswitch.conf" ...
-Check for integrity of name service switch configuration file "/etc/nsswitch.conf" passed
-ERROR: 
-PRVG-1101 : SCAN name "rac-scan" failed to resolve
-ERROR: 
-PRVF-4657 : Name resolution setup check for "rac-scan" (IP address: 10.255.255.25) failed
-ERROR: 
-PRVF-4664 : Found inconsistent name resolution entries for SCAN name "rac-scan"
-Verification of SCAN VIP and Listener setup failed
-Verification of scan was unsuccessful on all the specified nodes. 
-
 
 -- How to display the current configuration of the SCAN VIPs?
 srvctl config scan
@@ -1189,14 +1209,6 @@ srvctl modify scan_listener -p TCP:1522
 -- restart and enable it
 srvctl stop scan_listener
 srvctl start scan_listener
-
-
--- If you want to add or remove a scan_listener: 
-srvctl add | remove scan_listener
--- To change the port: 
-srvctl modify scan_listener -p
-
--- Manage the Oracle Cluster Registry (OCR)
 
 -- How to verify the integrity of OCR?
 cluvfy comp ocr -n all -verbose
@@ -1244,31 +1256,6 @@ sudo /u01/app/11.2.0/grid/bin/ocrconfig -add +OCR2
 crsctl replace votedisk +OCR2
 sudo /u01/app/11.2.0/grid/bin/ocrconfig -delete +OCR
 
-
---Change default location of physical OCR copies:
-ocrconfig -backuploc
---After that, you have to copy these files on tape or in another backup location (cp -p -R CRS_home/cdata/my_cluster_name /u03/backups )
-
---To do a manual backup:
-ocrconfig -export /u03/backups/exports/OCR_exportBackup.dmp
-
--- How to recover OCR from physical or export backup?
---Pre-requisite: All RAC components shutdow
--- Recover OCR from automatic physical backups:
-crconfig -restore CRS_home/cdata/my_cluster_name/OCRBackup/backup00.ocr
-
---Recover OCR from export backup:
-ocrconfig -import /u03/backups/exports/OCR_exportBackup.dmp
-
--- How to backup the Voting disks?
---In older versions of Oracle Clusterware you have to backup voting disks with the dd command.
---Starting with Oracle Clusterware 11g Release 2 you no longer need to backup them. Voting disks are automatically backed up as a part of the OCR.
-
--- Manage database components
-
--- How to find the name of the database?
-SQL> show parameter db_unique_name
-crsctl status resource -t | grep db
 
 -- How to inspect the database configuration?
 srvctl config database -d oradb
@@ -1351,6 +1338,19 @@ select count(1) from gv$process;
 select TABLESPACE_NAME, round(USED_PERCENT,0) used, round(100-USED_PERCENT,0) free, TABLESPACE_SIZE from DBA_TABLESPACE_USAGE_METRICS;
 -- ASM info (zabbix)
 select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/total_mb,3)*100 "used_rate(%)" from v$asm_diskgroup;
+
+
+
+-- database state performance 
+select event, state, count(*) from v$session_wait group by event, state order by 3 desc
+
+EVENT						   STATE		       COUNT(*)
+-------------------------------------------------- ------------------------- ----------
+SQL*Net message from client			   WAITING			    379
+rdbms ipc message				   WAITING			     50
+class slave wait				   WAITING			     12
+gcs remote message				   WAITING			      4
+LNS ASYNC end of log				   WAITING			      2
 
 
 -- connected session;
@@ -1570,6 +1570,8 @@ expdp cksp/cksp4631 directory=DUMP_4631 dumpfile=cksp83.dmp schemas=cksp exclude
 expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott logfile=expdp_scott.log parallel=2 job_name=expdp_scott.job
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
+--example
+expdp sys/oracle \"/ as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
 
 
 -- ------------------------------
@@ -2282,9 +2284,10 @@ startdb:2:once:/etc/rc.startdb
 -- crs 命令
 
 -- 启动 crs
-[root@rac1 ~]# /oracle/11.2.0/grid/gridhome/bin/crsctl start cluster
+[root@rac1 ~]# /oracle/11.2.0/grid/gridhome/bin/crsctl start crs
 -- 停止
-[root@rac1 ~]# /u01/app/11.2.0/grid/bin/crsctl stop cluster
+[root@rac1 ~]# /u01/app/11.2.0/grid/bin/crsctl stop crs
+[root@rac1 ~]# /u01/app/11.2.0/grid/bin/crsctl stop crs -f
 -- 查看当前的服务器启动情况，
 $ crs_stat -t
 -- 删除旧服务
@@ -2615,7 +2618,7 @@ alter system set service_names = 'mydb' scope = both;
 
 -- 开启日志实时应用
 -- 检查
-select instance_name, db_unique_name, database_role,  open_mode,status,switchover_status from v$instance,v$database;
+select instance_name, db_unique_name,database_role,open_mode,status,switchover_status from v$instance,v$database;
 -- dg开启应用
 SQL> recover managed standby database using current logfile disconnect from session;
 -- dg 关闭应用
