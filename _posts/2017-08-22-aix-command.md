@@ -62,3 +62,21 @@ netstat -Aan|grep 22
 ```
 prtconf |grep disk
 ```
+
+---
+
+### syslog
+
+
+config file **/etc/syslog.conf**
+
+```
+# check syslog
+ps -ef|grep syslogd
+
+# stop syslog
+stopsrc -s syslogd
+
+# start syslog
+startsrc -s syslogd
+```

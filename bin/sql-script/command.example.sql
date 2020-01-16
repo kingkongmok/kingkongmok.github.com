@@ -87,6 +87,10 @@ ALTER DATABASE FLASHBACK ON;
 SELECT FLASHBACK_ON FROM V$DATABASE;
 
 
+-- EMi 
+-- create https://dbatricksworld.com/oracle-enterprise-manager-failed-to-start-oc4j-configuration-issue-configure-enterprise-manager-database-control-manually-with-enterprise-manager-configuration-assistant/
+emca -config dbcontrol db -repos create
+
 -- EM/oem start 
 $ emctl start dbconsole
 $ emctl stop dbconsole
@@ -783,7 +787,7 @@ select * from ( select distinct name,next_time,completion_time,applied,thread#,S
 
 
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
-SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD# order by THREAD#;
+select thread#, max(sequence#) from v$log_history group by thread# order by thread#;
 
    THREAD#                          MAX(SEQUENCE#)
 ---------- ---------------------------------------
@@ -795,7 +799,7 @@ SELECT THREAD#, MAX(SEQUENCE#) FROM V$LOG_HISTORY GROUP BY THREAD# order by THRE
 --RFS: 备库接收从主库LNS进程或ARCH进程投递过来的归档日志
 --ARCH: 用于复制从主库同步过来的归档日志
 --MRP: 用于应用归档日志
-select process, status, thread#, sequence#  from v$managed_standby;
+select process, status, thread#, sequence# from v$managed_standby;
 --
 PROCESS   STATUS          THREAD#  SEQUENCE#
 --------- ------------ ---------- ----------
@@ -2180,6 +2184,40 @@ VOYAGEMAPDETAIL 	       USERS			      2018-01-18 03:10:56  354257297
 -- zjzz PE 335个非空表, 88 个空表
 
 
+-- table size
+SELECT
+   owner, 
+   table_name, 
+   TRUNC(sum(bytes)/1024/1024) Meg,
+   ROUND( ratio_to_report( sum(bytes) ) over () * 100) Percent
+FROM
+(SELECT segment_name table_name, owner, bytes
+     FROM dba_segments
+     WHERE segment_type IN ('TABLE', 'TABLE PARTITION', 'TABLE SUBPARTITION')
+     UNION ALL
+     SELECT i.table_name, i.owner, s.bytes
+     FROM dba_indexes i, dba_segments s
+     WHERE s.segment_name = i.index_name
+     AND   s.owner = i.owner
+     AND   s.segment_type IN ('INDEX', 'INDEX PARTITION', 'INDEX SUBPARTITION')
+     UNION ALL
+     SELECT l.table_name, l.owner, s.bytes
+     FROM dba_lobs l, dba_segments s
+     WHERE s.segment_name = l.segment_name
+     AND   s.owner = l.owner
+     AND   s.segment_type IN ('LOBSEGMENT', 'LOB PARTITION')
+     UNION ALL
+     SELECT l.table_name, l.owner, s.bytes
+     FROM dba_lobs l, dba_segments s
+     WHERE s.segment_name = l.index_name
+     AND   s.owner = l.owner
+     AND   s.segment_type = 'LOBINDEX')
+WHERE owner in UPPER('&owner')
+GROUP BY table_name, owner
+HAVING SUM(bytes)/1024/1024 > 10  /* Ignore really small tables */
+ORDER BY SUM(bytes) desc;   zjzzdg  1578646298524   SQL 1   2.761
+
+
 
 -- DDL
 TRUNCATE TABLE employees_demo; 
@@ -2861,3 +2899,33 @@ begin
 end;
 /
 
+
+--- 
+
+-- Run SQL Tuning Advisor For A Sql_id
+
+-- Create Tuning Task
+DECLARE
+  l_sql_tune_task_id  VARCHAR2(100);
+BEGIN
+  l_sql_tune_task_id := DBMS_SQLTUNE.create_tuning_task (
+                          sql_id      => '5fmyz01ptmc7f',
+                          scope       => DBMS_SQLTUNE.scope_comprehensive,
+                          time_limit  => 500,
+                          task_name   => '5fmyz01ptmc7f_tuning_task',
+                          description => 'Tuning task1 for statement 5fmyz01ptmc7f');
+  DBMS_OUTPUT.put_line('l_sql_tune_task_id: ' || l_sql_tune_task_id);
+END;
+/
+ 
+
+-- Execute Tuning task: 
+EXEC DBMS_SQLTUNE.execute_tuning_task(task_name => '5fmyz01ptmc7f_tuning_task'); 
+
+
+-- read tunning task
+set long 65536
+set longchunksize 65536
+set linesize 100
+select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
+ 
