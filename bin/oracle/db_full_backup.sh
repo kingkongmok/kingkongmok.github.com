@@ -10,22 +10,22 @@ rman target / << __EOF__
 run
 {
 crosscheck backup;
-DELETE noprompt OBSOLETE;
+delete noprompt obsolete;
 allocate channel ch1 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch2 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch3 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch4 device type disk format '/home/oracle/backup/%U.bkp';
 backup database;
 backup archivelog all;
-DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+delete noprompt archivelog all completed before 'sysdate-7';
 release channel ch1;
 release channel ch2;
 release channel ch3;
 release channel ch4;
 }
-ALLOCATE CHANNEL FOR MAINTENANCE DEVICE TYPE DISK;
-CROSSCHECK BACKUPSET;
-DELETE NOPROMPT OBSOLETE;
-EXIT
+allocate channel for maintenance device type disk;
+crosscheck backupset;
+delete noprompt obsolete;
+exit
 __EOF__
 
