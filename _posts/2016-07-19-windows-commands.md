@@ -149,3 +149,13 @@ route add 77.77.77.36 mask 255.255.255.255 172.26.31.254
 ```
 %windir%\system32\taskschd.msc /s
 ```
+
+---
+
+### telnet client install
+
+在命令行在安装，安装后退出cmd，重新进入cmd后就有telnet命令
+
+```
+pkgmgr /iu:"TelnetClient"
+```

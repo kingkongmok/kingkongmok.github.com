@@ -319,6 +319,13 @@ GRANT UNLIMITED TABLESPACE TO users;
 -- drop user 
 -- In order to drop a user, you must have the Oracle DROP USER system privilege. The command line syntax for dropping a user can be seen below:
 DROP USER edward CASCADE;
+DROP TABLESPACE tablespacename INCLUDING CONTENTS AND DATAFILES;
+-- check active and kill
+select s.sid, s.serial#, s.status, p.spid from v$session s, v$process p where s.username = '&user' and p.addr (+) = s.paddr;
+alter system kill session '&sid,&serial' immediate;
+-- user and space mb
+select owner, TABLESPACE_NAME, sum(bytes)/1024/1024 MB from dba_segments group by owner, TABLESPACE_NAME ;
+select tablespace_name from all_tables where owner = '&username';
 
 
 -- ------------------------------
@@ -362,6 +369,7 @@ UNDO_MANAGEMENT=AUTO
 SGA_TARGET=500M
 PGA_AGGREGATE_TARGET=100M
 LOG_BUFFER=5242880
+standby_file_management=auto
 DB_RECOVERY_FILE_DEST=/u01/app/oracle/flash_recovery_area
 DB_RECOVERY_FILE_DEST_SIZE=2G
 EOF
@@ -779,6 +787,71 @@ delete expired archivelog all ;
 -- ------------------------------
 -- ADG
 -- ------------------------------
+
+
+--create manual
+-- primary应该产生standby controlfile，给standby mount状态进行rman
+-- standby的路径应该由spfile的log_file_name_convert，db_file_name_convert进行调整，调整后会对rman restore 或者 rman duplicate有效
+
+-- tnsnames on primary and standby
+
+-- primary
+sql> alter system set log_archive_config='DG_CONFIG=(PRIMARY,STANDBY)' scope=spfile; 
+sql> alter system set log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=PRIMAY' scope=spfile;
+sql> alter system set log_archive_dest_2='SERVICE=ADG LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=STANDBY' scope=spfile;
+sql> shutdown immediate
+sql> startup
+rman> backup database plus archivelog;
+sql> alter database create standby controlfile as '/home/oracle/controlfile.ctl';
+
+-- standby
+cat > ~/init.ora <<EOF
+*.compatible='11.2.0.4.0'
+*.control_files='/u01/app/oracle/oradata/STANDBY/controlfile/control01.ctl','/u01/app/oracle/flash_recovery_area/STANDBY/controlfile/control02.ctl'
+*.db_recovery_file_dest='/u01/app/oracle/flash_recovery_area'
+*.db_recovery_file_dest_size=10G
+*.db_name='oradb'
+*.memory_max_target=400M
+*.memory_target=400M
+*.db_unique_name='STANDBY'
+*.standby_file_management=auto
+*.fal_client=adg1
+*.fal_server=oradb
+*.log_archive_config='DG_CONFIG=(STANDBY,PRIMARY)'
+*.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=STANDBY'
+*.log_archive_dest_2='SERVICE=PRIMARY LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=PRIMARY'
+*.db_file_name_convert='/u01/app/oracle/oradata/PRIMARY/datafile','/u01/app/oracle/oradata/STANDBY/datafile'
+*.log_file_name_convert='/u01/app/oracle/oradata/PRIMARY/datafile','/u01/app/oracle/oradata/STANDBY/datafile','/u01/app/oracle/flash_recovery_area/PRIMARY/onlinelog','/u01/app/oracle/flash_recovery_area/STANDBY/onlinelog'
+EOF
+--
+sql> startup nomount force pfile='/home/oracle/pfile';
+sql> create spfile from pfile='/home/oracle/pfile';
+sql> alter database mount standby database;
+rman> catalog start with '/backuppiece';
+rman> restore database;
+rman> recover database;
+rman> recover database until scn xxx;
+sql> alter database recover managed standby database disconnect from session;
+sql> alter database recover managed standby database cancel;
+sql> alter database open read only; ???
+sql> alter database recover managed standby database disconnect from session;
+
+
+-- standby_file_management 没设置导致 ORA-01111 ORA-01110 ORA-01157 ORA-01111 ORA-01110
+-- http://www.dba-oracle.com/t_data_guard_physical_standby_missing_file_tips.htm
+1. 调整 db_file_name_convert  和 standby_file_management 
+2. At the standby : alter system set standby_file_management=manual;
+3. Primary 
+sql> alter tablespace <tablespace name> begin backup ;
+sh> scp datafile to standby:./
+sql> alter tablespace <tablespace name> end backup; 
+4. standby
+At the Standby:
+
+SQL> alter database rename file '.......UNNAMED00167' to '< actual location of the datafile >';
+sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf_tbs_1_h2hsng6v_.dbf' as new;
+
+
 
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
@@ -1576,6 +1649,10 @@ expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_F
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 --example
 expdp sys/oracle \"/ as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
+-- import from network
+drop user cksp cascade;
+impdp  \"/ as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
+
 
 
 -- ------------------------------
@@ -2093,7 +2170,7 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
       1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
 --
 -- 自定义pga数，例如输入20就是pga20M的查询
-select s.inst_id, s.sid, s.serial#, p.spid, s.sql_id, s.machine, s.username, s.logon_time, s.program, round(PGA_USED_MEM/1024/1024,2) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,2) PGA_ALLOC_MEM from gv$session s, gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &memsize and s.username is not null order by PGA_USED_MEM;
+select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &mem_size and s.username is not null order by PGA_USED_MEM;
 
 
 -- check sql_text
@@ -2831,6 +2908,22 @@ select to_char (dbms_metadata.get_ddl ('SEQUENCE', user_objects.object_name)) as
 -- $ perl -pe 's/\s+$/;\n/' /tmp/test.sql 
 
 
+
+-- ------------------------------
+-- OMF
+-- ------------------------------
+-- http://www.dba-oracle.com/real_application_clusters_rac_grid/omf.html
+
+
+-- 新增加文件将从 $ORACLE_HOME/dbs调整为 ${DB_CREATE_FILE_DEST}/${uniq_db_name}/datafile/
+
+alter system set DB_CREATE_FILE_DEST='/u01/app/oracle/oradata' scope=both;
+CREATE TABLESPACE tbs_1;
+select * from dba_data_files;
+
+
+
+
 -- ------------------------------
 -- Automatic Maintenance and Optimizer Statistic Collection
 -- ------------------------------
@@ -2929,3 +3022,11 @@ set longchunksize 65536
 set linesize 100
 select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
  
+
+
+-- ------------------------------
+-- cache 
+-- ------------------------------
+--查看放入Keep的对象
+select segment_name, bytes/1024/1024 MB  from dba_segments where BUFFER_POOL = 'KEEP';
+

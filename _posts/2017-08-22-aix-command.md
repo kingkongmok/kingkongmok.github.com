@@ -68,7 +68,11 @@ prtconf |grep disk
 ### syslog
 
 
-config file **/etc/syslog.conf**
+config file **/etc/syslog.conf**, 注意中间的是tab
+
+```
+*.emerg;*.alert;*.crit;*.warning;*.err;*.notice;*.info  @172.16.40.73
+```
 
 ```
 # check syslog
@@ -79,4 +83,7 @@ stopsrc -s syslogd
 
 # start syslog
 startsrc -s syslogd
+
+# insert syslog
+logger "test message"
 ```
