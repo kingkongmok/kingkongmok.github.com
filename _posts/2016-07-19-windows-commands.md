@@ -4,6 +4,17 @@ layout: post
 category: windows
 ---
 
+
+### IIS 管理器
+
+
+```
+InetMgr
+```
+
+---
+
+
 ## [add user](https://www.windows-commandline.com/add-user-from-command-line/)
 
 ```
@@ -58,6 +69,10 @@ icacls "C:\inetpub\logs\LogFiles" /grant kenneth:(OI)(CI)F /T
 NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,READ
 NET SHARE LogFiles="C:\inetpub\logs\LogFiles" /GRANT:kenneth,FULL
 ```
+
+### firewall
+
+默认会禁止tcp445，需要将此rule disable才能共享
 
 ---
 

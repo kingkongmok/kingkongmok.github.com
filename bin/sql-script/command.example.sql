@@ -278,7 +278,7 @@ show parameter db_create
 -- ORA-28002: the password will expire within 7 days
 SELECT profile FROM dba_users WHERE username = upper('&currentuser'); 
 --
-SYS> select resource_name,liMit from dba_profiles where profile='DEFAULT' and RESOURCE_NAME='PASSWORD_LIFE_TIME';
+SYS> select resource_name,limit from dba_profiles where profile='DEFAULT' and RESOURCE_NAME='PASSWORD_LIFE_TIME';
 -- 用户不过期
 ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
 -- 尝试不退出
@@ -293,16 +293,16 @@ SELECT USERNAME, EXPIRY_DATE FROM DBA_USERS;
 
 -- check user privileges 
 -- Granted Roles:
-SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = 'USER';
+SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = '&user';
 
 -- Privileges Granted Directly To User:
-SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = 'USER';
+SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = '&user';
 
 -- Privileges Granted to Role Granted to User:
-SELECT * FROM DBA_TAB_PRIVS  WHERE GRANTEE IN (SELECT granted_role FROM DBA_ROLE_PRIVS WHERE GRANTEE = 'USER');
+SELECT * FROM DBA_TAB_PRIVS  WHERE GRANTEE IN (SELECT granted_role FROM DBA_ROLE_PRIVS WHERE GRANTEE = '&user');
 
 -- Granted System Privileges:
-SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'USER'; 
+SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user'; 
 
 
 -- create user/schema
@@ -316,13 +316,29 @@ GRANT UNLIMITED TABLESPACE TO users;
 -- ensure our new user has disk space allocated in the system to actually create or modify tables and data
 
 
+-- create READ_ONLY role.
+CREATE ROLE CKS_RO_ROLE;
+
+-- grant CKS tables to CKS_RO_ROLE
+BEGIN
+  FOR x IN (SELECT * FROM dba_tables WHERE owner='CKS' and table_name not like 'TMP_%')
+  LOOP
+    EXECUTE IMMEDIATE 'GRANT SELECT ON CKS.' || x.table_name || ' TO CKS_RO_ROLE';
+    -- DBMS_OUTPUT.put_line('got: ' || x.table_name);
+  END LOOP;
+END;
+
+-- grant to user CKSES
+GRANT CKS_RO_ROLE TO CKSES;
+
+
 -- drop user 
 -- In order to drop a user, you must have the Oracle DROP USER system privilege. The command line syntax for dropping a user can be seen below:
 DROP USER edward CASCADE;
 DROP TABLESPACE tablespacename INCLUDING CONTENTS AND DATAFILES;
 -- check active and kill
 select s.sid, s.serial#, s.status, p.spid from v$session s, v$process p where s.username = '&user' and p.addr (+) = s.paddr;
-alter system kill session '&sid,&serial' immediate;
+alter system kill session '&sid,&serial,@&inst_id' immediate;
 -- user and space mb
 select owner, TABLESPACE_NAME, sum(bytes)/1024/1024 MB from dba_segments group by owner, TABLESPACE_NAME ;
 select tablespace_name from all_tables where owner = '&username';
@@ -1573,7 +1589,8 @@ alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXT
 alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 -- 如果 db_create_file_dest 有设置，例如"+DATA"的时候，使用以下方式添加数据文件
-alter tablespace TICKET_TABLESPACES add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+alter tablespace USERS add datafile '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+
 
 
 -- alter datafile
@@ -1843,11 +1860,9 @@ db_create_file_dest                  string      /tmp/nas/oracle/oltp
 
 
 -- create tablespace
-create tablespace test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
+CREATE TABLESPACE test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
 CREATE TABLESPACE tablespacename DATAFILE '/ORADATA/tablespacename01.dbf' SIZE 5G AUTOEXTEND ON NEXT 5G AUTOEXTEND ON MAXSIZE UNLIMITED;
-CREATE TEMPORARY TABLESPACE tempdataspacename TEMPFILE '/ORADATA/tempdataspacename.dbf' SIZE 500M AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED;
-ALTER TABLESPACE ticket_tablespaces ADD DATAFILE '/u01/app/oracle/oradata/oltp/ticket_tablespace03.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
-ALTER TABLESPACE temp ADD TEMPFILE '/u01/app/oracle/oradata/ABCDEFG/temp02.dbf' SIZE 1024M REUSE AUTOEXTEND ON NEXT 50M  MAXSIZE 4096M;
+ALTER TABLESPACE ticket_tablespaces ADD DATAFILE '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 
 -- create test table
@@ -1933,6 +1948,8 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 -- kill session
 select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
 alter system kill session '&sid,&serial' immediate;
+alter system kill session '&sid,&serial,@&inst_id' immediate;
+
 
 -- 杀所有来自相同machine的session
 begin     
@@ -1948,7 +1965,7 @@ begin
 end;
 
 
--- kill all other session
+-- kill all other session from machine
 ALTER SYSTEM ENABLE RESTRICTED SESSION;
 
 begin     
@@ -1963,8 +1980,7 @@ begin
     end loop;  
 end;
 
--- 
-
+-- kill all other session from username
 BEGIN
   FOR r IN (select sid,serial# from v$session where username='user')
   LOOP
@@ -2170,7 +2186,9 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
       1       3559	60977 54081	      CKS	      2018-10-19_11:00:45	JDBC Thin Client		   209		 218
 --
 -- 自定义pga数，例如输入20就是pga20M的查询
-select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &mem_size and s.username is not null order by PGA_USED_MEM;
+
+select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_char(  s.logon_time, 'yyyy-mm-dd_hh24:mi:ss' ) logon_time, s.program, round(PGA_USED_MEM/1024/1024,0) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,0) PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &mem_size and s.username is not null order by PGA_USED_MEM;
+
 
 
 -- check sql_text
