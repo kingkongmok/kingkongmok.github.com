@@ -39,7 +39,12 @@ INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
 -- 16G -- Oracle的PGA 100*0.8*0.2
 
 -- alert log location
-$ORACLE_BASE/diag/rdbms/<dbname_in_lower_case>/$ORACLE_SID/trace/alert_ORACLE_SID.log
+show parameter DIAGNOSTIC_DEST
+DIAGNOSTIC_DEST/diag/rdbms/DB_NAME/ORACLE_SID/trace/alert_${ORACLE_SID}.log
+
+show parameter BACKGROUND_DUMP_DEST
+-- or --
+ORACLE_HOME/rdbms/trace
 
 -- pfile 
 $ORACLE_HOME/dbs/init/init$PID.ora
@@ -177,6 +182,14 @@ SELECT username, account_status, created, lock_date, expiry_date
 -- 查询登陆失败 DBA_AUDIT_TRAIL displays all audit trail entries.
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 select * from DBA_AUDIT_TRAIL where Returncode <> 0 order by Timestamp; 
+
+
+-- truncate aud$
+select count(1) from sys.aud$;
+select object_name,owner,object_type from dba_objects where object_name='AUD$';
+truncate table sys.aud$ reuse storage;
+
+
 
 -- oracle password file, 用于判断是否让远程登陆sys用户
 SQL> select * from v$pwfile_users; 
@@ -2199,6 +2212,16 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
 -- sid and seria#
 select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
+
+-- kill
+alter system kill session '&sid,&serial,@&inst_id' immediate;
+
+
+-- kill CKS 的例子
+select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_char(  s.logon_time, 'yyyy-mm-dd_hh24:mi:ss' ) logon_time, s.program, round(PGA_USED_MEM/1024/1024,0) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,0) PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 10 and s.username = 'CKS' and s.logon_time < sysdate-(1/24)  order by logon_time;
+-- kill CKS 的例子
+select 'ALTER SYSTEM KILL SESSION '''||s.sid||','||s.serial#||''' IMMEDIATE;'from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 10 and s.username = 'CKS' and s.logon_time < sysdate-(1/24)  order by logon_time;
+
 
 
 
