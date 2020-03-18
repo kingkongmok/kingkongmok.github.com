@@ -885,7 +885,7 @@ sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
-select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by completion_time desc ) where rownum < 15 ;
+select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 15 ;
 
 
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
@@ -2503,6 +2503,11 @@ $ crs_stop -all
 
 -- 查看存储裸设备
 fdisk -l 和 powermt display dev=all 确认存储盘信息
+
+
+-- 
+alter diskgroup data mount;
+alter diskgroup ocr mount;
 
 -- asm creating DATA disk group
 CREATE DISKGROUP DATA NORMAL REDUNDANCY DISK '/dev/raw/raw1';
