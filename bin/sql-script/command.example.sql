@@ -102,26 +102,11 @@ $ emctl stop dbconsole
 $ emctl status agent
 
 
--- sid / service name / user
-show parameter;
-show parameter service;
-show parameter service_name;
-select instance from v$thread;
-select name from v$database;
-select user from dual;
-select sys_context('userenv','instance_name') from dual;
-SELECT sys_context('USERENV', 'SID') FROM DUAL;
-
-
 -- server ip and hostname
 select utl_inaddr.get_host_address(host_name), host_name from v$instance;
 -- client ip and hostname
 select sys_context('USERENV', 'HOST') from dual;
 select sys_context('USERENV', 'IP_ADDRESS') from dual;
-
-
--- show oracle version
-SELECT * FROM V$VERSION;
 
 
 -- which spfile
@@ -139,12 +124,6 @@ select distinct owner from dba_segments where owner in (select username from dba
 -- aix 挂载nfs
 mount -o rw,bg,hard,intr,proto=tcp,vers=3,rsize=65536,wsize=65536,timeo=600 172.16.45.200:/volume1/Server_nfs01/dg83 /mnt/nas
 
--- change memory setting
-alter system set memory_max_target=32G scope=spfile sid='*'; 
-alter system set memory_target=32G scope=spfile sid='*'; 
-alter system set sga_target=0 scope=spfile sid='*'; 
-alter system set pga_aggregate_target=0 scope=spfile sid='*'; 
-alter system set sga_max_size=0 scope=spfile sid='*'; 
 
 -- list objects
 -- Tables
@@ -175,8 +154,7 @@ ALTER USER user_name account unlock;
 
 
 -- show account not work
-SELECT username, account_status, created, lock_date, expiry_date
-  FROM dba_users WHERE account_status != 'OPEN';
+SELECT username, account_status, created, lock_date, expiry_date FROM dba_users WHERE account_status != 'OPEN';
 
 
 -- 查询登陆失败 DBA_AUDIT_TRAIL displays all audit trail entries.
@@ -358,33 +336,13 @@ select tablespace_name from all_tables where owner = '&username';
 
 
 -- ------------------------------
--- SQL
--- ------------------------------
-
--- check sql
-alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';     
-select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
-select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
-
--- ------------------------------
 -- RMAN
 -- ------------------------------
 
 
 -- rman backup info
-col OUTPUT_BYTES_DISPLAY format a20
-col STATUS format a20
-col INPUT_TYPE format a20
-col TIME_TAKEN_DISPLAY format a20
 select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details order by start_time desc;
---
-START_TIME      STATUS       INPUT_TYPE       OUTPUT_BYTES_DISPLAY TIME_TAKEN_DISPLAY
-------------------- -------------------- -------------------- -------------------- --------------------
-2019-04-06_21:30:15 COMPLETED        DB FULL         97.54G        02:40:20
-2019-03-30_21:30:15 COMPLETED        DB FULL         96.91G        02:41:30
-2019-03-23_21:30:14 COMPLETED        DB FULL         96.67G        02:39:20
-2019-03-16_21:30:15 COMPLETED        DB FULL         96.29G        02:40:30
-2019-03-09_21:30:14 COMPLETED        DB FULL         96.11G        02:40:30
+
 
 -- create db by manual 手动建库
 --https://www.oracle-dba-online.com/creating_the_database.htm
@@ -777,7 +735,7 @@ restore database preview;
 -- 完整例子，先set newname 指定 OS 数据库文件路径，然后使用switch调整controlfile的映射路径。
 -- 11g以前，set newname只能指定datafile，之后就能设置for database（datafile和tempfile生效，但logfile不生效，需要在mount状态下调整logfile路径）
 
--- RMAN>
+RMAN>
 run
 {
 SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ADG/%b'; 
@@ -786,7 +744,7 @@ SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;  
 }
 
--- SQLPLUS>
+SQLPLUS>
 alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
 alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
 alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
@@ -798,13 +756,6 @@ alter database open resetlogs;
 -- delete obsolete 
 
 RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
-
-old RMAN configuration parameters:
-CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
-new RMAN configuration parameters:
-CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
-new RMAN configuration parameters are successfully stored
-
 delete obsolete ; 
 
 -- delete expired
@@ -816,6 +767,30 @@ delete expired archivelog all ;
 -- ------------------------------
 -- ADG
 -- ------------------------------
+
+-- 查询
+select recovery_mode from v$archive_dest_status where dest_id=2;
+select protection_mode,database_role,open_mode from v$database;
+select name,db_unique_name from v$database;
+select max(sequence#) from v$archived_log; 
+-- dg processes
+select sequence#,status,thread#,block#,process,status from v$managed_standby;
+
+
+-- start redo apply in the FOREGROUND, issue the following sql statement:
+alter database recover managed standby database;
+
+-- to start redo apply in the BACKGROUND, include the DISCONNECT keyword on the sql statement. for example:
+alter database recover managed standby database disconnect;
+
+-- to start real-time apply, include the using CURRENT LOGFILE clause on the sql statement. for example:
+alter database recover managed standby database using current logfile disconnect;
+
+-- Managed Standby Recovery Canceled
+alter database recover managed standby database cancel;
+-- Managed Standby Recovery finished
+alter database recover managed standby database finish;
+
 
 
 --create manual
@@ -897,133 +872,15 @@ select thread#, max(sequence#) from v$log_history group by thread# order by thre
          2                                   21242
 
 
--- 从 standby中查看 v$managed_standby ; 观察status，看看MRP0是否有waiting的出现（有的话异常）
---RFS: 备库接收从主库LNS进程或ARCH进程投递过来的归档日志
---ARCH: 用于复制从主库同步过来的归档日志
---MRP: 用于应用归档日志
-select process, status, thread#, sequence# from v$managed_standby;
---
-PROCESS   STATUS          THREAD#  SEQUENCE#
---------- ------------ ---------- ----------
-ARCH      CLOSING               1        191
-ARCH      CLOSING               2        154
-RFS       IDLE                  0          0
-ARCH      CONNECTED             0          0
-ARCH      CLOSING               1        192
-RFS       IDLE                  0          0
-RFS       IDLE                  1        193
-RFS       IDLE                  0          0
-RFS       IDLE                  2        155
-RFS       IDLE                  0          0
-RFS       IDLE                  0          0
-RFS       IDLE                  0          0
-MRP0      APPLYING_LOG          2        155
 
 
-
--- on slave, V$DATAGUARD_STATS
-col VALUE format a20
-col NAME format a25
-col UNIT format  a35
-col TIME_COMPUTED format a30
-col DATUM_TIME format a30
-
+-- on slave, lags
 select * from V$DATAGUARD_STATS;
-select VALUE from V$DATAGUARD_STATS where NAME = 'transport lag';
-select VALUE from V$DATAGUARD_STATS where NAME = 'apply lag';
-select to_number(to_number(substr(value,2,2))*1440 + to_number(substr(value,5,2))*60 + to_number(substr(value,8,2)) ) Lag_Total from V$DATAGUARD_STATS;
 
-
-
--- on physical standby, check gaps:
+-- on standby, check gaps:
 SYS@STANDBY> select * from v$archive_gap;
---
-   THREAD# LOW_SEQUENCE# HIGH_SEQUENCE#
----------- ------------- --------------
-         1            36             36
 
-
--- dg关库:
-lsnrctl stop
-alter database recover managed standby database cancel;   
- shutdown immediate;  
- 
--- grid
-sqlplus / as sysasm
-shutdown immediate;  
-  
-  
-  
--- dg开库
-
--- 查路径
-select path from v$asm_disk
-
--- grid
-$ sqlplus / as sysasm
-select state,redundancy,total_mb,free_mb,name,failgroup from v$asm_disk;
    
-startup mount
-alter database recover managed standby database disconnect from session;
-
-$ lsnrctl start
-
-
-
--- adg status
-select process,status,thread#,sequence#,block#,blocks,delay_mins from v$managed_standby;  
---
---
---master:
-PROCESS 		    STATUS				    THREAD#  SEQUENCE#	   BLOCK#     BLOCKS DELAY_MINS
---------------------------- ------------------------------------ ---------- ---------- ---------- ---------- ----------
-ARCH			    CLOSING					  2	 56592	     2048	1258	      0
-ARCH			    CLOSING					  2	 56593	   356352	1011	      0
-ARCH			    CLOSING					  2	 56590	    20480	 625	      0
-ARCH			    CLOSING					  2	 56591	   301056	1649	      0
-LNS			    WRITING					  2	 56608	     4373	   1	      0
---
---
---slave:
-PROCESS 		    STATUS				    THREAD#  SEQUENCE#	   BLOCK#     BLOCKS DELAY_MINS
---------------------------- ------------------------------------ ---------- ---------- ---------- ---------- ----------
-ARCH			    CLOSING					  1	 90935	   307200	1361	      0
-ARCH			    CLOSING					  1	 90936	   303104	2003	      0
-ARCH			    CONNECTED					  0	     0		0	   0	      0
-ARCH			    CLOSING					  2	 56607	   198656	 930	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  2	 56608	     3887	   1	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-RFS			    IDLE					  1	 90937	    59713	2048	      0
-RFS			    IDLE					  0	     0		0	   0	      0
-MRP0			    APPLYING_LOG				  1	 90937	    61760     409600	      0
-
-
--- 看日志   
-SELECT LOG_MODE FROM SYS.V$DATABASE;
-ARCHIVE LOG LIST;
-select * from v$standby_log;
-
-
--- 日志组
-SELECT GROUP#, ARCHIVED, STATUS FROM V$LOG;
-
-col FIRST_CHANGE# format a15
-col NEXT_CHANGE# format a15
-SELECT * FROM V$LOG;
-
-col MEMBER format a25
-SELECT * FROM V$LOGFILE;
-
-	
--- 验证adg
---   主库 
-select * from v$log;
-alter system switch logfile;  
-
--- will switch the logs on all RAC nodes (instances)
-ALTER SYSTEM ARCHIVE LOG CURRENT
-
 
 -- master adg ckecking
 select distinct instance_name,db_unique_name,database_role,open_mode,status,switchover_status from gv$instance,gv$database;
@@ -1031,20 +888,6 @@ select distinct instance_name,db_unique_name,database_role,open_mode,status,swit
 INSTANCE_NAME    DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            STATUS       SWITCHOVER_STATUS
 ---------------- ------------------------------ ---------------- -------------------- ------------ --------------------
 ADG              ADG                            SNAPSHOT STANDBY MOUNTED              MOUNTED      NOT ALLOWED
-
-
--- 看时间是否同步
-select to_char(checkpoint_time,'yyyy-hh-dd hh24:mi:ss') from v$datafile;
-
-   
---
-select thread#,max(sequence#) from v$log_history group by thread#;
-
-
--- 2、备库执行，查看是否有数据未应用
-set linesize 140
-col name format a80
-select * from ( select name,SEQUENCE#,APPLIED from v$archived_log order by sequence# desc ) where rownum < 5 ;
 
 -- regesiter archivelog file to database;
 alter database register physical logfile '/tmp/archivelogfile.dbf';
@@ -1054,52 +897,11 @@ alter database recover automatic standby database;
 --
 select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
 
-
--- 3、检查备库是否开启实时应用
-select recovery_mode from v$archive_dest_status where dest_id=2;
-
-
-
-
 -- error archive log
 select distinct  destination, error from v$archive_dest;
 
 
--- dg setup
--- https://oracle-base.com/articles/11g/data-guard-setup-11gr2#backup_primary_database
-
--- Start Apply Process
-
--- Foreground redo apply. Session never returns until cancel. 
-alter database recover managed standby database;
-
--- Background redo apply. Control is returned to the session once the apply process is started.
-alter database recover managed standby database disconnect from session;
-
--- cancel the apply process
-alter database recover managed standby database cancel;
-
--- set a delay between the arrival of the archived redo log and it being applied on the standby server
-alter database recover managed standby database cancel;
-alter database recover managed standby database delay 30 disconnect from session;
-
-alter database recover managed standby database cancel;
-alter database recover managed standby database nodelay disconnect from session;
-
--- Test Log Transport
--- primary server, check the latest archived redo log and force a log switch.
-alter session set nls_date_format='dd-mon-yyyy hh24:mi:ss';
-select sequence#, first_time, next_time from v$archived_log order by first_change#;
-alter system switch logfile;
-
--- Check the new archived redo log has arrived at the standby server and been applied.
-alter session set nls_date_format='DD-MON-YYYY HH24:MI:SS';
-select sequence#, first_time, next_time, applied from v$archived_log order by first_change#;
-
 -- Protection Mode
--- Maximum Availability: Transactions on the primary do not commit until redo information has been written to the online redo log and the standby redo logs of at least one standby location. If no standby location is available, it acts in the same manner as maximum performance mode until a standby becomes available again.
--- Maximum Performance: Transactions on the primary commit as soon as redo information has been written to the online redo log. Transfer of redo information to the standby server is asynchronous, so it does not impact on performance of the primary.
--- Maximum Protection: Transactions on the primary do not commit until redo information has been written to the online redo log and the standby redo logs of at least one standby location. If not suitable standby location is available, the primary database shuts down.
 select protection_mode from v$database;
 
 -- Maximum Availability.
@@ -1194,7 +996,7 @@ alter system set dg_broker_config_file1='+DATA/oradb/datafile/dr1oradb.dat'  sco
 alter system set dg_broker_config_file2='+DATA/oradb/datafile/dr2oradb.dat'  scope=spfile sid='*';
 -- 在primary和standby中启动
 alter system set dg_broker_start=TRUE scope=spfile sid='*';
--- 在primary和standby中添加lintener
+-- 在primary和standby中添加listener
 -- 注意GLOBAL_DBNAME为<DB_UNIQUE_NAME>_DGMGRL.<DB_DOMAIN>
 --
 SID_LIST_LISTENER =
@@ -1729,10 +1531,18 @@ table_name = 'T1';
 
 
 
--- redo log add new member
-alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo01.log' to group 1 ; 
-alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo02.log' to group 2 ; 
-alter database add logfile member '/u01/app/oracle/oradata/EE/onlinelog/redo03.log' to group 3 ; 
+-- redo log create/add group
+ALTER DATABASE ADD LOGFILE GROUP 10 ('/oracle/dbs/log1c.rdo', '/oracle/dbs/log2c.rdo') SIZE 100M BLOCKSIZE 512;
+-- redo log delete group
+ALTER DATABASE DROP LOGFILE GROUP 3;
+
+-- redo log add member
+ALTER DATABASE ADD LOGFILE MEMBER '/u01/app/oracle/oradata/EE/redo01.log' TO GROUP 1;
+-- redo log delete member
+ALTER DATABASE DROP LOGFILE MEMBER '/oracle/dbs/log3c.rdo';
+
+-- adg management is automatic.
+alter database add standby logfile;
 
 
 -- Multiplexed redolog recover
@@ -2053,6 +1863,13 @@ CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE3              NONUNIQ
 CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE4              NONUNIQUE INSERTTIME               
 
 
+
+
+-- ------------------------------
+-- INDEX
+-- ------------------------------
+
+
 -- 查询index是否失效；
 select index_name,last_analyzed,status from dba_indexes where owner='CKSP';
 select index_name,last_analyzed,status, NUM_ROWS from user_indexes;
@@ -2103,6 +1920,13 @@ exec dbms_stats.gather_index_stats(null, 'IDX_PCTREE_PARENTID', null, DBMS_STATS
 execute dbms_stats.gather_table_stats(ownname => 'CKSP', tabname => 'PCLINE', estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,
 execute dbms_stats.gather_table_stats(ownname => 'CKSP', tabname => 'PCLINE');
 execute dbms_stats.gather_schema_stats('SCOTT');
+
+
+
+
+-- ------------------------------
+-- SQL TUNE
+-- ------------------------------
 
 -- 接受推荐的 SQL 概要文件。
 execute dbms_sqltune.accept_sql_profile(task_name => 'staName807', task_owner => 'CKSP', replace => TRUE);
@@ -2252,6 +2076,12 @@ SYS                33 oracle     5tc4frsnvrv64   ltext_with_newlines t,V$SESSION
                                                  where t.address =s.sql_address
 
 
+-- check sql
+alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';     
+select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+
+
 
 -- 统计信息 
 -- 统计信息的收集是位于gather_stats_prog这个task，当前状态为enabled，即启用
@@ -2380,6 +2210,11 @@ SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 SELECT ID,STATUS FROM VOYAGEMAPDETAIL WHERE TRANSACTION_ID = TO_CHAR(:B1 )
 
 
+
+-- ------------------------------
+-- DBLINK
+-- ------------------------------
+
 -- create dblink
 -- https://dba.stackexchange.com/questions/54185/create-database-link-on-oracle-database-with-2-databases-on-different-machines
 --list dblik
@@ -2397,6 +2232,10 @@ select count(1) from schema.testtable@remote_dblink ;
 
 -- 查看是否有权限进程dblink操作
 select * from user_sys_privs where privilege like upper('&db_link');  
+
+
+
+
 
 -- Rman备份再恢复
 -- 1 copy backupset and autobackup to /home/oracle
@@ -2509,6 +2348,7 @@ fdisk -l 和 powermt display dev=all 确认存储盘信息
 alter diskgroup data mount;
 alter diskgroup ocr mount;
 
+
 -- asm creating DATA disk group
 CREATE DISKGROUP DATA NORMAL REDUNDANCY DISK '/dev/raw/raw1';
 CREATE DISKGROUP FRA EXTERNAL REDUNDANCY DISK 'dev/raw/raw2';
@@ -2587,7 +2427,8 @@ PATH            GROUP_#     DISK_# MOUNT_S HEADER_STATU STATE      TOTAL_MB    F
 /dev/raw/raw4             2      0 CACHED  MEMBER   NORMAL        20473  20380
 /dev/raw/raw5             3      0 CACHED  MEMBER   NORMAL        20473  20380
 
-
+-- check
+select state,redundancy,total_mb,free_mb,name,failgroup from v$asm_disk;
 
 
 -- asmcmd copy
@@ -2656,29 +2497,7 @@ MOUNTED  NORMAL  N         512   4096  1048576      3069     2143             10
 
 
 -- 按上面挂载后root运行启动服务
-[oragrid]$sudo su - 
 [root ~]# /oracle/11.2.0/grid/gridhome/bin/ocrcheck
-Status of Oracle Cluster Registry is as follows :
-	 Version                  :          3
-	 Total space (kbytes)     :     262120
-	 Used space (kbytes)      :       3172
-	 Available space (kbytes) :     258948
-	 ID                       : 1572689525
-	 Device/File Name         :       +OCR
-                                    Device/File integrity check succeeded
-
-                                    Device/File not configured
-
-                                    Device/File not configured
-
-                                    Device/File not configured
-
-                                    Device/File not configured
-
-	 Cluster registry integrity check succeeded
-
-	 Logical corruption check succeeded
-
 
 
 -- 这个会失败， 尝试启动crs，但失败。只能启动cluster
@@ -2710,6 +2529,13 @@ MB
 ----------
 187854.063
 
+
+
+
+
+-- ------------------------------
+-- Large table
+-- ------------------------------
 
 
 
@@ -2776,14 +2602,6 @@ alter system set db_domain='' scope=spfile;
 alter system set service_names = 'mydb' scope = both;
 
 
-
--- 开启日志实时应用
--- 检查
-select instance_name, db_unique_name,database_role,open_mode,status,switchover_status from v$instance,v$database;
--- dg开启应用
-SQL> recover managed standby database using current logfile disconnect from session;
--- dg 关闭应用
-SQL> alter database recover managed standby database cancel;
 
 
 -- 无法添加tempfile
@@ -3062,7 +2880,7 @@ END;
 EXEC DBMS_SQLTUNE.execute_tuning_task(task_name => '5fmyz01ptmc7f_tuning_task'); 
 
 
--- read tunning task
+-- read tuning task
 set long 65536
 set longchunksize 65536
 set linesize 100
