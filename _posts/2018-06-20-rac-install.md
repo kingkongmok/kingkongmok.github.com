@@ -16,7 +16,8 @@ yum -y groupinstall "Development Tools"
 yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
     compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc ntpdate glibc-common \
     glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC mlocate \
-    unixODBC-devel xorg-x11-xauth tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support
+    unixODBC-devel xorg-x11-xauth tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support\
+    sg3_utils
 
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 rpm -ivh /stage/software/*rpm
@@ -25,7 +26,7 @@ rpm -ivh /stage/software/*rpm
 
 ```
 yum -y install screen
-screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap'
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap sg3_utils'
 ```
 
 ---
@@ -250,6 +251,7 @@ export TMPDIR=$TMP
 export ORACLE_BASE=/u01/app/grid
 export ORACLE_HOME=/u01/app/11.2.0/grid
 export GRID_HOME=/u01/app/11.2.0/grid
+export CRS_HOME=$GRID_HOME
 export ORACLE_SID=+ASM1
 umask 022
 PATH=$ORACLE_HOME/bin:$PATH

@@ -184,3 +184,11 @@ Characteristics of this binary (from libperl):
 ```
 
 
+---
+
+### [force a CIFS connection to unmount](https://stackoverflow.com/questions/74626/how-do-you-force-a-cifs-connection-to-unmount)
+
+
+```
+umount -a -t cifs -l
+```
