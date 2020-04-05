@@ -254,7 +254,7 @@ show parameter log_archive_dest
 alter system set db_recovery_file_dest='+DATA' scope=spfile sid='*'; 
 
 --check recovery space usage
-select * from v$recover_area_usage ; 
+select * from v$recovery_area_usage ; 
 
 -- show parameter 
 show parameter db_recovery
@@ -547,10 +547,10 @@ cat > ~/init.ora <<EOF
 *.control_files='+DATA/adg1/controlfile/current.256.1013424367'
 *.db_recovery_file_dest='+DATA'
 *.db_recovery_file_dest_size=10G
+*.db_unique_name='adg1'
 *.db_name='oradb'
 *.memory_max_target=400M
 *.memory_target=400M
-*.db_unique_name='adg1'
 *.db_file_name_convert='+DATA','+DATA'
 *.fal_client=adg1
 *.fal_server=oradb
@@ -717,7 +717,7 @@ backup database plus archivelog
 
 run
 {
-  allocate channel d1 device type disk format '/tmp/backup/%U.bkp';
+  allocate channel d1 device type disk format '/home/oracle/backup/%U.bkp';
   backup database plus archivelog; 
   release channel d1;
 }
@@ -745,6 +745,10 @@ SWITCH TEMPFILE ALL;
 }
 
 SQLPLUS>
+select name from v$datafile;
+select name from v$tempfile;
+select member from v$logfile;
+
 alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
 alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
 alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
@@ -883,7 +887,7 @@ SYS@STANDBY> select * from v$archive_gap;
    
 
 -- master adg ckecking
-select distinct instance_name,db_unique_name,database_role,open_mode,status,switchover_status from gv$instance,gv$database;
+select distinct instance_name,db_unique_name,protection_mode,database_role,open_mode,status,switchover_status from gv$instance,gv$database;
 --
 INSTANCE_NAME    DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            STATUS       SWITCHOVER_STATUS
 ---------------- ------------------------------ ---------------- -------------------- ------------ --------------------
@@ -902,21 +906,21 @@ select distinct  destination, error from v$archive_dest;
 
 
 -- Protection Mode
-select protection_mode from v$database;
+select protection_mode, protection_level from v$database;
 
 -- Maximum Availability.
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
-ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE AVAILABILITY;
+alter database set standby database to maximize availability;
 
 -- Maximum Performance.
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby NOAFFIRM ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
-ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PERFORMANCE;
+alter database set standby database to maximize performance;
 
 -- Maximum Protection.
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
-SHUTDOWN IMMEDIATE;
-STARTUP MOUNT;
-ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PROTECTION;
+shutdown immediate;
+startup mount;
+alter database set standby database to maximize protection;
 
 
 -- Switchover manual
@@ -1034,6 +1038,13 @@ DGMGRL> CREATE CONFIGURATION 'oradb_config' as PRIMARY DATABASE IS 'oradb' conne
 DGMGRL> add database 'ADG' AS CONNECT IDENTIFIER IS 'ADG' MAINTAINED AS PHYSICAL;   
 DGMGRL> enable configuration
 --
+DGMGRL> connect sys/oracle
+DGMGRL> disable configuration;
+DGMGRL> REMOVE CONFIGURATION;
+dgmgrl> create configuration ORADB_CONFIG as primary database is PRIDB connect identifier is PRIDB ;
+dgmgrl> add database STBDB as connect identifier is STBDB maintained as physical;   
+dgmgrl> enable configuration
+--
 DGMGRL> show configuration;
 DGMGRL> show database 'ADG';
 
@@ -1082,6 +1093,8 @@ CRS-4533: Event Manager is online
 crsctl stop crs
 crsctl stop crs -f 
 crsctl start crs
+crsctl start res ora.cluster_interconnect.haip -init
+
 
 -- How to display the current configuration of the SCAN VIPs?
 srvctl config scan
@@ -1480,10 +1493,14 @@ expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott log
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 --example
-expdp sys/oracle \"/ as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
+expdp sys/oracle \" / as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
 -- import from network
 drop user cksp cascade;
-impdp  \"/ as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
+impdp  \" / as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
+-- dump table
+expdp \" / as sysdba \" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
+expdp \" / as sysdba \" tables=cksp.passengercheckinrecord dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+
 
 
 
@@ -1530,9 +1547,11 @@ table_name = 'T1';
 
 
 
+-- clear redo logfile
+ALTER DATABASE CLEAR LOGFILE GROUP 3;
 
 -- redo log create/add group
-ALTER DATABASE ADD LOGFILE GROUP 10 ('/oracle/dbs/log1c.rdo', '/oracle/dbs/log2c.rdo') SIZE 100M BLOCKSIZE 512;
+ALTER DATABASE ADD LOGFILE thead 2 GROUP 3 ('/oracle/dbs/log1c.rdo', '/oracle/dbs/log2c.rdo') SIZE 100M BLOCKSIZE 512;
 -- redo log delete group
 ALTER DATABASE DROP LOGFILE GROUP 3;
 
@@ -1900,6 +1919,7 @@ drop index TICKETRECORD_PK;
 -- directory for datadump
 select DIRECTORY_NAME, DIRECTORY_PATH from dba_directories;
 create directory dump_file_dir as '/u01test';
+create directory dump_file_dir as '/home/oracle/dump';
 grant read,write on directory dump_file_dir to gabsj, hztb, xttb,mylcpt;
 -- dba directory
 SELECT * FROM SYS.DBA_DIRECTORIES;
@@ -2347,6 +2367,7 @@ fdisk -l 和 powermt display dev=all 确认存储盘信息
 -- 
 alter diskgroup data mount;
 alter diskgroup ocr mount;
+alter diskgroup ocr dismount;
 
 
 -- asm creating DATA disk group
@@ -2403,6 +2424,14 @@ NAME			       HEADER_STATUS	    PATH
 SQL> DROP DISKGROUP INIT FORCE INCLUDING CONTENTS;
 
 Diskgroup dropped.
+
+
+select group_number, operation, state, est_minutes from v$asm_operation ;
+--
+GROUP_NUMBER OPERA STAT EST_MINUTES
+------------ ----- ---- -----------
+ 1            REBAL RUN  2
+ 1            REBAL WAIT 0
 
 
 -- create asm diskgroup
@@ -2462,7 +2491,8 @@ CRS-0184: Cannot communicate with the CRS daemon.
 
 
 -- 2. log 查异常原因
-[oragrid:/oracle/11.2.0/grid/gridhome/log/hostname/crsd]$vi crsd.log 
+ls -lh $CRS_HOME/log/`hostname`/crsd/crsd.log
+ls -lh $GRID_HOME/log/`hostname`/crsd/crsd.log
 
 
 -- 3.  ocr是oracle集群的注册文件，位于asm

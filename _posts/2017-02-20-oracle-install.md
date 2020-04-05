@@ -22,7 +22,7 @@ yum -y install xorg-x11-xauth
 rpm -ivh /stage/grid/rpm/cvuqdisk-1.0.9-1.rpm
 
 
-yum -y install kmod-oracleasm oracleasm-support
+yum -y install kmod-oracleasm oracleasm-support sg3_utils
 rpm -ivh oracleasmlib*rpm
 
 ```
@@ -30,7 +30,7 @@ rpm -ivh oracleasmlib*rpm
 
 ```
 yum -y install screen
-screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support'
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support sg3_utils'
 
 ```
 
