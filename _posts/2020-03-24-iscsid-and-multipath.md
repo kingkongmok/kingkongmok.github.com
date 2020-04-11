@@ -151,6 +151,12 @@ check
 tgt-admin --show
 ```
 
+### [update tgtd without restart](https://blog.delouw.ch/2013/07/07/creating-and-managing-iscsi-targets/)
+
+```
+tgt-admin --update ALL --force
+```
+
 ---
 
 
@@ -182,6 +188,15 @@ set
 ```
 iscsiadm -m node -p 10.255.255.150:3260,1 -T iqn.2008-09.com.example:server.target3 -l
 iscsiadm -m node -p 192.168.255.150:3260,1 -T iqn.2008-09.com.example:server.target3 -l
+```
+
+unset 
+
+```
+sudo /etc/init.d/iscsi restart
+sudo iscsiadm -m node -P 0
+sudo iscsiadm -m node -T iqn.2020-03.com.example:storage.target4 -p 192.168.1.150:3260,1 -u
+sudo iscsiadm -m node -T iqn.2020-03.com.example:storage.target4 -p 192.168.1.150:3260,1 -o delete
 ```
 
 ### restart iscsi, 用于线路修复
@@ -230,15 +245,15 @@ multipaths {
         }
         multipath {
                 wwid      1IET_00010003
-                alias     storage-orc1
+                alias     storage-ocr1
         }
         multipath {
                 wwid      1IET_00010004
-                alias     storage-orc2
+                alias     storage-ocr2
         }
         multipath {
                 wwid      1IET_00010005
-                alias     storage-orc3
+                alias     storage-ocr3
         }
 }
 ```
@@ -314,9 +329,9 @@ oracleasm listdisks
 /usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/mapper/storage-fra -a force=yes
 oracleasm listdisks
 /usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n ORC1 -s /dev/mapper/storage-orc1 -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n ORC2 -s /dev/mapper/storage-orc2 -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n ORC3 -s /dev/mapper/storage-orc3 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/mapper/storage-ocr1 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/mapper/storage-ocr2 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/mapper/storage-ocr3 -a force=yes
 oracleasm listdisks
 ls -l /dev/oracleasm/
 ls -l /dev/oracleasm/disks/

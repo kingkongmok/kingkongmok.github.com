@@ -36,8 +36,7 @@ screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:540 small/"
 ```
 mkdir small
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:720 small/"$i" ; done'
-screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:576 small/"$i" ; done'
-screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:640 small/"$i" ; done'
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:576 -b:v 750k small/"$i" ; done'
 ```
 
 + **Constant Rate Factor**, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24

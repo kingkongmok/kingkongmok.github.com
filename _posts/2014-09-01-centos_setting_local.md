@@ -192,3 +192,11 @@ Characteristics of this binary (from libperl):
 ```
 umount -a -t cifs -l
 ```
+
+---
+
+### nfs set config without restart
+
+```
+exportfs -ra
+```
