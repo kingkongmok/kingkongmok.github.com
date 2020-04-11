@@ -574,11 +574,40 @@ This final command will blank the OCR configuration and voting disk.
 # /etc/init.d/oracleasm createdisk DATA /dev/sdb1
 ```
 
+---
+
+### [asmtools: kfod, kfed, amdu](https://www.hhutzler.de/blog/asm-tools-used-by-support-kfod-kfed-amdu-doc-id-1485597-1/)
+
+#### kfod - Kernel Files OSM Disk
+
+```
+kfod disk=all
+kfod status=true g=OCR
+```
+
+#### kfed - Kernel Files metadata EDitor
+
+```
+kfed read ORCL:ORC1
+kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
+```
+
+#### amdu - ASM Metadata Dump Utility
+
+. Dumps metadata for ASM disks
+. Extract the content of ASM files even DG isn't mounted
+
+
+```
+asmcmd lsdg | grep -i ocr
+amdu -diskstring 'ORCL:*' -dump 'OCR'
+```
+
 
 ---
 
 
-## add nodes
+## [add nodes](https://docs.oracle.com/cd/E11882_01/rac.112/e41960/adddelunix.htm#RACAD7903)
 
 ```
 export IGNORE_PREADDNODE_CHECKS=Y
@@ -594,3 +623,9 @@ As a root user, execute the following script(s):
 ```
 crsctl check cluster -all
 ```
+
+---
+
+## [delete nodes](https://docs.oracle.com/cd/E11882_01/rac.112/e41960/adddelunix.htm#RACAD7903)
+
+

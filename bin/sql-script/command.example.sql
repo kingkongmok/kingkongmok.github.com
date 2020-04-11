@@ -749,10 +749,25 @@ select name from v$datafile;
 select name from v$tempfile;
 select member from v$logfile;
 
-alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
-alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
-alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
+-- alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
+-- alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
+-- alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
+
+-- 如果设置了db_create参数，能自动生成log位置     *.db_create_file_dest='/u01/app/oracle/oradata';
+alter database clear logfile group 1;
+alter database clear logfile group 2;
+alter database clear logfile group 3;
+alter database clear logfile group 4;
+
 alter database open resetlogs;
+
+
+-- disable / remove after restore to single node.
+select thread#, instance, status from v$thread
+alter database disable thread 2; 
+
+alter database drop logfile group 3;
+alter database drop logfile group 4;
 
 
 
@@ -1130,6 +1145,35 @@ srvctl modify scan_listener -p TCP:1522
 -- restart and enable it
 srvctl stop scan_listener
 srvctl start scan_listener
+
+
+-- 实际操作
+-- kill session
+BEGIN
+  FOR r IN (select sid,serial# from v$session where username='user')
+  LOOP
+      EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ','
+        || r.serial# || ''' immediate';
+  END LOOP;
+END;
+/
+
+-- 检查 在scanip上操作（两个操作也可以）：
+grid ~:$ srvctl config scan_listener
+-- 调整
+grid ~ :$ srvctl modify scan_listener -p TCP:1522
+-- 重启
+grid ~:$ srvctl stop scan_listener
+grid ~:$ srvctl start scan_listener
+-- 验证
+grid ~:$ ss -nltp | grep 152
+SQL> show parameter remote
+-- 注册
+show parameter remote_listener
+alter system set remote_listener='(DESCRIPTION =(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=172.16.70.35) (PORT=1522))))' sid='*';
+show parameter remote_listener
+
+
 
 -- How to verify the integrity of OCR?
 cluvfy comp ocr -n all -verbose
@@ -1698,7 +1742,7 @@ select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recov
 
 
 -- 默认新建datafiles文件位置
-db_create_file_dest                  string      /tmp/nas/oracle/oltp
+*.db_create_file_dest='/u01/app/oracle/oradata';
 
 
 -- create tablespace
