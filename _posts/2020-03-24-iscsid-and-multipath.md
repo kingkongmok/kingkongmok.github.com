@@ -342,3 +342,31 @@ ls -l /dev/oracleasm/disks/
 ALTER DISKGROUP dgroup1 ADD DISK '/devices/diska*';
 
 ```
+---
+
+### [asmtools: kfod, kfed, amdu](https://www.hhutzler.de/blog/asm-tools-used-by-support-kfod-kfed-amdu-doc-id-1485597-1/)
+
+#### kfod - Kernel Files OSM Disk
+
+```
+kfod disk=all
+kfod status=true g=OCR
+```
+
+#### kfed - Kernel Files metadata EDitor
+
+```
+kfed read ORCL:ORC1
+kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
+```
+
+#### amdu - ASM Metadata Dump Utility
+
+. Dumps metadata for ASM disks
+. Extract the content of ASM files even DG isn't mounted
+
+
+```
+asmcmd lsdg | grep -i ocr
+amdu -diskstring 'ORCL:*' -dump 'OCR'
+```
