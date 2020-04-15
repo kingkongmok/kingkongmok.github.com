@@ -546,6 +546,45 @@ install rdbms,  和grid的runInstaller一样，只在stb1
 /u01/app/oraInventory/logs/installActions<TIMESTAMP>.log
 ```
 
+
+---
+
+### 让oracle有asm使用权限
+
+
+```
+# 
+oracle@stb1 ~  $ ls -l $ORACLE_HOME/bin/oracle
+-rwsr-s--x. 1 oracle oinstall 239626641 Apr 14 11:45 oracle
+
+grid@stb1 setasmgidwrap o=/u01/app/oracle/product/12.2.0/dbhome_1/bin/oracle
+
+grid@stb1 /u01/app/oracle/product/11.2.0/dbhome_1/bin $ ls -l oracle
+-rwsr-s--x. 1 oracle asmadmin 239626641 Apr 14 11:45 oracle
+
+```
+
+---
+
+### 添加srvctl 服务
+
+```
+-- 删除旧服务
+$ srvctl remove database -d orcl
+-- 添加服务 用oracle用户
+oracle@host ~ $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1
+srvctl add database -d $ORACLE_SID -o $ORACLE_HOME
+
+-- standalone db
+sudo $GRID_HOME/bin/crsctl delete resource  ora.oradb.db
+-- rac
+srvctl add database -d db_unique_name -r PRIMARY -n db_name -o $ORACLE_HOME
+-- srvctl add database -d db_unique_name -r PHYSICAL_STANDBY -n db_name -o $ORACLE_HOME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+
+```
+
 ---
 
 ### dbca 

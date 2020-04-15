@@ -1,4 +1,187 @@
 -- ------------------------------
+-- storage and multipath
+-- ------------------------------
+
+--check
+mdadm --detail /dev/md0
+
+
+-- create
+mdadm --create --verbose /dev/md0 --level=10 --raid-devices=4 /dev/sdb /dev/sdc /dev/sdd /dev/sde --spare-devices=1 /dev/sdf
+mdadm --detail /dev/md0
+
+-- save
+mdadm --verbose --detail -scan > /etc/mdadm.conf
+
+--restore other machinne?
+cat /etc/mdadm.conf
+mdadm --assemble /dev/md0
+
+-- stop and remove
+mdadm --stop /dev/md0
+mdadm --remove /dev/md0
+mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+
+-- lvm
+pvcreate /dev/md0
+vgcreate storage /dev/md0
+lvcreate -n data -L 25GiB storage
+lvcreate -n fra -L 5GiB storage
+lvcreate -n ocr1 -L 1GiB storage
+lvcreate -n ocr2 -L 1GiB storage
+lvcreate -n ocr3 -L 1GiB storage
+
+---
+
+-- scsi-taget as service
+
+--install
+yum -y install scsi-target-utils sg3_utils
+
+--config /etc/tgt/targets.conf 
+default-driver iscsi
+<target iqn.2020-03.com.example:storage.target4>
+        backing-store /dev/mapper/storage-orc1
+        backing-store /dev/mapper/storage-orc2
+        backing-store /dev/mapper/storage-orc3
+        write-cache on
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+
+<target iqn.2020-04.com.example:storage.data>
+        backing-store /dev/mapper/storage-data
+        write-cache on
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+
+
+-- start
+service tgtd start
+tgt-admin --update ALL --force
+
+-- check
+tgt-admin --show
+
+
+-- iscsi-initiator
+yum install iscsi-initiator-utils
+
+--discover
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv1
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv2
+
+-- check
+iscsiadm -m node -P 0
+
+
+--restart iscsi
+sudo /etc/init.d/iscsi restart
+
+-- mulipath
+yum install device-mapper-multipath
+/sbin/mpathconf --enable
+/etc/init.d/multipathd restart
+multipath -ll
+
+-- /etc/multipath.conf
+
+
+defaults {
+        user_friendly_names yes
+        getuid_callout "/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/%n"
+}
+
+blacklist {
+        devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
+}
+
+multipaths {
+        multipath {
+                wwid      1IET_00010001
+                alias     storage-orc1
+        }
+        multipath {
+                wwid      1IET_00010002
+                alias     storage-orc2
+        }
+        multipath {
+                wwid      1IET_00010003
+                alias     storage-orc3
+        }
+        multipath {
+                wwid      1IET_00020001
+                alias     storage-data
+        }
+        multipath {
+                wwid      1IET_00080001
+                alias     storage-fra
+        }
+}
+
+
+
+---
+
+
+
+mdadm --verbose --detail /dev/md0
+mdadm --add /dev/md0 /dev/sdg /dev/sdi /dev/sdh
+mdadm --grow /dev/md0 --raid-devices=7
+mdadm --detail /dev/md0
+/etc/init.d/tgtd stop
+pvresize /dev/md0
+vgdisplay
+lvextend -l +100%FREE storage-fra
+lvextend -L 20G storage-fra
+/etc/init.d/tgtd start
+
+
+sudo /etc/init.d/iscsi stop
+sudo /etc/init.d/multipathd stop
+# sudo multipathd --disable
+# sudo multipathd -k'resize map storage-fra'
+sql> select name, total_mb/(1024) "Total GiB" from v$asm_diskgroup;
+sql> alter diskgroup FRA resize all;
+
+sudo /etc/init.d/oracleasm start
+
+/etc/init.d/oracleasm configure
+oracleasm scandisks
+oracleasm listdisks
+/usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/mapper/storage-fra -a force=yes
+oracleasm listdisks
+/usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/mapper/storage-ocr1 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/mapper/storage-ocr2 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/mapper/storage-ocr3 -a force=yes
+oracleasm listdisks
+ls -l /dev/oracleasm/
+ls -l /dev/oracleasm/disks/
+/etc/init.d/oracleasm --help
+/etc/init.d/oracleasm listdisks
+
+-- kfod - Kernel Files OSM Disk
+kfod disk=all
+kfod status=true g=OCR
+-- kfed - Kernel Files metadata EDitor
+kfed read ORCL:ORC1
+kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
+-- amdu - ASM Metadata Dump Utility
+--  Dumps metadata for ASM disks
+--  Extract the content of ASM files even DG isn't mounted
+asmcmd lsdg | grep -i ocr
+amdu -diskstring 'ORCL:*' -dump 'OCR'
+
+
+
+
+-- ------------------------------
 -- parameter
 -- ------------------------------
 
@@ -74,15 +257,22 @@ $ lsnrctl status
 $ lsnrctl stop
 -- 检查谁在运行监听
 ps -ef | grep tnslsnr
+
 -- 增加静态监听  $ORACLE_HOME/admin/network/listener.ora 添加
 SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
-     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = oradg)
-     (GLOBAL_DBNAME=dg)
-    )    
- )
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1 )
+     (SID_NAME = rac1 )
+     (GLOBAL_DBNAME= PRIDB )
+    )
+    (SID_DESC =
+      (GLOBAL_DBNAME = PRIDB_DGMGRL)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = rac1 )
+      (SERVICE_NAME = PRIDB)
+    )
+  )
 
 
 -- enable flashback
