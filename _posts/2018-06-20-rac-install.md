@@ -726,3 +726,77 @@ crsctl check cluster -all
 ## [delete nodes](https://docs.oracle.com/cd/E11882_01/rac.112/e41960/adddelunix.htm#RACAD7903)
 
 
+
+---
+
+### 测试系统关闭一下资源
+
+. [ologgerd](https://www.rocworks.at/wordpress/?p=271)
+
+```
+crsctl stop resource ora.crf -init
+sudo `which crsctl` delete resource ora.crf -init
+
+crsctl stop resource ora.oc4j
+```
+
+
+
+---
+
+### sample install
+
+
+
+```
+unzip p13390677_112040_Linux-x86-64_6of7.zip
+```
+
+**demos_install.rsp**
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_demosinstall_response_schema_v11_2_0
+ORACLE_HOSTNAME=rac1
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory/
+SELECTED_LANGUAGES=en,zh_CN
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/db_1
+ORACLE_BASE=/u01/app/oracle
+oracle.installer.autoupdates.option=
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+```
+
+. install
+
+```
+./runInstaller -silent -force -ignorePrereq -ignoreSysPrereqs -responseFile /stage/examples/response/demos_install.rsp
+```
+
+sql insert
+
+```
+SQL>@?/demo/schema/human_resources/hr_main.sql
+
+specify password for HR as parameter 1:
+Enter value for 1: hr
+
+specify default tablespeace for HR as parameter 2:
+Enter value for 2: USERS
+
+specify temporary tablespace for HR as parameter 3:
+Enter value for 3: TEMPTS1
+
+specify password for SYS as parameter 4:
+Enter value for 4: oracle
+
+specify log path as parameter 5:
+Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
+```

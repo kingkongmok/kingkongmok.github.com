@@ -3152,6 +3152,38 @@ select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
  
 
 
+
+-- explain plan
+-- display running explain plan
+select * from table(dbms_xplan.display);
+-- display specified sql_id plan
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id',&plan_hash_value));
+-- from baseline
+SELECT * FROM TABLE(DBMS_XPLAN.display_sql_plan_baseline(plan_name=>'SQL_PLAN_agz791au8s6jg30a4b3a6'));
+-- Display all the explain plans of a sql_id from a sql set DBACLASS_SET, sql_id-dwdx28sdfsdf5
+SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET', 'dwdx28sdfsdf5'));
+-- Display explain plan for particular plan_hash_value - 983987987
+SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET','dwdx28sdfsdf5', 983987987));
+ 
+
+--  
+
+-- DBA_HIST_SQL_PLAN get plan_hash_value from sqlid
+select s.begin_interval_time , s.end_interval_time , q.snap_id , q.dbid , q.sql_id , q.plan_hash_value , q.optimizer_cost , q.optimizer_mode from
+         dba_hist_sqlstat  q , dba_hist_snapshot s where q.dbid=&dbid and q.sql_id  = '&sql_id' and q.snap_id = s.snap_id
+         and s.begin_interval_time between sysdate-7 and sysdate order by s.snap_id desc ;
+
+
+BEGIN_INTERVAL_TIME END_INTERVAL_TIME      SNAP_ID       DBID SQL_ID                                PLAN_HASH_VALUE                          OPTIMIZER_COST OPTIMIZER_
+------------------- ------------------- ---------- ---------- ------------- --------------------------------------- --------------------------------------- ----------
+2020-04-10 20:00:38 2020-04-10 21:00:43     106105 1227174256 6gvch1xu9ca3g                                       0                                       0 ALL_ROWS  
+2020-04-10 19:00:34 2020-04-10 20:00:38     106104 1227174256 6gvch1xu9ca3g                                       0                                       0 ALL_ROWS  
+
+-- get explain plan from sql_id and plan_hash_value
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id', &plan_hash_value ));
+
+
 -- ------------------------------
 -- cache 
 -- ------------------------------
