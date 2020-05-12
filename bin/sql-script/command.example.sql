@@ -282,6 +282,35 @@ ALTER DATABASE FLASHBACK ON;
 SELECT FLASHBACK_ON FROM V$DATABASE;
 
 
+-- recyclebin manage
+show parameter recyclebin;
+show recyclebin;   -- 显示垃圾桶内容
+drop table name purge;  --drop表不放垃圾桶
+
+Purge tablespace tablespace_name -- 用于清空表空间的Recycle Bin
+Purge tablespace tablespace_name user user_name -- 清空指定表空间的Recycle Bin中指定用户的对象
+Purge recyclebin                                --删除当前用户的Recycle Bin中的对象
+Purge dba_recyclebin                            --删除所有用户的Recycle Bin中的对象，该命令要sysdba权限
+Drop table table_name purge                     -- 删除对象并且不放在Recycle Bin中，即永久的删除，不能用Flashback恢复。
+Purge index recycle_bin_object_name             -- 当想释放Recycle bin的空间，又想能恢复表时，可以通过释放该对象的index所占用的空间来缓解空间压力。 因为索引是可以重建的。
+PURGE TABLE TABLE_NAME                          --删除回收站中指定对象
+PURGE TABLE "BIN$04LhcpndanfgMAAAAAANPw==$0";   --使用其回收站中的名称：
+
+-- recyclebin flashback
+flashback table table_name to before drop;                          -- 还原回收站被删除的表、索引等对象， 是通过Flashback Drop实现的
+flashback table table_name to before drop rename to new_table_name; --闪回到新的名字
+-- Flashback Drop注意事项
+1: 只能用于非系统表空间和本地管理的表空间。 在系统表空间中，表对象删除后就真的从系统中删除了，而不是存放在回收站中。
+2: 对象的参考约束不会被恢复，指向该对象的外键约束需要重建。
+3: 对象能否恢复成功，取决于对象空间是否被覆盖重用。
+4: 当删除表时，依赖于该表的物化视图也会同时删除，但是由于物化视图并不会放入recycle binzhong，因此当你执行flashback drop时，并不能恢复依赖其的物化视图。需要DBA手工重建。
+5: 对于回收站（Recycle Bin）中的对象，只支持查询。不支持任何其他DML、DDL等操作。
+
+
+
+
+
+
 -- EMi 
 -- create https://dbatricksworld.com/oracle-enterprise-manager-failed-to-start-oc4j-configuration-issue-configure-enterprise-manager-database-control-manually-with-enterprise-manager-configuration-assistant/
 emca -config dbcontrol db -repos create
@@ -487,7 +516,7 @@ SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user';
 
 
 -- create user/schema
-CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TEMP USERDEFAULTSPACE PROFILE default ACCOUNT unlock;
+CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE default ACCOUNT unlock;
 GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO username;  
 GRANT CONNECT, RESOURCE TO username ; 
 GRANT UNLIMITED TABLESPACE TO users;
@@ -1652,6 +1681,8 @@ alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf'
 
 -- 如果 db_create_file_dest 有设置，例如"+DATA"的时候，使用以下方式添加数据文件
 alter tablespace USERS add datafile '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+-- alter system set db_create_file_dest='/u01/app/oracle/oradata';
+alter tablespace USERS add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 
 
@@ -1684,7 +1715,8 @@ WHERE df.file_id = f.file_id(+) ORDER BY df.tablespace_name, df.file_name;
 -- default tablespace determined when creating a table?
 -- oracle 查看 用户，用户权限，用户表空间，用户默认表空间。
 select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
-
+ALTER USER user_name DEFAULT TABLESPACE USERS;
+ALTER USER user_name TEMPORARY TABLESPACE TEMP;
 
 --  Temporary Tablespace Usage
 select round(100*(  free_space / Tablespace_size) ,0) free_perc  from dba_temp_free_space;
@@ -1716,6 +1748,19 @@ ALTER DATABASE OPEN;
 
 -- drop tempfile
 ALTER DATABASE TEMPFILE '/u01/app/oracle/oradata/EE/temp01.dbf' DROP INCLUDING DATAFILES;
+-- kill session and drop tempfile
+--ORA-25152: TEMPFILE cannot be dropped at this time
+SELECT s.sid, s.username, s.status, u.tablespace, u.segfile#, u.contents, u.extents, u.blocks FROM v$session s, v$sort_usage u WHERE s.saddr=u.session_addr ORDER BY u.tablespace, u.segfile#, u.segblk#, u.blocks;
+--
+       SID USERNAME			  STATUS   TABLESPACE			     SEGFILE# CONTENTS	   EXTENTS     BLOCKS
+---------- ------------------------------ -------- ------------------------------- ---------- --------- ---------- ----------
+       317 CKSES			  INACTIVE TMP					  207 TEMPORARY 	 1	  128
+
+select sid,serial# from v$session where sid = 317 ;
+alter system kill session '758,771';
+
+
+
 
 -- 数据泵 impdp expdb
 --example
@@ -1733,7 +1778,25 @@ drop user cksp cascade;
 impdp  \" / as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
 -- dump table
 expdp \" / as sysdba \" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
-expdp \" / as sysdba \" tables=cksp.passengercheckinrecord dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+expdp \" / as sysdba \" tables=schema.table1,schema.table2 dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+impdp \" / as sysdba \" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
+-- impdp sys用户不需要指定schema，因为expdp时候已经带有。但没有进行table_exists测试
+
+impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA
+impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log ESTIMATE_ONLY=yes 
+
+
+-- check space
+select sum(bytes)/1024/1024 mb , tablespace_name  from user_segments group by tablespace_name;
+
+-- kill job
+-- if not exit the prompt
+Export >
+kill_job
+-- if exit the promt, get the jobname name attach on it
+select * from dba_datapump_jobs;
+impdp username/password@database attach=name_of_the_job   --(Get the name_of_the_job using the above query)
+Import>kill_job
 
 
 
@@ -2443,7 +2506,7 @@ select SEQUENCE_NAME,to_char(LAST_NUMBER),to_char(MAX_VALUE) from user_sequences
 
 
 -- check session
-select s.sid, s.serial#, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.  sql_id and s.sid = '&sid' ;
+select s.sid, s.serial#, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.sid = '&sid' ;
 
 --
 --

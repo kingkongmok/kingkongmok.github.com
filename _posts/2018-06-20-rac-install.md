@@ -13,7 +13,7 @@ category: linux
 ```
 yum -y update
 yum -y groupinstall "Development Tools"
-yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
+yum -y install man mlocate vim screen smartmontools sysstat gcc gcc-c++ make binutils \
     compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc ntpdate glibc-common \
     glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC mlocate \
     unixODBC-devel xorg-x11-xauth tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support\
@@ -26,7 +26,7 @@ rpm -ivh /stage/software/*rpm
 
 ```
 yum -y install screen
-screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap sg3_utils'
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install man mlocate vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap sg3_utils'
 ```
 
 ---
@@ -747,7 +747,6 @@ crsctl stop resource ora.oc4j
 ### sample install
 
 
-
 ```
 unzip p13390677_112040_Linux-x86-64_6of7.zip
 ```
@@ -800,3 +799,16 @@ Enter value for 4: oracle
 specify log path as parameter 5:
 Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
 ```
+
+---
+
+### [sample install manual](https://github.com/oracle/db-sample-schemas#README.txt)
+
+```
+cd $HOME/db-sample-schemas
+perl -p -i.bak -e 's#__SUB__CWD__#'$(pwd)'#g' *.sql */*.sql */*.dat 
+#sqlplus system/systempw@connect_string @mksample systempw syspw hrpw oepw pmpw ixpw shpw bipw users temp /your/path/to/log/ connect_string
+sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMPTS1 /tmp/sample_install.log pridb
+```
+
+
