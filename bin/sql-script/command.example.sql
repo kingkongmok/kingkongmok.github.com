@@ -2291,13 +2291,13 @@ WHERE ROWNUM <= 20
 /
 
 --  SQL ordered by Elapsed Time in 20mins, like awr
-col EXEs format a5;
-col TOTAL_ELAPSED format a15; 
-col ELAPSED_PER_EXEC format a15; 
-col TOTAL_CPU format a15; 
-col CPU_PER_SEC format a15; 
-col TOTAL_USER_IO format a15; 
-col USER_IO_PER_EXEC format a15; 
+col EXEs format 99999999;
+col TOTAL_ELAPSED format 9999999999; 
+col ELAPSED_PER_EXEC format 9999999999; 
+col TOTAL_CPU format 9999999999; 
+col CPU_PER_SEC format 9999999999; 
+col TOTAL_USER_IO format 99999999.99; 
+col USER_IO_PER_EXEC format 99999999.99; 
 col MODULE format a20; 
 select * from (
     select
