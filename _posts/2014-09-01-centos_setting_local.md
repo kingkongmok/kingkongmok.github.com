@@ -200,3 +200,24 @@ umount -a -t cifs -l
 ```
 exportfs -ra
 ```
+
+--- 
+
+### [SYSTEMD TARGETS](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/sect-managing_services_with_systemd-targets)
+
+```
+runlevel3.target, multi-user.target
+runlevel5.target, graphical.target
+```
+
+```
+# Viewing the Default Target
+systemctl get-default
+systemctl list-units --type target
+
+# Changing the Default Target
+sudo systemctl set-default multi-user.target
+
+# Changing the Current Target
+sudo systemctl isolate multi-user.target
+```

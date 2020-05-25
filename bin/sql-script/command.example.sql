@@ -1,4 +1,187 @@
 -- ------------------------------
+-- storage and multipath
+-- ------------------------------
+
+--check
+mdadm --detail /dev/md0
+
+
+-- create
+mdadm --create --verbose /dev/md0 --level=10 --raid-devices=4 /dev/sdb /dev/sdc /dev/sdd /dev/sde --spare-devices=1 /dev/sdf
+mdadm --detail /dev/md0
+
+-- save
+mdadm --verbose --detail -scan > /etc/mdadm.conf
+
+--restore other machinne?
+cat /etc/mdadm.conf
+mdadm --assemble /dev/md0
+
+-- stop and remove
+mdadm --stop /dev/md0
+mdadm --remove /dev/md0
+mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+
+-- lvm
+pvcreate /dev/md0
+vgcreate storage /dev/md0
+lvcreate -n data -L 25GiB storage
+lvcreate -n fra -L 5GiB storage
+lvcreate -n ocr1 -L 1GiB storage
+lvcreate -n ocr2 -L 1GiB storage
+lvcreate -n ocr3 -L 1GiB storage
+
+---
+
+-- scsi-taget as service
+
+--install
+yum -y install scsi-target-utils sg3_utils
+
+--config /etc/tgt/targets.conf 
+default-driver iscsi
+<target iqn.2020-03.com.example:storage.target4>
+        backing-store /dev/mapper/storage-orc1
+        backing-store /dev/mapper/storage-orc2
+        backing-store /dev/mapper/storage-orc3
+        write-cache on
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+
+<target iqn.2020-04.com.example:storage.data>
+        backing-store /dev/mapper/storage-data
+        write-cache on
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+
+
+-- start
+service tgtd start
+tgt-admin --update ALL --force
+
+-- check
+tgt-admin --show
+
+
+-- iscsi-initiator
+yum install iscsi-initiator-utils
+
+--discover
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv1
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv2
+
+-- check
+iscsiadm -m node -P 0
+
+
+--restart iscsi
+sudo /etc/init.d/iscsi restart
+
+-- mulipath
+yum install device-mapper-multipath
+/sbin/mpathconf --enable
+/etc/init.d/multipathd restart
+multipath -ll
+
+-- /etc/multipath.conf
+
+
+defaults {
+        user_friendly_names yes
+        getuid_callout "/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/%n"
+}
+
+blacklist {
+        devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
+}
+
+multipaths {
+        multipath {
+                wwid      1IET_00010001
+                alias     storage-orc1
+        }
+        multipath {
+                wwid      1IET_00010002
+                alias     storage-orc2
+        }
+        multipath {
+                wwid      1IET_00010003
+                alias     storage-orc3
+        }
+        multipath {
+                wwid      1IET_00020001
+                alias     storage-data
+        }
+        multipath {
+                wwid      1IET_00080001
+                alias     storage-fra
+        }
+}
+
+
+
+---
+
+
+
+mdadm --verbose --detail /dev/md0
+mdadm --add /dev/md0 /dev/sdg /dev/sdi /dev/sdh
+mdadm --grow /dev/md0 --raid-devices=7
+mdadm --detail /dev/md0
+/etc/init.d/tgtd stop
+pvresize /dev/md0
+vgdisplay
+lvextend -l +100%FREE storage-fra
+lvextend -L 20G storage-fra
+/etc/init.d/tgtd start
+
+
+sudo /etc/init.d/iscsi stop
+sudo /etc/init.d/multipathd stop
+# sudo multipathd --disable
+# sudo multipathd -k'resize map storage-fra'
+sql> select name, total_mb/(1024) "Total GiB" from v$asm_diskgroup;
+sql> alter diskgroup FRA resize all;
+
+sudo /etc/init.d/oracleasm start
+
+/etc/init.d/oracleasm configure
+oracleasm scandisks
+oracleasm listdisks
+/usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/mapper/storage-fra -a force=yes
+oracleasm listdisks
+/usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/mapper/storage-ocr1 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/mapper/storage-ocr2 -a force=yes
+/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/mapper/storage-ocr3 -a force=yes
+oracleasm listdisks
+ls -l /dev/oracleasm/
+ls -l /dev/oracleasm/disks/
+/etc/init.d/oracleasm --help
+/etc/init.d/oracleasm listdisks
+
+-- kfod - Kernel Files OSM Disk
+kfod disk=all
+kfod status=true g=OCR
+-- kfed - Kernel Files metadata EDitor
+kfed read ORCL:ORC1
+kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
+-- amdu - ASM Metadata Dump Utility
+--  Dumps metadata for ASM disks
+--  Extract the content of ASM files even DG isn't mounted
+asmcmd lsdg | grep -i ocr
+amdu -diskstring 'ORCL:*' -dump 'OCR'
+
+
+
+
+-- ------------------------------
 -- parameter
 -- ------------------------------
 
@@ -74,15 +257,22 @@ $ lsnrctl status
 $ lsnrctl stop
 -- 检查谁在运行监听
 ps -ef | grep tnslsnr
+
 -- 增加静态监听  $ORACLE_HOME/admin/network/listener.ora 添加
 SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
-     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/dbhome_1)
-     (SID_NAME = oradg)
-     (GLOBAL_DBNAME=dg)
-    )    
- )
+     (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1 )
+     (SID_NAME = rac1 )
+     (GLOBAL_DBNAME= PRIDB )
+    )
+    (SID_DESC =
+      (GLOBAL_DBNAME = PRIDB_DGMGRL)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = rac1 )
+      (SERVICE_NAME = PRIDB)
+    )
+  )
 
 
 -- enable flashback
@@ -90,6 +280,35 @@ SID_LIST_LISTENER =
 ALTER SYSTEM SET DB_FLASHBACK_RETENTION_TARGET=4320;
 ALTER DATABASE FLASHBACK ON;
 SELECT FLASHBACK_ON FROM V$DATABASE;
+
+
+-- recyclebin manage
+show parameter recyclebin;
+show recyclebin;   -- 显示垃圾桶内容
+drop table name purge;  --drop表不放垃圾桶
+
+Purge tablespace tablespace_name -- 用于清空表空间的Recycle Bin
+Purge tablespace tablespace_name user user_name -- 清空指定表空间的Recycle Bin中指定用户的对象
+Purge recyclebin                                --删除当前用户的Recycle Bin中的对象
+Purge dba_recyclebin                            --删除所有用户的Recycle Bin中的对象，该命令要sysdba权限
+Drop table table_name purge                     -- 删除对象并且不放在Recycle Bin中，即永久的删除，不能用Flashback恢复。
+Purge index recycle_bin_object_name             -- 当想释放Recycle bin的空间，又想能恢复表时，可以通过释放该对象的index所占用的空间来缓解空间压力。 因为索引是可以重建的。
+PURGE TABLE TABLE_NAME                          --删除回收站中指定对象
+PURGE TABLE "BIN$04LhcpndanfgMAAAAAANPw==$0";   --使用其回收站中的名称：
+
+-- recyclebin flashback
+flashback table table_name to before drop;                          -- 还原回收站被删除的表、索引等对象， 是通过Flashback Drop实现的
+flashback table table_name to before drop rename to new_table_name; --闪回到新的名字
+-- Flashback Drop注意事项
+1: 只能用于非系统表空间和本地管理的表空间。 在系统表空间中，表对象删除后就真的从系统中删除了，而不是存放在回收站中。
+2: 对象的参考约束不会被恢复，指向该对象的外键约束需要重建。
+3: 对象能否恢复成功，取决于对象空间是否被覆盖重用。
+4: 当删除表时，依赖于该表的物化视图也会同时删除，但是由于物化视图并不会放入recycle binzhong，因此当你执行flashback drop时，并不能恢复依赖其的物化视图。需要DBA手工重建。
+5: 对于回收站（Recycle Bin）中的对象，只支持查询。不支持任何其他DML、DDL等操作。
+
+
+
+
 
 
 -- EMi 
@@ -203,6 +422,14 @@ REVOKE EXECUTE ON Find_Value FROM public;
 -- autotrace
 set autotrace traceonly statistics; 
 set autotrace off;
+-- 
+drop role plustrace;
+create role plustrace;
+grant select on v_$sesstat to plustrace;
+grant select on v_$statname to plustrace;
+grant select on v_$mystat to plustrace;
+grant plustrace to dba with admin option;
+grant plustrace to SCOTT;
 
 
 -- turn off Oracle password expiration?
@@ -297,8 +524,8 @@ SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user';
 
 
 -- create user/schema
-CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TEMP USERDEFAULTSPACE PROFILE default ACCOUNT unlock;
-GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO username;  
+CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE default ACCOUNT unlock;
+GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE, CREATE FUNCTION TO username;  
 GRANT CONNECT, RESOURCE TO username ; 
 GRANT UNLIMITED TABLESPACE TO users;
 -- CONNECT to assign privileges to the user through attaching the account to various roles
@@ -1462,6 +1689,8 @@ alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf'
 
 -- 如果 db_create_file_dest 有设置，例如"+DATA"的时候，使用以下方式添加数据文件
 alter tablespace USERS add datafile '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
+-- alter system set db_create_file_dest='/u01/app/oracle/oradata';
+alter tablespace USERS add datafile size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
 
 
@@ -1494,7 +1723,8 @@ WHERE df.file_id = f.file_id(+) ORDER BY df.tablespace_name, df.file_name;
 -- default tablespace determined when creating a table?
 -- oracle 查看 用户，用户权限，用户表空间，用户默认表空间。
 select USERNAME, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE from DBA_USERS;
-
+ALTER USER user_name DEFAULT TABLESPACE USERS;
+ALTER USER user_name TEMPORARY TABLESPACE TEMP;
 
 --  Temporary Tablespace Usage
 select round(100*(  free_space / Tablespace_size) ,0) free_perc  from dba_temp_free_space;
@@ -1526,6 +1756,19 @@ ALTER DATABASE OPEN;
 
 -- drop tempfile
 ALTER DATABASE TEMPFILE '/u01/app/oracle/oradata/EE/temp01.dbf' DROP INCLUDING DATAFILES;
+-- kill session and drop tempfile
+--ORA-25152: TEMPFILE cannot be dropped at this time
+SELECT s.sid, s.username, s.status, u.tablespace, u.segfile#, u.contents, u.extents, u.blocks FROM v$session s, v$sort_usage u WHERE s.saddr=u.session_addr ORDER BY u.tablespace, u.segfile#, u.segblk#, u.blocks;
+--
+       SID USERNAME			  STATUS   TABLESPACE			     SEGFILE# CONTENTS	   EXTENTS     BLOCKS
+---------- ------------------------------ -------- ------------------------------- ---------- --------- ---------- ----------
+       317 CKSES			  INACTIVE TMP					  207 TEMPORARY 	 1	  128
+
+select sid,serial# from v$session where sid = 317 ;
+alter system kill session '758,771';
+
+
+
 
 -- 数据泵 impdp expdb
 --example
@@ -1543,7 +1786,25 @@ drop user cksp cascade;
 impdp  \" / as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
 -- dump table
 expdp \" / as sysdba \" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
-expdp \" / as sysdba \" tables=cksp.passengercheckinrecord dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+expdp \" / as sysdba \" tables=schema.table1,schema.table2 dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+impdp \" / as sysdba \" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
+-- impdp sys用户不需要指定schema，因为expdp时候已经带有。但没有进行table_exists测试
+
+impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
+expdp \" / as sysdba \" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log ESTIMATE_ONLY=yes 
+
+
+-- check space
+select sum(bytes)/1024/1024 mb , tablespace_name  from user_segments group by tablespace_name;
+
+-- kill job
+-- if not exit the prompt
+Export >
+kill_job
+-- if exit the promt, get the jobname name attach on it
+select * from dba_datapump_jobs;
+impdp username/password@database attach=name_of_the_job   --(Get the name_of_the_job using the above query)
+Import>kill_job
 
 
 
@@ -1992,6 +2253,22 @@ execute dbms_stats.gather_schema_stats('SCOTT');
 -- SQL TUNE
 -- ------------------------------
 
+
+-- Privilege
+grant advisor to scott;
+grant administer sql tuning set to scott;
+
+
+-- innor join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e inner join dept d on e.deptno=d.deptno order by e.empno;
+-- left join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e left join dept d on e.deptno=d.deptno order by e.empno;
+-- right join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e right join dept d on e.deptno=d.deptno order by e.empno;
+-- full join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e full join dept d on e.deptno=d.deptno order by e.empno;
+
+
 -- 接受推荐的 SQL 概要文件。
 execute dbms_sqltune.accept_sql_profile(task_name => 'staName807', task_owner => 'CKSP', replace => TRUE);
 
@@ -2038,13 +2315,13 @@ WHERE ROWNUM <= 20
 /
 
 --  SQL ordered by Elapsed Time in 20mins, like awr
-col EXEs format a5;
-col TOTAL_ELAPSED format a15; 
-col ELAPSED_PER_EXEC format a15; 
-col TOTAL_CPU format a15; 
-col CPU_PER_SEC format a15; 
-col TOTAL_USER_IO format a15; 
-col USER_IO_PER_EXEC format a15; 
+col EXEs format 99999999;
+col TOTAL_ELAPSED format 9999999999; 
+col ELAPSED_PER_EXEC format 9999999999; 
+col TOTAL_CPU format 9999999999; 
+col CPU_PER_SEC format 9999999999; 
+col TOTAL_USER_IO format 99999999.99; 
+col USER_IO_PER_EXEC format 99999999.99; 
 col MODULE format a20; 
 select * from (
     select
@@ -2144,6 +2421,7 @@ SYS                33 oracle     5tc4frsnvrv64   ltext_with_newlines t,V$SESSION
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';     
 select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+select sql_id, sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 
 
 
@@ -2253,7 +2531,7 @@ select SEQUENCE_NAME,to_char(LAST_NUMBER),to_char(MAX_VALUE) from user_sequences
 
 
 -- check session
-select s.sid, s.serial#, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.  sql_id and s.sid = '&sid' ;
+select s.sid, s.serial#, s.username, s.machine, s.osuser, cpu_time, (elapsed_time/1000000)/60 as minutes, sql_text from gv$sqlarea a, gv$session s where s.sql_id = a.sql_id and s.sid = '&sid' ;
 
 --
 --
@@ -2960,6 +3238,38 @@ set longchunksize 65536
 set linesize 100
 select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
  
+
+
+
+-- explain plan
+-- display running explain plan
+select * from table(dbms_xplan.display);
+-- display specified sql_id plan
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id',&plan_hash_value));
+-- from baseline
+SELECT * FROM TABLE(DBMS_XPLAN.display_sql_plan_baseline(plan_name=>'SQL_PLAN_agz791au8s6jg30a4b3a6'));
+-- Display all the explain plans of a sql_id from a sql set DBACLASS_SET, sql_id-dwdx28sdfsdf5
+SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET', 'dwdx28sdfsdf5'));
+-- Display explain plan for particular plan_hash_value - 983987987
+SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET','dwdx28sdfsdf5', 983987987));
+ 
+
+--  
+
+-- DBA_HIST_SQL_PLAN get plan_hash_value from sqlid
+select s.begin_interval_time , s.end_interval_time , q.snap_id , q.dbid , q.sql_id , q.plan_hash_value , q.optimizer_cost , q.optimizer_mode from
+         dba_hist_sqlstat  q , dba_hist_snapshot s where q.dbid=&dbid and q.sql_id  = '&sql_id' and q.snap_id = s.snap_id
+         and s.begin_interval_time between sysdate-7 and sysdate order by s.snap_id desc ;
+
+
+BEGIN_INTERVAL_TIME END_INTERVAL_TIME      SNAP_ID       DBID SQL_ID                                PLAN_HASH_VALUE                          OPTIMIZER_COST OPTIMIZER_
+------------------- ------------------- ---------- ---------- ------------- --------------------------------------- --------------------------------------- ----------
+2020-04-10 20:00:38 2020-04-10 21:00:43     106105 1227174256 6gvch1xu9ca3g                                       0                                       0 ALL_ROWS  
+2020-04-10 19:00:34 2020-04-10 20:00:38     106104 1227174256 6gvch1xu9ca3g                                       0                                       0 ALL_ROWS  
+
+-- get explain plan from sql_id and plan_hash_value
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id', &plan_hash_value ));
 
 
 -- ------------------------------
