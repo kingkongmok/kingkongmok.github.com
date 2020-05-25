@@ -44,7 +44,7 @@ sub usage {
 HELPTEXT
 }
 
-my $videoPath = shift // "/home/kk/Downloads/videos"; 
+my $Path = shift // "/home/kk/Downloads/videos"; 
 
 
 sub confirm{
@@ -66,19 +66,36 @@ if ( $opt_h ) {
     exit 23;
 }
 
-opendir (my $dh, $videoPath) || die $!; 
+opendir (my $videodh, $Path) || die $!; 
 my %h; 
 my @videoFiles =  
 grep { !$h{$_}++ }
 map{s/-\d+?\.(?:mp4|flv|avi|mkv)//; $_}
 map $_->[0],
 sort { $a->[1] <=> $b->[1] }
-map [ $_, +(stat "$videoPath/$_")[9] ],
-grep{/\.(?:mp4|flv|avi|mkv)$/} readdir $dh ; 
+map [ $_, +(stat "$Path/$_")[9] ],
+grep{/\.(?:mp4|flv|avi|mkv)$/} readdir $videodh ; 
+
+opendir (my $comixdh, $Path) || die $!; 
+my @comixFiles =  
+grep { !$h{$_}++ }
+map{s/-\d+?\.(?:zip|rar|tar)//; $_}
+map $_->[0],
+sort { $a->[1] <=> $b->[1] }
+map [ $_, +(stat "$Path/$_")[9] ],
+grep{/\.(?:zip|rar|tar)$/} readdir $comixdh ; 
 
 foreach my $file ( @videoFiles ) {
-    my $fileprefixname = $videoPath . "/" . $file ; 
+    my $fileprefixname = $Path . "/" . $file ; 
     system("mplayer \"$fileprefixname\"\*");
+    if ( confirm("remove file $file\*") ) {
+        system("rm \"$fileprefixname\"\*");
+    }
+}
+
+foreach my $file ( @comixFiles ) {
+    my $fileprefixname = $Path . "/" . $file ; 
+    system("mcomix \"$fileprefixname\"\*");
     if ( confirm("remove file $file\*") ) {
         system("rm \"$fileprefixname\"\*");
     }
