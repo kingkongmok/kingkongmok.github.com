@@ -289,6 +289,7 @@ yum install device-mapper-multipath
 /sbin/mpathconf --enable
 /etc/init.d/multipathd restart
 multipath -ll
+sudo /sbin/multipath -ll|grep -qP "fault|fail|inactive"
 ```
 
 

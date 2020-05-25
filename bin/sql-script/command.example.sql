@@ -422,6 +422,14 @@ REVOKE EXECUTE ON Find_Value FROM public;
 -- autotrace
 set autotrace traceonly statistics; 
 set autotrace off;
+-- 
+drop role plustrace;
+create role plustrace;
+grant select on v_$sesstat to plustrace;
+grant select on v_$statname to plustrace;
+grant select on v_$mystat to plustrace;
+grant plustrace to dba with admin option;
+grant plustrace to SCOTT;
 
 
 -- turn off Oracle password expiration?
@@ -517,7 +525,7 @@ SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user';
 
 -- create user/schema
 CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE default ACCOUNT unlock;
-GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO username;  
+GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE, CREATE FUNCTION TO username;  
 GRANT CONNECT, RESOURCE TO username ; 
 GRANT UNLIMITED TABLESPACE TO users;
 -- CONNECT to assign privileges to the user through attaching the account to various roles
@@ -1782,8 +1790,8 @@ expdp \" / as sysdba \" tables=schema.table1,schema.table2 dumpfile=passengerche
 impdp \" / as sysdba \" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
 -- impdp sys用户不需要指定schema，因为expdp时候已经带有。但没有进行table_exists测试
 
-impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA
-impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log ESTIMATE_ONLY=yes 
+impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
+expdp \" / as sysdba \" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log ESTIMATE_ONLY=yes 
 
 
 -- check space
@@ -2245,6 +2253,22 @@ execute dbms_stats.gather_schema_stats('SCOTT');
 -- SQL TUNE
 -- ------------------------------
 
+
+-- Privilege
+grant advisor to scott;
+grant administer sql tuning set to scott;
+
+
+-- innor join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e inner join dept d on e.deptno=d.deptno order by e.empno;
+-- left join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e left join dept d on e.deptno=d.deptno order by e.empno;
+-- right join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e right join dept d on e.deptno=d.deptno order by e.empno;
+-- full join
+select e.empno,e.ename,e.job,d.deptno,d.dname from emp e full join dept d on e.deptno=d.deptno order by e.empno;
+
+
 -- 接受推荐的 SQL 概要文件。
 execute dbms_sqltune.accept_sql_profile(task_name => 'staName807', task_owner => 'CKSP', replace => TRUE);
 
@@ -2397,6 +2421,7 @@ SYS                33 oracle     5tc4frsnvrv64   ltext_with_newlines t,V$SESSION
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';     
 select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+select sql_id, sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 
 
 
