@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# CONFIGURE CONTROLFILE AUTOBACKUP ON;
 # CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
 # CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+DATA/${db_unique_name}/controlfile/snapcf_${db_unique_name}.f';
 
@@ -15,8 +16,7 @@ allocate channel ch1 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch2 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch3 device type disk format '/home/oracle/backup/%U.bkp';
 allocate channel ch4 device type disk format '/home/oracle/backup/%U.bkp';
-backup database;
-backup archivelog all;
+backup as compressed backupset database plus archivelog;
 delete noprompt archivelog all completed before 'sysdate-7';
 release channel ch1;
 release channel ch2;

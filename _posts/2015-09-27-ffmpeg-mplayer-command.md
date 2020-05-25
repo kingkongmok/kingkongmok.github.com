@@ -104,3 +104,17 @@ ffmpeg -err_detect ignore_err -i video.mkv -c copy video_fixed.mkv
 ---
 
 ffmpeg -i action.mp4 -vf scale=-1:720 -b:v 2600k small_action.mp4
+
+---
+
+### [merge mp4 and m4a](https://superuser.com/questions/277642/how-to-merge-audio-and-video-file-in-ffmpeg)
+
+
+```
+ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
+```
+
+```
+ffmpeg -i video.mp4 -i audio.wav -c copy output.mkv
+```
+

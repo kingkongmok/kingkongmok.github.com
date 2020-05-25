@@ -13,7 +13,7 @@ category: linux
 ```
 yum -y update
 yum -y groupinstall "Development Tools"
-yum -y install vim screen smartmontools sysstat gcc gcc-c++ make binutils \
+yum -y install man mlocate vim screen smartmontools sysstat gcc gcc-c++ make binutils \
     compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc ntpdate glibc-common \
     glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC mlocate \
     unixODBC-devel xorg-x11-xauth tcpdump strace lsof bc nmap kmod-oracleasm oracleasm-support\
@@ -26,7 +26,7 @@ rpm -ivh /stage/software/*rpm
 
 ```
 yum -y install screen
-screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap sg3_utils'
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install man mlocate vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support tcpdump strace lsof bc nmap sg3_utils'
 ```
 
 ---
@@ -546,6 +546,45 @@ install rdbms,  和grid的runInstaller一样，只在stb1
 /u01/app/oraInventory/logs/installActions<TIMESTAMP>.log
 ```
 
+
+---
+
+### 让oracle有asm使用权限
+
+
+```
+# 
+oracle@stb1 ~  $ ls -l $ORACLE_HOME/bin/oracle
+-rwsr-s--x. 1 oracle oinstall 239626641 Apr 14 11:45 oracle
+
+grid@stb1 setasmgidwrap o=/u01/app/oracle/product/12.2.0/dbhome_1/bin/oracle
+
+grid@stb1 /u01/app/oracle/product/11.2.0/dbhome_1/bin $ ls -l oracle
+-rwsr-s--x. 1 oracle asmadmin 239626641 Apr 14 11:45 oracle
+
+```
+
+---
+
+### 添加srvctl 服务
+
+```
+-- 删除旧服务
+$ srvctl remove database -d orcl
+-- 添加服务 用oracle用户
+oracle@host ~ $ srvctl add database -d ee -o /u01/app/oracle/product/11.2.0/dbhome_1
+srvctl add database -d $ORACLE_SID -o $ORACLE_HOME
+
+-- standalone db
+sudo $GRID_HOME/bin/crsctl delete resource  ora.oradb.db
+-- rac
+srvctl add database -d db_unique_name -r PRIMARY -n db_name -o $ORACLE_HOME
+-- srvctl add database -d db_unique_name -r PHYSICAL_STANDBY -n db_name -o $ORACLE_HOME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+srvctl add instance -d db_unique_name -i $ORACLE_SID -n $HOSTNAME
+
+```
+
 ---
 
 ### dbca 
@@ -685,5 +724,91 @@ crsctl check cluster -all
 ---
 
 ## [delete nodes](https://docs.oracle.com/cd/E11882_01/rac.112/e41960/adddelunix.htm#RACAD7903)
+
+
+
+---
+
+### 测试系统关闭一下资源
+
+. [ologgerd](https://www.rocworks.at/wordpress/?p=271)
+
+```
+crsctl stop resource ora.crf -init
+sudo `which crsctl` delete resource ora.crf -init
+
+crsctl stop resource ora.oc4j
+```
+
+
+
+---
+
+### sample install
+
+
+```
+unzip p13390677_112040_Linux-x86-64_6of7.zip
+```
+
+**demos_install.rsp**
+
+```
+oracle.install.responseFileVersion=/oracle/install/rspfmt_demosinstall_response_schema_v11_2_0
+ORACLE_HOSTNAME=rac1
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory/
+SELECTED_LANGUAGES=en,zh_CN
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/db_1
+ORACLE_BASE=/u01/app/oracle
+oracle.installer.autoupdates.option=
+oracle.installer.autoupdates.option=SKIP_UPDATES
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+```
+
+. install
+
+```
+./runInstaller -silent -force -ignorePrereq -ignoreSysPrereqs -responseFile /stage/examples/response/demos_install.rsp
+```
+
+sql insert
+
+```
+SQL>@?/demo/schema/human_resources/hr_main.sql
+
+specify password for HR as parameter 1:
+Enter value for 1: hr
+
+specify default tablespeace for HR as parameter 2:
+Enter value for 2: USERS
+
+specify temporary tablespace for HR as parameter 3:
+Enter value for 3: TEMPTS1
+
+specify password for SYS as parameter 4:
+Enter value for 4: oracle
+
+specify log path as parameter 5:
+Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
+```
+
+---
+
+### [sample install manual](https://github.com/oracle/db-sample-schemas#README.txt)
+
+```
+cd $HOME/db-sample-schemas
+perl -p -i.bak -e 's#__SUB__CWD__#'$(pwd)'#g' *.sql */*.sql */*.dat 
+#sqlplus system/systempw@connect_string @mksample systempw syspw hrpw oepw pmpw ixpw shpw bipw users temp /your/path/to/log/ connect_string
+sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMPTS1 /tmp/sample_install.log pridb
+```
 
 

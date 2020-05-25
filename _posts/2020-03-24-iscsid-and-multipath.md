@@ -11,13 +11,28 @@ tags: [centos, san, iscsi, multipath]
 ```
 cat >> /etc/hosts << EOF
 
-# test for storage
+# primary db
+10.255.255.21   rac1
+10.255.255.22   rac2
+10.255.255.23   rac1-vip
+10.255.255.24   rac2-vip
+10.255.255.25   rac-scan
+192.168.0.1     rac1-priv
+192.168.0.2     rac2-priv
+
+# standby db
+10.255.255.121  stb1
+10.255.255.122  stb2
+10.255.255.123  stb1-vip
+10.255.255.124  stb2-vip
+10.255.255.125  stb-scan
+192.168.0.21    stb1-priv
+192.168.0.22    stb2-priv
+
+# storage
 10.255.255.150  storage
-10.255.255.151  c1
-10.255.255.152  c2
-192.168.255.150     storage-priv
-192.168.255.151     c1-priv
-192.168.255.152     c2-priv
+192.168.0.150     storage-priv1
+192.168.1.150     storage-priv2
 EOF
 
 ```
@@ -126,15 +141,75 @@ config
 ```
 cat >> /etc/tgt/targets.conf << EOF
 
-<target iqn.2020-03.com.example:storage.data>
+default-driver iscsi
+<target iqn.2020-03.com.example:storage.target4>
+        backing-store /dev/mapper/storage-orc1
+        backing-store /dev/mapper/storage-orc2
+        backing-store /dev/mapper/storage-orc3
+        write-cache on
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+
+<target iqn.2020-04.com.example:storage.data>
         backing-store /dev/mapper/storage-data
         write-cache on
-    #vendor_id MyCompany Inc.
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
 </target>
-<target iqn.2020-04.com.example:storage.data2>
-        backing-store /dev/mapper/storage-data2
+<target iqn.2020-04.com.example:storage.fra>
+        backing-store /dev/mapper/storage-fra
         write-cache on
-    #vendor_id MyCompany Inc.
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+</target>
+<target iqn.2020-04.com.example:storage.dg-fra>
+        backing-store /dev/mapper/storage-dg--fra
+        write-cache on
+        initiator-address 192.168.0.21
+        initiator-address 192.168.1.21
+        initiator-address 192.168.0.22
+        initiator-address 192.168.1.22
+</target>
+<target iqn.2020-04.com.example:storage.dg-data>
+        backing-store /dev/mapper/storage-dg--data
+        write-cache on
+        initiator-address 192.168.0.21
+        initiator-address 192.168.1.21
+        initiator-address 192.168.0.22
+        initiator-address 192.168.1.22
+</target>
+<target iqn.2020-04.com.example:storage.dg-ocr1>
+        backing-store /dev/mapper/storage-dg--ocr1
+        write-cache on
+        initiator-address 192.168.0.21
+        initiator-address 192.168.1.21
+        initiator-address 192.168.0.22
+        initiator-address 192.168.1.22
+</target>
+
+<target iqn.2020-04.com.example:storage.dg-ocr2>
+        backing-store /dev/mapper/storage-dg--ocr2
+        write-cache on
+        initiator-address 192.168.0.21
+        initiator-address 192.168.1.21
+        initiator-address 192.168.0.22
+        initiator-address 192.168.1.22
+</target>
+
+<target iqn.2020-04.com.example:storage.dg-ocr3>
+        backing-store /dev/mapper/storage-dg--ocr3
+        write-cache on
+        initiator-address 192.168.0.21
+        initiator-address 192.168.1.21
+        initiator-address 192.168.0.22
+        initiator-address 192.168.1.22
 </target>
 EOF
 ```
@@ -170,27 +245,24 @@ yum install iscsi-initiator-utils
 discover
 
 ```
-iscsiadm -m discovery -t sendtargets -p storage-priv
-iscsiadm -m discovery -t sendtargets -p storage
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv1
+sudo iscsiadm -m discovery -t sendtargets -p storage-priv2
 ```
 
 check
 
 ```
 iscsiadm -m node -P 0
-
-192.168.255.150:3260,1 iqn.2008-09.com.example:server.target3
-10.255.255.150:3260,1 iqn.2008-09.com.example:server.target3
 ```
 
-set
+~~set~~
 
 ```
 iscsiadm -m node -p 10.255.255.150:3260,1 -T iqn.2008-09.com.example:server.target3 -l
 iscsiadm -m node -p 192.168.255.150:3260,1 -T iqn.2008-09.com.example:server.target3 -l
 ```
 
-unset 
+~~unset~~
 
 ```
 sudo /etc/init.d/iscsi restart
@@ -217,12 +289,14 @@ yum install device-mapper-multipath
 /sbin/mpathconf --enable
 /etc/init.d/multipathd restart
 multipath -ll
+sudo /sbin/multipath -ll|grep -qP "fault|fail|inactive"
 ```
 
 
 edit **/etc/multipath.conf**
 
 ```
+
 defaults {
         user_friendly_names yes
         getuid_callout "/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/%n"
@@ -230,32 +304,31 @@ defaults {
 
 blacklist {
         devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
-        devnode "^sdb"
 }
-
 
 multipaths {
         multipath {
                 wwid      1IET_00010001
-                alias     storage-data
+                alias     storage-orc1
         }
         multipath {
                 wwid      1IET_00010002
-                alias     storage-fra
+                alias     storage-orc2
         }
         multipath {
                 wwid      1IET_00010003
-                alias     storage-ocr1
+                alias     storage-orc3
         }
         multipath {
-                wwid      1IET_00010004
-                alias     storage-ocr2
+                wwid      1IET_00020001
+                alias     storage-data
         }
         multipath {
-                wwid      1IET_00010005
-                alias     storage-ocr3
+                wwid      1IET_00080001
+                alias     storage-fra
         }
 }
+
 ```
 
 ```
