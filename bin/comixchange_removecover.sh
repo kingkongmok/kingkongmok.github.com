@@ -110,18 +110,18 @@ extract_it ()
         case $SUFFIX in
                 zip | ZIP)
 			if [ -z "$PASSWORD" ] ; then
-				unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
+				unzip -jnLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
 			else
-				unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
+				unzip -jnLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
 			fi
                         ;;
  
                 rar | RAR)
 			mkdir "${WORKPATH}/${FILENAME}" -p
 			if [ -z "$PASSWORD" ] ; then
-				unrar x "$FILE" "${WORKPATH}/${FILENAME}"
+				unrar -ep x "$FILE" "${WORKPATH}/${FILENAME}"
 			else
-				unrar x -p"$PASSWORD" "$FILE" "${WORKPATH}/${FILENAME}"
+				unrar -ep x -p"$PASSWORD" "$FILE" "${WORKPATH}/${FILENAME}"
 			fi
                         ;;
 
