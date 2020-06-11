@@ -120,3 +120,51 @@ show parameter spfile ;
 create pfile='/tmp/initASM.ora' from spfile ;
 create spfile='+OCR' from pfile='/tmp/initASM.ora';
 ```
+
+---
+
+## [asm add disk](alter diskgroup FRA drop disk 'FRA_0000' rebalance power 10://oracleblog.org/working-case/how-to-replace-ocr-and-votedisk-to-new-storage/)
+
+检查ocr的使用情况
+
+```
+col path format a40
+select path,failgroup,mount_status,mode_status,header_status,state from v$asm_disk order by failgroup, path;
+
+PATH                                     FAILGROUP                      MOUNT_S MODE_ST HEADER_STATU STATE
+---------------------------------------- ------------------------------ ------- ------- ------------ --------
+ORCL:DATA                                DATA                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:FRA                                 FRA                            CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC1                                ORC1                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC2                                ORC2                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC3                                ORC3                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:NEWDATA                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWFRA                                                             CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR1                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR2                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR3                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+```
+
+加入新存储的lun
+
+```
+alter diskgroup OCR add disk 'ORCL:NEWOCR1'  rebalance power 10;
+alter diskgroup OCR add disk 'ORCL:NEWOCR2'  rebalance power 10;
+alter diskgroup OCR add disk 'ORCL:NEWOCR3'  rebalance power 10;
+```
+
+检查asm的平衡情况
+
+```
+select * from v$asm_operation;
+```
+
+删除旧存储的lun
+
+```
+alter diskgroup OCR drop disk 'ORC1' rebalance power 10;
+alter diskgroup OCR drop disk 'ORC2' rebalance power 10;
+alter diskgroup OCR drop disk 'ORC3' rebalance power 10;
+```
+
+

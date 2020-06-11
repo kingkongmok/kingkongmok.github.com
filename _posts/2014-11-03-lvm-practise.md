@@ -73,6 +73,8 @@ lvextend -l +100%FREE /dev/vgloop01/lvloop01
 
 # ext filesystem
 e2fsck -f /dev/vgloop01/lvloop01 
+# ext3/4
+resize2fs /dev/mapper/vg_ptmsdevdb-lv_root
 # xfs filesystem
 xfs_growfs /dev/dm-0
 

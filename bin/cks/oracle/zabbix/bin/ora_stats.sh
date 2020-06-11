@@ -6,6 +6,7 @@ then
 	exit 1;
 fi
 
+#. /home/zabbix/etc/oraenv
 . /var/lib/zabbix/bin/oraenv
 
 
@@ -22,10 +23,6 @@ case $1 in
 'process')
 	sql="select count(*) from v\$process;"
 	;;
-'tmptbs')
-        sql="select round(100*(free_space / Tablespace_size) ,0) perc  from dba_temp_free_space;"
-        ;;
-
 
 *)
         echo "ZBX_NOTSUPPORTED"
@@ -36,6 +33,8 @@ esac
 
 
 if [ a"$sql" != a"" ]; then
+#       echo "$sql"
+       #echo "$sql" | sqlplus -s /nolog @/var/lib/zabbix/bin/cont.sql
 	result=`echo "$sql" | sqlplus -s /nolog @/var/lib/zabbix/bin/cont.sql`
 	echo $result
 fi

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # CONFIGURE CONTROLFILE AUTOBACKUP ON;
+# CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/mnt/nas/rman/%F';
 # CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
 # CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+DATA/${db_unique_name}/controlfile/snapcf_${db_unique_name}.f';
 
@@ -12,10 +13,10 @@ run
 {
 crosscheck backup;
 delete noprompt obsolete;
-allocate channel ch1 device type disk format '/home/oracle/backup/%U.bkp';
-allocate channel ch2 device type disk format '/home/oracle/backup/%U.bkp';
-allocate channel ch3 device type disk format '/home/oracle/backup/%U.bkp';
-allocate channel ch4 device type disk format '/home/oracle/backup/%U.bkp';
+allocate channel ch1 device type disk format '/mnt/nas/rman/%U.bkp';
+allocate channel ch2 device type disk format '/mnt/nas/rman/%U.bkp';
+allocate channel ch3 device type disk format '/mnt/nas/rman/%U.bkp';
+allocate channel ch4 device type disk format '/mnt/nas/rman/%U.bkp';
 backup as compressed backupset database plus archivelog;
 delete noprompt archivelog all completed before 'sysdate-7';
 release channel ch1;

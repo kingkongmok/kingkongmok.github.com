@@ -1,3 +1,4 @@
 export ORACLE_BASE=/oracle/11.2.0/db
 export ORACLE_HOME=$ORACLE_BASE/dbhome
-export ORACLE_SID=orcl
+export ORACLE_SID=zjzzdb1 # ORACLE_SID=zjzzdb2
+export PATH=$PATH:$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:/backup/ogg/11.2.1

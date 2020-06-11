@@ -28,21 +28,27 @@ ffmpeg -i input.mp4 -vf "scale=iw/2:ih/2" output.mp4
 
 ```
 mkdir small
-screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:540 small/"$i" ; done'
-```
-
-720P
-
-```
-mkdir small
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale=-1:720 small/"$i" ; done'
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -b:v 1M small/"$i" ; done'
+
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
 ```
 
 + **Constant Rate Factor**, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24
 
 ```
 ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
+```
+
+---
+
+### [join 2 mp4](https://stackoverflow.com/questions/7333232/how-to-concatenate-two-mp4-files-using-ffmpeg)
+
+
+```
+ls 1.mp4 2.mp4 | perl -ne 'print "file $_"' | ffmpeg -protocol_whitelist file,pipe -f concat -safe 0 -i pipe: -vcodec copy -acodec copy all.mp4
 ```
 
 ---
