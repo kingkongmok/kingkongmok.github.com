@@ -11,10 +11,10 @@ ErrCount=0
 
 PROCESS_LIST=( 
 
-    ora_pmon ora_smon ora_lgwr ora_dbw ora_ckpt ora_cjq ora_mman ora_reco ora_s             # -- oracle instance
-    #asm_pmon asm_smon asm_lgwr asm_dbw asm_ckpt             # -- oracle asm
-    #ora_lmd ora_lck ora_lmon ora_lms ora_diag ora_asmb ora_rbal ora_pz ora_lmhb ora_rms ora_rsmn ora_gtx ora_acms ora_onnn ora_rcbg 
-    #ora_arch ora_lns                            # -- adg primary
+    ntpd ora_pmon ora_smon ora_lgwr ora_dbw ora_ckpt ora_cjq ora_mman ora_reco ora_s             # -- oracle instance
+    asm_pmon asm_smon asm_lgwr asm_dbw asm_ckpt             # -- oracle asm
+    ora_lmd ora_lck ora_lmon ora_lms ora_diag ora_asmb ora_rbal ora_lmhb ora_rms ora_rsmn ora_gtx ora_acms #ora_onnn ora_rcbg 
+    ora_arch #ora_lns                            # -- adg primary
     #ora_rfs ora_mrp ora_pr ora_lsp                # -- adg standby
 
 )

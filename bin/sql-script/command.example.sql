@@ -524,8 +524,9 @@ SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user';
 
 
 -- create user/schema
+select * from dba_temp_files;
 CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE default ACCOUNT unlock;
-GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE, CREATE FUNCTION TO username;  
+GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE TO username;  
 GRANT CONNECT, RESOURCE TO username ; 
 GRANT UNLIMITED TABLESPACE TO users;
 -- CONNECT to assign privileges to the user through attaching the account to various roles
@@ -1533,6 +1534,10 @@ select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/t
 
 
 
+-- table modified
+select * from DBA_TAB_MODIFICATIONS;
+
+
 -- database state performance 
 select event, state, count(*) from v$session_wait group by event, state order by 3 desc
 
@@ -1648,6 +1653,23 @@ GROUP_NUMBER DISK_NUMBER STATE			  MOUNT_STATUS		REDUNDANCY		TOTAL_MB    FREE_MB
 	   3	       0 NORMAL 		  CACHED		UNKNOWN 		    1023	715 Y
 	   3	       1 NORMAL 		  CACHED		UNKNOWN 		    1023	713 Y
 	   3	       2 NORMAL 		  CACHED		UNKNOWN 		    1023	715 Y
+
+
+select path,failgroup,mount_status,mode_status,header_status,state from v$asm_disk order by failgroup, path;
+
+PATH                                     FAILGROUP                      MOUNT_S MODE_ST HEADER_STATU STATE
+---------------------------------------- ------------------------------ ------- ------- ------------ --------
+ORCL:DATA                                DATA                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:FRA                                 FRA                            CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC1                                ORC1                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC2                                ORC2                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC3                                ORC3                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:NEWDATA                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWFRA                                                             CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR1                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR2                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR3                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+
 
 
 -- asm group info
@@ -1780,18 +1802,20 @@ expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott log
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 --example
-expdp sys/oracle \" / as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
+expdp sys/oracle \"/ as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
 -- import from network
 drop user cksp cascade;
-impdp  \" / as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
+impdp  \"/ as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`date +"%Y%m%d"` directory=DATA_PUMP_DIR logfile=impdp_`date +"%Y%m%d"`.log
 -- dump table
-expdp \" / as sysdba \" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
-expdp \" / as sysdba \" tables=schema.table1,schema.table2 dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
-impdp \" / as sysdba \" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
+expdp \"/ as sysdba\" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
+expdp \"/ as sysdba\" tables=schema.table1,schema.table2 dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
+impdp \"/ as sysdba\" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
 -- impdp sys用户不需要指定schema，因为expdp时候已经带有。但没有进行table_exists测试
 
-impdp \" / as sysdba \" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
-expdp \" / as sysdba \" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.`date +%F`.dump.log ESTIMATE_ONLY=yes 
+impdp \"/ as sysdba\" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
+impdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.log dumpfile=SCHEMA.dump table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
+expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log ESTIMATE_ONLY=yes 
+expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log dumpfile=SCHEMA.`date +%F`.dump compression=all
 
 
 -- check space
@@ -1806,6 +1830,8 @@ select * from dba_datapump_jobs;
 impdp username/password@database attach=name_of_the_job   --(Get the name_of_the_job using the above query)
 Import>kill_job
 
+-- 
+exec utl_recomp.recomp_serial('CKSP');
 
 
 
@@ -2192,6 +2218,10 @@ CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE4              NONUNIQ
 -- ------------------------------
 -- INDEX
 -- ------------------------------
+
+-- 查询index是否失效；
+select index_name, status, domidx_status, domidx_opstatus,funcidx_status from user_indexes where status<>'VALID' or funcidx_status<>'ENABLED' ;
+alter index IDX_TR_RPT1 rebuild;
 
 
 -- 查询index是否失效；
@@ -2721,6 +2751,35 @@ CREATE DISKGROUP data NORMAL REDUNDANCY FAILGROUP controller1 DISK
 '/dev/raw/raw4' NAME data1,
 '/dev/raw/raw5' NAME data2
 /
+
+
+-- asm replace disk
+-- http://blog.itpub.net/30126024/viewspace-2155829/
+select path,failgroup,mount_status,mode_status,header_status,state from v$asm_disk order by failgroup, path;
+
+PATH                                     FAILGROUP                      MOUNT_S MODE_ST HEADER_STATU STATE
+---------------------------------------- ------------------------------ ------- ------- ------------ --------
+ORCL:DATA                                DATA                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:FRA                                 FRA                            CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC1                                ORC1                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC2                                ORC2                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:ORC3                                ORC3                           CACHED  ONLINE  MEMBER       NORMAL
+ORCL:NEWDATA                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWFRA                                                             CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR1                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR2                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+ORCL:NEWOCR3                                                            CLOSED  ONLINE  PROVISIONED  NORMAL
+
+-- add disk
+alter diskgroup FRA add disk 'ORCL:NEWFRA'  rebalance power 10;
+-- check operation
+select * from v$asm_operation;
+-- check disk
+select a.path,a.name,a.mode_status,b.name diskgroupname,b.type from v$asm_disk a,v$asm_diskgroup b where a.group_number=b.group_number and b.name='FRA';
+-- drop disk
+alter diskgroup FRA drop disk 'FRAFAILGROUP' rebalance power 10;
+-- check operation
+select * from v$asm_operation;
 
 -- 无法删除INIT ,
 

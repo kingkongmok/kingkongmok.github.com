@@ -2,8 +2,8 @@
 
 if [ $# != 1 ]
 then
-	echo "ZBX_NOTSUPPORTED"
-	exit 1;
+        echo "ZBX_NOTSUPPORTED"
+        exit 1;
 fi
 
 . /var/lib/zabbix/bin/oraenv
@@ -12,8 +12,12 @@ fi
 case $1 in
 
 'status')
-	sql="select status, time  from ( select to_char(START_TIME, 'yyyy-mm-dd_hh24:mi:ss') time, status from v\$rman_backup_job_details order by SESSION_KEY desc ) where rownum=1 ;"
-	;;
+        sql="select status from ( select status from v\$rman_backup_job_details order by SESSION_KEY desc ) where rownum=1 ;"
+        ;;
+
+'day')
+        sql="select day from ( select round(sysdate - START_TIME, 0) day from v\$rman_backup_job_details order by SESSION_KEY desc ) where rownum=1 ;"
+        ;;
 
 *)
         echo "ZBX_NOTSUPPORTED"
@@ -24,8 +28,8 @@ esac
 
 
 if [ a"$sql" != a"" ]; then
-	result=`echo "$sql" | sqlplus -s /nolog @/var/lib/zabbix/bin/cont.sql`
-	echo $result
+        result=`echo "$sql" | sqlplus -s /nolog @/var/lib/zabbix/bin/cont.sql`
+        echo $result
 fi
 rval=$?
 
