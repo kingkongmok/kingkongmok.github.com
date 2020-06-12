@@ -30,7 +30,7 @@ rpm -ivh oracleasmlib*rpm
 
 ```
 yum -y install screen
-screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support sg3_utils'
+screen sh -c 'yum -y update; yum -y groupinstall "Development Tools"; yum -y install vim screen smartmontools sysstat; yum -y install  gcc gcc-c++ make binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel unixODBC unixODBC-devel; yum -y install xorg-x11-xauth kmod-oracleasm oracleasm-support sg3_utils ; yum install -y kmod-oracleasm oracleasm-support'
 
 ```
 
