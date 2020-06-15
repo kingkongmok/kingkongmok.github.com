@@ -43,7 +43,7 @@ perl-rename 's/.*/sprintf"%03d.txt",++$i/e' * -i
 # 抓取title和正文内容
 for i in *txt ; do perl -i.bak -00nE 'while(/<title>(.*?)<\/title>.*?\<pre\>(.*)\<\/pre\>/gsm){print $1, "\n",  $2}' "$i"; done
 # 匹配一下是否有title再合并
-for i in *txt ; do head -n1 "$i" | grep -qP "$TITLE|第.*章" && cat "$i" >> all.txt ; done 
+for i in *txt ; do head -n1 "$i" | grep -q "$TITLE" && cat "$i" >> all.txt ; done 
 perl -i.bak -pe 's/<font color=#\w+?>\w+?\.\w+<\/font><p><\/p>//g; s/\r\n//g; s/　　/\n　　/g; s/    /\n　　/g' all.txt
 perl -i.bak2 -pe 's#<font \S+?</font>##g; s#<p></p>#\n#g; s#<br />##g' all.txt
 perl -i -ne 'print unless /^[\s　]+\r?$/' all.txt
