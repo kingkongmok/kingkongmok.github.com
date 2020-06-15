@@ -2033,7 +2033,7 @@ select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recov
 
 
 -- create tablespace
-CREATE TABLESPACE test datafile 'test01.dbf' SIZE 40M AUTOEXTEND ON;
+CREATE TABLESPACE test datafile '/u01/app/oracle/oradata/ORCL/test01.dbf' SIZE 40M AUTOEXTEND ON;
 CREATE TABLESPACE tablespacename DATAFILE '/ORADATA/tablespacename01.dbf' SIZE 5G AUTOEXTEND ON NEXT 5G AUTOEXTEND ON MAXSIZE UNLIMITED;
 ALTER TABLESPACE ticket_tablespaces ADD DATAFILE '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 
