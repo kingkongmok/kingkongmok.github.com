@@ -435,3 +435,15 @@ sudo modprobe -r snd_hda_intel && sudo modprobe snd_hda_intel
 sudo vim /sys/class/backlight/intel_backlight/brightness
 ```
 
+
+---
+
+## kernel update
+
+```
+cd /usr/src/ && find . -maxdepth 1 -type l -delete && ln -svf `ls -t | head -n1` linux
+screen -S kernelupdate sudo sh -c 'cd /usr/src/ && find . -maxdepth 1 -type l -delete && ln -svf `ls -t | head -n1` linux && cd linux && zcat /proc/config.gz > .config && mount -o remount,rw /boot && yes "" | make oldconfig && make && make modules_install && make install && grub-mkconfig -o /boot/grub/grub.cfg'
+# after reboot
+screen -S moduleupdate sudo sh -c 'emerge @module-rebuild'
+sudo systemctl restart virtualbox-guest-additions.service
+```

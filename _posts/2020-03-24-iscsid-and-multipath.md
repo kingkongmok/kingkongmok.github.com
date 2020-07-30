@@ -112,6 +112,23 @@ mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
 
 ---
 
+
+## [fix mdadm](https://ahelpme.com/linux/recovering-md-array-and-mdadm-cannot-get-array-info-for-dev-md0/)
+
+```
+### backup config
+mv /etc/mdadm.conf{,.backup20200720}
+
+#RESCAN FOR MD DEVICES WITH MDADM
+sudo mdadm --assemble --scan --verbose --force
+
+# ADD THE MISSING PARTITIONS TO YOUR SOFTWARE RAID DEVICES.
+sudo mdadm --add /dev/md0 /dev/sdf
+
+# check
+mdadm --detail /dev/md0
+```
+
 ### [lvm](https://geekpeek.net/lvm-physical-volume-management/)
 
 ```
@@ -252,7 +269,7 @@ sudo iscsiadm -m discovery -t sendtargets -p storage-priv2
 check
 
 ```
-iscsiadm -m node -P 0
+sudo iscsiadm -m node -P 0
 ```
 
 ~~set~~
@@ -442,4 +459,12 @@ kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhd
 ```
 asmcmd lsdg | grep -i ocr
 amdu -diskstring 'ORCL:*' -dump 'OCR'
+```
+
+---
+
+### emc
+
+```
+powermt display dev=all
 ```

@@ -128,6 +128,8 @@ multipaths {
 
 ---
 
+multipath -ll
+powermt display dev=all 
 
 
 mdadm --verbose --detail /dev/md0
@@ -196,6 +198,35 @@ col 1 format a15
 
 -- clear buffer and cache
 alter system flush buffer_cache
+
+-- SQL緩存
+alter system flush shared_pool
+
+
+--1.查詢非綁定變量的SQL，重複解析次數超過20
+SELECT to_char(FORCE_MATCHING_SIGNATURE), COUNT (1)
+FROM V$SQL WHERE FORCE_MATCHING_SIGNATURE > 0
+AND FORCE_MATCHING_SIGNATURE != EXACT_MATCHING_SIGNATURE
+GROUP BY FORCE_MATCHING_SIGNATURE
+HAVING (COUNT (1) >20) ORDER BY 2 desc;
+
+--2.查詢每個超過1小時沒有使用的SQL的ADDRESS_HASH_VALUE
+select address || ',' || hash_value as ADDRESS_HASH_VALUE
+from v$sqlarea
+where FORCE_MATCHING_SIGNATURE=6075142212657914118
+and last_load_time < sysdate - 1 / 24 ;
+
+--3. 根據ADDRESS_HASH_VALUE從緩存中清除
+--方式a： 當SQL執行
+call sys.dbms_shared_pool.purge('00000000787B50F0,3727297360', 'c');
+--方式b：在存儲過程里執行
+declare
+begin
+    sys.dbms_shared_pool.purge('00000000787B50F0,3727297360', 'c');
+end;
+--方式c：在命令行窗口執行
+execute sys.dbms_shared_pool.purge('00000000787B50F0,3727297360', 'c');
+
 
 
 -- DB_NAME, DB_UNIQUE_NAME, SERVICE_NAMES, INSTANCE_NAME, and $ORACLE_SID
@@ -311,9 +342,16 @@ flashback table table_name to before drop rename to new_table_name; --闪回到�
 
 
 
--- EMi 
+-- EM 
 -- create https://dbatricksworld.com/oracle-enterprise-manager-failed-to-start-oc4j-configuration-issue-configure-enterprise-manager-database-control-manually-with-enterprise-manager-configuration-assistant/
-emca -config dbcontrol db -repos create
+emca -config dbcontrol db -repos recreate
+
+
+-- http://blog.itpub.net/23135684/viewspace-1188673/
+SYS@+ASM1>  alter system set remote_listener='dm01-scan:1521';
+SYS@+ASM1>  alter system register
+
+oracle@rac1> ~$ emca -config dbcontrol db  -repos create -cluster
 
 -- EM/oem start 
 $ emctl start dbconsole
@@ -338,6 +376,9 @@ select value from nls_database_parameters where parameter='NLS_CHARACTERSET';
 
 -- show schemas
 select distinct owner from dba_segments where owner in (select username from dba_users where default_tablespace not in ('SYSTEM','SYSAUX') );
+
+-- 
+select PROPERTY_NAME,PROPERTY_VALUE,DESCRIPTION from database_properties;
 
 
 -- aix 挂载nfs
@@ -1529,8 +1570,10 @@ select count(1) from gv$locked_object;
 select count(1) from gv$process;
 -- get TableSpace info (zabbix)
 select TABLESPACE_NAME, round(USED_PERCENT,0) used, round(100-USED_PERCENT,0) free, TABLESPACE_SIZE from DBA_TABLESPACE_USAGE_METRICS;
+select TABLESPACE_NAME, round(USED_PERCENT,0) "used%", round(100-USED_PERCENT,0) "free%", round(TABLESPACE_SIZE*8192/1024/1024/1024,2) GB from DBA_TABLESPACE_USAGE_METRICS;
+
 -- ASM info (zabbix)
-select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/total_mb,3)*100 "used_rate(%)" from v$asm_diskgroup;
+select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/total_mb,3)*100 "used%" from v$asm_diskgroup;
 
 
 
@@ -1546,7 +1589,7 @@ EVENT						   STATE		       COUNT(*)
 SQL*Net message from client			   WAITING			    379
 rdbms ipc message				   WAITING			     50
 class slave wait				   WAITING			     12
-gcs remote message				   WAITING			      4
+gcs remote message				   WAITING			      e
 LNS ASYNC end of log				   WAITING			      2
 
 
@@ -1703,8 +1746,14 @@ select TABLESPACE_NAME, TABLESPACE_SIZE, round(100-USED_PERCENT,0) "free percent
 
 -- 查询tablespaces
 select * from dba_tablespaces;
+select TABLESPACE_NAME,CONTENTS,BLOCK_SIZE,EXTENT_MANAGEMENT,SEGMENT_SPACE_MANAGEMENT from dba_tablespaces ;
+
 
 -- 使用以下方式添加数据文件
+-- OMF 下
+alter tablespace USERS add datafile;
+
+-- 没有 OMF
 alter tablespace EAS_D_CKSPUB01_STANDARD add datafile '+DATADG1/zjzzdr/ckspub3.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace USERS add datafile '+DATADG1/zjzzdb/user12.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
 alter tablespace SYSTEM add datafile '/u01/app/oracle/oradata/oltp/system02.dbf' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
@@ -1789,6 +1838,18 @@ SELECT s.sid, s.username, s.status, u.tablespace, u.segfile#, u.contents, u.exte
 select sid,serial# from v$session where sid = 317 ;
 alter system kill session '758,771';
 
+-- drop tempspace
+
+-- show status
+select tablespace_name,file_name from dba_temp_files;
+-- If any sessions are using temp space, then kill them.
+SELECT b.tablespace,b.segfile#,b.segblk#,b.blocks,a.sid,a.serial#, a.username,a.osuser, a.status
+FROM v$session a,v$sort_usage b WHERE a.saddr = b.session_addr;
+ALTER SYSTEM KILL 'SID,SERIAL#' IMMEDIATE; 
+-- drop temporary tablespace
+DROP TABLESPACE TEMPTEST INCLUDING CONTENTS AND DATAFILES;
+DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES;
+
 
 
 
@@ -1830,9 +1891,12 @@ select * from dba_datapump_jobs;
 impdp username/password@database attach=name_of_the_job   --(Get the name_of_the_job using the above query)
 Import>kill_job
 
--- 
+-- 执行重编译
 exec utl_recomp.recomp_serial('CKSP');
 
+-- 查询index是否失效；
+select index_name, status, domidx_status, domidx_opstatus,funcidx_status from user_indexes where status<>'VALID' or funcidx_status<>'ENABLED' ;
+alter index IDX_TR_RPT1 rebuild;
 
 
 -- ------------------------------
@@ -1879,7 +1943,8 @@ table_name = 'T1';
 
 
 -- clear redo logfile
-ALTER DATABASE CLEAR LOGFILE GROUP 3;
+alter database clear logfile group 3;
+alter database clear unarchived logfile group 3;
 
 -- redo log create/add group
 ALTER DATABASE ADD LOGFILE thead 2 GROUP 3 ('/oracle/dbs/log1c.rdo', '/oracle/dbs/log2c.rdo') SIZE 100M BLOCKSIZE 512;
@@ -2022,9 +2087,10 @@ DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES ;
 
 
 
--- check datafile is online or not
-col name format a50
-select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recover, fuzzy from v$datafile_header;
+--  check scn from datafile header 
+select file#, STATUS, RECOVER , to_char(RESETLOGS_CHANGE#), to_char(CHECKPOINT_CHANGE#) from v$datafile_header ;
+select file#,  name, to_char(CHECKPOINT_CHANGE#),to_char(LAST_CHANGE#) from v$datafile ;
+
 
 
 
@@ -2033,6 +2099,16 @@ select file#, name, status, to_char(checkpoint_change#),resetlogs_change#, recov
 
 
 -- create tablespace
+-- with OMF
+
+create tablespace SCOTT datafile ;
+create temporary tablespace temp2 tempfile ;
+create undo tablespace undotbs2 datafile ;
+alter system set undo_tablespace='UNDOTBS2';
+alter TABLESPACE SCOTT add datafile; 
+alter database add logfile group 4;
+
+-- no OMF
 CREATE TABLESPACE test datafile '/u01/app/oracle/oradata/ORCL/test01.dbf' SIZE 40M AUTOEXTEND ON;
 CREATE TABLESPACE tablespacename DATAFILE '/ORADATA/tablespacename01.dbf' SIZE 5G AUTOEXTEND ON NEXT 5G AUTOEXTEND ON MAXSIZE UNLIMITED;
 ALTER TABLESPACE ticket_tablespaces ADD DATAFILE '+DATA' size 5G AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED;
@@ -2067,6 +2143,18 @@ ALTER TABLESPACE TEMP ADD TEMPFILE '/u01/app/oracle/oradata/OLTP/temp01.dbf' SIZ
 alter database default temporary tablespace TEMP;
 
 
+-- ! rm tempfile online
+
+startup mount
+alter datafile 3 offline
+alter database open ;
+
+rman target / 
+list failure 
+advise failure 
+restore datafile 3;
+recover datafile 3;
+ALTER TABLESPACE UNDOTBS1 ONLINE;
 
 
 -- check procedure
@@ -2203,7 +2291,7 @@ LEFT JOIN all_ind_expressions f
 WHERE i.table_owner = UPPER('&table_owner')
  AND  i.table_name  = UPPER('&table_name')
 ORDER BY i.table_owner, i.table_name, i.index_name, c.column_position
-/
+;
 
 TABLE_OWNE TABLE_NAME                     INDEX_NAME                     UNIQUENES COLUMN_NAME               COLUMN_EXPRESSI
 ---------- ------------------------------ ------------------------------ --------- ------------------------- ---------------
@@ -2233,6 +2321,7 @@ alter index user1.indx rebuild;
 select index_name, table_name, include_column from user_indexes;
 select * from user_ind_columns;
 select * from user_constraints;
+select constraint_name, constraint_type, table_name , R_CONSTRAINT_NAME, INDEX_NAME , DELETE_RULE, status from user_constraints ;
 
 -- drop CONSTRAINTS
 select * from user_constraints;
@@ -2266,8 +2355,16 @@ select owner, table_name, num_rows, sample_size, last_analyzed, tablespace_name 
 -- To check table statistics use:
 select index_name, table_name, num_rows, sample_size, distinct_keys, last_analyzed, status from dba_indexes where table_owner='HR' order by table_owner;
 
+--grant explain
+
+GRANT SELECT ON v_$session TO &USER;
+GRANT SELECT ON v_$sql_plan_statistics_all TO &USER;
+GRANT SELECT ON v_$sql_plan TO &USER;
+GRANT SELECT ON v_$sql TO &USER;
 
 -- 收集此表的优化程序统计信息。
+analyze table testemp compute statistics ;
+
 -- single table
 exec DBMS_STATS.GATHER_TABLE_STATS (ownname => 'SMART' , tabname => 'AGENT',cascade => true, estimate_percent => 10,method_opt=>'for all indexed columns size 1', granularity => 'ALL', degree => 1);
 -- index
@@ -2402,11 +2499,16 @@ select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_
 -- check sql_text
 select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
 select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIVE'; 
-select s.sid, s.serial#, s.user, s.machine from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id;
+select s.sid, s.serial#, s.username, s.module, s.machine from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
 
 -- sid and seria#
 select S.USERNAME, s.sid, s.SERIAL#, t.sql_id, sql_text from v$sqltext_with_newlines t,V$SESSION s where t.address =s.sql_address and s.sid=&sid and s.SERIAL#=&serial;
+
+
+-- 完成度
+select  target, round (SOFAR/TOTALWORK*100, 2) finished_perc from V$session_longops where sid='&sid' and SERIAL#='&serial#';
+
 
 -- kill
 alter system kill session '&sid,&serial,@&inst_id' immediate;
@@ -2508,7 +2610,7 @@ VOYAGEMAPDETAIL 	       USERS			      2018-01-18 03:10:56  354257297
 SELECT
    owner, 
    table_name, 
-   TRUNC(sum(bytes)/1024/1024) Meg,
+   TRUNC(sum(bytes)/1024/1024) MB,
    ROUND( ratio_to_report( sum(bytes) ) over () * 100) Percent
 FROM
 (SELECT segment_name table_name, owner, bytes
@@ -2535,7 +2637,7 @@ FROM
 WHERE owner in UPPER('&owner')
 GROUP BY table_name, owner
 HAVING SUM(bytes)/1024/1024 > 10  /* Ignore really small tables */
-ORDER BY SUM(bytes) desc;   zjzzdg  1578646298524   SQL 1   2.761
+ORDER BY SUM(bytes) desc;
 
 
 
@@ -2605,6 +2707,9 @@ select count(1) from schema.testtable@remote_dblink ;
 -- 查看是否有权限进程dblink操作
 select * from user_sys_privs where privilege like upper('&db_link');  
 
+
+-- synonym
+create synonym tablename for schema.tablename@remote_dblink ;
 
 
 
@@ -2755,6 +2860,8 @@ CREATE DISKGROUP data NORMAL REDUNDANCY FAILGROUP controller1 DISK
 
 -- asm replace disk
 -- http://blog.itpub.net/30126024/viewspace-2155829/
+col FAILGROUP format a30
+col path format a30
 select path,failgroup,mount_status,mode_status,header_status,state from v$asm_disk order by failgroup, path;
 
 PATH                                     FAILGROUP                      MOUNT_S MODE_ST HEADER_STATU STATE
@@ -3038,6 +3145,63 @@ V$TEMPSEG_USAGE
 -- Large table
 -- ------------------------------
 
+-- check redef package
+EXEC DBMS_REDEFINITION.can_redef_table('SCOTT', 'BIG_TABLE');
+-- copy content from bigtable to bigtable2
+--Alter parallelism to desired level for large tables.
+--ALTER SESSION FORCE PARALLEL DML PARALLEL 8;
+--ALTER SESSION FORCE PARALLEL QUERY PARALLEL 8;
+BEGIN
+    DBMS_REDEFINITION.start_redef_table(
+        uname      => 'SCOTT',
+        orig_table => 'BIG_TABLE',
+        int_table  => 'BIG_TABLE2');
+END;
+/
+--sync before redefine
+BEGIN
+    dbms_redefinition.sync_interim_table(
+        uname      => 'SCOTT',
+        orig_table => 'BIG_TABLE',
+        int_table  => 'BIG_TABLE2');
+END;
+/
+-- copy all constaints, index to table2
+SET SERVEROUTPUT ON
+DECLARE
+  l_errors  NUMBER;
+BEGIN
+  DBMS_REDEFINITION.copy_table_dependents(
+    uname            => 'SCOTT',
+    orig_table       => 'BIG_TABLE',
+    int_table        => 'BIG_TABLE2',
+    copy_indexes     => DBMS_REDEFINITION.cons_orig_params,
+    copy_triggers    => TRUE,
+    copy_constraints => TRUE,
+    copy_privileges  => TRUE,
+    ignore_errors    => FALSE,
+    num_errors       => l_errors,
+    copy_statistics  => FALSE,
+    copy_mvlog       => FALSE);
+
+  DBMS_OUTPUT.put_line('Errors=' || l_errors);
+END;
+/
+-- change name ( using newtable now )
+BEGIN
+  dbms_redefinition.finish_redef_table(
+    uname      => 'SCOTT',
+    orig_table => 'BIG_TABLE',
+    int_table  => 'BIG_TABLE2');
+END;
+/
+-- drop old table 
+drop table BIG_TABLE2
+
+
+
+
+
 -- duplicate large table
 1. Get DDL + partitions + indexes of The original table.
 2. create new table using DDL
@@ -3153,7 +3317,7 @@ bbed, resetlogs scn, fuzzy
 
 -- high water mark HWM
 
-ANALYZE TABLE VOYAGEMAPDETAIL_BAK ESTIMATE/COMPUTE STATISTICS;
+ANALYZE TABLE VOYAGEMAPDETAIL_BAK COMPUTE STATISTICS;
 SELECT blocks, empty_blocks, num_rows FROM user_tables WHERE table_name = VOYAGEMAPDETAIL_BAK;
 
 -- kill oracle with ORACLE_SID=EE
@@ -3299,6 +3463,9 @@ select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
  
 
 
+-- 上个sql的explain plan
+select * from table (dbms_xplan.display_cursor (format=>'ALLSTATS LAST'));
+
 
 -- explain plan
 -- display running explain plan
@@ -3336,4 +3503,88 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id', &plan_hash_value ));
 -- ------------------------------
 --查看放入Keep的对象
 select segment_name, bytes/1024/1024 MB  from dba_segments where BUFFER_POOL = 'KEEP';
+
+alter system set db_keep_cache_size 100M; 
+alter table schema.tablename storage( buffer_pool keep );       -- keep
+alter table schema.tablename storage( buffer_pool resycle );    -- recycle
+
+-- Examining the Buffer Cache Usage Pattern for All Segments
+
+COLUMN object_name FORMAT A40
+COLUMN number_of_blocks FORMAT 999,999,999,999
+SELECT o.object_name, COUNT(*) number_of_blocks FROM DBA_OBJECTS o, V$BH bh WHERE o.data_object_id = bh.OBJD AND o.owner != 'SYS' GROUP BY o.object_Name ORDER BY COUNT(*);
+
+-- check hit rate
+SELECT Sum(Decode(a.name, 'consistent gets', a.value, 0)) "Consistent Gets",
+       Sum(Decode(a.name, 'db block gets', a.value, 0)) "DB Block Gets",
+       Sum(Decode(a.name, 'physical reads', a.value, 0)) "Physical Reads",
+       Round(((Sum(Decode(a.name, 'consistent gets', a.value, 0)) +
+         Sum(Decode(a.name, 'db block gets', a.value, 0)) -
+         Sum(Decode(a.name, 'physical reads', a.value, 0))  )/
+           (Sum(Decode(a.name, 'consistent gets', a.value, 0)) +
+             Sum(Decode(a.name, 'db block gets', a.value, 0))))
+             *100,2) "Hit Ratio %"
+FROM   v$sysstat a
+/
+
+
+-- ------------------------------
+-- function
+-- ------------------------------
+to_date('1911-1-1')
+to_char('1911')
+to_number('1911')
+
+--单行函数
+lower
+upper
+lpad     -- LPAD('tech', 8, '0');               #'0000tech'
+rpad     -- RPAD('tech', 8, '0');               #'tech0000'
+trim
+ltrim
+rtrim
+round
+substr   -- select substr('helloworld', 2, 2 )  from dual;         # el
+instr    --四舍五入 select instr('helloworld', 'l', 1 , 2)  from dual;     # 4 
+trunc    --去掉小数点后 select trunc( 123.45, 1)  from dual;                   # 123.4
+mod      --求余
+
+
+
+
+-- ------------------------------
+-- get DDL
+-- ------------------------------
+
+set pagesize 0
+set long 90000
+
+select dbms_metadata.get_ddl('TABLE','EMP','SCOTT') from dual;
+
+-- ------------------------------
+-- view
+-- ------------------------------
+
+select text from ALL_VIEWS where upper(view_name) like upper('V_iew');
+
+
+-- ------------------------------
+-- shrink space
+-- ------------------------------
+
+alter table t enable row movement;
+alter table t shrink move;
+-- move后需要重建索引
+alter index idx_t_id rebuild;
+analyze table t compute statistics ;
+alter table t disable row movement;
+
+
+-- shrink 有两个步骤，shrink space compact 可以在业务时段进行，shrink space 在闲时进行
+alter table t enable row movement;  
+alter table t shrink space compact;
+alter table t shrink space;
+select bytes from user_segments where  segment_name = 'T';
+
+
 
