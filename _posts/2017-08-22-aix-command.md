@@ -87,3 +87,7 @@ startsrc -s syslogd
 # insert syslog
 logger "test message"
 ```
+
+---
+
+## [https://sysaix.com/aix-command-vs-linux-commands](https://sysaix.com/aix-command-vs-linux-commands)
