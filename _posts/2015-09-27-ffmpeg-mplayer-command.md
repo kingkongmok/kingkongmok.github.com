@@ -68,6 +68,7 @@ screen -S lame bash -c 'for i in *mp3; do lame --preset phon+ "$i"; done'
 
 ```
 ffmpeg -i infile.mp4 -i infile.srt -c copy -c:s mov_text outfile.mp4
+for i in *ass; do ffmpeg -i "${i%ass}mp4" -i "$i" -c copy -c:s mov_text outfile_"${i%ass}mp4" && rm -f "${i%ass}mp4" "$i" && mv outfile_"${i%ass}mp4" "${i%ass}mp4" ; done 
 ```
 
 **-vf subtitles=infile.srt** will not work with **-c copy**
@@ -79,6 +80,7 @@ ffmpeg -i infile.mp4 -i infile.srt -c copy -c:s mov_text outfile.mp4
 
 ```
 ffmpeg -i input.mkv -c copy -c:s mov_text output.mp4
+screen -S ffmpeg sh -c 'for i in *mkv ; do ffmpeg -i "$i" -c copy -c:s mov_text "${i%mkv}mp4" ; done'
 ```
 
 ### wmv to mp4 

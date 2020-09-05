@@ -54,6 +54,7 @@ else
     sudo emaint --fix cleanresume
 fi
 
+sudo nice -n 19 emerge-webrsync && \
 sudo nice -n 19 emerge --sync && \
 sudo nice -n 19 emerge --keep-going --update --deep --with-bdeps=y --newuse @world && \
 sudo nice -n 19 emerge --depclean && \
