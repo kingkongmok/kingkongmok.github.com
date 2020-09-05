@@ -115,6 +115,11 @@ mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
 
 ## [fix mdadm](https://ahelpme.com/linux/recovering-md-array-and-mdadm-cannot-get-array-info-for-dev-md0/)
 
+
+```
+mdadm: Cannot get array info for /dev/md125
+```
+
 ```
 ### backup config
 mv /etc/mdadm.conf{,.backup20200720}
@@ -128,6 +133,20 @@ sudo mdadm --add /dev/md0 /dev/sdf
 # check
 mdadm --detail /dev/md0
 ```
+
+---
+
+### [replace a disk marked as removed](https://www.linuxquestions.org/questions/linux-server-73/mdadm-error-replacing-a-failed-disk-909577/)
+
+
+```
+mdadm -S /dev/md3
+mdadm --assemble /dev/md3 /dev/sd[fljed]1 --force
+mdadm --manage /dev/md3 --add /dev/sdk1
+```
+
+---
+
 
 ### [lvm](https://geekpeek.net/lvm-physical-volume-management/)
 
@@ -446,7 +465,7 @@ kfod status=true g=OCR
 #### kfed - Kernel Files metadata EDitor
 
 ```
-kfed read ORCL:ORC1
+kfed read ORCL:ORC2
 kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
 ```
 

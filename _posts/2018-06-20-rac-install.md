@@ -812,3 +812,19 @@ sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMP
 ```
 
 
+
+--- 
+
+### [hotplug attribute on network cards](https://anuragkumarjoy.blogspot.com/2018/05/)
+
+To find all network cards used by clusterware run following command.
+
+```
+$CRS_HOME/bin/oifcfg getif
+```
+
+---
+
+### asmstring
+
+cat $ORACLE_HOME/gpnp/profiles/peer/profile.xml

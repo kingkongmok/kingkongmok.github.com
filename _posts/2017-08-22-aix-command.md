@@ -91,3 +91,11 @@ logger "test message"
 ---
 
 ## [https://sysaix.com/aix-command-vs-linux-commands](https://sysaix.com/aix-command-vs-linux-commands)
+
+
+---
+
+```
+lsblk
+lsdev -Cc.disk
+```

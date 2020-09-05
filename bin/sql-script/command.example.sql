@@ -306,37 +306,6 @@ SID_LIST_LISTENER =
   )
 
 
--- enable flashback
--- minutes 1440 minutes = 1day
-ALTER SYSTEM SET DB_FLASHBACK_RETENTION_TARGET=4320;
-ALTER DATABASE FLASHBACK ON;
-SELECT FLASHBACK_ON FROM V$DATABASE;
-
-
--- recyclebin manage
-show parameter recyclebin;
-show recyclebin;   -- 显示垃圾桶内容
-drop table name purge;  --drop表不放垃圾桶
-
-Purge tablespace tablespace_name -- 用于清空表空间的Recycle Bin
-Purge tablespace tablespace_name user user_name -- 清空指定表空间的Recycle Bin中指定用户的对象
-Purge recyclebin                                --删除当前用户的Recycle Bin中的对象
-Purge dba_recyclebin                            --删除所有用户的Recycle Bin中的对象，该命令要sysdba权限
-Drop table table_name purge                     -- 删除对象并且不放在Recycle Bin中，即永久的删除，不能用Flashback恢复。
-Purge index recycle_bin_object_name             -- 当想释放Recycle bin的空间，又想能恢复表时，可以通过释放该对象的index所占用的空间来缓解空间压力。 因为索引是可以重建的。
-PURGE TABLE TABLE_NAME                          --删除回收站中指定对象
-PURGE TABLE "BIN$04LhcpndanfgMAAAAAANPw==$0";   --使用其回收站中的名称：
-
--- recyclebin flashback
-flashback table table_name to before drop;                          -- 还原回收站被删除的表、索引等对象， 是通过Flashback Drop实现的
-flashback table table_name to before drop rename to new_table_name; --闪回到新的名字
--- Flashback Drop注意事项
-1: 只能用于非系统表空间和本地管理的表空间。 在系统表空间中，表对象删除后就真的从系统中删除了，而不是存放在回收站中。
-2: 对象的参考约束不会被恢复，指向该对象的外键约束需要重建。
-3: 对象能否恢复成功，取决于对象空间是否被覆盖重用。
-4: 当删除表时，依赖于该表的物化视图也会同时删除，但是由于物化视图并不会放入recycle binzhong，因此当你执行flashback drop时，并不能恢复依赖其的物化视图。需要DBA手工重建。
-5: 对于回收站（Recycle Bin）中的对象，只支持查询。不支持任何其他DML、DDL等操作。
-
 
 
 
@@ -416,6 +385,15 @@ ALTER USER user_name account unlock;
 -- show account not work
 SELECT username, account_status, created, lock_date, expiry_date FROM dba_users WHERE account_status != 'OPEN';
 
+
+-- 查询目前audit情况
+-- https://docs.oracle.com/cd/B19306_01/network.102/b14266/cfgaudit.htm#i1007930
+SELECT * FROM DBA_STMT_AUDIT_OPTS;
+-- 查看audit表
+
+select * from aud$;
+select * from dba_common_audit_trail
+-- 其中，DBA_COMMON_AUDIT_TRAIL = DBA_COMMON_AUDIT_TRAIL + DBA_FGA_AUDIT_TRAIL
 
 -- 查询登陆失败 DBA_AUDIT_TRAIL displays all audit trail entries.
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
@@ -604,12 +582,37 @@ select owner, TABLESPACE_NAME, sum(bytes)/1024/1024 MB from dba_segments group b
 select tablespace_name from all_tables where owner = '&username';
 
 
+
+
+
+-- ------------------------------
+-- User-Managed backup 
+-- ------------------------------
+SQL> select * from v$backup ;
+
+SQL> alter database begin backup;
+SQL> alter database end backup;
+
+SQL> alter tablespace test begin backup ;
+SQL> alter tablespace test end backup ;
+
+
+
+
+
 -- ------------------------------
 -- RMAN
 -- ------------------------------
 
+-- https://oraclespin.com/2011/01/22/rman-to-enable-compression-of-backupset/#:~:text=Backup%20in%20RMAN%20can%20be,backup%20database%20remain%20the%20same.
+-- Enable compression when creating backup to disk
+RMAN> configure device type disk backup type to compressed backupset;
+
+
 
 -- rman backup info
+col OUTPUT_BYTES_DISPLAY for a20
+col TIME_TAKEN_DISPLAY for a20
 select start_time, status, input_type, output_bytes_display, time_taken_display from v$rman_backup_job_details order by start_time desc;
 
 
@@ -847,6 +850,9 @@ $ rman target sys/oracle@oradb auxiliary sys/oracle@adg1
 SQL> startup nomount pfile='/home/oracle/init.ora';
 RMAN> duplicate target database for standby from active database;
 SQL> alter database add standby logfile;
+SQL> /
+SQL> /
+SQL> /
 SQL> alter database open;
 SQL> recover managed standby database using current logfile disconnect from session;
 SQL> alter database recover managed standby database cancel;
@@ -931,7 +937,7 @@ repair failure;
 
 
 -- rman for dataguard
--- for the site where you don’t backup. It can be the standby or the primary.
+-- for the site where you don't backup. It can be the standby or the primary.
 -- rman on rac
 RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+DATA/oradb/controlfile/snapcf_ORAPRIMDB.f';
 -- rman on ADG
@@ -963,6 +969,14 @@ SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo01.log' TO '/u01/app/or
 SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo02.log' TO '/u01/app/oracle/oradata/new/redo02.log';
 SET NEWNAME FOR DATAFILE '/u01/app/oracle/oradata/EE/redo03.log' TO '/u01/app/oracle/oradata/new/redo03.log';
 RESTORE database ; 
+}
+
+-- for restore
+-- change location preview
+run
+{
+SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ORCL/%b'; 
+restore database preview;
 }
 
 -- https://docs.oracle.com/cd/E18283_01/backup.112/e10642/rcmdupad.htm
@@ -1005,6 +1019,10 @@ restore database preview;
 -- 11g以前，set newname只能指定datafile，之后就能设置for database（datafile和tempfile生效，但logfile不生效，需要在mount状态下调整logfile路径）
 
 RMAN>
+startup nomount force;
+restore standby controlfile from '/home/oracle/backup/autobackuppiece.bak';
+alter database mount ; 
+
 run
 {
 SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ADG/%b'; 
@@ -1065,14 +1083,15 @@ select max(sequence#) from v$archived_log;
 select sequence#,status,thread#,block#,process,status from v$managed_standby;
 
 
--- start redo apply in the FOREGROUND, issue the following sql statement:
+-- start redo apply in the FOREGROUND
 alter database recover managed standby database;
 
--- to start redo apply in the BACKGROUND, include the DISCONNECT keyword on the sql statement. for example:
+-- to start redo apply in the BACKGROUND
 alter database recover managed standby database disconnect;
 
--- to start real-time apply, include the using CURRENT LOGFILE clause on the sql statement. for example:
+-- to start real-time apply, include the using CURRENT LOGFILE 
 alter database recover managed standby database using current logfile disconnect;
+select recovery_mode from v$archive_dest_status where dest_id=1;
 
 -- Managed Standby Recovery Canceled
 alter database recover managed standby database cancel;
@@ -1140,7 +1159,11 @@ sql> alter tablespace <tablespace name> end backup;
 4. standby
 At the Standby:
 
-SQL> alter database rename file '.......UNNAMED00167' to '< actual location of the datafile >';
+
+-- 如果不是OMF
+SQL> alter database rename file 'oracle_home/dbs/uname001' to 'oradata/orcl/datafile/user01.dbf';
+
+-- 如果是OMF
 sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf_tbs_1_h2hsng6v_.dbf' as new;
 
 
@@ -1148,6 +1171,7 @@ sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
+select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' order by next_time desc ) where rownum < 10;
 select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 15 ;
 
 
@@ -1205,6 +1229,8 @@ ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(O
 shutdown immediate;
 startup mount;
 alter database set standby database to maximize protection;
+alter system flush redo to 'STBDB';
+
 
 
 -- Switchover manual
@@ -1224,15 +1250,20 @@ startup;
 
 
 -- failover manual
+-- old primary
+startup mount;
+alter system flush redo to 'STANDBY';
 alter database flashback on ;
 select flashback_on from v$database;
+-- old standby 
 alter database recover managed standby database cancel;
 alter database recover managed standby database finish;
 alter database activate standby database;
 alter database open;
 -- reinstate manual
+-- new primary
 select to_char(standby_became_primary_scn) from v$database;
-shutdown immediate
+-- new standby
 startup mount
 flashback database To scn 2569953;
 alter database convert to physical standby;
@@ -1242,6 +1273,7 @@ alter database recover managed standby database disconnect from session;
 
 -- snapshot manual
 alter database flashback on ;
+startup mount force
 alter database convert to snapshot standby;
 alter database open;
 -- convert to physical
@@ -1346,6 +1378,37 @@ DGMGRL> REINSTATE DATABASE 'ORCL';
 $ dgmgrl sys/oracle@ORCL
 DGMGRL> CONVERT DATABASE 'ADG' TO SNAPSHOT STANDBY;
 DGMGRL> CONVERT DATABASE 'ADG' TO PHYSICAL STANDBY;
+
+
+-- Refresh Physical Standby using INCREMENTAL BACKUP
+-- http://www.shannura.com/archives/2226261108_dgps_09.html
+
+-- 1. at standby : check standby the mininal scn
+select current_scn from v$database ;
+select file#,CHECKPOINT_CHANGE# from v$datafile_header;
+select file#,CHECKPOINT_CHANGE# from v$datafile;
+alter database recover managed standby database cancel ;
+
+-- 2. at primary : alter database recover managed standby database cancel ;
+RMAN> backup incremental from scn 1286586 database format '/home/oracle/backup/%U';
+find /u01/app/oracle/flash_recovery_area/PRD/archivelog -type f -newer /home/oracle/backup/ -exec cp {} /home/oracle/backup/ \;
+
+-- 3. at standby : Restore the controlfile
+startup nomount force;
+RMAN> restore standby controlfile from '/home/oracle/backup/autobackup_backuppiece';
+
+-- 4. catalog backpieces and datafile
+catalog start with '/home/oracle/backup/';
+catalog start with '/u01/app/oracle/oradata/AUX/';
+
+-- 5. switch file to copy ?
+-- RMAN> switch database to copy;
+
+-- 6. recover 
+RMAN> recover database noredo;
+
+-- 7. applied
+recover managed standby database disconnect;
 
 
 -- ------------------------------
@@ -1854,6 +1917,9 @@ DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES;
 
 
 -- 数据泵 impdp expdb
+-- 检查tablespace
+select distinct tablespace_name from user_tables ;
+
 --example
 expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
 --example
@@ -3142,7 +3208,7 @@ V$TEMPSEG_USAGE
 
 
 -- ------------------------------
--- Large table
+-- big table
 -- ------------------------------
 
 -- check redef package
@@ -3166,6 +3232,17 @@ BEGIN
         int_table  => 'BIG_TABLE2');
 END;
 /
+
+-- sync 后应该可以进行删除物化视图
+-- https://kknews.cc/zh-hk/tech/lgz9l2.html
+-- 注意，如果出现start_interim_table 异常，例如文中提到表空间不足导致异常，重做会出现ORA-23539 ORA-06512 ORA-06512 ORA-06512 错误
+-- 用以下终止并重做
+drop materialized view test.BILL_LOGOUT_CN_DEF
+drop materialized view log on test.BILL_LOGOUT_CN;
+execute dbms_redefinition.ABORT_REDEF_TABLE ('TEST','BILL_LOGOUT_CN','BILL_LOGOUT_CN_DEF');
+
+
+
 -- copy all constaints, index to table2
 SET SERVEROUTPUT ON
 DECLARE
@@ -3198,6 +3275,16 @@ END;
 -- drop old table 
 drop table BIG_TABLE2
 
+-- drop materialized table
+xxxxx
+
+
+
+-- interval partition
+create sequence testid;
+create table test1 ( id number primary key, day date ) partition by range(day) interval(numtodsinterval(1,'day' )) ( partition p1 values less than(to_date('2014-01-01','yyyy-mm-dd')) );
+create table test1 ( id number primary key, day date ) partition by range(day) interval(numtoyminterval(1,'year')) ( partition p1 values less than(to_date('2019-01-01','yyyy-mm-dd')) );
+insert into test1 ( id, day ) values ( testid.nextval, sysdate );
 
 
 
@@ -3571,16 +3658,26 @@ select text from ALL_VIEWS where upper(view_name) like upper('V_iew');
 -- ------------------------------
 -- shrink space
 -- ------------------------------
+-- http://www.dba-oracle.com/t_alter_table_move_shrink_space.htm
+-- http://www.2cto.com/database/201201/117275.html?spm=a2c6h.12873639.0.0.6d9e30321SeCyp
+
+-- Alter table move - The alter table xxx move command moves rows down into un-used space and adjusts the HWM but does not adjust the segments extents, and the table size remains the same.  The alter table move syntax also preserves the index and constraint definitions.
 
 alter table t enable row movement;
 alter table t shrink move;
--- move后需要重建索引
+-- move后,会改变一些记录的ROWID，所以MOVE之后索引会变为无效，需要REBUILD
 alter index idx_t_id rebuild;
 analyze table t compute statistics ;
 alter table t disable row movement;
+ 
+-- Alter table shrink space - Using the "alter table xxx shrink space compact" command will re-pack the rows, move down the HWM, and releases unused extents.  With standard Oracle tables, you can reclaim space with the "alter table shrink space" command:
+-- 有两个步骤，
+-- shrink space compact 可以在业务时段进行，
+-- shrink space 在闲时进行
+-- 3.使用shrink space时，索引会自动维护。如果在业务繁忙时做压缩，可以先shrink space compact，来压缩数据而不移动HWM，等到不繁忙的时候再shrink space来移动HWM。
+-- 4.索引也是可以压缩的，压缩表时指定Shrink space cascade会同时压缩索引，也可以alter index xxx shrink space来压缩索引。
+-- 5.shrink space需要在表空间是自动段空间管理的，所以system表空间上的表无法shrink space。
 
-
--- shrink 有两个步骤，shrink space compact 可以在业务时段进行，shrink space 在闲时进行
 alter table t enable row movement;  
 alter table t shrink space compact;
 alter table t shrink space;
@@ -3588,3 +3685,144 @@ select bytes from user_segments where  segment_name = 'T';
 
 
 
+-- ------------------------------
+-- flashback
+-- ------------------------------
+
+
+db_flashback_retention_target 单位是 minutes
+undo_retention  单位是 seconds
+
+-- flashback database, depends on flashback logs
+flashback database ; 
+select to_char(oldest_flashback_scn), oldest_flashback_time from v$flashback_database_log;
+STARTUP MOUNT force;
+FLASHBACK DATABASE TO SCN 411010;
+ALTER DATABASE OPEN read only;
+query xxx;
+startup mount force;
+FLASHBACK DATABASE TO SCN 411110;
+...
+alter database open resetlogs;
+alter database flashback off;
+alter database flashback on;
+
+
+--
+CREATE RESTORE POINT before_update GUARANTEE FLASHBACK DATABASE;
+LIST RESTORE POINT ALL;
+FLASHBACK DATABASE TO RESTORE POINT 'BEFORE_UPDATE';
+ALTER DATABASE OPEN RESETLOGS;
+
+
+
+-- flashback drop , depends on recyclebin
+show recyclebin;
+flash back table test to before drop;
+-- 需要更改index和constraint名称, 并重建fk
+alter index xxxx rename to pk_test;
+alter table test rename constraint xxx to pk_test;
+-- Flashback Drop注意事项
+1: 只能用于非系统表空间和本地管理的表空间。 在系统表空间中，表对象删除后就真的从系统中删除了，而不是存放在回收站中。
+2: 对象的参考约束不会被恢复，指向该对象的外键约束需要重建。
+3: 对象能否恢复成功，取决于对象空间是否被覆盖重用。
+4: 当删除表时，依赖于该表的物化视图也会同时删除，但是由于物化视图并不会放入recycle binzhong，因此当你执行flashback drop时，并不能恢复依赖其的物化视图。需要DBA手工重建。
+5: 对于回收站（Recycle Bin）中的对象，只支持查询。不支持任何其他DML、DDL等操作。
+
+
+-- flashback query, depends on undo
+select * from test as of timestamp to_date('2020-08-13 13:00:00', 'yyyy-mm-dd hh24:mi:ss');
+select * from test as of scn 9999;
+create table test_hist as select * from test as of scn 9999;
+
+
+-- flashback table, depends on undo
+alter table test enable row movement;
+flashback table test to timestamp to_date('2020-08-13 13:00:00', 'yyyy-mm-dd hh24:mi:ss');
+flashback table test to scn 9999;
+
+
+-- flashback versions, depends on undo
+-- logminder on
+select supplemental_log_data_min from v$database;
+-- get the scn versions between
+SELECT to_char(versions_startscn), to_char(versions_endscn), versions_xid, versions_operation, id FROM test versions between scn minvalue and maxvalue;
+select to_char(versions_startscn), to_char(versions_endscn), versions_xid, versions_operation, id FROM test versions between timestamp to_date(sysdate - 1/24*2) and to_date(sysdate);
+
+
+-- flashback archive, depends on undo
+--check
+select * from dba_flashback_archive_ts;
+select * from dba_flashback_archive;
+--创建flashback archive专用tablespace，创建方案使用此tablespace，将表关联到此方案。
+createte tablespace flasharc datafile ;
+create flashback archive flashback_archive tablespace flasharc retention 1 year;
+-- 将其设置成default，有点类似default tablespace
+alter flashback archive flashback_archive set default ;
+-- 设置表格实现flashback archive 
+alter table table_name flashback archive flashback_archive ; -- 如果没有默认flashback archive
+alter table table_name flashback archive ; -- 如果有默认 flashback archive
+-- 表只能截不能删，ORA-55610，如果需要取消，则 设置表格取消 flashback archive
+alter table table_name no flashback archive;
+
+
+
+-- flashback transaction, depends on undo,redo,archivlog
+desc flashback_transaction_query
+select xid, LOGON_USER, OPERATION from flashback_transaction_query where xid='09001600AC0C0000';
+select UNDO_SQL from flashback_transaction_query where xid=hextoraw('09001600AC0C0000');
+
+
+-- V$FLASHBACK_DATABASE_LOG –> displays information about the flashback data. Use this view to help estimate the amount of flashback space required for the current workload.
+-- V$FLASHBACK_DATABASE_STAT displays statistics for monitoring the I/O overhead of logging flashback data.
+select * from V$FLASHBACK_DATABASE_LOG;
+select * from V$FLASHBACK_DATABASE_STAT;
+
+
+-- recyclebin manage
+show parameter recyclebin;
+show recyclebin;   -- 显示垃圾桶内容
+drop table name purge;  --drop表不放垃圾桶
+Purge tablespace tablespace_name -- 用于清空表空间的Recycle Bin
+Purge tablespace tablespace_name user user_name -- 清空指定表空间的Recycle Bin中指定用户的对象
+Purge recyclebin                                --删除当前用户的Recycle Bin中的对象
+Purge dba_recyclebin                            --删除所有用户的Recycle Bin中的对象，该命令要sysdba权限
+Drop table table_name purge                     -- 删除对象并且不放在Recycle Bin中，即永久的删除，不能用Flashback恢复。
+Purge index recycle_bin_object_name             -- 当想释放Recycle bin的空间，又想能恢复表时，可以通过释放该对象的index所占用的空间来缓解空间压力。 因为索引是可以重建的。
+PURGE TABLE TABLE_NAME                          --删除回收站中指定对象
+PURGE TABLE "BIN$04LhcpndanfgMAAAAAANPw==$0";   --使用其回收站中的名称：
+
+
+-- ------------------------------
+-- logminder
+-- ------------------------------
+select supplemental_log_data_min from v$database;
+-- enable
+alter database add supplemental log data;
+-- disable
+alter database drop supplemental log data;
+
+
+
+
+-- ------------------------------
+--  TSPITR Performing RMAN Tablespace Point-in-Time Recovery
+-- ------------------------------
+recover tablespace 'TEST' until scn 16027745078 auxiliary destination '/u01/app/oracle/oraaux';
+
+
+-- ------------------------------
+--  catalog and uncatalog
+-- ------------------------------
+RMAN>CATALOG ARCHIVELOG '/oracle/oradata/dbname/a_1_1883.arc', '/oracle/oradata/dbname/a_1_1885.arc';
+RMAN>CATALOG DATAFILECOPY '/oradata/backup/data01.dbf' LEVEL 0;
+RMAN>CATALOG CONTROLFILECOPY '/oradata/backup/ctl01.ctl';
+RMAN>CATALOG START WITH '/backups/bkp_db' NOPROMPT;
+RMAN>CATALOG RECOVERY AREA NOPROMPT;
+RMAN>CATALOG DB_RECOVERY_FILE_DEST;
+RMAN>CATALOG BACKUPPIECE '/u02/oradata/dbname/bkp_piece_name';
+
+--Uncatalog
+RMAN>CHANGE ARCHIVELOG ALL UNCATALOG;
+RMAN>CHANGE BACKUP OF TABLESPACE TBS_DATA01 UNCATALOG;
+RMAN>CHANGE BACKUPPIECE '+DG_DATA/bakup/offr423' UNCATALOG;
