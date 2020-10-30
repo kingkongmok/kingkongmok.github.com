@@ -129,3 +129,32 @@ configure arguments: --prefix=/usr/local/nginx-1.10.3 --without-mail_smtp_module
 --with-pcre=../pcre-8.40 --with-zlib=../zlib-1.2.11
 --with-http_stub_status_module
 ```
+
+---
+
+
+### [隐藏header](https://serverfault.com/questions/214242/can-i-hide-all-server-os-info)
+
+```
+# src/http/ngx_http_header_filter_module.c
+static char ngx_http_server_string[] = "Server: nginx" CRLF;
+static char ngx_http_server_string[] = "Server: webserver" CRLF;
+
+# src/core/nginx.h 
+#define NGINX_VER          "nginx/" NGINX_VERSION
+#define NGINX_VER          "webserver/" NGINX_VERSION
+
+#define NGINX_VERSION "1.0.4"
+#define NGINX_VERSION "999"
+
+```
+
+```
+nginx.conf
+在http选项下
+
+http{
+server_tokens off;
+...
+}
+```

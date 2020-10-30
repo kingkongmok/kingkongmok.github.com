@@ -110,3 +110,31 @@ Jul 28 15:52:25 ins14 sshd[15112]: Accepted keyboard-interactive/pam for kk from
 Jul 28 15:52:25 ins14 sshd[15708]: pam_unix(sshd:session): session opened for user kk by (uid=0)
 Hint: Some lines were ellipsized, use -l to show in full.
 ```
+
+---
+
+
+```
+# make
+yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmkmf libXt-devel pam-devel
+./configure --with-pam --prefix=/usr/local/openssh-8.4p1 --sysconfdir=/etc/ssh  --with-md5-passwords  
+make && make install
+
+# install
+yum install -y telnet-server
+sed -i 's/disable.*yes/disable = no/' /etc/xinetd.d/telnet
+chkconfig xinetd off
+service xinetd start
+
+cp -a /etc/init.d/sshd /etc/init.d/sshd8.4p1
+chkconfig --add sshd8.4p1
+chkconfig sshd off
+sed -i 's#SSHD=/usr/sbin/sshd#SSHD=/usr/local/openssh-8.4p1/sbin/sshd#' /etc/init.d/sshd8.4p1
+chkconfig --list | grep -P "sshd|xinetd"
+sed -i.8.4p1.bak 's/^GSSAPIAuthentication/#GSSAPIAuthentication/; s/^GSSAPICleanupCredentials/#GSSAPICleanupCredentials/' /etc/ssh/sshd_config
+service sshd stop
+service sshd8.4p1 start
+ps -ef |grep sshd
+
+service xinetd stop
+```
