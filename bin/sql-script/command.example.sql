@@ -196,11 +196,15 @@ set pagesize 100
 col 1 format a15
 
 
--- clear buffer and cache
-alter system flush buffer_cache
-
--- SQL緩存
+-- Flush Shared pool means flushing the cached execution plan and SQL Queries from memory.
 alter system flush shared_pool
+-- FLush buffer cache means flushing the cached data of objects from memory.
+alter system flush buffer_cache
+-- Both is like when we restart the oracle database and all memory is cleared.
+-- For RAC Environment:
+alter system flush buffer_cache global;
+alter system flush shared_pool global;
+
 
 
 --1.查詢非綁定變量的SQL，重複解析次數超過20
@@ -245,12 +249,30 @@ INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
         ├── STANDB1
         └── STANDB2
 
-
--- sga/pga 比例 
+-- ------------------------------
+--  memory
+-- ------------------------------
+-- ASMM: sga/pga 比例 
 -- 假设主机的总物理内存是100G。
 -- 20G -- 操作系统及其他预留
 -- 64G -- Oracle的SGA 100*0.8*0.8
 -- 16G -- Oracle的PGA 100*0.8*0.2
+
+-- ASMM ( Automatic Shared Memory Management,  10G后 )
+-- AMM ( Automatic Memory Management , 11G后)
+
+
+ORACLE  9i      PGA自动管理，SGA手动管理
+ORACLE 10g      PGA自动管理，SGA自动管理（ASMM，自动共享内存管理）
+ORACLE 11g      PGA,SGA统一自动管理（AMM，自动内存管理）
+ORACLE 12c      跟11g一样，没有变化
+
+
+自动内存管理（AMM）   : memory_target=非0，是自动内存管理，如果初始化参数 LOCK_SGA=TRUE，则 AMM 是不可用的。
+自动共享内存管理(ASMM): 在memory_target=0 and sga_target为非0的情形下是自动内存管理
+手工共享内存管理      : memory_target=0 and sga_target=0  指定 share_pool_size 、db_cache_size 等 sga 参数
+自动 PGA 管理         : memory_target=0 and workarea_size_policy=auto  and PGA_AGGREGATE_TARGET=值
+手动 PGA 管理         : memory_target=0 and workarea_size_policy=manal  然后指定 SORT_AREA_SIZE 等 PGA 参数，一般不使用手动管理PGA。
 
 -- alert log location
 show parameter DIAGNOSTIC_DEST
@@ -321,11 +343,6 @@ SYS@+ASM1>  alter system set remote_listener='dm01-scan:1521';
 SYS@+ASM1>  alter system register
 
 oracle@rac1> ~$ emca -config dbcontrol db  -repos create -cluster
-
--- EM/oem start 
-$ emctl start dbconsole
-$ emctl stop dbconsole
-$ emctl status agent
 
 
 -- server ip and hostname
@@ -399,6 +416,8 @@ select * from dba_common_audit_trail
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 select * from DBA_AUDIT_TRAIL where Returncode <> 0 order by Timestamp; 
 
+-- user最后登陆日期
+SELECT  MAX(TIMESTAMP), A.USERNAME FROM DBA_AUDIT_TRAIL A WHERE ACTION_NAME = 'LOGON' GROUP BY USERNAME ORDER BY 1 DESC;
 
 -- truncate aud$
 select count(1) from sys.aud$;
@@ -1032,6 +1051,7 @@ SWITCH TEMPFILE ALL;
 }
 
 SQLPLUS>
+select * from vrecover_file;
 select name from v$datafile;
 select name from v$tempfile;
 select member from v$logfile;
@@ -1171,7 +1191,7 @@ sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf
 -- ADG 同步情况
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
-select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' order by next_time desc ) where rownum < 10;
+select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' and name not like '+%' order by next_time desc ) where rownum < 10;
 select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 15 ;
 
 
@@ -1350,8 +1370,8 @@ SID_LIST_LISTENER =
  )
 -- 在primary中添加dgmgrl的配置
 DGMGRL> connect sys/oracle
-DGMGRL> CREATE CONFIGURATION 'oradb_config' as PRIMARY DATABASE IS 'oradb' connect identifier is 'oradb' ;
-DGMGRL> add database 'ADG' AS CONNECT IDENTIFIER IS 'ADG' MAINTAINED AS PHYSICAL;   
+DGMGRL> CREATE CONFIGURATION ee_config as PRIMARY DATABASE IS EE connect identifier is EE ;
+DGMGRL> add database AUX AS CONNECT IDENTIFIER IS AUX MAINTAINED AS PHYSICAL;   
 DGMGRL> enable configuration
 --
 DGMGRL> connect sys/oracle
@@ -1634,6 +1654,11 @@ select count(1) from gv$process;
 -- get TableSpace info (zabbix)
 select TABLESPACE_NAME, round(USED_PERCENT,0) used, round(100-USED_PERCENT,0) free, TABLESPACE_SIZE from DBA_TABLESPACE_USAGE_METRICS;
 select TABLESPACE_NAME, round(USED_PERCENT,0) "used%", round(100-USED_PERCENT,0) "free%", round(TABLESPACE_SIZE*8192/1024/1024/1024,2) GB from DBA_TABLESPACE_USAGE_METRICS;
+
+--check
+create tablespace small datafile size 10M extent management local uniform size 3M;
+create table small ( id number) tablespace small storage ( minextents 3 );
+select reason from dba_outstanding_alerts;
 
 -- ASM info (zabbix)
 select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/total_mb,3)*100 "used%" from v$asm_diskgroup;
@@ -2475,6 +2500,31 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 @?/rdbms/admin/awrrpt.sql
 
 
+-- 本实例AWR报告
+@?/rdbms/admin/awrrpt  
+-- RAC中选择实例号
+@?/rdbms/admin/awrrpti   
+-- AWR 比对报告
+@?/rdbms/admin/awrddrpt
+-- RAC全局AWR报告
+@?/rdbms/admin/awrgrpt
+
+
+
+@?/rdbms/admin/awrddrpt.sql
+
+-- chech snapshot
+select snap_id,BEGIN_INTERVAL_TIME,dbid from dba_hist_snapshot order by snap_id
+-- create baseline
+exec DBMS_WORKLOAD_REPOSITORY.CREATE_BASELINE(start_snap_id=>435,end_snap_id=>436,baseline_name=>'work_bs1',dbid=>1195893416,expiration=>30);
+exec DBMS_WORKLOAD_REPOSITORY.CREATE_BASELINE(start_snap_id=>435,end_snap_id=>436,baseline_name=>'work_bs1',dbid=>1195893416,expiration=>null);
+-- query baseline
+select dbid,baseline_id,baseline_name,EXPIRATION,CREATION_TIME from dba_hist_baseline;
+
+
+
+
+
 -- 查询是专用服务器还是 共享服务器
 show parameter shared_serve
 select p.program,s.server from v$session s , v$process p where s.paddr = p.addr ; 
@@ -2626,7 +2676,7 @@ select sql_id, sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:
 -- 统计信息 
 -- 统计信息的收集是位于gather_stats_prog这个task，当前状态为enabled，即启用
 SELECT client_name,task_name, status FROM dba_autotask_task WHERE client_name = 'auto optimizer stats collection';
-SELECT program_action, number_of_arguments, enabled FROM dba_scheduler_programs WHERE owner = 'SYS' AND program_name = 'GATHER_STATS_PROG'
+SELECT program_action, number_of_arguments, enabled FROM dba_scheduler_programs WHERE owner = 'SYS' AND program_name = 'GATHER_STATS_PROG';
 --统计信息收集的时间窗口
 SELECT w.window_name, w.repeat_interval, w.duration, w.enabled FROM dba_autotask_window_clients c, dba_scheduler_windows w WHERE c.window_name = w.window_name AND c.optimizer_stats = 'ENABLED';
 -- 自动收集统计信息历史执行情况
@@ -3105,6 +3155,16 @@ select 'DROP PROCEDURE '||owner||'."'||a.object_name||'";' from DBA_PROCEDURES a
 where a.object_name like 'DBMS_%_INTERNAL% '
 /
 
+-- 
+SELECT OWNER,
+OBJECT_NAME,
+OBJECT_TYPE,
+TO_CHAR(CREATED, 'YYYY-MM-DD HH24:MI:SS')
+FROM DBA_OBJECTS
+WHERE OBJECT_NAME LIKE 'DBMS_CORE_INTERNA%'
+OR OBJECT_NAME LIKE 'DBMS_SYSTEM_INTERNA%'
+OR OBJECT_NAME LIKE 'DBMS_SUPPORT%';
+
 
 -- size of all objects in your schema
 select sum(bytes)/1024/1024 MB from dba_segments where owner = 'CKSP'; 
@@ -3551,7 +3611,17 @@ select dbms_sqltune.report_tuning_task('5fmyz01ptmc7f_tuning_task') from dual;
 
 
 -- 上个sql的explain plan
+ -- A_ROWS (actual rows) and E-Rows (CBO estimated rows).
+alter session set statistics_level='ALL'; 
+set serveroutput off;
+set linesize 200
+set pagesize 500
+set timing on
 select * from table (dbms_xplan.display_cursor (format=>'ALLSTATS LAST'));
+--执行SQLXX
+select * from table(dbms_xplan.display_cursor(null,0,'allstats last'));
+
+
 
 
 -- explain plan
@@ -3568,7 +3638,55 @@ SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET', 'dwdx28sdfsdf5'));
 SELECT * FROM TABLE(dbms_xplan.display_sqlset('DBACLASS_SET','dwdx28sdfsdf5', 983987987));
  
 
---  
+-- 用于查询
+
+select sql_text, sql_id, hash_value, plan_hash_value, executions from v$sqlarea where upper(sql_text) like upper('%from scott%') and upper(sql_text) not like upper('%v$sql%');
+select sql_id, sql_text, child_number, executions from v$sql where upper(sql_text) like upper('%from scott%') and upper(sql_text) not like upper('%v$sql%');
+
+-- 不绑定变量的
+create table scott.m1(x int);
+create or replace Procedure proc1
+as
+begin
+    for i in 1..5000
+        loop
+            execute immediate
+            'insert into scott.m1 values('||i||')';
+        end loop;
+    end;
+/
+
+SQL> set timing on;
+SQL> exec proc1;
+
+
+--
+-- Flush Shared pool means flushing the cached execution plan and SQL Queries from memory.
+alter system flush shared_pool
+-- FLush buffer cache means flushing the cached data of objects from memory.
+alter system flush buffer_cache
+-- Both is like when we restart the oracle database and all memory is cleared.
+-- For RAC Environment:
+alter system flush buffer_cache global;
+alter system flush shared_pool global;
+
+
+-- 带绑定变量的
+create table scott.m2(x int);
+create or replace Procedure proc2
+as
+begin
+    for i in 1..5000
+        loop
+            execute immediate
+            'insert into scott.m2 values(:x)' using i;
+        end loop;
+    end;
+/
+
+SQL> set timing on;
+SQL> exec proc2;
+
 
 -- DBA_HIST_SQL_PLAN get plan_hash_value from sqlid
 select s.begin_interval_time , s.end_interval_time , q.snap_id , q.dbid , q.sql_id , q.plan_hash_value , q.optimizer_cost , q.optimizer_mode from
@@ -3826,3 +3944,28 @@ RMAN>CATALOG BACKUPPIECE '/u02/oradata/dbname/bkp_piece_name';
 RMAN>CHANGE ARCHIVELOG ALL UNCATALOG;
 RMAN>CHANGE BACKUP OF TABLESPACE TBS_DATA01 UNCATALOG;
 RMAN>CHANGE BACKUPPIECE '+DG_DATA/bakup/offr423' UNCATALOG;
+
+-- ------------------------------
+--  Resource Consumer Groups
+-- ------------------------------
+
+SELECT username, initial_rsrc_consumer_group FROM dba_users WHERE username = 'SCOTT';
+--? select RESOURCE_CONSUMER_GROUP from v$session where username='SCOTT';
+
+select * from dba_outstanding_alerts;
+
+
+-- ------------------------------
+--  OEM Oracle Enterprise manager
+-- ------------------------------
+-- EM/oem start 
+emctl start dbconsole
+emctl stop dbconsole
+emctl status agent
+
+select username, account_status from dba_users where username in ('SYSTEM','SYSMAN','DBSNMP');
+alter user sysman identified by PASSWORD account unlock;
+
+-- change following entries value in the "emoms.properties" file:
+orcle.sysman.eml.mntr.emdRepPwd=NEW_SYSMAN_PASSWORD (in plain text)
+orcle.sysman.eml.mntr.emdRepPwdEncrypted=FALSE (true to false)

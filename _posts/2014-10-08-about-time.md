@@ -150,3 +150,15 @@ $ sudo grep docker /var/log/emerge.log | perl -MPOSIX -npE 's/^\d+/strftime"%F_%
 2019-03-30_00:11:38:  === (6 of 6) Cleaning (app-emulation/docker-18.09.4::/usr/portage/app-emulation/docker/docker-18.09.4.ebuild)
 2019-03-30_00:11:38:  === (6 of 6) Compiling/Merging (app-emulation/docker-18.09.4::/usr/portage/app-emulation/docker/docker-18.09.4.ebuild)
 ```
+
+---
+
+linux date command
+
+```
+# Get the seconds since epoch
+date -d "Oct 21 1973" +%s
+
+#Convert the number of seconds back to string
+date -d @120024000
+```

@@ -48,8 +48,10 @@ mysqldump -uuser -ppass --single-transaction --routines --triggers
 ## [不重启的情况下备份](http://lizhenliang.blog.51cto.com/7876557/1669829)
 
 ```
-# mysqldump -uroot -p123 --routines --single_transaction --master-data=2
---databases weibo > weibo.sql
+# mysqldump -uroot -p123 --routines --single_transaction --master-data=2 --databases weibo > weibo.sql
+
+
+mysqldump --single-transaction --routines --triggers --master-data=2 --databases database1 database2 database3 | gzip > mysql.backup.sql.gz
 ```
 
 * **--routines**：导出存储过程和函数
@@ -64,3 +66,75 @@ mysqldump -uuser -ppass --single-transaction --routines --triggers
 #大概22行
 ```
 
+
+---
+
+### [mysql 删除 主从信息](://blog.csdn.net/wulantian/article/details/8463394)
+
+
+```
+mysql>change master to master_host=' ';
+```
+
+---
+
+### mysql shutdown
+
+```
+mysqladmin -u root -ppassowrd shutdown
+mysqladmin shutdown
+```
+
+---
+
+### [install](https://dev.mysql.com/downloads/repo/yum/)
+
+
+```
+grep 'temporary password' /var/log/mysqld.log
+SET GLOBAL validate_password_policy=LOW;
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+```
+
+--- 
+
+
+### [ERROR 1231 (42000)  Variable sql_mode NO_AUTO_CREATE_USER](https://stackoverflow.com/questions/55503831/error-1231-42000-with-sql-mode-when-trying-to-import-a-sql-dump-in-mysql-workb)
+
+```
+perl -pi -e 's/,NO_AUTO_CREATE_USER//g' dump.sql
+```
+
+---
+
+
+### [mysql kill process](https://stackoverflow.com/questions/1903838/how-do-i-kill-all-the-processes-in-mysql-show-processlist)
+
+```
+mysql> select concat('KILL ',id,';') from information_schema.processlist
+where user='root' and time > 200 into outfile '/tmp/a.txt';
+
+mysql> source /tmp/a.txt;
+```
+
+---
+
+
+### [Repair the MySQL Replication](https://www.howtoforge.com/how-to-repair-mysql-replication)
+
+```
+Last_Error: Error 'Duplicate key name 'idx_FromHost'' on query. Default database: 'Syslog'. Query: 'create index idx_FromHost on SystemEvents ( FromHost )'
+```
+
+```
+mysql> STOP SLAVE;
+#
+# simply skip the invalid SQL query
+# This tells the slave to skip one query (which is the invalid one that caused the replication to stop). 
+# If you'd like to skip two queries, you'd use SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 2; instead and so on.
+#
+mysql> SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1;
+
+mysql> START SLAVE;
+mysql> SHOW SLAVE STATUS \G
+```
