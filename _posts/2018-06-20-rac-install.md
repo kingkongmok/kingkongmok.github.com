@@ -217,13 +217,25 @@ ORACLEASM_SCANEXCLUDE=""
 ORACLEASM_USE_LOGICAL_BLOCK_SIZE="false"
 
 # 用asmtool
-/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/sdb -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/sdc -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/sdd -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n DATA -s /dev/sde -a force=yes
-/usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/sdf -a force=yes
+
+
+sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n DATA -s /dev/mapper/storage-data -a force=yes
+sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n FRA  -s /dev/mapper/storage-fra  -a force=yes
+sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n OCR1 -s /dev/mapper/storage-ocr1 -a force=yes
+sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n OCR2 -s /dev/mapper/storage-ocr2 -a force=yes
+sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n OCR3 -s /dev/mapper/storage-ocr3 -a force=yes
+
 oracleasm scandisks
 oracleasm listdisks
+
+grid@pri1 ~ $  ls -lht /dev/oracleasm/disks/
+total 0
+brw-rw---- 1 grid asmadmin 8, 144 Dec 28 11:16 OCR1
+brw-rw---- 1 grid asmadmin 8, 112 Dec 28 11:16 OCR3
+brw-rw---- 1 grid asmadmin 8,  80 Dec 28 11:16 FRA
+brw-rw---- 1 grid asmadmin 8,  48 Dec 28 11:16 OCR2
+brw-rw---- 1 grid asmadmin 8,  16 Dec 28 11:16 DATA
+
 ```
 
 
@@ -265,7 +277,7 @@ alias asmcmd='rlwrap -A asmcmd'
 
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
-ORACLE_HOSTNAME=primary1
+ORACLE_HOSTNAME=pri1
 INVENTORY_LOCATION=/u01/app/oraInventory
 SELECTED_LANGUAGES=en
 oracle.install.option=CRS_CONFIG
@@ -274,21 +286,21 @@ ORACLE_HOME=/u01/app/11.2.0/grid
 oracle.install.asm.OSDBA=asmdba
 oracle.install.asm.OSOPER=oinstall
 oracle.install.asm.OSASM=asmadmin
-oracle.install.crs.config.gpnp.scanName=primary-scan
+oracle.install.crs.config.gpnp.scanName=pri-scan
 oracle.install.crs.config.gpnp.scanPort=1521
-oracle.install.crs.config.clusterName=primary-cluster
+oracle.install.crs.config.clusterName=pri-cluster
 oracle.install.crs.config.gpnp.configureGNS=false
 oracle.install.crs.config.gpnp.gnsSubDomain=
 oracle.install.crs.config.gpnp.gnsVIPAddress=
 oracle.install.crs.config.autoConfigureClusterNodeVIP=false
-oracle.install.crs.config.clusterNodes=primary1:primary1-vip,primary2:primary2-vip
-oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.1.0:2,eth3:172.26.31.0:3
+oracle.install.crs.config.clusterNodes=pri1:pri1-vip,pri2:pri2-vip
+oracle.install.crs.config.networkInterfaceList=eth0:10.0.2.0:3,eth1:10.255.255.0:1,eth2:192.168.0.0:2,eth3:192.168.1.0:3
 oracle.install.crs.config.storageOption=ASM_STORAGE
 oracle.install.crs.config.sharedFileSystemStorage.diskDriveMapping=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskRedundancy=NORMAL
 oracle.install.crs.config.sharedFileSystemStorage.ocrLocations=
-oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL 
+oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
 oracle.install.crs.config.useIPMI=false
 oracle.install.crs.config.ipmi.bmcUsername=
 oracle.install.crs.config.ipmi.bmcPassword=oracle
@@ -297,7 +309,7 @@ oracle.install.asm.diskGroup.name=OCR
 oracle.install.asm.diskGroup.redundancy=NORMAL
 oracle.install.asm.diskGroup.AUSize=1
 oracle.install.asm.diskGroup.disks=ORCL:OCR1,ORCL:OCR2,ORCL:OCR3
-oracle.install.asm.diskGroup.diskDiscoveryString=
+oracle.install.asm.diskGroup.diskDiscoveryString=ORCL:*
 oracle.install.asm.monitorPassword=oracle
 oracle.install.crs.upgrade.clusterNodes=
 oracle.install.asm.upgradeASM=false
@@ -317,7 +329,7 @@ PROXY_REALM=
 检验环境是否OK
 
 ```
-/stage/grid/runcluvfy.sh stage -pre crsinst -n stb1,stb2 -verbose
+/stage/grid/runcluvfy.sh stage -pre crsinst -n pri1,pri2
 ```
 
 安装, 只在stb1
@@ -365,8 +377,6 @@ EOF
 
 
 
-
----
 
 ## rdbms database install
 
@@ -417,7 +427,7 @@ CREATE DISKGROUP FRA  EXTERNAL REDUNDANCY DISK '/dev/raw/raw5';
 ```
 oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
 oracle.install.option=INSTALL_DB_AND_CONFIG
-ORACLE_HOSTNAME=primary1
+ORACLE_HOSTNAME=pri1
 UNIX_GROUP_NAME=oinstall
 INVENTORY_LOCATION=/u01/app/oraInventory
 SELECTED_LANGUAGES=en
@@ -428,15 +438,15 @@ oracle.install.db.EEOptionsSelection=false
 oracle.install.db.optionalComponents=
 oracle.install.db.DBA_GROUP=dba
 oracle.install.db.OPER_GROUP=
-oracle.install.db.CLUSTER_NODES=primary1,primary2
+oracle.install.db.CLUSTER_NODES=pri1,pri2
 oracle.install.db.isRACOneInstall=false
 oracle.install.db.racOneServiceName=
 oracle.install.db.config.starterdb.type=GENERAL_PURPOSE
 oracle.install.db.config.starterdb.globalDBName=oradata
-oracle.install.db.config.starterdb.SID=primary
+oracle.install.db.config.starterdb.SID=pri
 oracle.install.db.config.starterdb.characterSet=AL32UTF8
 oracle.install.db.config.starterdb.memoryOption=true
-oracle.install.db.config.starterdb.memoryLimit=802
+oracle.install.db.config.starterdb.memoryLimit=256
 oracle.install.db.config.starterdb.installExampleSchemas=false
 oracle.install.db.config.starterdb.enableSecuritySettings=true
 oracle.install.db.config.starterdb.password.ALL=oracle
@@ -554,12 +564,12 @@ install rdbms,  和grid的runInstaller一样，只在stb1
 
 ```
 # 
-oracle@stb1 ~  $ ls -l $ORACLE_HOME/bin/oracle
+oracle@stb1:~$ ls -l $ORACLE_HOME/bin/oracle
 -rwsr-s--x. 1 oracle oinstall 239626641 Apr 14 11:45 oracle
 
-grid@stb1 setasmgidwrap o=/u01/app/oracle/product/12.2.0/dbhome_1/bin/oracle
+grid@stb1:~$ setasmgidwrap o=/u01/app/oracle/product/12.2.0/dbhome_1/bin/oracle
 
-grid@stb1 /u01/app/oracle/product/11.2.0/dbhome_1/bin $ ls -l oracle
+grid@stb1:~$ ls -l oracle
 -rwsr-s--x. 1 oracle asmadmin 239626641 Apr 14 11:45 oracle
 
 ```
@@ -807,7 +817,6 @@ Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
 ```
 cd $HOME/db-sample-schemas
 perl -p -i.bak -e 's#__SUB__CWD__#'$(pwd)'#g' *.sql */*.sql */*.dat 
-#sqlplus system/systempw@connect_string @mksample systempw syspw hrpw oepw pmpw ixpw shpw bipw users temp /your/path/to/log/ connect_string
 sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMPTS1 /tmp/sample_install.log pridb
 ```
 
@@ -828,3 +837,98 @@ $CRS_HOME/bin/oifcfg getif
 ### asmstring
 
 cat $ORACLE_HOME/gpnp/profiles/peer/profile.xml
+
+---
+
+## create database
+
+
+initstb1.ora
+
+```
+*.DB_NAME=ORADB
+*.DB_UNIQUE_NAME=STBDB
+*.DB_BLOCK_SIZE=8192
+*.CONTROL_FILES='+DATA/stbdb/controlfile/controlfile.ctl'
+*.UNDO_TABLESPACE=UNDOTBS1
+*.UNDO_MANAGEMENT=AUTO
+*.SGA_TARGET=296M
+*.PGA_AGGREGATE_TARGET=90M
+*.standby_file_management=auto
+*.db_create_file_dest=+DATA
+*.DB_RECOVERY_FILE_DEST=+FRA
+*.DB_RECOVERY_FILE_DEST_SIZE=5G
+*.cluster_database=false
+*.cluster_database_instances=2
+stb1.instance_name=stb1
+stb1.instance_number=1
+stb1.thread=1
+stb1.undo_tablespace=UNDOTBS1
+```
+
+
+createdb.sql
+
+```
+CREATE DATABASE ORADB
+MAXINSTANCES 32
+MAXLOGHISTORY 1
+MAXLOGFILES 192
+MAXLOGMEMBERS 3
+MAXDATAFILES 1024 
+DATAFILE '+DATA' SIZE 700M REUSE AUTOEXTEND ON NEXT 10240K MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL
+SYSAUX DATAFILE '+DATA' SIZE 550M REUSE AUTOEXTEND ON NEXT 10240K MAXSIZE UNLIMITED
+SMALLFILE DEFAULT TABLESPACE USERS DATAFILE '+DATA' SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+SMALLFILE DEFAULT TEMPORARY TABLESPACE TEMP TEMPFILE '+DATA' SIZE 20M REUSE AUTOEXTEND ON NEXT 640K MAXSIZE UNLIMITED
+SMALLFILE UNDO TABLESPACE "UNDOTBS1" DATAFILE '+DATA' SIZE 200M REUSE AUTOEXTEND ON NEXT 5120K MAXSIZE UNLIMITED
+CHARACTER SET AL32UTF8
+NATIONAL CHARACTER SET UTF8 
+LOGFILE GROUP 1, GROUP 2 , GROUP 3 
+USER SYS IDENTIFIED BY oracle USER SYSTEM IDENTIFIED BY oracle;
+```
+
+build views, synonyms, etc.
+
+```
+@?/rdbms/admin/catalog.sql
+@?/rdbms/admin/catproc.sql
+@?/rdbms/admin/catclust.sql
+```
+
+
+add thread to rac2
+
+```
+CREATE UNDO TABLESPACE UNDOTBS2 datafile '+DATA'; 
+alter database add logfile thread 2 group 4 , group 5 , group 6 ;
+
+alter database enable public thread 2;
+alter system set cluster_database=false sid='*' scope=spfile;
+```
+
+
+config pfile
+
+```
+stb2.instance_name=stb2
+stb2.instance_number=2
+stb2.thread=2
+stb2.undo_tablespace=UNDOTBS2
+```
+
+
+ register in crs
+
+```
+srvctl add database -d stbdb -r PRIMARY -n ORADB -o $ORACLE_HOME
+srvctl add instance -d stbdb -i stb1 -n stb1
+srvctl add instance -d stbdb -i stb2 -n stb2
+```
+
+
+## drop database
+
+alter system set cluster_database=FALSE scope=spfile;
+startup mount exclusive restrict force;
+Drop Database;

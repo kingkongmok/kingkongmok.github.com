@@ -114,6 +114,28 @@ Hint: Some lines were ellipsized, use -l to show in full.
 ---
 
 
+### with openssl
+
+```
+# openssl
+./config --prefix=/usr/local/openssl-1.1.1g
+make -j8 && make install
+echo /usr/local/openssl-1.1.1g/lib >> /etc/ld.so.conf
+ldconfig
+/usr/local/openssl-1.1.1g/bin/openssl version -a
+
+
+# openssh
+patch --strip=1 < 0001-seccomp-Allow-clock_nanosleep-in-sandbox.patch
+
+yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmkmf libXt-devel pam-devel
+./configure --with-pam --prefix=/usr/local/openssh-8.4p1 --sysconfdir=/etc/ssh  --with-md5-passwords --with-tcp-wrappers --with-ssl-dir=/usr/local/openssl-1.1.1g
+make && make install
+```
+
+---
+
+
 ```
 # make
 yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmkmf libXt-devel pam-devel
@@ -137,4 +159,20 @@ service sshd8.4p1 start
 ps -ef |grep sshd
 
 service xinetd stop
+```
+
+---
+
+## disable aes256-cbc and aes128-cbc
+
+
+```
+
+cp -a /etc/crypto-policies/back-ends/opensshserver.config{,.orig}
+vim /etc/crypto-policies/back-ends/opensshserver.config
+删除aes256-cbc
+删除aes128-cbc
+
+
+systemctl status sshd | grep -P "aes256-cbc|aes128-cbc"
 ```
