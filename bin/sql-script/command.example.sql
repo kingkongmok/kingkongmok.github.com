@@ -258,7 +258,7 @@ INSTANCE_NAME (Server-wide Name) INSTANCE_NAME = $ORACLE_SID
 -- 64G -- Oracle的SGA 100*0.8*0.8
 -- 16G -- Oracle的PGA 100*0.8*0.2
 
--- ASMM ( Automatic Shared Memory Management,  10G后 )
+-- ASMM ( Automatic Shared Memory Management,  10G后 ) linux 应该使用此项
 -- AMM ( Automatic Memory Management , 11G后)
 
 
@@ -351,6 +351,11 @@ select utl_inaddr.get_host_address(host_name), host_name from v$instance;
 select sys_context('USERENV', 'HOST') from dual;
 select sys_context('USERENV', 'IP_ADDRESS') from dual;
 
+
+
+select instance_number, status, logins from gv$instance;
+alter system enable restricted session;
+alter system disable restricted session;
 
 -- which spfile
 show parameter spfile;
@@ -644,9 +649,8 @@ DB_BLOCK_SIZE=8192
 CONTROL_FILES='/u01/app/oracle/oradata/ORADB/controlfileORADR.ctl','/u01/app/oracle/flash_recovery_area/ORADB/controlfileORADR.ctl'
 UNDO_TABLESPACE=UNDOTBS
 UNDO_MANAGEMENT=AUTO
-SGA_TARGET=500M
-PGA_AGGREGATE_TARGET=100M
-LOG_BUFFER=5242880
+SGA_TARGET=296M
+PGA_AGGREGATE_TARGET=90M
 standby_file_management=auto
 DB_RECOVERY_FILE_DEST=/u01/app/oracle/flash_recovery_area
 DB_RECOVERY_FILE_DEST_SIZE=2G
@@ -711,108 +715,64 @@ orapwd file=${ORACLE_HOME}/dbs/orapw${ORACLE_SID} password=oracle
 srvctl remove database -d oradr
 srvctl add database -d ORADR -o /u01/app/oracle/product/11.2.0/dbhome_1
 
--- rac
--- init.ora
-rac2.__db_cache_size=41943040
-rac1.__db_cache_size=41943040
-rac2.__java_pool_size=4194304
-rac1.__java_pool_size=4194304
-rac2.__large_pool_size=8388608
-rac1.__large_pool_size=8388608
-rac2.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
-rac1.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
-rac2.__pga_aggregate_target=184549376
-rac1.__pga_aggregate_target=184549376
-rac1.__sga_target=213909504
-rac2.__sga_target=213909504
-rac2.__shared_io_pool_size=0
-rac1.__shared_io_pool_size=0
-rac2.__shared_pool_size=150994944
-rac1.__shared_pool_size=150994944
-rac2.__streams_pool_size=0
-rac1.__streams_pool_size=0
-*.archive_lag_target=0
-*.audit_file_dest='/u01/app/oracle/admin/PRIDB/adump'
-*.audit_trail='db'
+
+-- rac create database 
+-- http://www.dba-oracle.com/real_application_clusters_rac_grid/db_created_manually.htm
+
+-- initstb1.ora
+*.DB_NAME=ORADB
+*.DB_UNIQUE_NAME=STBDB
+*.DB_BLOCK_SIZE=8192
+*.CONTROL_FILES='+DATA/stbdb/controlfile/controlfile.ctl'
+*.UNDO_TABLESPACE=UNDOTBS1
+*.UNDO_MANAGEMENT=AUTO
+*.SGA_TARGET=296M
+*.PGA_AGGREGATE_TARGET=90M
+*.standby_file_management=auto
+*.db_create_file_dest=+DATA
+*.DB_RECOVERY_FILE_DEST=+FRA
+*.DB_RECOVERY_FILE_DEST_SIZE=5G
 *.cluster_database=false
-*.compatible='11.2.0.4.0'
-*.control_files='+DATA/PRIDB/CONTROLFILE/control.ctl'
-*.db_block_size=8192
-*.db_create_file_dest='+DATA'
-*.db_domain=''
-*.db_file_name_convert='+DATA','+DATA'
-*.db_name='ORCL'
-*.db_recovery_file_dest_size=10g
-*.db_recovery_file_dest='+DATA'
-*.db_unique_name='PRIDB'
-*.dg_broker_config_file1='+DATA/PRIDB/datafile/dgbroker1PRIDB.dat'
-*.dg_broker_config_file2='+DATA/PRIDB/datafile/dgbroker2PRIDB.dat'
-*.dg_broker_start=TRUE
-*.diagnostic_dest='/u01/app/oracle'
-*.fal_client='PRIDB'
-*.fal_server='STBDB'
-rac2.instance_number=2
-rac1.instance_number=1
-*.log_archive_config='DG_CONFIG=(PRIDB,STBDB)'
-*.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=PRIDB'
-*.log_archive_dest_2='SERVICE=ORASTBDB LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=STBDB'
-*.log_archive_dest_3=''
-*.log_archive_dest_state_2='ENABLE'
-rac1.log_archive_format='%t_%s_%r.dbf'
-rac2.log_archive_format='%t_%s_%r.dbf'
-*.log_archive_max_processes=10
-*.log_archive_min_succeed_dest=1
-rac1.log_archive_trace=0
-rac2.log_archive_trace=0
-*.log_file_name_convert='+DATA','+DATA'
-*.memory_max_target=421527552
-*.memory_target=421527552
-*.open_cursors=300
-*.processes=150
-*.remote_listener='rac-scan:1521'
-*.remote_login_passwordfile='exclusive'
-*.sga_max_size=0
-*.standby_file_management='AUTO'
-rac2.thread=2
-rac1.thread=1
-rac2.undo_tablespace='UNDOTBS2'
-rac1.undo_tablespace='UNDOTBS1'
+*.cluster_database_instances=2
+stb1.instance_name=stb1
+stb1.instance_number=1
+stb1.thread=1
+stb1.undo_tablespace=UNDOTBS1
 
 -- createdb.sql
-CREATE DATABASE orcl
-   USER SYS IDENTIFIED BY oracle
-   USER SYSTEM IDENTIFIED BY oracle
-   LOGFILE GROUP 1 ('+DATA/PRIDB/onlinelog/redo01.log') SIZE 100M,
-           GROUP 2 ('+DATA/PRIDB/onlinelog/redo02.log') SIZE 100M,
-           GROUP 3 ('+DATA/PRIDB/onlinelog/redo03.log') SIZE 100M,
-           GROUP 4 ('+DATA/PRIDB/onlinelog/redo04.log') SIZE 100M
-   MAXLOGFILES 5
-   MAXLOGMEMBERS 5
-   MAXLOGHISTORY 1
-   MAXDATAFILES 100
-   CHARACTER SET AL32UTF8
-   EXTENT MANAGEMENT LOCAL
-   DATAFILE '+DATA/PRIDB/DATAFILE/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
-   SYSAUX DATAFILE '+DATA/PRIDB/DATAFILE/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
-   DEFAULT TABLESPACE users
-      DATAFILE '+DATA/PRIDB/DATAFILE/users01.dbf'
-      SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
-   DEFAULT TEMPORARY TABLESPACE tempts1
-      TEMPFILE '+DATA/PRIDB/TEMPFILE/temp01.dbf'
-      SIZE 20M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
-   UNDO TABLESPACE UNDOTBS1
-      DATAFILE '+DATA/PRIDB/DATAFILE/undotbs01.dbf'
-      SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+CREATE DATABASE ORADB
+MAXINSTANCES 32
+MAXLOGHISTORY 1
+MAXLOGFILES 192
+MAXLOGMEMBERS 3
+MAXDATAFILES 1024
+DATAFILE '+DATA' SIZE 700M REUSE AUTOEXTEND ON NEXT 10240K MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL
+SYSAUX DATAFILE '+DATA' SIZE 550M REUSE AUTOEXTEND ON NEXT 10240K MAXSIZE UNLIMITED
+SMALLFILE DEFAULT TABLESPACE USERS DATAFILE '+DATA' SIZE 500M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+SMALLFILE DEFAULT TEMPORARY TABLESPACE TEMP TEMPFILE '+DATA' SIZE 20M REUSE AUTOEXTEND ON NEXT 640K MAXSIZE UNLIMITED
+SMALLFILE UNDO TABLESPACE "UNDOTBS1" DATAFILE '+DATA' SIZE 200M REUSE AUTOEXTEND ON NEXT 5120K MAXSIZE UNLIMITED
+CHARACTER SET AL32UTF8
+NATIONAL CHARACTER SET UTF8
+LOGFILE GROUP 1, GROUP 2 , GROUP 3 
+USER SYS IDENTIFIED BY oracle USER SYSTEM IDENTIFIED BY oracle;
+
+-- build views, synonyms, etc.
+@?/rdbms/admin/catalog.sql
+@?/rdbms/admin/catproc.sql
+@?/rdbms/admin/catclust.sql
 -- add undo to rac2
-create UNDO TABLESPACE UNDOTBS2 DATAFILE '+data/PRIDB/datafile/undotbs02.dbf' SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+CREATE UNDO TABLESPACE UNDOTBS2 datafile '+DATA'; 
 -- add logfile
-alter database add logfile thread 2 group 5 ('+DATA/pridb/onlinelog/redo05.log') size 100M ,group 6 ('+DATA/pridb/onlinelog/redo06.log') size 100M, group 7 ('+DATA/pridb/onlinelog/redo07.log') size 100M, group 8 ('+DATA/pridb/onlinelog/redo08.log') size 100M ;
+alter database add logfile thread 2 group 4 , group 5 , group 6 ;
 -- define cluster database
-alter system set cluster_database=TRUE sid='*' scope=spfile ;
-alter system set cluster_database_instances=2 sid='*' scope=spfile;
 alter database enable public thread 2;
--- archivelog 
-alter database archivelog mode;
+alter system set cluster_database=false sid='*' scope=spfile;
+-- config pfile
+stb2.instance_name=stb2
+stb2.instance_number=2
+stb2.thread=2
+stb2.undo_tablespace=UNDOTBS2
 -- register in crs
 srvctl add database -d pridb -r PRIMARY -n orcl -o $ORACLE_HOME
 srvctl add instance -d pridb -i rac1 -n rac1
@@ -1384,6 +1344,11 @@ dgmgrl> enable configuration
 DGMGRL> show configuration;
 DGMGRL> show database 'ADG';
 
+
+-- 重新运行
+dgmgrl> edit database stbdb set state=apply-off;
+dgmgrl> edit database stbdb set state=apply-on;
+
 -- switchover
 DGMGRL> SWITCHOVER TO 'ADG';
 -- switch back
@@ -1839,6 +1804,17 @@ select TABLESPACE_NAME,CONTENTS,BLOCK_SIZE,EXTENT_MANAGEMENT,SEGMENT_SPACE_MANAG
 
 -- 使用以下方式添加数据文件
 -- OMF 下
+
+-- 注意用 show parameter create 查看
+db_create_file_dest                  string      /u01/app/oracle/oradata
+db_create_online_log_dest_1          string
+--  其中 db_create_file_dest 为datafile的位置，应该设置为/u01/app/oracle/oradata或者+DATA
+-- db_create_online_log_dest_1应该为空，
+-- 默认会设置为 db_create_online_log_dest_1=/u01/app/oracle/oradata
+-- 默认会设置为 db_create_online_log_dest_2=/u01/app/oracle/flash_recovery_area
+
+
+
 alter tablespace USERS add datafile;
 
 -- 没有 OMF
@@ -2674,7 +2650,7 @@ select sql_id, sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:
 
 
 -- 统计信息 
--- 统计信息的收集是位于gather_stats_prog这个task，当前状态为enabled，即启用
+-- 统计信息的收集是位于Gather_stats_prog这个task，当前状态为enabled，即启用
 SELECT client_name,task_name, status FROM dba_autotask_task WHERE client_name = 'auto optimizer stats collection';
 SELECT program_action, number_of_arguments, enabled FROM dba_scheduler_programs WHERE owner = 'SYS' AND program_name = 'GATHER_STATS_PROG';
 --统计信息收集的时间窗口
@@ -2682,7 +2658,7 @@ SELECT w.window_name, w.repeat_interval, w.duration, w.enabled FROM dba_autotask
 -- 自动收集统计信息历史执行情况
 select * FROM dba_autotask_client_history WHERE client_name LIKE '%stats%';
 -- 手动查询收集信息情况
-select TABLE_NAME,NUM_ROWS,BLOCKS,LAST_ANALYZED from dba_tables where TABLE_NAME='T1';
+select * from ( select CLIENT_NAME,WINDOW_NAME,JOBS_STARTED,JOBS_COMPLETED from dba_autotask_client_history  WHERE client_name LIKE '%stats%' order by WINDOW_END_TIME desc ) where rownum < 10 ;
 --  执行下面的这个存储过程
 EXEC DBMS_AUTO_TASK_IMMEDIATE.GATHER_OPTIMIZER_STATS;
 
@@ -3969,3 +3945,18 @@ alter user sysman identified by PASSWORD account unlock;
 -- change following entries value in the "emoms.properties" file:
 orcle.sysman.eml.mntr.emdRepPwd=NEW_SYSMAN_PASSWORD (in plain text)
 orcle.sysman.eml.mntr.emdRepPwdEncrypted=FALSE (true to false)
+
+
+-- 加密
+--https://docs.oracle.com/cd/E11882_01/network.112/e40393/asoconfg.htm#ASOAG9599
+sqlnet.ora文件加入以下两个参数
+SQLNET.ENCRYPTION_TYPES_SERVER=RC4_256
+SQLNET.CRYPTO_CHECKSUM_SERVER=REQUIRED
+
+
+
+
+-- ------------------------------
+--  PSU
+-- ------------------------------
+sudo $ORACLE_HOME/OPatch/opatch auto /stage/28813878/ -oh $ORACLE_HOME -ocmrf $ORACLE_HOME/OPatch/ocm/bin/ocm.rsp

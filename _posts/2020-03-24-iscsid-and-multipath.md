@@ -51,6 +51,7 @@ create
 
 ```
 mdadm --create --verbose /dev/md0 --level=10 --raid-devices=4 /dev/sdb /dev/sdc /dev/sdd /dev/sde --spare-devices=1 /dev/sdf
+mdadm --create --verbose /dev/md0 --level=5 --raid-devices=7 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh --spare-devices=1 /dev/sdi
 mdadm --detail /dev/md0
 
 /dev/md0:
@@ -154,12 +155,20 @@ mdadm --manage /dev/md3 --add /dev/sdk1
 
 pvcreate /dev/md0
 vgcreate storage /dev/md0
-lvcreate -n data -L 25GiB storage
-lvcreate -n fra -L 5GiB storage
-lvcreate -n ocr1 -L 1GiB storage
-lvcreate -n ocr2 -L 1GiB storage
-lvcreate -n ocr3 -L 1GiB storage
 
+
+
+lvcreate -n pridata -L 10GiB storage
+lvcreate -n prifra -L 10GiB storage
+lvcreate -n priocr1 -L 1GiB storage
+lvcreate -n priocr2 -L 1GiB storage
+lvcreate -n priocr3 -L 1GiB storage
+lvcreate -n stbdata -L 10GiB storage
+lvcreate -n stbfra -L 10GiB storage
+lvcreate -n stbocr1 -L 10GiB storage
+lvcreate -n stbocr1 -L 1GiB storage
+lvcreate -n stbocr2 -L 1GiB storage
+lvcreate -n stbocr3 -L 1GiB storage
 ```
 
 ---
@@ -177,76 +186,100 @@ config
 ```
 cat >> /etc/tgt/targets.conf << EOF
 
-default-driver iscsi
-<target iqn.2020-03.com.example:storage.target4>
-        backing-store /dev/mapper/storage-orc1
-        backing-store /dev/mapper/storage-orc2
-        backing-store /dev/mapper/storage-orc3
+<target iqn.2020-03.com.example:storage.pridata>
+        backing-store /dev/mapper/storage-pridata
         write-cache on
         initiator-address 192.168.0.1
         initiator-address 192.168.1.1
         initiator-address 192.168.0.2
         initiator-address 192.168.1.2
+    #vendor_id MyCompany Inc.
 </target>
-
-<target iqn.2020-04.com.example:storage.data>
-        backing-store /dev/mapper/storage-data
+<target iqn.2020-03.com.example:storage.prifra>
+        backing-store /dev/mapper/storage-prifra
         write-cache on
         initiator-address 192.168.0.1
         initiator-address 192.168.1.1
         initiator-address 192.168.0.2
         initiator-address 192.168.1.2
+    #vendor_id MyCompany Inc.
 </target>
-<target iqn.2020-04.com.example:storage.fra>
-        backing-store /dev/mapper/storage-fra
+<target iqn.2020-03.com.example:storage.priocr1>
+        backing-store /dev/mapper/storage-priocr1
         write-cache on
         initiator-address 192.168.0.1
         initiator-address 192.168.1.1
         initiator-address 192.168.0.2
         initiator-address 192.168.1.2
+    #vendor_id MyCompany Inc.
 </target>
-<target iqn.2020-04.com.example:storage.dg-fra>
-        backing-store /dev/mapper/storage-dg--fra
+<target iqn.2020-03.com.example:storage.priocr2>
+        backing-store /dev/mapper/storage-priocr2
         write-cache on
-        initiator-address 192.168.0.21
-        initiator-address 192.168.1.21
-        initiator-address 192.168.0.22
-        initiator-address 192.168.1.22
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+    #vendor_id MyCompany Inc.
 </target>
-<target iqn.2020-04.com.example:storage.dg-data>
-        backing-store /dev/mapper/storage-dg--data
+<target iqn.2020-03.com.example:storage.priocr3>
+        backing-store /dev/mapper/storage-priocr3
         write-cache on
-        initiator-address 192.168.0.21
-        initiator-address 192.168.1.21
-        initiator-address 192.168.0.22
-        initiator-address 192.168.1.22
-</target>
-<target iqn.2020-04.com.example:storage.dg-ocr1>
-        backing-store /dev/mapper/storage-dg--ocr1
-        write-cache on
-        initiator-address 192.168.0.21
-        initiator-address 192.168.1.21
-        initiator-address 192.168.0.22
-        initiator-address 192.168.1.22
+        initiator-address 192.168.0.1
+        initiator-address 192.168.1.1
+        initiator-address 192.168.0.2
+        initiator-address 192.168.1.2
+    #vendor_id MyCompany Inc.
 </target>
 
-<target iqn.2020-04.com.example:storage.dg-ocr2>
-        backing-store /dev/mapper/storage-dg--ocr2
+<target iqn.2020-04.com.example:storage.stbdata>
+        backing-store /dev/mapper/storage-stbdata
         write-cache on
-        initiator-address 192.168.0.21
-        initiator-address 192.168.1.21
-        initiator-address 192.168.0.22
-        initiator-address 192.168.1.22
+        initiator-address 192.168.0.11
+        initiator-address 192.168.1.11
+        initiator-address 192.168.0.12
+        initiator-address 192.168.1.12
+    #vendor_id MyCompany Inc.
+</target>
+<target iqn.2020-04.com.example:storage.stbfra>
+        backing-store /dev/mapper/storage-stbfra
+        write-cache on
+        initiator-address 192.168.0.11
+        initiator-address 192.168.1.11
+        initiator-address 192.168.0.12
+        initiator-address 192.168.1.12
+    #vendor_id MyCompany Inc.
+</target>
+<target iqn.2020-04.com.example:storage.stbocr1>
+        backing-store /dev/mapper/storage-stbocr1
+        write-cache on
+        initiator-address 192.168.0.11
+        initiator-address 192.168.1.11
+        initiator-address 192.168.0.12
+        initiator-address 192.168.1.12
+    #vendor_id MyCompany Inc.
+</target>
+<target iqn.2020-04.com.example:storage.stbocr2>
+        backing-store /dev/mapper/storage-stbocr2
+        write-cache on
+        initiator-address 192.168.0.11
+        initiator-address 192.168.1.11
+        initiator-address 192.168.0.12
+        initiator-address 192.168.1.12
+    #vendor_id MyCompany Inc.
+</target>
+<target iqn.2020-04.com.example:storage.stbocr3>
+        backing-store /dev/mapper/storage-stbocr3
+        write-cache on
+        initiator-address 192.168.0.11
+        initiator-address 192.168.1.11
+        initiator-address 192.168.0.12
+        initiator-address 192.168.1.12
+    #vendor_id MyCompany Inc.
 </target>
 
-<target iqn.2020-04.com.example:storage.dg-ocr3>
-        backing-store /dev/mapper/storage-dg--ocr3
-        write-cache on
-        initiator-address 192.168.0.21
-        initiator-address 192.168.1.21
-        initiator-address 192.168.0.22
-        initiator-address 192.168.1.22
-</target>
+
+
 EOF
 ```
 
@@ -305,6 +338,8 @@ sudo /etc/init.d/iscsi restart
 sudo iscsiadm -m node -P 0
 sudo iscsiadm -m node -T iqn.2020-03.com.example:storage.target4 -p 192.168.1.150:3260,1 -u
 sudo iscsiadm -m node -T iqn.2020-03.com.example:storage.target4 -p 192.168.1.150:3260,1 -o delete
+
+for i in `sudo iscsiadm -m node -P 0 | perl -naE 'say $F[1]'`; do iscsiadm -m node -T "$i" -p 192.168.0.150:3260,1 -o delete; done
 ```
 
 ### restart iscsi, 用于线路修复
@@ -332,7 +367,6 @@ sudo /sbin/multipath -ll|grep -qP "fault|fail|inactive"
 edit **/etc/multipath.conf**
 
 ```
-
 defaults {
         user_friendly_names yes
         getuid_callout "/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/%n"
@@ -344,26 +378,27 @@ blacklist {
 
 multipaths {
         multipath {
-                wwid      1IET_00010001
-                alias     storage-orc1
+                wwid      1IET_00030001
+                alias     storage-priocr1
         }
         multipath {
-                wwid      1IET_00010002
-                alias     storage-orc2
+                wwid      1IET_00040001
+                alias     storage-priocr2
         }
         multipath {
-                wwid      1IET_00010003
-                alias     storage-orc3
+                wwid      1IET_00050001
+                alias     storage-priocr3
         }
         multipath {
                 wwid      1IET_00020001
-                alias     storage-data
+                alias     storage-prifra
         }
         multipath {
-                wwid      1IET_00080001
-                alias     storage-fra
+                wwid      1IET_00010001
+                alias     storage-pridata
         }
 }
+
 
 ```
 
