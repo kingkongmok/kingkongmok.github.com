@@ -441,6 +441,7 @@ SYS                            TRUE  TRUE  FALSE
 
 -- 如果没有，就创建密码文件, default location $ORACLE_HOME/dbs/orapw$ORACLE_SID 
 orapwd file=orapw[SID] password=oracle
+orapwd file=orapw$ORACLE_SID password=oracle
 
 
 --Oracle / PLSQL: Grant/Revoke Privileges
@@ -757,6 +758,7 @@ NATIONAL CHARACTER SET UTF8
 LOGFILE GROUP 1, GROUP 2 , GROUP 3 
 USER SYS IDENTIFIED BY oracle USER SYSTEM IDENTIFIED BY oracle;
 
+
 -- build views, synonyms, etc.
 @?/rdbms/admin/catalog.sql
 @?/rdbms/admin/catproc.sql
@@ -1010,6 +1012,14 @@ SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;  
 }
 
+run
+{
+SET NEWNAME FOR DATABASE TO '+DATA/stbdb/datafile/%b'; 
+restore database ;
+SWITCH DATAFILE ALL;
+SWITCH TEMPFILE ALL;  
+}
+
 SQLPLUS>
 select * from vrecover_file;
 select name from v$datafile;
@@ -1032,6 +1042,9 @@ alter database open resetlogs;
 -- disable / remove after restore to single node.
 select thread#, instance, status from v$thread
 alter database disable thread 2; 
+
+alter database add logfile group 3;
+alter database add logfile group 4;
 
 alter database drop logfile group 3;
 alter database drop logfile group 4;
@@ -1206,10 +1219,11 @@ alter database set standby database to maximize performance;
 
 -- Maximum Protection.
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
-shutdown immediate;
-startup mount;
-alter database set standby database to maximize protection;
-alter system flush redo to 'STBDB';
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PROTECTION;
+ALTER DATABASE OPEN;
+
 
 
 
@@ -1220,13 +1234,13 @@ alter database commit to switchover to standby;
 shutdown immediate;
 startup nomount;
 alter database mount standby database;
---
-alter database recover managed standby database disconnect from session;
-alter database open;
 -- standby, 后做， 待primary切换后再进行
 alter database commit to switchover to primary;
 shutdown immediate;
 startup;
+-- 原pridb，继续启动成为physical standby
+alter database recover managed standby database disconnect from session;
+alter database open;
 
 
 -- failover manual
@@ -1465,6 +1479,10 @@ srvctl start scan_listener
 
 
 -- 实际操作
+
+-- kill LOCAL=NO
+kill -9 `ps -ef|grep "oracle$ORACLE_SID"|grep "(LOCAL=NO)"|grep -v "grep (LOCAL=NO)"|awk -F ' ' '{print $2}'`
+
 -- kill session
 BEGIN
   FOR r IN (select sid,serial# from v$session where username='user')
@@ -3045,8 +3063,8 @@ ASMCMD> cp /u01/oracle/oradata/test1.dbf +DATA/LONDON/DATAFILE/test.dbf
 copying /u01/oracle/oradata/test1.dbf -> +DATA/LONDON/DATAFILE/test.dbf
 
 -- asmcmd copy multiple
-for i in $(asmcmd ls +DG_AL/EMREP/ARCHIVELOG/2012_12_04); do
-  asmcmd cp +DG_AL/EMREP/ARCHIVELOG/2012_12_04/$i /u01
+for i in `find +DATA "*" ; do
+  asmcmd rm "$i"
 done
 
 -- 更换数据文件到asm
@@ -3957,6 +3975,26 @@ SQLNET.CRYPTO_CHECKSUM_SERVER=REQUIRED
 
 
 -- ------------------------------
---  PSU
+--  PSU opatch update
 -- ------------------------------
-sudo $ORACLE_HOME/OPatch/opatch auto /stage/28813878/ -oh $ORACLE_HOME -ocmrf $ORACLE_HOME/OPatch/ocm/bin/ocm.rsp
+sudo su - grid
+sudo unzip ~/p31718723_112040_Linux-x86-64.zip -d /stage/
+sudo chmod 777 -R /stage/31718723/
+cd $ORACLE_HOME/
+sudo rm -rf OPatch/
+sudo unzip ~/p6880880_112000_Linux-x86-64.zip -d ./
+sudo chown grid.oinstall -R OPatch/
+./OPatch/opatch lsinventory &> /tmp/PSU_old_GI_version
+sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
+./OPatch/opatch lsinventory &> /tmp/PSU_new_GI_version
+
+sudo su - oracle
+cd $ORACLE_HOME/
+sudo rm -rf OPatch
+sudo unzip /home/grid/p6880880_112000_Linux-x86-64.zip -d ./
+sudo chown oracle.oinstall -R OPatch/
+./OPatch/opatch lsinventory &> /tmp/PSU_old_DB_version
+sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
+./OPatch/opatch lsinventory &> /tmp/PSU_new_DB_version
+
+SQL>@?/rdbms/admin/catbundle.sql

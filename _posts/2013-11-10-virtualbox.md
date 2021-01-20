@@ -107,10 +107,7 @@ mount | grep compress
 + 对vm进行0文件填充，并删掉、关机。
 
 ```
-sudo dd if=/dev/zero of=/var/tmp/bigemptyfile bs=4096k
-sudo rm -f /var/tmp/bigemptyfile
-sudo systemctl poweroff
-
+sudo sh -c 'dd if=/dev/zero of=/var/tmp/bigemptyfile bs=4096k ; rm -f /var/tmp/bigemptyfile ; shutdown -h now' &
 ```
 
 
