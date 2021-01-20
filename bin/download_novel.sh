@@ -32,7 +32,8 @@ cd /tmp/novel-done/$TIMESTAMP
 enca -L zh -x utf8 name.html
 #TITLE=`perl -nE 'say $1 if /\<title\>.*?-(.*)-/' name.html`
 TITLE=`perl -nE 'say $1 if /<title>.*?【(.*)】.*?<\/title>/' name.html`
-TITLE=${TITLE:-`echo $2`}
+#TITLE=${TITLE:-`echo $2`}
+[[ "x$2" == "x" ]] ||  TITLE=$2
 
 cd www*/bbs4/
 enca -L zh -x utf8 *
