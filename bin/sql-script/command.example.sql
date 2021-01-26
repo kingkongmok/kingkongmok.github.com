@@ -267,6 +267,35 @@ ORACLE 10g      PGA自动管理，SGA自动管理（ASMM，自动共享内存管
 ORACLE 11g      PGA,SGA统一自动管理（AMM，自动内存管理）
 ORACLE 12c      跟11g一样，没有变化
 
+-- ------------------------------
+--  SGA
+-- ------------------------------
+
+-- sga
+-- -- shared pool
+-- -- -- free 空闲空间
+
+
+-- buffer/cache命中率 命中率最好在98以上
+select (1-(sum(decode(name, 'physical reads',value,0))/(sum(decode(name, 'db block gets',value,0))
++sum(decode(name,'consistent gets',value,0))))) * 100 "BufferCache Hit Ratio"
+from v$sysstat;
+
+-- -- -- row cache, 字典缓存，schema, dba_tables, dba_ojjects等信息, 命中率最好在98以上
+select (1-(sum(getmisses)/sum(gets))) * 100 "RowCache Hit Ratio" from v$rowcache;
+
+-- -- -- library cache, 库缓存，sql语句及执行计划
+select Sum(Pins)/(Sum(Pins) + Sum(Reloads))  * 100 "LibraryCache Hit Ratio" from V$LibraryCache;
+
+
+-- PGA内存排序命中率 命中率最好大于98
+select a.value "Disk Sorts", b.value "Memory Sorts",round((100*b.value)/decode((a.value+b.value),0,1,(a.value+b.value)),2)"Pct Memory Sorts" from v$sysstat a, v$sysstat b where a.name = 'sorts (disk)'and b.name = 'sorts (memory)';
+
+select * from v$sgastat a where a.pool = 'shared pool' and a.NAME = 'free memory';
+select * from v$sgastat a where a.NAME = 'library cache';
+select * from v$sgastat a where a.NAME = 'row cache';
+
+
 
 自动内存管理（AMM）   : memory_target=非0，是自动内存管理，如果初始化参数 LOCK_SGA=TRUE，则 AMM 是不可用的。
 自动共享内存管理(ASMM): 在memory_target=0 and sga_target为非0的情形下是自动内存管理
@@ -277,10 +306,7 @@ ORACLE 12c      跟11g一样，没有变化
 -- alert log location
 show parameter DIAGNOSTIC_DEST
 DIAGNOSTIC_DEST/diag/rdbms/DB_NAME/ORACLE_SID/trace/alert_${ORACLE_SID}.log
-
 show parameter BACKGROUND_DUMP_DEST
--- or --
-ORACLE_HOME/rdbms/trace
 
 -- pfile 
 $ORACLE_HOME/dbs/init/init$PID.ora
@@ -1203,8 +1229,7 @@ alter database recover automatic standby database;
 select SEQUENCE#,FIRST_TIME,NEXT_TIME ,APPLIED from v$archived_log order by 1;
 
 -- error archive log
-select distinct  destination, error from v$archive_dest;
-
+select distinct  destination, error from v$archive_dest where error is not null;
 
 -- Protection Mode
 select protection_mode, protection_level from v$database;

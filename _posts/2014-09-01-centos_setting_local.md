@@ -221,3 +221,63 @@ sudo systemctl set-default multi-user.target
 # Changing the Current Target
 sudo systemctl isolate multi-user.target
 ```
+
+
+---
+
+### yum  centos-vault
+
+```
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the
+# remarked out baseurl= line instead.
+#
+#
+
+[base]
+name=CentOS-6.10 - Base - mirrors.aliyun.com
+failovermethod=priority
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/os/$basearch/
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/centos-vault/RPM-GPG-KEY-CentOS-6
+
+#released updates
+[updates]
+name=CentOS-6.10 - Updates - mirrors.aliyun.com
+failovermethod=priority
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/updates/$basearch/
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/centos-vault/RPM-GPG-KEY-CentOS-6
+
+#additional packages that may be useful
+[extras]
+name=CentOS-6.10 - Extras - mirrors.aliyun.com
+failovermethod=priority
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/extras/$basearch/
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/centos-vault/RPM-GPG-KEY-CentOS-6
+
+#additional packages that extend functionality of existing packages
+[centos-vaultplus]
+name=CentOS-6.10 - Plus - mirrors.aliyun.com
+failovermethod=priority
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/centos-vaultplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://mirrors.aliyun.com/centos-vault/RPM-GPG-KEY-CentOS-6
+
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-6.10 - Contrib - mirrors.aliyun.com
+failovermethod=priority
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/contrib/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://mirrors.aliyun.com/centos-vault/RPM-GPG-KEY-CentOS-6
+```

@@ -138,3 +138,14 @@ mysql> SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1;
 mysql> START SLAVE;
 mysql> SHOW SLAVE STATUS \G
 ```
+
+
+---
+
+在slave上删除一条记录
+
+```
+stop slave;
+set global sql_slave_skip_counter=1;
+start slave;
+```
