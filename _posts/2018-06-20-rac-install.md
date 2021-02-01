@@ -821,7 +821,13 @@ Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
 
 ```
 cd $HOME/db-sample-schemas
+git pull
+cp -r $HOME/db-sample-schemas /tmp/
+cd /tmp/db-sample-schemas
 perl -p -i.bak -e 's#__SUB__CWD__#'$(pwd)'#g' *.sql */*.sql */*.dat 
+docker cp /tmp/db-sample-schemas oracle:/tmp/
+...
+
 sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMPTS1 /tmp/sample_install.log pridb
 ```
 
