@@ -149,3 +149,19 @@ stop slave;
 set global sql_slave_skip_counter=1;
 start slave;
 ```
+
+---
+
+### [memory](https://stackoverflow.com/questions/1178736/mysql-maximum-memory-usage)
+
+as 2G memory in OS
+
+```
+innodb_buffer_pool_size = 384M
+key_buffer = 256M
+query_cache_size = 1M
+query_cache_limit = 128M
+thread_cache_size = 8
+max_connections = 400
+innodb_lock_wait_timeout = 100
+```
