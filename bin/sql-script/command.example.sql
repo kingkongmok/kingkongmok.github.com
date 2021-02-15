@@ -455,6 +455,10 @@ select count(1) from sys.aud$;
 select object_name,owner,object_type from dba_objects where object_name='AUD$';
 truncate table sys.aud$ reuse storage;
 
+-- export
+exp \"/ as sysdba\" file=SYS_AUD_table.dmp log=exp_SYS_AUD_table.log tables=AUD$
+
+
 
 
 -- oracle password file, 用于判断是否让远程登陆sys用户

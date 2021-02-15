@@ -23,8 +23,7 @@ nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
 ## [All Data is InnoDB](https://dba.stackexchange.com/questions/19532/safest-way-to-perform-mysqldump-on-a-live-system-with-active-reads-and-writes)
 
 ```
-mysqldump -uuser -ppass --single-transaction --routines --triggers
---master-data=2 --all-databases > backup_db.sql
+mysqldump -uuser -ppass --single-transaction --routines --triggers --master-data=2 --all-databases > backup_db.sql
 ```
 
 * **--single-transaction** produces a checkpoint that allows the dump to capture all data prior to the checkpoint while receiving incoming changes. Those incoming changes do not become part of the dump. That ensures the same point-in-time for all tables.
@@ -164,4 +163,38 @@ query_cache_limit = 128M
 thread_cache_size = 8
 max_connections = 400
 innodb_lock_wait_timeout = 100
+```
+
+---
+
+安全需要，添加超时
+
+```
+my.cnf 
+
+plugin-load-add=connection_control.so
+connection-control=FORCE_PLUS_PERMANENT
+connection-control-failed-login-attempts=FORCE_PLUS_PERMANENT
+connection_control_failed_connections_threshold=30
+connection_control_min_connection_delay=600000
+interactive_timeout=1800
+```
+
+---
+
+slave read only
+
+```
+my.cnf
+
+read_only=1
+super_read_only=1
+```
+
+---
+
+### [count rows](https://stackoverflow.com/questions/286039/get-record-counts-for-all-tables-in-mysql-database)
+
+```
+SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'CTMS';
 ```
