@@ -583,6 +583,9 @@ SELECT USERNAME, EXPIRY_DATE FROM DBA_USERS;
 
 
 
+-- 检查资源 resource
+select *  from v$resource_limit;
+
 -- check user privileges 
 -- Granted Roles:
 SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = '&user';
@@ -1101,6 +1104,7 @@ delete expired archivelog all ;
 select recovery_mode from v$archive_dest_status where dest_id=2;
 select protection_mode,database_role,open_mode from v$database;
 select name,db_unique_name from v$database;
+select THREAD#,SEQUENCE#,applied,registrar from v$archived_log;
 select max(sequence#) from v$archived_log; 
 -- dg processes
 select sequence#,status,thread#,block#,process,status from v$managed_standby;
