@@ -63,30 +63,50 @@ sub baidupanFileSearch {
     return @removeduplicate;
 } ## --- end sub baidupanFileSearch
 
-sub md5FileSearch {
+sub torrentFileSearch {
     my	( $keyword )	= @_;
-    my @md5Result;
-    my @md5Files = glob("~/Dropbox/home/kk/Downloads/mldonkey/*");
-    foreach my $md5File ( @md5Files ) {
-        if ( -r $md5File ) {
+    my @torrentResult;
+    my @torrentFiles = glob("~/Dropbox/var/log/mldonkey/torrentJoin.log");
+    foreach my $torrentFile ( @torrentFiles ) {
+        if ( -r $torrentFile ) {
             foreach my $word ( @{$keyword} ) {
-                open my $fh , "< $md5File";
+                open my $fh , "< $torrentFile";
                 while ( <$fh> ) {
-                    push @md5Result,$_ if /$word/i ;
+                    push @torrentResult,$_ if /$word/i ;
                 }
             }
         }
     }
     my %seen;
-    my @removeduplicate = grep { !$seen{$_}++ } @md5Result;
+    my @removeduplicate = grep { !$seen{$_}++ } @torrentResult;
 
     return @removeduplicate;
-} ## --- end sub md5FileSearch
+} ## --- end sub torrentFileSearch
+
+sub emuleFileSearch {
+    my	( $keyword )	= @_;
+    my @emuleResult;
+    my @emuleFiles = glob("~/Dropbox/var/log/mldonkey/magnet.log");
+    foreach my $emuleFile ( @emuleFiles ) {
+        if ( -r $emuleFile ) {
+            foreach my $word ( @{$keyword} ) {
+                open my $fh , "< $emuleFile";
+                while ( <$fh> ) {
+                    push @emuleResult,$_ if /^(Added link :|Added link :|BitTorrent: ).*$word/i ;
+                }
+            }
+        }
+    }
+    my %seen;
+    my @removeduplicate = grep { !$seen{$_}++ } @emuleResult;
+
+    return @removeduplicate;
+} ## --- end sub emuleFileSearch
 
 sub comicSearch {
     my	( $keyword )	= @_;
     my @comicResult;
-    my @comicFiles = glob("/home/kk/Dropbox/var/log/wn_download/*");
+    my @comicFiles = glob("~/Dropbox/var/log/wn_download/*");
     foreach my $comicFile ( @comicFiles ) {
         if ( -r $comicFile ) {
             foreach my $word ( @{$keyword} ) {
@@ -105,13 +125,18 @@ sub comicSearch {
 
 
 if ( @ARGV ) {
-    my @md5FileResult = &md5FileSearch(\@ARGV) ;
+    my @torrentResult = &torrentFileSearch(\@ARGV) ;
+    my @emuleResult = &emuleFileSearch(\@ARGV) ;
     my @baidupanFileResult = &baidupanFileSearch(\@ARGV) ;
     my @mlocateResult = &mlocateSearch(\@ARGV) ;
     my @comicResult = &comicSearch(\@ARGV) ;
-    if ( @md5FileResult ) {
+    if ( @torrentResult ) {
         say "\n[33;1mDownloaded torrent match[0;49m ";
-        say @md5FileResult
+        say @torrentResult
+    }
+    if ( @emuleResult ) {
+        say "\n[33;1mDownloaded emule match[0;49m ";
+        say @emuleResult
     }
     if ( @baidupanFileResult ) {
         say "\n[33;1mBaidupan match[0;49m ";
