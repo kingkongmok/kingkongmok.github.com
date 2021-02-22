@@ -21,16 +21,17 @@ set -o nounset                              # Treat unset variables as an error
 
 FirstChoise=h3
 SecondChoise=best
+DownloadLog="/home/kk/Dropbox/var/log/yDown.log"
 
 downUrl()
 {
         timestamp=`date +%s`
-        if [[ `grep -x "$1" /home/kk/Dropbox/videos/history.list.txt` ]] ; then 
+        if [[ `grep -x "$1" "$DownloadLog"` ]] ; then 
             echo "$1" is download before.
         else
             echo "$1" >> /tmp/youtube-dl.${timestamp}.log
-            echo "$1" >> /home/kk/Dropbox/videos/history.list.txt
-            /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
+            echo "$1" >> "$DownloadLog"
+            /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
             nohup /home/kk/workspace/youtube-dl/youtube-dl -f "[height < 720]" "$1" \
                 -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
             #nohup /home/kk/workspace/youtube-dl/youtube-dl "$1" \
@@ -44,8 +45,8 @@ forceDownUrl()
 {
     timestamp=`date +%s`
     echo "$1" >> /tmp/youtube-dl.${timestamp}.log
-    echo "$1" >> /home/kk/Dropbox/videos/history.list.txt
-    /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> /home/kk/Dropbox/videos/history.list.txt
+    echo "$1" >> "$DownloadLog"
+    /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
     nohup /home/kk/workspace/youtube-dl/youtube-dl -f "[height < 720]" "$1" \
         -o '/home/kk/Downloads/videos/%(title)s-%(autonumber)s.%(ext)s' \
     #nohup /home/kk/workspace/youtube-dl/youtube-dl "$1" \
