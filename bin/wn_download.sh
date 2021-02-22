@@ -137,7 +137,7 @@ downUrl()
             SIZE=`$PROXYCHAINS -q $CURL -H "$CURL_HEADER" -s -I $DownloadURL | grep content-length: | perl -naE 'say $F[-1]'`
             SIZE=${SIZE:-0}
 
-
+            # the filesize in http is more than 0
             if [ $SIZE -gt 0 ] ; then
 
                 # get the localfile status 
@@ -173,6 +173,11 @@ downUrl()
                     perl -i.bak -nE 'print unless m#'"$DownloadURL"'#' $comicDownloadList
                     continue
                 fi
+
+            # the filesize in http is less than 0
+            elif [ $SIZE -eq 0 ] ; then
+
+                sleep 10
 
             fi
 
