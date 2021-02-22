@@ -21,12 +21,12 @@ set -o nounset                              # Treat unset variables as an error
 
 
 TFILE="/tmp/$(basename $0).$$.tmp"
-comicDownloadList="/home/kk/Dropbox/home/kk/Downloads/comic/comic.list"
-comicDownloadFinish="/home/kk/Dropbox/home/kk/Downloads/comic/comic.done"
-comicDownloadFailure="/home/kk/Dropbox/home/kk/Downloads/comic/comic.fail"
+comicDownloadList="/home/kk/Dropbox/var/log/wn_download/comic.list"
+comicDownloadFinish="/home/kk/Dropbox/var/log/wn_download/comic.done"
+comicDownloadFailure="/home/kk/Dropbox/var/log/wn_download/comic.fail"
 CURL_HEADER="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
 PROXYCHAINS=proxychains
-DOWNLOAD_DIR=/home/kk/Downloads/comic/
+DOWNLOAD_DIR=/home/kk/Downloads/comic
 CURL=curl
 FailureMode=0
 ERRORMAKR=0
@@ -67,7 +67,7 @@ getURL()
                     else
                         echo "$DOWNLOADLINE is marked before" 
                     fi
-                    perl -i.bak -nE 'print unless m#'"$1"'#' $comicDownloadFailure
+                    perl -i -nE 'print unless m#'"$1"'#' $comicDownloadFailure
                 fi
                 
                 return 0
@@ -82,7 +82,7 @@ getURL()
                 else
                     echo "$DOWNLOADLINE is marked before" 
                 fi
-                perl -i.bak -nE 'print unless m#'"$1"'#' $comicDownloadFailure
+                perl -i -nE 'print unless m#'"$1"'#' $comicDownloadFailure
                 return 0
             fi
 
@@ -150,8 +150,7 @@ downUrl()
                 # check the localfile size 1/2 first time, 
                 if  [ "$SIZE" -eq "$localfile_size" ]; then 
                     echo $line >> $comicDownloadFinish
-                    #sed -i.bak \"#$DownloadURL#d\" $comicDownloadList
-                    perl -i.bak -nE 'print unless m#'"$DownloadURL"'#' $comicDownloadList
+                    perl -i -nE 'print unless m#'"$DownloadURL"'#' $comicDownloadList
                     continue
                 fi
 
@@ -169,8 +168,7 @@ downUrl()
                 # if the file is downloaded compeleted
                 if  [ "$SIZE" -eq "$localfile_size" ]; then 
                     echo $line >> $comicDownloadFinish
-                    #sed -i.bak \"#$DownloadURL#d\" $comicDownloadList
-                    perl -i.bak -nE 'print unless m#'"$DownloadURL"'#' $comicDownloadList
+                    perl -i -nE 'print unless m#'"$DownloadURL"'#' $comicDownloadList
                     continue
                 fi
 

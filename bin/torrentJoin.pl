@@ -27,7 +27,7 @@ my@dirs=("/home/kk/Downloads", "/home/kk/Dropbox/torrents");
 # use Dropbox to restore done_before.md5
 #
 #open FH,"</home/kk/.mldonkey/done_before.md5";
-open FH,"</home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5" || die $! ;
+open FH,"</home/kk/Dropbox/var/log/mldonkey/torrentJoin.log" || die $! ;
 my%md5record ;
 my$k;
 my$v;
@@ -51,7 +51,7 @@ foreach my $dir ( @dirs ) {
             print " $dir/$file 已经下载过。\n"; 
         } else {
             #qx#echo -n "$filemd5" >> /home/kk/.mldonkey/done_before.md5# ;
-            qx#echo -n "$filemd5" >> /home/kk/Dropbox/home/kk/Downloads/mldonkey/torrent_done_before.md5# ;
+            qx#echo -n "$filemd5" >> /home/kk/Dropbox/var/log/mldonkey/torrentJoin.log# ;
             qx#mv "$dir/$file" /home/kk/.mldonkey/torrents/incoming/#;
         }
     }
