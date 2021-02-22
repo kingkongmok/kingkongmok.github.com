@@ -21,7 +21,7 @@ set -o nounset                              # Treat unset variables as an error
 
 FirstChoise=h3
 SecondChoise=best
-DownloadLog="/home/kk/Dropbox/var/log/yDown.log"
+DownloadLog=~/Dropbox/var/log/yDown.log
 
 downUrl()
 {

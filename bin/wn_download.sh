@@ -21,12 +21,12 @@ set -o nounset                              # Treat unset variables as an error
 
 
 TFILE="/tmp/$(basename $0).$$.tmp"
-comicDownloadList="/home/kk/Dropbox/var/log/wn_download/comic.list"
-comicDownloadFinish="/home/kk/Dropbox/var/log/wn_download/comic.done"
-comicDownloadFailure="/home/kk/Dropbox/var/log/wn_download/comic.fail"
+comicDownloadList=~/Dropbox/var/log/wn_download/comic.list
+comicDownloadFinish=~/Dropbox/var/log/wn_download/comic.done
+comicDownloadFailure=~/Dropbox/var/log/wn_download/comic.fail
 CURL_HEADER="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
 PROXYCHAINS=proxychains
-DOWNLOAD_DIR=/home/kk/Downloads/comic
+DOWNLOAD_DIR=~/Downloads/comic
 CURL=curl
 FailureMode=0
 ERRORMAKR=0
