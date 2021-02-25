@@ -114,6 +114,7 @@ tryFailureJobs()
         do
             if [ ! -z "$line" ]; then
             getURL $line
+            sleep 3
             fi
         done < $TFILE
     fi 
