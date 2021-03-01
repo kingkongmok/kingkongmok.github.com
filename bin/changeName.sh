@@ -69,21 +69,28 @@ if [ "$TESTMODE" == 0 ] ; then
     if  [ ! -d "$backup_dir" ] ; then
 	mkdir "$backup_dir"
     fi
+    find .  -maxdepth 1 -type f -exec ln {} "$backup_dir" \;
 fi
 
-find .  -maxdepth 1 -type f -exec ln {} "$backup_dir" \;
 
 
 # 包含以下字符的直接删除
 list+=( "18禁アニメ"  )
 list+=( "風的工房"  )
+list+=( "4K漢化組"  )
+list+=( "\[無修\]"  )
+list+=( "\[中\]"  )
 list+=( "東方Project"  )
 # list+=( "Fatestaynight"  )
 list+=( "DL版"  )
-list+=( "中国翻訳"  )
-list+=( "（Chinese）"  )
-list+=( "\[Digital\]"  )
-list+=( "精修"  )
+list+=( "中国翻訳" )
+list+=( "（Chinese）" )
+list+=( "\[Digital\]" )
+list+=( "\[精修\]" )
+list+=( "\[Chinese\]" )
+list+=( "\[Decensored\]" )
+list+=( "\(Complete\)" )
+list+=( "\[English\]" )
 command=''
 exp=''
 for mystr in "${list[@]}"; do 
