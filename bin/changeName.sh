@@ -20,11 +20,55 @@
 set -o nounset                              
 
 
+
+#===  FUNCTION  ================================================================
+#         NAME:  usage
+#  DESCRIPTION:  Display usage information.
+#===============================================================================
+function usage ()
+{
+    cat <<- EOT
+
+    DESCRIPTION: download video from youtube-dl
+
+    Usage :  ${0##/*/} [-f]
+
+    Options:
+    -n		  Test only
+    -h|help       Display this message
+
+EOT
+}    # ----------  end of function usage  ----------
+
+#-----------------------------------------------------------------------
+#  Handle command line arguments
+#-----------------------------------------------------------------------
+
+TESTMODE=0
+
+while getopts "n" opt
+do
+    case $opt in
+
+        n     	   )  TESTMODE=1 ;  ;;
+        h|help     )  usage; exit 0   ;;
+
+        \? )  echo -e "\n  Option does not exist : $OPTARG\n"
+            usage; exit 1   ;;
+
+        esac    # --- end of case ---
+    done
+shift $(($OPTIND-1))
+
+
+
 backup_dir=changeNameBackup
 changename_log=${backup_dir}/changeName.log
 
-if  [ ! -d "$backup_dir" ] ; then
-    mkdir "$backup_dir"
+if [ "$TESTMODE" == 0 ] ; then
+    if  [ ! -d "$backup_dir" ] ; then
+	mkdir "$backup_dir"
+    fi
 fi
 
 find .  -maxdepth 1 -type f -exec ln {} "$backup_dir" \;
@@ -101,10 +145,12 @@ command="perl-rename -n '$variable' "
 find . -maxdepth 1  -type f -print0 | while read -d $'\0' file; do
 
 # eval "$command \"$file\"" >> "$changename_log"
-eval "perl-rename -n '$variable' \"$file\"" >> "$changename_log"
-eval "perl-rename -i '$variable' \"$file\""  
+if [ "$TESTMODE" == 0 ] ; then
+    eval "perl-rename -n '$variable' \"$file\"" >> "$changename_log"
+    eval "perl-rename -i '$variable' \"$file\""  
+else
+    eval "perl-rename -n '$variable' \"$file\""
+fi
 
 done
-
-# echo "[33;1mfinish please see $changename_log [0;49m ";
 
