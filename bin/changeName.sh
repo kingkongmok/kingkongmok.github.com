@@ -75,15 +75,19 @@ fi
 
 
 # 包含以下字符的直接删除
-list+=( "18禁アニメ"  )
-list+=( "風的工房"  )
-list+=( "4K漢化組"  )
+list+=( "\[S版\]"  )
+list+=( "\[無修正_重嵌\]"  )
+list+=( "\[无修正中文\]"  )
+list+=( "\[原版\]"  )
+list+=( "\[改正\]"  )
+list+=( "\[風的工房\]"  )
+list+=( "\[4K漢化組\]"  )
 list+=( "\[無修\]"  )
 list+=( "\[中\]"  )
-list+=( "東方Project"  )
+list+=( "\[東方Project\]"  )
 # list+=( "Fatestaynight"  )
-list+=( "DL版"  )
-list+=( "中国翻訳" )
+list+=( "\[DL版\]"  )
+list+=( "\[中国翻訳\]" )
 list+=( "（Chinese）" )
 list+=( "\[Digital\]" )
 list+=( "\[精修\]" )
@@ -91,6 +95,7 @@ list+=( "\[Chinese\]" )
 list+=( "\[Decensored\]" )
 list+=( "\(Complete\)" )
 list+=( "\[English\]" )
+list+=( "18禁アニメ"  )
 command=''
 exp=''
 for mystr in "${list[@]}"; do 
@@ -128,13 +133,20 @@ variable+='s/\(C\d+\)//;'
 variable+='s/\[720P[^]]*?\]//;'
 variable+='s/\[MJK.*?\]//;'
 variable+='s/\[(?:無)修正\]//;'
+variable+='s/\((?:無)修正\)//;'
 variable+='s/～.*?～//;'
 variable+='s/\(COMIC.*?\)//;'
 #variable+='s/(.*)\[.*?組\]\./$1\./;'
 variable+='s/【.*?(漢|汉)化】//;'
+variable+='s/【.*?翻(译|訳)】//;'
+variable+='s/\[[^]]*?翻(译|訳)\]//;'
 variable+='s/\[[^[]*?(漢|汉)化\]//;'
-variable+='s/\[[^[]*?(漢|汉)化组\]//;'
+variable+='s/\[[^[]*?(漢|汉)化(组|組)\]//;'
+variable+='s/\[[^[]*?日语社\]//;'
 variable+='s/\[[^[]*?掃圖組\]//;'
+variable+='s/\[[^[]*?试看版\]//;'
+variable+='s/\[[^[]*?重嵌\]//;'
+# variable+='s/「.*?」//;'
 variable+='s/\&nbsp;//g;'
 variable+='s/Vol.(\d)/_$1/g;'
 # variable+='s/\(.*?\)(\.[^.]*?)$/$1/;'
