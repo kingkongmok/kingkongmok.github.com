@@ -76,6 +76,8 @@ fi
 
 # 包含以下字符的直接删除
 list+=( "\[S版\]"  )
+list+=( " 無修正"  )
+list+=( "\(成年コミック\)"  )
 list+=( "\[無修正_重嵌\]"  )
 list+=( "\[无修正中文\]"  )
 list+=( "\[原版\]"  )
@@ -87,7 +89,9 @@ list+=( "\[中\]"  )
 list+=( "\[東方Project\]"  )
 # list+=( "Fatestaynight"  )
 list+=( "\[DL版\]"  )
+list+=( "\[無碼\]"  )
 list+=( "\[中国翻訳\]" )
+list+=( "\[中国語\]" )
 list+=( "（Chinese）" )
 list+=( "\[Digital\]" )
 list+=( "\[精修\]" )
@@ -121,6 +125,7 @@ variable+="s/第十話/_10/g;"
 
 
 variable+="s/ +//g;"
+variable+="s/　//g;"
 variable+="s/!+//g;"
 variable+="s/\|/_/g;"
 variable+="s/\(\)//g;"
@@ -135,6 +140,7 @@ variable+='s/\[MJK.*?\]//;'
 variable+='s/\[(?:無)修正\]//;'
 variable+='s/\((?:無)修正\)//;'
 variable+='s/～.*?～//;'
+variable+='s/(-|～)*総集編(-|～)*//;'
 variable+='s/\(COMIC.*?\)//;'
 #variable+='s/(.*)\[.*?組\]\./$1\./;'
 variable+='s/【.*?(漢|汉)化】//;'
@@ -144,6 +150,7 @@ variable+='s/\[[^[]*?(漢|汉)化\]//;'
 variable+='s/\[[^[]*?(漢|汉)化(组|組)\]//;'
 variable+='s/\[[^[]*?日语社\]//;'
 variable+='s/\[[^[]*?掃圖組\]//;'
+variable+='s/\[[^[]*?字幕组\]//;'
 variable+='s/\[[^[]*?试看版\]//;'
 variable+='s/\[[^[]*?重嵌\]//;'
 # variable+='s/「.*?」//;'
