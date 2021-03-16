@@ -35,6 +35,7 @@ options:
 -w : set the sleep time;
 -p : set password;
 -n : do not resize;
+-r : auto rename all the images;
 EOF
 exit 3
 }
@@ -46,9 +47,10 @@ fi
 
 PASSWORD=
 WAITTIME=0
+RENAME_TRIGGER=0
 NOTDOFLAG=
 
-while getopts w:p:nh OPTIONS ; do
+while getopts w:p:nrh OPTIONS ; do
 	case $OPTIONS in
 
 		h)
@@ -62,6 +64,9 @@ while getopts w:p:nh OPTIONS ; do
 			;;
 		n)
 			NOTDOFLAG=1;
+			;;
+		r)
+			RENAME_TRIGGER=1;
 			;;
 
 	esac    # --- end of case ---
@@ -144,7 +149,16 @@ extract_it ()
 resize ()
 {
 
-    cd "${WORKPATH}/${FILENAME}"
+    cd "${WORKPATH}/${FILENAME}" || exit 23
+
+    
+    # rename all the images file if RENAME_TRIGGER is ON
+    if [ $RENAME_TRIGGER -eq 1 ]  ; then
+        shopt  -s dotglob
+        find -type f -exec perl-rename 's/\///g' {} -i \;
+        perl-rename 's/.*\./sprintf"%04d.",++$i/e' * -i
+        shopt  -u dotglob
+    fi
 
 
     # delete NOT IMAGE files
