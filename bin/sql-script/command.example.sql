@@ -440,7 +440,7 @@ SELECT * FROM DBA_STMT_AUDIT_OPTS;
 -- 查看audit表
 
 select * from aud$;
-select * from dba_common_audit_trail
+select * from dba_common_audit_trail;
 -- 其中，DBA_COMMON_AUDIT_TRAIL = DBA_COMMON_AUDIT_TRAIL + DBA_FGA_AUDIT_TRAIL
 
 -- 查询登陆失败 DBA_AUDIT_TRAIL displays all audit trail entries.
@@ -515,6 +515,20 @@ select resource_name,limit from dba_profiles where profile='<profile_name>';
 ALTER PROFILE "DEFAULT" LIMIT PASSWORD_VERIFY_FUNCTION NULL;
 ALTER user user_name identified by new_password account unlock;
 
+
+-- 密码错误验证延迟特性
+-- 被HANG住以及row cache lock、library cache lock问题
+-- https://blog.csdn.net/haibusuanyun/article/details/50444115
+-- 关闭防暴力破解延迟
+alter system set events='28401 trace name context forever, level 1';
+
+    ————————————————
+    版权声明：本文为CSDN博主「还不算晕」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+    原文链接：https://blog.csdn.net/haibusuanyun/article/details/50444115
+
+
+-- 检查tnslsnr的错误次数
+perl -nE 'say $1 if /FAILOVER.*ADDRESS=\(PROTOCOL=tcp\)\(HOST=(.*?)\)/'  listener.log  | sort | uniq -c
 
 -- show tables
 SELECT owner, table_name FROM dba_tables;
@@ -653,6 +667,11 @@ SQL> alter database end backup;
 
 SQL> alter tablespace test begin backup ;
 SQL> alter tablespace test end backup ;
+
+select * from v$recover_file ;
+select file#,CHECKPOINT_CHANGE# from v$datafile_header;
+select file#,CHECKPOINT_CHANGE# from v$datafile;
+
 
 
 
@@ -1685,8 +1704,14 @@ select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/t
 select * from DBA_TAB_MODIFICATIONS;
 
 
+-- cursors opened
+col  MAX_OPEN_CUR format a50
+col hwm_open_cur format 99,999
+col max_open_cur format 99,999
+select max(a.value) as hwm_open_cur, p.value as max_open_cur from v$sesstat a, v$statname b, v$parameter p where a.statistic# = b.statistic# and b.name ='opened cursors current' and p.name='open_cursors' group by p.value;
+
 -- database state performance 
-select event, state, count(*) from v$session_wait group by event, state order by 3 desc
+select event, state, count(*) from gv$session_wait group by event, state order by 3 desc;
 
 EVENT						   STATE		       COUNT(*)
 -------------------------------------------------- ------------------------- ----------
@@ -1695,6 +1720,29 @@ rdbms ipc message				   WAITING			     50
 class slave wait				   WAITING			     12
 gcs remote message				   WAITING			      e
 LNS ASYNC end of log				   WAITING			      2
+
+
+select program ,event,wait_class from V$session where event='rdbms ipc message';
+
+PROGRAM                        EVENT                          WAIT_CLASS
+-------------------------------------------------- -------------------------------------------------- --------------------------------------------------
+oracle@ptms_report (ARC1)              rdbms ipc message                      Idle
+oracle@ptms_report (SMCO)              rdbms ipc message                      Idle
+oracle@ptms_report (MMAN)              rdbms ipc message                      Idle
+oracle@ptms_report (MMON)              rdbms ipc message                      Idle
+oracle@ptms_report (ARC2)              rdbms ipc message                      Idle
+oracle@ptms_report (DBW0)              rdbms ipc message                      Idle
+oracle@ptms_report (MMNL)              rdbms ipc message                      Idle
+oracle@ptms_report (ARC3)              rdbms ipc message                      Idle
+oracle@ptms_report (PSP0)              rdbms ipc message                      Idle
+oracle@ptms_report (LGWR)              rdbms ipc message                      Idle
+oracle@ptms_report (CKPT)              rdbms ipc message                      Idle
+oracle@ptms_report (GEN0)              rdbms ipc message                      Idle
+oracle@ptms_report (CJQ0)              rdbms ipc message                      Idle
+oracle@ptms_report (RECO)              rdbms ipc message                      Idle
+oracle@ptms_report (ARC0)              rdbms ipc message                      Idle
+oracle@ptms_report (DBRM)              rdbms ipc message                      Idle
+oracle@ptms_report (RBAL)              rdbms ipc message                      Idle
 
 
 -- connected session;
@@ -1981,6 +2029,7 @@ expdp system/oracle directory=data_pump_dir dumpfile=scott.dmp schemas=scott log
 expdp cks/NEWPASSWORD DUMPFILE=cd2tables.dmp DIRECTORY=data_pump_dir TABLES=CD_FACILITY,CD_PORT
 impdp system/NEWPASSWORD dumpfile=cksp.dmp directory=DATA_PUMP_DIR logfile=cksp_imp.log schemas=cksp table_exists_action=replace remap_schema=cksp:cksp
 --example
+expdp \"/ as sysdba\"  schemas=ckses directory=DATA_PUMP_DIR dumpfile=ckses_`date +"%Y%m%d"`.dmp logfile=ckses_`date +"%Y%m%d"`.log job_name=expdpjob_ckses
 expdp sys/oracle \"/ as sysdba\"  schemas=ckspub01 directory=CKSDATA exclude=TABLE:\"LIKE \'TMP%\'\" exclude=TABLE:\"LIKE \'VT%\'\" job_name=expdp20191216 logfile=expdp20191216.log dumpfile=expdp20191216.dmp
 -- import from network
 drop user cksp cascade;
@@ -2301,6 +2350,12 @@ ORDER BY l.inst_id,l.id1, l.request
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
 
+
+select distinct sid from v$mystat ;
+select paddr from v$session where sid=40 ;
+select spid from v$process where addr='000000007F495250';
+
+
 -- get session, spid is OS process id.
 COLUMN spid FORMAT A10
 COLUMN username FORMAT A10
@@ -2561,6 +2616,7 @@ select p.program,s.server from v$session s , v$process p where s.paddr = p.addr 
 SELECT TO_CHAR(SYSDATE, 'MM-DD-YYYY HH24:MI:SS') "NOW" FROM DUAL;
 
 
+
 --  显示gv$session超过60s的查询 queries currently running for more than 60 seconds
 select s.username,s.sid,s.serial#, s.sql_id, round ( s.last_call_et/60, 2) mins_running from gv$session s where status='ACTIVE' and type <>'BACKGROUND' and last_call_et> 60 order  by mins_running desc ,sid,serial# ;
 
@@ -2638,6 +2694,9 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
 select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_char(  s.logon_time, 'yyyy-mm-dd_hh24:mi:ss' ) logon_time, s.program, round(PGA_USED_MEM/1024/1024,0) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,0) PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &mem_size and s.username is not null order by PGA_USED_MEM;
 
 
+-- check remain time , 查看进程进度，推算剩余时间
+select  target,SOFAR  /  TOTALWORK *100 from V$session_longops where sid=1378 and SERIAL#   =29389;
+
 
 -- check sql_text
 select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
@@ -2697,6 +2756,13 @@ alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 select * from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 select sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
 select sql_id, sql_text, module, to_char( last_active_time, 'yyyy-mm-dd_hh24:mi:ss' )  from v$sqlarea a where A.Sql_fullText like '%TICKETRECORD_HIST%';
+
+-- 查包含sql关键字的sid, serial#
+select a.program, a.sid,a.serial#, c.sql_text,c.SQL_ID
+from v$session a, v$process b, v$sqlarea c
+where a.paddr = b.addr
+and a.sql_hash_value = c.hash_value
+and a.username is not null and c.sql_text like '%CONSTRAINT%';
 
 
 
@@ -3491,7 +3557,7 @@ bbed, resetlogs scn, fuzzy
 
 -- high water mark HWM
 
-ANALYZE TABLE VOYAGEMAPDETAIL_BAK COMPUTE STATISTICS;
+ANALYZE TABLE tablen_name COMPUTE STATISTICS;
 SELECT blocks, empty_blocks, num_rows FROM user_tables WHERE table_name = VOYAGEMAPDETAIL_BAK;
 
 -- kill oracle with ORACLE_SID=EE
