@@ -49,6 +49,15 @@ ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
 
 ```
 ls 1.mp4 2.mp4 | perl -ne 'print "file $_"' | ffmpeg -protocol_whitelist file,pipe -f concat -safe 0 -i pipe: -vcodec copy -acodec copy all.mp4
+
+
+:: Create File List
+echo file file1.mp4 >  mylist.txt
+echo file file2.mp4 >> mylist.txt
+echo file file3.mp4 >> mylist.txt
+
+:: Concatenate Files
+ffmpeg -f concat -i mylist.txt -c copy output.mp4
 ```
 
 ---
