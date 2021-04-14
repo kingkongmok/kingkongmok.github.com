@@ -1050,20 +1050,67 @@ restore database preview;
 
 -- 完整例子，先set newname 指定 OS 数据库文件路径，然后使用switch调整controlfile的映射路径。
 -- 11g以前，set newname只能指定datafile，之后就能设置for database（datafile和tempfile生效，但logfile不生效，需要在mount状态下调整logfile路径）
+-- https://www.thegeekdiary.com/how-to-move-restore-oracle-database-to-new-host-and-file-system-using-rman/
+
+
+RMAN> startup nomount force;
+RMAN> restore spfile from '/tmp/spfile.bks';
+RMAN> restore spfile to pfile '/tmp/initnewdb.ora' from '/tmp/spfile.bks';
+
+$ grep audit /tmp/initnewdb.ora
+*.audit_file_dest='/u01/app/oracle/admin/em10rep/adump'
+
+$ mkdir -p /opt/app/oracle/admin/ORA112/adump
+
+SQL> shutdown immediate;
+SQL> startup nomount;
+SQL> show parameter control_files
+SQL> show parameter dump
+SQL> show parameter create
+SQL> show parameter recovery
+
+RMAN> restore controlfile from '/tmp/control.bks';
+RMAN> alter database mount;
+RMAN> report schema;
+
+--
 
 RMAN>
 startup nomount force;
 restore standby controlfile from '/home/oracle/backup/autobackuppiece.bak';
 alter database mount ; 
 
+
+RMAN> run {
+# set newname for all datafiles to be mapped to a new path
+# OR use SET NEWNAME FOR DATABASE if you wish to have all files located in the same directory
+# eg. SET NEWNAME FOR DATABASE to '+DATA/inovadg/datafile/%b' 
+set newname for datafile 1 to  'new file path and name';
+...
+set newname for tempfile 1 to 'new file path and name';
+restore database;
+switch datafile all;
+switch tempfile all;
+}
+
+RMAN> report schema;
+RMAN> recover database noredo;
+
+RMAN> run {# change the date and time to suit
+SET UNTIL TIME "to_date('01 SEP 2011 12:04:00','DD MON YYYY hh24:mi:ss')";
+recover database;
+}
+
+-- 数据文件拷贝到/u01/app/oracle/oradata/stbdb/
 run
 {
-SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ADG/%b'; 
+SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/stbdb/%b'; 
 restore database ;
 SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;  
 }
 
+-- 数据文件拷贝到 +DATA/stbdb/datafile/
 run
 {
 SET NEWNAME FOR DATABASE TO '+DATA/stbdb/datafile/%b'; 
@@ -1072,15 +1119,16 @@ SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;  
 }
 
-SQLPLUS>
-select * from vrecover_file;
-select name from v$datafile;
-select name from v$tempfile;
-select member from v$logfile;
+SQL> select * from v$recover_file;
+SQL> select name from v$datafile;
+SQL> select name from v$tempfile;
+SQL> select member from v$logfile;
+SQL> select * from v$logfile;
 
--- alter database rename file '/u01/app/oracle/oradata/EE/redo01.log' to '/u01/app/oracle/oradata/ADG/redo01.log' ;
--- alter database rename file '/u01/app/oracle/oradata/EE/redo02.log' to '/u01/app/oracle/oradata/ADG/redo02.log' ;
--- alter database rename file '/u01/app/oracle/oradata/EE/redo03.log' to '/u01/app/oracle/oradata/ADG/redo03.log' ;
+-- swtich command not works for logfile, change it manual
+alter database rename file '/u01/app/oracle/oradata/stbdb/redo01.log' to '+DATA/stbdb/datafile/onlinelog/redo01.log' ;
+alter database rename file '/u01/app/oracle/oradata/stbdb/redo02.log' to '+DATA/stbdb/datafile/onlinelog/redo02.log' ;
+alter database rename file '/u01/app/oracle/oradata/stbdb/redo03.log' to '+DATA/stbdb/datafile/onlinelog/redo03.log' ;
 
 -- 如果设置了db_create参数，能自动生成log位置     *.db_create_file_dest='/u01/app/oracle/oradata';
 alter database clear logfile group 1;
@@ -1135,9 +1183,62 @@ alter database recover managed standby database;
 -- to start redo apply in the BACKGROUND
 alter database recover managed standby database disconnect;
 
+
+SQL> select recovery_mode from v$archive_dest_status where dest_id=1;
+
+RECOVERY_MODE
+-----------------------
+MANAGED
+
+SQL> select sequence#,status,thread#,block#,process,status from v$managed_standby;
+
+ SEQUENCE# STATUS          THREAD#     BLOCK# PROCESS   STATUS
+---------- ------------ ---------- ---------- --------- ------------
+       134 CLOSING               2      83968 ARCH      CLOSING
+       215 CLOSING               1     176128 ARCH      CLOSING
+         0 CONNECTED             0          0 ARCH      CONNECTED
+       213 CLOSING               1          1 ARCH      CLOSING
+       216 WAIT_FOR_LOG          1          0 MRP0      WAIT_FOR_LOG
+       135 IDLE                  2      95724 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+       216 IDLE                  1      47351 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+
+12 rows selected.
+
+
+
 -- to start real-time apply, include the using CURRENT LOGFILE 
 alter database recover managed standby database using current logfile disconnect;
-select recovery_mode from v$archive_dest_status where dest_id=1;
+SQL> select recovery_mode from v$archive_dest_status where dest_id=1;
+RECOVERY_MODE
+-----------------------
+MANAGED REAL TIME APPLY
+
+SQL> select sequence#,status,thread#,block#,process,status from v$managed_standby;
+
+ SEQUENCE# STATUS          THREAD#     BLOCK# PROCESS   STATUS
+---------- ------------ ---------- ---------- --------- ------------
+       134 CLOSING               2      83968 ARCH      CLOSING
+       215 CLOSING               1     176128 ARCH      CLOSING
+         0 CONNECTED             0          0 ARCH      CONNECTED
+       213 CLOSING               1          1 ARCH      CLOSING
+       135 APPLYING_LOG          2      95689 MRP0      APPLYING_LOG
+       135 IDLE                  2      95689 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+       216 IDLE                  1      47316 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+         0 IDLE                  0          0 RFS       IDLE
+
+12 rows selected.
+
+
+
 
 -- Managed Standby Recovery Canceled
 alter database recover managed standby database cancel;
@@ -1536,11 +1637,11 @@ srvctl start scan_listener
 kill -9 `ps -ef|grep "oracle$ORACLE_SID"|grep "(LOCAL=NO)"|grep -v "grep (LOCAL=NO)"|awk -F ' ' '{print $2}'`
 
 -- kill session
+
 BEGIN
-  FOR r IN (select sid,serial# from v$session where username='user')
+  FOR r IN (select sid,serial#,inst_id from gv$session where username='SCOTT')
   LOOP
-      EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ','
-        || r.serial# || ''' immediate';
+      EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# ||', @' || r.inst_id || ''' immediate';
   END LOOP;
 END;
 /
@@ -2126,6 +2227,13 @@ ALTER DATABASE DROP LOGFILE MEMBER '/oracle/dbs/log3c.rdo';
 -- adg management is automatic.
 alter database add standby logfile;
 
+-- adg drop standby logfile; 
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 4;
+
+recover managed standby database cancel;
+alter database add standby logfile thread 2 ;
+
+
 
 -- Multiplexed redolog recover
 
@@ -2399,13 +2507,16 @@ begin
 end;
 
 
--- kill all other session from machine
+-- can not initiate new connections ( sys/system connect only )
 ALTER SYSTEM ENABLE RESTRICTED SESSION;
+ORA-01035: ORACLE only available to users with RESTRICTED SESSION privilege
+ALTER SYSTEM DISABLE RESTRICTED SESSION;
+
+-- kill all other session from machine
 
 begin     
     for x in (  
-            select Sid, Serial#, machine, program  
-            from gv$session  
+            select Sid, Serial#, machine, program  from gv$session  
             where  
                 machine <> 'kenneth-PC'  
         ) loop  
@@ -2416,10 +2527,9 @@ end;
 
 -- kill all other session from username
 BEGIN
-  FOR r IN (select sid,serial# from v$session where username='user')
+  FOR r IN (select sid,serial#,inst_id from gv$session where username='user')
   LOOP
-      EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' 
-        || r.serial# || ''' immediate';
+      EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# ||',' || r.inst_id || ''' immediate';
   END LOOP;
 END;
 
@@ -2593,7 +2703,35 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 
 
 
-@?/rdbms/admin/awrddrpt.sql
+-- awr 空间异常
+select a.owner,a.segment_name,a.segment_type,a.bytes/1024/1024/1024 from dba_segments a where a.tablespace_name='SYSAUX' order by 3 desc;
+
+1、SYSAUX表空间容量异常，确认没有业务数据
+2、WRM$和WRI$打头的表占用大量空间
+
+-- 处理流程:
+1)检查快照策略正常
+select * from dba_hist_wr_control;
+DBID SNAP_INTERVAL RETENTION TOPNSQL CON_ID
+3266178832 +00000 01:00:00.0 +00008 00:00:00.0 DEFAULT 0
+
+2)检查发现从建库至今的快照信息都还保留着
+select min(a.SNAP_ID),max(a.SNAP_ID) from dba_hist_snapshot a;
+select min(SNAP_ID),max(SNAP_ID) from wrm$_snapshot;
+
+3)清理历史快照
+exec dbms_workload_repository.drop_snapshot_range(low_snap_id => 1,high_snap_id => 40000,dbid => 3266178832);
+或
+begin
+    dbms_workload_repository.drop_snapshot_range(
+        low_snap_id => 1,
+        high_snap_id => 40000,
+        dbid => 3266178832);
+end;
+
+注意：1、清理历史快照会产生大量日志，占用大量UNDO ，需要留意归档等空间
+2、清理后注意验证，个别版本会出现没法清除的情况，可查看官方文档ID 1489801.1和ID 9797851.8，打上对应的补丁
+3、进一步检查发现环境的自动任务在建库之初被人为停止，暂时没能验证是否与Automatic Segment Advisor任务没有启用有关。
 
 -- chech snapshot
 select snap_id,BEGIN_INTERVAL_TIME,dbid from dba_hist_snapshot order by snap_id
@@ -3095,7 +3233,40 @@ select a.path,a.name,a.mode_status,b.name diskgroupname,b.type from v$asm_disk a
 -- drop disk
 alter diskgroup FRA drop disk 'FRAFAILGROUP' rebalance power 10;
 -- check operation
-select * from v$asm_operation;
+
+SQL> select * from v$asm_operation;
+
+GROUP_NUMBER OPERA STAT      POWER     ACTUAL      SOFAR   EST_WORK   EST_RATE EST_MINUTES ERROR_CODE
+------------ ----- ---- ---------- ---------- ---------- ---------- ---------- ----------- --------------------------------------------
+           1 REBAL RUN           1          1        904       1320        809           0
+
+SQL> alter diskgroup data rebalance power 10 ;
+
+Diskgroup altered.
+
+SQL> select * from v$asm_operation;
+
+GROUP_NUMBER OPERA STAT      POWER     ACTUAL      SOFAR   EST_WORK   EST_RATE EST_MINUTES ERROR_CODE
+------------ ----- ---- ---------- ---------- ---------- ---------- ---------- ----------- --------------------------------------------
+           1 REBAL WAIT         10
+
+SQL> /
+
+GROUP_NUMBER OPERA STAT      POWER     ACTUAL      SOFAR   EST_WORK   EST_RATE EST_MINUTES ERROR_CODE
+------------ ----- ---- ---------- ---------- ---------- ---------- ---------- ----------- --------------------------------------------
+           1 REBAL RUN           1          1        904       1320        809           0
+
+SQL> alter diskgroup data rebalance power 10 ;
+
+Diskgroup altered.
+
+SQL> select * from v$asm_operation;
+
+GROUP_NUMBER OPERA STAT      POWER     ACTUAL      SOFAR   EST_WORK   EST_RATE EST_MINUTES ERROR_CODE
+------------ ----- ---- ---------- ---------- ---------- ---------- ---------- ----------- --------------------------------------------
+           1 REBAL WAIT         10
+
+
 
 -- 无法删除INIT ,
 

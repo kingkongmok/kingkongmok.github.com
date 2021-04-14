@@ -522,3 +522,23 @@ amdu -diskstring 'ORCL:*' -dump 'OCR'
 ```
 powermt display dev=all
 ```
+
+---
+
+## increase
+
+lvcreate -n pridata1 -L 5GiB storage
+lvcreate -n stbdata1 -L 5GiB storage
+
+vim /etc/tgt/targets.conf
+
+... csr stop
+
+
+sudo /etc/init.d/tgtd force-stop
+sudo /etc/init.d/tgtd start
+
+
+/usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
+kfod disk=all
+alter diskgroup DATA add disk 'ORCL:DATA1' rebalance power 10;
