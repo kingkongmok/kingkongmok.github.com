@@ -139,7 +139,7 @@ downUrl()
             SIZE=${SIZE:-0}
 
             # the filesize in http is more than 0
-            if [ $SIZE -gt 0 ] ; then
+            if [ $SIZE -gt 1000 ] ; then
 
                 # get the localfile status 
                 localfile=${DOWNLOAD_DIR}/${FILENAME}
@@ -174,7 +174,7 @@ downUrl()
                 fi
 
             # the filesize in http is less than 0
-            elif [ $SIZE -eq 0 ] ; then
+            elif [ $SIZE -lt 1000 ] ; then
 
                 sleep 10
 
