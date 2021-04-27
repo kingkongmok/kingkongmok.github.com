@@ -24,7 +24,7 @@ if [[ "$(/usr/bin/xinput -list | grep Mouse)" ]]  ; then
 
 if [[ "$(/usr/bin/xinput -list | grep TouchPad)" ]]  ; then
     # if plug device, disable synaptics
-    SynapticsNumber=`/usr/bin/xinput list | grep TouchPad | perl -naE 'say $1 if $F[5]=~/id=(\d+)/'`
+    SynapticsNumber=`/usr/bin/xinput list | grep 'PS/2 Generic Mouse' | perl -naE 'say $1 if $F[5]=~/id=(\d+)/'`
     /usr/bin/xinput set-prop $SynapticsNumber "Device Enabled" 0
 
 fi
