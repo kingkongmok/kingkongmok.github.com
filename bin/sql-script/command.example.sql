@@ -196,10 +196,13 @@ set pagesize 100
 col 1 format a15
 
 
+-- single instance:
 -- Flush Shared pool means flushing the cached execution plan and SQL Queries from memory.
 alter system flush shared_pool
 -- FLush buffer cache means flushing the cached data of objects from memory.
 alter system flush buffer_cache
+
+-- for RAC
 -- Both is like when we restart the oracle database and all memory is cleared.
 -- For RAC Environment:
 alter system flush buffer_cache global;
@@ -1238,6 +1241,12 @@ SQL> select sequence#,status,thread#,block#,process,status from v$managed_standb
 12 rows selected.
 
 
+-- adg delay apply, delay 5(minutes) ; 
+1. disable recover database managed standby USING CURRENT LOGFILE; ( on client )
+2. alter system set log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST DELAY=5 VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=PRIMAY' scope=spfile;
+
+
+
 
 
 -- Managed Standby Recovery Canceled
@@ -1320,6 +1329,9 @@ alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
 select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' and name not like '+%' order by next_time desc ) where rownum < 10;
 select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 15 ;
+--
+select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log where name not like '/%' and name not like '+%' order by recid desc ) where rownum < 250 ;
+select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log order by recid desc ) where rownum < 250 ;
 
 
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
@@ -1575,6 +1587,10 @@ recover managed standby database disconnect;
 -- ONL  Oracle Net listeners
 -- GSD Global Service Daemon
 -- ONS Oracle Notification Service
+
+
+-- 集群错误日志，例如磁盘是否掉线可查看日志：
+${ORACLE_HOME}/log/${ORACLE_SID}
 
 
 -- To know the cluster name: 
@@ -2585,14 +2601,41 @@ CKSP       TICKETRECORD_HIST              TICKET_HIST_INDE4              NONUNIQ
 
 
 
+-- ------------------------------
+-- PARTITION
+-- ------------------------------
+
+--  check partitioined tables
+
+select * from ALL_TAB_PARTITIONS where TABLE_OWNER = 'SCHEMA';
+select * from ALL_TAB_PARTITIONS where TABLE_OWNER = 'SCHEMA';
+
 
 -- ------------------------------
 -- INDEX
 -- ------------------------------
 
+
+-- 分区索引
+
+select locality from dba_part_indexes where index_name='MY_PARTITIONED_INDEX' ;
+
+-- 1 local (where locality=LOCAL) 
+-- 2 locality=GLOBAL then you have a global partitioned index
+-- 3 If no rows are found, then it is a global non-partitioned index
+
 -- 查询index是否失效；
 select index_name, status, domidx_status, domidx_opstatus,funcidx_status from user_indexes where status<>'VALID' or funcidx_status<>'ENABLED' ;
 alter index IDX_TR_RPT1 rebuild;
+
+
+-- ORA-14086: a partitioned index may not be rebuilt as a whole
+
+-- ORA-14086: A partitioned index may not be rebuilt as a whole.
+-- Cause:  User attempted to rebuild a partitioned index using ALTER INDEX REBUILD statement, which is illegal.
+-- Action: Rebuild the index a partition at a time (using ALTER INDEX REBUILD PARTITION) or drop and recreate the entire index.
+
+select 'alter index '||index_owner||'.'||index_name||' rebuild partition '||partition_name||';' from dba_ind_partitions where index_name='INDEX01';
 
 
 -- 查询index是否失效；
@@ -2704,10 +2747,39 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 
 
 -- awr 空间异常
-select a.owner,a.segment_name,a.segment_type,a.bytes/1024/1024/1024 from dba_segments a where a.tablespace_name='SYSAUX' order by 3 desc;
+select a.owner,a.segment_name,a.segment_type,a.bytes/1024/1024/1024 from dba_segments a where a.tablespace_name='SYSAUX' order by 4 desc;
 
 1、SYSAUX表空间容量异常，确认没有业务数据
 2、WRM$和WRI$打头的表占用大量空间
+
+
+-- list awr snapshot
+set lines 100 pages 999
+select snap_id, snap_level, to_char(begin_interval_time, 'dd/mm/yy hh24:mi:ss') begin from dba_hist_snapshot order by 1;
+
+
+-- awr 处理
+
+select segment_name,segment_type,sum(bytes/1024/1024) M from dba_segments where tablespace_name = 'SYSAUX' 
+group by  segment_name,segment_type order by  M desc;
+--查询段使用情况
+
+
+select segment_name,PARTITION_NAME,segment_type,bytes/1024/1024 from dba_segments where tablespace_name='SYSAUX' and 
+segment_name='WRH$_ACTIVE_SESSION_HISTORY' order by 3;
+--查询表的分区信息
+
+alter table sys.wrh$_active_session_history truncate partition WRH$_ACTIVE_1227174256_77682 update global indexes;
+
+alter session set "_swrf_test_action" = 72;  
+--让系统对表进行分区
+
+
+select segment_name,PARTITION_NAME,segment_type,bytes/1024/1024 from dba_segments where tablespace_name='SYSAUX' 
+and segment_name='WRH$_ACTIVE_SESSION_HISTORY' order by 3;
+
+--查询表分区信息
+
 
 -- 处理流程:
 1)检查快照策略正常
@@ -3442,6 +3514,49 @@ MB
 
 
 -- ------------------------------
+-- hugepages
+-- ------------------------------
+
+-- https://oracle-base.com/articles/linux/configuring-huge-pages-for-oracle-on-linux-64#force-oracle-to-use-hugepages
+
+--  Disabling Transparent HugePages 
+cat /sys/kernel/mm/transparent_hugepage/enabled
+always madvise [never]
+
+-- Configuring HugePages
+
+
+$ ./hugepages_setting.sh 
+Recommended setting: vm.nr_hugepages = 305
+
+# fgrep dba /etc/group
+dba:x:54322:oracle
+
+cat >> /etc/sysctl.conf << EOF
+vm.nr_hugepages=306
+vm.hugetlb_shm_group=54322
+EOF
+
+# sysctl -p
+
+
+-- Add the following entries into the "/etc/security/limits.conf" script or "/etc/security/limits.d/99-grid-oracle-limits.conf" script, where the setting is at least the size of the HugePages allocation in KB (HugePages * Hugepagesize). In this case the value is 306*2048=626688.
+
+
+
+cat >> /etc/security/limits.conf << EOF
+
+# 306*2048=626688
+* soft memlock 626688
+* hard memlock 626688
+EOF
+
+
+-- ASMM
+
+
+
+-- ------------------------------
 -- Large table
 -- ------------------------------
 
@@ -3535,6 +3650,8 @@ V$TEMPSEG_USAGE
 -- big table
 -- ------------------------------
 
+
+-- https://oracle-base.com/articles/misc/partitioning-an-existing-table
 -- check redef package
 EXEC DBMS_REDEFINITION.can_redef_table('SCOTT', 'BIG_TABLE');
 -- copy content from bigtable to bigtable2
@@ -4268,3 +4385,81 @@ sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
 ./OPatch/opatch lsinventory &> /tmp/PSU_new_DB_version
 
 SQL>@?/rdbms/admin/catbundle.sql
+
+
+-- ------------------------------
+--  latch: cache buffers chains
+-- ------------------------------
+
+-- https://sites.google.com/site/embtdbo/wait-event-documentation/oracle-latch-cache-buffers-chains
+-- check the sql and the block
+
+select count(*), sql_id, nvl(o.object_name,ash.current_obj#) objn, substr(o.object_type,0,10) otype, CURRENT_FILE# fn,
+CURRENT_BLOCK# blockn from  v$active_session_history ash , all_objects o where event like 'latch: cache buffers chains' and o.object_id (+)= ash.CURRENT_OBJ#
+group by sql_id, current_obj#, current_file#, current_block#, o.object_name,o.object_type order by count(*) ; 
+
+CNT SQL_ID        OBJN     OTYPE   FN BLOCKN
+---- ------------- -------- ------ --- ------
+  84 a09r4dwjpv01q MYDUAL   TABLE    1  93170
+
+
+-- 查询v$event_name 看看解析
+select * from v$event_name where name = 'latch: cache buffers chains'
+   
+EVENT#     NAME                         PARAMETER1 PARAMETER2 PARAMETER3 
+---------- ---------------------------- ---------- ---------- ----------
+        58 latch: cache buffers chains     address     number      tries 
+
+-- P1是CBC latch 等待的锁存器地址
+
+select count(*), lpad(replace(to_char(p1,'XXXXXXXXX'),' ','0'),16,0) laddr from v$active_session_history where event='latch: cache buffers chains' group by p1 order by count(*);   
+
+COUNT(*)  LADDR
+---------- ----------------
+      4933 00000004D8108330  
+
+--  假设只有一个地址，那么可以通过这里查询块的信息 blocks (headers actually)
+select o.name, bh.dbarfil, bh.dbablk, bh.tch from x$bh bh, obj$ o where tch > 5 and hladdr='00000004D8108330' and o.obj#=bh.obj order by tch; 
+
+NAME        DBARFIL DBABLK  TCH
+----------- ------- ------ ----
+EMP_CLUSTER       4    394  120        
+
+-- "TCH" or "touch count".
+-- We look for the block with the highest "TCH" or "touch count". Touch count is a count of the times the block has been accesses. The count has some restrictions. The count is only incremented once every 3 seconds, so even if I access the block 1 million times a second, the count will only go up once every 3 seconds. Also, and unfortunately, the count gets zeroed out if the block cycles through the buffer cache, but probably the most unfortunate is that  this analysis only works when the problem is currently happening. Once the problem is over then the blocks will usually get pushed out of the buffer cache.
+
+
+select 
+        name, file#, dbablk, obj, tch, hladdr 
+from x$bh bh
+    , obj$ o
+ where 
+       o.obj#(+)=bh.obj and
+      hladdr in 
+(
+    select ltrim(to_char(p1,'XXXXXXXXXX') )
+    from v$active_session_history 
+    where event like 'latch: cache buffers chains'
+    group by p1 
+    having count(*) > 5
+)
+   and tch > 5
+order by tch   ;
+
+ -- example output
+
+NAME          FILE# DBABLK    OBJ TCH HLADDR
+------------- ----- ------ ------ --- --------
+BBW_INDEX         1 110997  66051  17 6BD91180
+IDL_UB1$          1  54837     73  18 6BDB8A80
+VIEW$             1   6885     63  20 6BD91180
+VIEW$             1   6886     63  24 6BDB8A80
+DUAL              1   2082    258  32 6BDB8A80
+DUAL              1   2081    258  32 6BD91180
+MGMT_EMD_PING     3  26479  50312 272 6BDB8A80
+
+
+--  lsnrctl 日志 
+
+netstat -na  | find  /i "time_wait" /c
+netstat -na  | find  /i "estatb" /c

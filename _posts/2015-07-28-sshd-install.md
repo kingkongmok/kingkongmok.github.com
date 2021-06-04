@@ -137,9 +137,16 @@ make && make install
 
 
 ```
+
+# openssl install
+
+./config --prefix=/usr/local/openssl-1.1.1k
+make && make install
+
+
 # make
 yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmkmf libXt-devel pam-devel
-./configure --with-pam --prefix=/usr/local/openssh-8.4p1 --sysconfdir=/etc/ssh  --with-md5-passwords  
+./configure --with-pam --prefix=/usr/local/openssh-8.6p1 --sysconfdir=/etc/ssh  --with-md5-passwords --with-tcp-wrappers --with-ssl-dir=/usr/local/openssl-1.1.1k --without-pie
 make && make install
 
 # install
@@ -148,14 +155,14 @@ sed -i 's/disable.*yes/disable = no/' /etc/xinetd.d/telnet
 chkconfig xinetd off
 service xinetd start
 
-cp -a /etc/init.d/sshd /etc/init.d/sshd8.4p1
-chkconfig --add sshd8.4p1
+cp -a /etc/init.d/sshd /etc/init.d/sshd-local
+chkconfig --add sshd-local
 chkconfig sshd off
-sed -i 's#SSHD=/usr/sbin/sshd#SSHD=/usr/local/openssh-8.4p1/sbin/sshd#' /etc/init.d/sshd8.4p1
+sed -i 's#SSHD=/usr/sbin/sshd#SSHD=/usr/local/openssh-local/sbin/sshd#' /etc/init.d/sshd-local
 chkconfig --list | grep -P "sshd|xinetd"
 sed -i.8.4p1.bak 's/^GSSAPIAuthentication/#GSSAPIAuthentication/; s/^GSSAPICleanupCredentials/#GSSAPICleanupCredentials/' /etc/ssh/sshd_config
 service sshd stop
-service sshd8.4p1 start
+service sshd-local start
 ps -ef |grep sshd
 
 service xinetd stop
@@ -176,3 +183,38 @@ vim /etc/crypto-policies/back-ends/opensshserver.config
 
 systemctl status sshd | grep -P "aes256-cbc|aes128-cbc"
 ```
+
+---
+
+### docker sshd not work
+
+```
+/usr/sbin/sshd -D -d
+debug1: sshd version OpenSSH_7.4, OpenSSL 1.0.2k-fips  26 Jan 2017
+debug1: key_load_private: No such file or directory
+debug1: key_load_public: No such file or directory
+Could not load host key: /etc/ssh/ssh_host_rsa_key
+debug1: key_load_private: No such file or directory
+debug1: key_load_public: No such file or directory
+Could not load host key: /etc/ssh/ssh_host_dsa_key
+debug1: key_load_private: No such file or directory
+debug1: key_load_public: No such file or directory
+Could not load host key: /etc/ssh/ssh_host_ecdsa_key
+debug1: key_load_private: No such file or directory
+debug1: key_load_public: No such file or directory
+Could not load host key: /etc/ssh/ssh_host_ed25519_key
+sshd: no hostkeys available -- exiting.
+
+
+ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+ssh-keygen -t ecdsa -f  /etc/ssh/ssh_host_ecdsa_key
+ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
+
+
+```
+
+
+---
+
+
+
