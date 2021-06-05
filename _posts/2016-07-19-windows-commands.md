@@ -173,6 +173,10 @@ route add 77.77.77.36 mask 255.255.255.255 172.26.31.254
 
 ```
 pkgmgr /iu:"TelnetClient"
+
+or
+
+dism /online /Enable-Feature /FeatureName:TelnetClient
 ```
 
 ---
