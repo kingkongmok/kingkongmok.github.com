@@ -19,6 +19,9 @@
 
 set -o nounset                              # Treat unset variables as an error
 
+
+sleep 20 
+
 # check input device if pluged
 if [[ "$(/usr/bin/xinput -list | grep Mouse)" ]]  ; then
 
@@ -33,3 +36,7 @@ if [[ "$(/usr/bin/xinput -list | grep Mouse)" ]]  ; then
         /usr/bin/xinput set-prop $SynapticsNumber "Device Enabled" 0
     fi
 fi
+
+
+# disable capslocks
+setxkbmap -option caps:none

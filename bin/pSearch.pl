@@ -125,11 +125,22 @@ sub comicSearch {
 
 
 if ( @ARGV ) {
-    my @torrentResult = &torrentFileSearch(\@ARGV) ;
-    my @emuleResult = &emuleFileSearch(\@ARGV) ;
-    my @baidupanFileResult = &baidupanFileSearch(\@ARGV) ;
-    my @mlocateResult = &mlocateSearch(\@ARGV) ;
-    my @comicResult = &comicSearch(\@ARGV) ;
+
+    my @a;
+    foreach my $arg ( @ARGV ) {
+        $arg =~ s/^(TushyRaw|Tushy)_//i;
+        $arg =~ s/^\d+_//;
+        $arg =~ s/.(mp4|zip|tar|avi|mkv)$//i;
+        $arg =~ s/[\[\]\.+-,\(\)]/ /g;
+        push @a, grep { /\S/ } split/\s+/,$arg;
+    }
+
+
+    my @torrentResult = &torrentFileSearch(\@a) ;
+    my @emuleResult = &emuleFileSearch(\@a) ;
+    my @baidupanFileResult = &baidupanFileSearch(\@a) ;
+    my @mlocateResult = &mlocateSearch(\@a) ;
+    my @comicResult = &comicSearch(\@a) ;
     if ( @torrentResult ) {
         say "\n[33;1mDownloaded torrent match[0;49m ";
         say @torrentResult
