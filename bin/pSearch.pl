@@ -20,9 +20,6 @@
 
 use strict;
 use warnings;
-use lib '/home/kk/bin';
-use KK::Gpgutil;
-use KK::Mlocate;
 use feature 'say';
 
 sub usage {
@@ -128,10 +125,11 @@ if ( @ARGV ) {
 
     my @a;
     foreach my $arg ( @ARGV ) {
-        $arg =~ s/^(TushyRaw|Tushy)_//i;
+        $arg =~ s/^(opiu|Tus|Cari|1Po|Toky)\w+?_//i;
         $arg =~ s/^\d+_//;
+        $arg =~ s/_*\d+(\.[^.]*?)/$1/;
         $arg =~ s/.(mp4|zip|tar|avi|mkv)$//i;
-        $arg =~ s/[\[\]\.+-,\(\)]/ /g;
+        $arg =~ s/[\[\]\.\+\_\-\,\(\)]/ /g;
         push @a, grep { /\S/ } split/\s+/,$arg;
     }
 
