@@ -95,7 +95,7 @@ sysctl -p
 sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 ```
 
-+ ulimit
++ limit
 
 ```
 cat >> /etc/security/limits.conf  << EOF
