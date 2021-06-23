@@ -4359,6 +4359,17 @@ SQLNET.ENCRYPTION_TYPES_SERVER=RC4_256
 SQLNET.CRYPTO_CHECKSUM_SERVER=REQUIRED
 
 
+-- 允许、禁止访问
+
+sqlnet.ora文件加入以下两个参数
+tcp.validnode_checking=yes
+# exclude是黑名单
+TCP.EXCLUDED_NODES=(10.255.255.1)
+# INVITED是白名单
+TCP.INVITED_NODES =(10.255.255.0/24)
+
+
+
 
 
 -- ------------------------------
@@ -4463,3 +4474,26 @@ MGMT_EMD_PING     3  26479  50312 272 6BDB8A80
 
 netstat -na  | find  /i "time_wait" /c
 netstat -na  | find  /i "estatb" /c
+
+
+---
+
+
+oerr ora 19606
+19606, 00000, "Cannot copy or restore to snapshot control file"
+// *Cause:  A control file copy or restore operation specified the name of the
+//          snapshot control file as the output file.  It is not permitted to
+//          overwrite the snapshot control file in this manner.  Other
+//          methods are available to create the snapshot control file.
+// *Action: Specify a different file name and retry the operation.  If this
+//          is a restore, then the restore conversation remains active and
+//          more files may be specified.
+
+
+-- 删除copy
+RMAN> crsosscheck copy;
+RMAN> delete controlfilecopy '/u01/app/oracle/product/11.2.0/db_1/dbs/snapcf_oltp.f' ;
+
+-- 然后 https://oratechcloud.wordpress.com/database-corner/db-how-to-delete-obsolete-controlfile-copy/
+RMAN> change controlfilecopy '/u01/app/oracle/product/11.2.0/db_1/dbs/snapcf_oltp.f' uncatalog;
+
