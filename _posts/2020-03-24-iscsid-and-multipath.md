@@ -500,8 +500,8 @@ kfod status=true g=OCR
 #### kfed - Kernel Files metadata EDitor
 
 ```
-kfed read ORCL:ORC2
-kfed read ORCL:ORC1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
+kfed read ORCL:OCR2
+kfed read ORCL:OCR1 | grep -P "kfdhdb.hdrsts|kfdhdb.dskname|kfdhdb.grpname|kfdhdb.fgname|kfdhdb.secsize|blksize|driver.provstr|kfdhdb.ausize"
 ```
 
 #### amdu - ASM Metadata Dump Utility
