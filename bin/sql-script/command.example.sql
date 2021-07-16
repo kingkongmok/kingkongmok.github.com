@@ -1325,10 +1325,11 @@ sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf
 
 
 -- ADG 同步情况
+set linesize 190 pagesize 50
 alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
+select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 100 ;
 select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' and name not like '+%' order by next_time desc ) where rownum < 10;
-select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 15 ;
 --
 select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log where name not like '/%' and name not like '+%' order by recid desc ) where rownum < 250 ;
 select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log order by recid desc ) where rownum < 250 ;
@@ -1403,7 +1404,7 @@ alter database mount standby database;
 alter database commit to switchover to primary;
 shutdown immediate;
 startup;
--- 原pridb，继续启动成为physical standby
+-- new standby ，继续启动成为physical standby
 alter database recover managed standby database disconnect from session;
 alter database open;
 
@@ -1411,13 +1412,16 @@ alter database open;
 -- failover manual
 -- old primary
 startup mount;
-alter system flush redo to 'STANDBY';
+alter system flush redo to 'STBDB';
+-- alter system flush redo to 'PRIDB';
 alter database flashback on ;
 select flashback_on from v$database;
 -- old standby 
 alter database recover managed standby database cancel;
 alter database recover managed standby database finish;
 alter database activate standby database;
+shutdown immediate
+startup mount
 alter database open;
 -- reinstate manual
 -- new primary
