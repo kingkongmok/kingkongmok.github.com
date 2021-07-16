@@ -135,7 +135,7 @@ downUrl()
             DownloadURL=`echo $line | perl -naE 'say $F[0]'`
             #FILENAME=`echo $line | perl -naE 'say join" ", @F[1..$#F]'`
             FILENAME=`echo $line | perl -nE 'print $1 if / (.*$)/'`
-            SIZE=`$PROXYCHAINS -q $CURL -H "$CURL_HEADER" -s -I $DownloadURL | grep content-length: | perl -naE 'say $F[-1]'`
+            SIZE=`$PROXYCHAINS -q $CURL -k -H "$CURL_HEADER" -s -I $DownloadURL | grep content-length: | perl -naE 'say $F[-1]'`
             SIZE=${SIZE:-0}
 
             # the filesize in http is more than 0
@@ -157,7 +157,7 @@ downUrl()
 
                 
                 # download the file
-                $PROXYCHAINS -q $CURL -s -H "$CURL_HEADER" -C - $DownloadURL -o "$localfile" 
+                $PROXYCHAINS -q $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL -o "$localfile" 
                 sleep 3
 
 
