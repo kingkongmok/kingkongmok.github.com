@@ -1834,6 +1834,9 @@ select max(a.value) as hwm_open_cur, p.value as max_open_cur from v$sesstat a, v
 -- database state performance 
 select event, state, count(*) from gv$session_wait group by event, state order by 3 desc;
 
+select event, state,WAIT_CLASS,count(*) from gv$session_wait group by event, state, WAIT_CLASS order by count(*) desc ;
+
+
 EVENT						   STATE		       COUNT(*)
 -------------------------------------------------- ------------------------- ----------
 SQL*Net message from client			   WAITING			    379
