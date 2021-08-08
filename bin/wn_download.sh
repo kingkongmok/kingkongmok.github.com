@@ -114,7 +114,7 @@ tryFailureJobs()
         do
             if [ ! -z "$line" ]; then
             getURL $line
-            sleep 3
+            sleep 15
             fi
         done < $TFILE
     fi 
@@ -139,7 +139,7 @@ downUrl()
             SIZE=${SIZE:-0}
 
             # the filesize in http is more than 0
-            if [ $SIZE -gt 1000 ] ; then
+            if [ $SIZE -gt 10000 ] ; then
 
                 # get the localfile status 
                 localfile=${DOWNLOAD_DIR}/${FILENAME}
@@ -157,8 +157,8 @@ downUrl()
 
                 
                 # download the file
-                $PROXYCHAINS -q $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL -o "$localfile" 
-                sleep 3
+                $PROXYCHAINS -q $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL --retry 5 -o "$localfile" 
+                sleep 15
 
 
                 # check the localfile size 2/2 second time, 
@@ -176,7 +176,7 @@ downUrl()
             # the filesize in http is less than 0
             elif [ $SIZE -lt 1000 ] ; then
 
-                sleep 10
+                sleep 20
 
             fi
 
