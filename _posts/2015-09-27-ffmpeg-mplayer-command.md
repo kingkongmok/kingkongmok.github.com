@@ -135,3 +135,11 @@ ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
 ffmpeg -i video.mp4 -i audio.wav -c copy output.mkv
 ```
 
+---
+
+* m2ts to mp4
+
+```
+M2TS TO MP4
+for i in *m2ts; do  echo ffmpeg -i "$i" -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "${i%m2ts}mp4"; done
+```
