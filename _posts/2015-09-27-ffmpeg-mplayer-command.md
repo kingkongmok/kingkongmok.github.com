@@ -48,16 +48,15 @@ ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
 
 
 ```
-ls 1.mp4 2.mp4 | perl -ne 'print "file $_"' | ffmpeg -protocol_whitelist file,pipe -f concat -safe 0 -i pipe: -vcodec copy -acodec copy all.mp4
-
-
 :: Create File List
-echo file file1.mp4 >  mylist.txt
-echo file file2.mp4 >> mylist.txt
-echo file file3.mp4 >> mylist.txt
+ls *mp4 | perl -ne 'print "file $_"' > mylist.txt
 
 :: Concatenate Files
 ffmpeg -f concat -i mylist.txt -c copy output.mp4
+```
+
+```
+ffmpeg -f concat -safe 0 -i <( find . -type f -iname '*mp4' -printf "file '$PWD/%P'\n" | sort -g  ) -c copy all.mp4
 ```
 
 ---
@@ -141,5 +140,6 @@ ffmpeg -i video.mp4 -i audio.wav -c copy output.mkv
 
 ```
 M2TS TO MP4
-for i in *m2ts; do  echo ffmpeg -i "$i" -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "${i%m2ts}mp4"; done
+screen -S ffmpeg bash -c 'find . -iname "*m2ts" -exec ffmpeg -i {} -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "{}.mp4" \;'
+screen -S ffmpeg bash -c 'find . -size +100M -exec ffmpeg -i {} -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "{}.mp4" \;'
 ```
