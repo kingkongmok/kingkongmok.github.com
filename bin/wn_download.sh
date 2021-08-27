@@ -157,8 +157,8 @@ downUrl()
 
                 
                 # download the file
-                $PROXYCHAINS -q $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL --retry 5 -o "$localfile" 
-                sleep 15
+                $PROXYCHAINS -q $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
+                sleep 60
 
 
                 # check the localfile size 2/2 second time, 
