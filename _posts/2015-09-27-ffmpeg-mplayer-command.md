@@ -36,6 +36,12 @@ screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
 ```
 
++ [first audio only](https://ottverse.com/add-remove-extract-audio-from-video-using-ffmpeg/)
+
+```
+screen -S ffmpeg ffmpeg -i video.mp4 -vcodec libx264 -crf 20 -acodec ac3 -map 0 -map 0:a:0 -vf scale="trunc(oh*a/2)*2:20" -b:v 1M out.mp4
+```
+
 + **Constant Rate Factor**, which lowers the average bit rate, but retains better quality. Vary the CRF between around 18 and 24
 
 ```
@@ -56,7 +62,7 @@ ffmpeg -f concat -i mylist.txt -c copy output.mp4
 ```
 
 ```
-ffmpeg -f concat -safe 0 -i <( find . -type f -iname '*mp4' -printf "file '$PWD/%P'\n" | sort -g  ) -c copy all.mp4
+ffmpeg -f concat -safe 0 -i <( find . -type f -name '*mp4' -printf "file '$PWD/%P'\n" | sort -g  ) -c copy all.mp4
 ```
 
 ---
