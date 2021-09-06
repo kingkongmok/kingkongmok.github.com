@@ -433,6 +433,24 @@ ALTER USER user_name IDENTIFIED BY NEWPASSWORD account unlock;
 ALTER USER user_name account unlock;
 
 
+-- change password setting
+
+
+
+@?/rdbms/admin/utlpwdmg.sql
+ALTER PROFILE DEFAULT LIMIT PASSWORD_REUSE_MAX 5;
+ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED ;
+
+-- 修改密码前
+ALTER PROFILE DEFAULT LIMIT PASSWORD_REUSE_MAX UNLIMITED;
+ALTER PROFILE DEFAULT LIMIT PASSWORD_VERIFY_FUNCTION NULL;
+
+-- 修改密码后
+ALTER PROFILE DEFAULT LIMIT PASSWORD_REUSE_MAX 5;
+ALTER PROFILE DEFAULT LIMIT PASSWORD_VERIFY_FUNCTION verify_function_11G;
+
+
+
 -- show account not work
 SELECT username, account_status, created, lock_date, expiry_date FROM dba_users WHERE account_status != 'OPEN';
 
@@ -1803,6 +1821,7 @@ srvctl start listener -l LISTENER_NAME
 -- check oracle health
 -- activesession (zabbix)
 Select count(1) From gv$session where status='ACTIVE';
+Select inst_id, count(1) From gv$session where status='ACTIVE' group by inst_id;
 -- locked (zabbix)
 select count(1) from gv$locked_object;
 -- process (zabbix)
@@ -1955,6 +1974,9 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR( &sql_id, &child ));
 -- use asmcmd
 $ . ./profle_grid
 $ asmcmd
+
+-- asmcmd find all files
+find . *
 
 
 -- check asm disk
@@ -2167,7 +2189,7 @@ impdp \"/ as sysdba\" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=
 impdp \"/ as sysdba\" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
 impdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.log dumpfile=SCHEMA.dump table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
 expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log ESTIMATE_ONLY=yes 
-expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log dumpfile=SCHEMA.`date +%F`.dump compression=all
+expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log dumpfile=SCHEMA.expdp.`date +%F`.dump compression=all
 
 
 -- check space
@@ -2480,6 +2502,11 @@ ORDER BY l.inst_id,l.id1, l.request
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
+
+
+select * from v$process where spid=20048 ;
+select sql_id from v$session  where paddr='0000000A187E55F0' ;
+
 
 
 select distinct sid from v$mystat ;
@@ -4403,6 +4430,69 @@ sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
 ./OPatch/opatch lsinventory &> /tmp/PSU_new_DB_version
 
 SQL>@?/rdbms/admin/catbundle.sql
+
+
+
+-- ------------------------------
+--  v$session_wait 
+--  buffer busy waits
+-- ------------------------------
+
+-- http://facedba.blogspot.com/2014/09/vsessionwait-tips.html
+-- http://blog.itpub.net/31480688/viewspace-2151969/
+
+
+select username, event, p1, p2 from v$session_wait where sid = 74;
+
+
+select segment_name,segment_type
+from dba_extents
+where file_id = &file_id 
+and &block_id between block_id and block_id + blocks - 1;
+
+
+-- 查询等待事件
+select event, state,WAIT_CLASS,count(*) from gv$session_wait group by event, state, WAIT_CLASS order by count(*) desc ;
+
+-- 查询热块
+select p1 "File#",p2 "Block#",p3 "ReasonCode" from gv$session_wait where event = '&event_name';
+
+--查询验证
+SELECT NAME, PARAMETER1 P1, PARAMETER2 P2, PARAMETER3 P3 FROM V$EVENT_NAME WHERE NAME = '&event_name'; 
+
+
+--查看热点块导致的sql：
+select sql_id,sql_text
+from v$sqltext a,
+(select distinct a.owner, a.segment_name, a.segment_type
+    from dba_extents a,
+    (select dbarfil, dbablk
+        from (select dbarfil, dbablk from x$bh order by tch desc)
+        where rownum < 11) b
+    where a.RELATIVE_FNO = b.dbarfil
+    and a.BLOCK_ID <= b.dbablk
+    and a.block_id + a.blocks > b.dbablk) b
+where a.sql_text like '%' || b.segment_name || '%'
+and b.segment_type = 'TABLE'
+order by a.hash_value, a.address, a.piece;
+
+
+-- 查看事件相关sql
+select sid, s.username, s.program, s.action, logon_time, q.sql_text, q.SQL_FULLTEXT, q.sql_id
+from v$session s
+left join v$sql q on s.sql_hash_value = q.hash_value
+where s.sid in (select sid from v$session_wait where event='read by other session')；
+
+
+-- 多个等待事务
+select distinct sql_id  
+from v$session  
+where event in ('read by other session', 'db file sequential read'); 
+select distinct sql_id  
+from v$session  
+where event in ('read by other session');   
+
+
 
 
 -- ------------------------------

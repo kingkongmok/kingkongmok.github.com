@@ -198,3 +198,11 @@ super_read_only=1
 ```
 SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'CTMS';
 ```
+
+---
+
++ 删除180日日志
+
+```
+4 5     * * *   root    mysql -e "PURGE BINARY LOGS BEFORE DATE(NOW() - INTERVAL 180 DAY);"
+```
