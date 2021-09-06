@@ -560,3 +560,40 @@ sudo /etc/init.d/tgtd start
 /usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
 kfod disk=all
 alter diskgroup DATA add disk 'ORCL:DATA1' rebalance power 10;
+
+
+
+---
+
+### emc switch
+
+
+检查交换机收发异常
+
+```
+$> porterrshow
+```
+
+
+清理一下计数器
+
+```
+statsclear
+slotstatsclear 
+```
+
+
++ RX Power和TX  Power需要350以上
+
+
+```
+$> sfpshow -all
+
+...
+Voltage:     3293.6  mVolts
+RX Power:    -2.4    dBm (577.0uW)
+TX Power:    -3.1    dBm (487.9 uW)
+
+State transitions: 1
+```
+
