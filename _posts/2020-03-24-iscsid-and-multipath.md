@@ -519,6 +519,24 @@ amdu -diskstring 'ORCL:*' -dump 'OCR'
 
 ### emc
 
+
+1、存储首先开机，存储的HBA卡向SAN交换机发送RSCN信号，通知HBA卡关联的ZONE成员，表示它已联机。
+-- 内核调用HBA卡的驱动和固件共同完成
+2、服务器开机后，主机的HBA卡向SAN交换机发送RSCN信号，通知HBA卡关联的ZONE成员，那这个时候在存储里面会看到主机的HBA卡已联机。
+3、由于存储中已经配置了映射关系，存储识别到映射关系中的HBA卡联机后会自动映射给主机。
+4、主机上的多路径软件默认是自动启动的，多路径软件会根据已有的配置文件对EMC存储映射过来的LUN进行链路聚合，形成/dev/emcpowerxx。
+5、通过powermt display dev=all命令查看多路径恢复情况，正常情况下所有路径都是active的。
+6、假设无法识别到EMC存储映射过来的LUN，可以执行powermt config重新扫描磁盘，再次查询多路径恢复情况。
+
+
+如识别不到存储，可使用powermt config重新扫描磁盘
+
+```
+powermt config
+```
+
+查看链路恢复情况
+
 ```
 powermt display dev=all
 ```
@@ -542,3 +560,40 @@ sudo /etc/init.d/tgtd start
 /usr/sbin/asmtool -C -l /dev/oracleasm -n DATA2 -s /dev/mapper/storage-data -a force=yes
 kfod disk=all
 alter diskgroup DATA add disk 'ORCL:DATA1' rebalance power 10;
+
+
+
+---
+
+### emc switch
+
+
+检查交换机收发异常
+
+```
+$> porterrshow
+```
+
+
+清理一下计数器
+
+```
+statsclear
+slotstatsclear 
+```
+
+
++ RX Power和TX  Power需要350以上
+
+
+```
+$> sfpshow -all
+
+...
+Voltage:     3293.6  mVolts
+RX Power:    -2.4    dBm (577.0uW)
+TX Power:    -3.1    dBm (487.9 uW)
+
+State transitions: 1
+```
+
