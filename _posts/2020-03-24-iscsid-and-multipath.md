@@ -541,6 +541,12 @@ powermt config
 powermt display dev=all
 ```
 
+重置链路错误数为0
+
+```
+powermt restore
+```
+
 ---
 
 ## increase

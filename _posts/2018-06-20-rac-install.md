@@ -335,6 +335,8 @@ PROXY_REALM=
 安装, 只在stb1
 
 ```
+-- asm delete files
+
 /stage/grid/runInstaller -responseFile /stage/grid/response/grid_install.rsp -silent -ignorePrereq -showProgress
 ```
 
