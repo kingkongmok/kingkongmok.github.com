@@ -132,6 +132,28 @@ multipath -ll
 powermt display dev=all 
 
 
+--- emc
+
+
+1、存储首先开机，存储的HBA卡向SAN交换机发送RSCN信号，通知HBA卡关联的ZONE成员，表示它已联机。
+-- 内核调用HBA卡的驱动和固件共同完成
+2、服务器开机后，主机的HBA卡向SAN交换机发送RSCN信号，通知HBA卡关联的ZONE成员，那这个时候在存储里面会看到主机的HBA卡已联机。
+3、由于存储中已经配置了映射关系，存储识别到映射关系中的HBA卡联机后会自动映射给主机。
+4、主机上的多路径软件默认是自动启动的，多路径软件会根据已有的配置文件对EMC存储映射过来的LUN进行链路聚合，形成/dev/emcpowerxx。
+5、通过powermt display dev=all命令查看多路径恢复情况，正常情况下所有路径都是active的。
+6、假设无法识别到EMC存储映射过来的LUN，可以执行powermt config重新扫描磁盘，再次查询多路径恢复情况。
+
+
+如识别不到存储，可使用powermt config重新扫描磁盘
+
+powermt config
+
+查看链路恢复情况
+
+powermt display dev=all
+
+
+
 mdadm --verbose --detail /dev/md0
 mdadm --add /dev/md0 /dev/sdg /dev/sdi /dev/sdh
 mdadm --grow /dev/md0 --raid-devices=7
@@ -1344,13 +1366,15 @@ sql> alter database create datafile '/u01/app/oracle/oradata/TEST/datafile/o1_mf
 
 -- ADG 同步情况
 set linesize 190 pagesize 50
-alter session set nls_date_format='yyyy-mm-dd_hh24:mi:ss';
 col NAME format a80
-select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log order by next_time desc ) where rownum < 100 ;
-select * from ( select distinct name,next_time,completion_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' and name not like '+%' order by next_time desc ) where rownum < 10;
---
-select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log where name not like '/%' and name not like '+%' order by recid desc ) where rownum < 250 ;
-select name,to_char(next_time, 'yyyy-mm-dd_hh24:mi:ss') next_time, applied,thread#,SEQUENCE# from ( select  * from v$archived_log order by recid desc ) where rownum < 250 ;
+select * from ( select name,to_char(next_time,'yyyy-mm-dd hh24:mi:ss') next_time,applied,thread#,SEQUENCE# from v$archived_log order by recid desc ) where rownum < 400;
+select * from ( select name,to_char(next_time,'yyyy-mm-dd hh24:mi:ss') next_time,applied,thread#,SEQUENCE# from v$archived_log where name not like '/%' and name not like '+%' order by recid desc ) where rownum < 100;
+select * from ( select name,to_char(next_time,'yyyy-mm-dd hh24:mi:ss') next_time,applied,thread#,SEQUENCE# from v$archived_log where applied='YES' order by recid desc ) where rownum < 10;
+
+
+select * from v$archive_dest_status;
+select INST_ID,DEST_ID,STATUS,TYPE,DATABASE_MODE,RECOVERY_MODE,PROTECTION_MODE,GAP_STATUS,APPLIED_THREAD#,APPLIED_SEQ# from gv$archive_dest_status where status='VALID';
+select * from v$managed_standby;
 
 
 -- Check ADG status of sync to standby https://community.oracle.com/thread/2228773
@@ -1461,6 +1485,33 @@ alter database open;
 shutdown immediate
 startup mount
 alter database convert to physical standby;
+
+
+-- 检查temp文件路径和大小是否正确
+select a.name,a.bytes/1024/1024,b.name from v$tempfile a,v$tablespace b where a.ts#=b.ts# order by b.name;
+
+-- 检查是否有文件系统路径/data/qlhsdb的temp文件，如果没有，手动为TEMP表空间增加临时数据文件
+alter tablespace temp add tempfile '/data/qlhsdb/temp01.dbf' size 5G reuse autoextend on maxsize 30G;
+
+-- 然后删除+datadg1/qlhsdb的temp文件删除
+alter tablespace temp drop tempfile '+DATADG1/qlhsdb/tempfile/temp01.dbf';
+alter tablespace temp drop tempfile '+DATADG1/qlhsdb/tempfile/temp02.dbf';
+
+
+
+-- 二、测试完成后，转换为physical standby设置回Active data guard
+-- 测试完成后，按照以下步骤将36.170的DG库设置回Active data guard
+shutdown immediate;
+startup mount;
+ALTER DATABASE CONVERT TO PHYSICAL STANDBY;
+shutdown immediate;
+startup mount;
+alter database open read only;
+alter database recover managed standby database using current logfile disconnect from session;
+-- 查询DG库的状态
+select DATABASE_ROLE,name,OPEN_MODE from v$database;
+
+
 
 
 -- Read-Only Standby (10G) and Active Data Guard(11G)
@@ -2769,6 +2820,10 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 @?/rdbms/admin/awrrpt.sql
 
 
+-- create awr snapshot
+EXEC DBMS_WORKLOAD_REPOSITORY.create_snapshot;
+
+
 -- 本实例AWR报告
 @?/rdbms/admin/awrrpt  
 -- RAC中选择实例号
@@ -3271,7 +3326,7 @@ $ crs_stop -all
 -- ------------------------------
 
 -- 查看存储裸设备
-fdisk -l 和 powermt display dev=all 确认存储盘信息
+fdisk -l powermt display dev=all 确认存储盘信息
 
 
 -- 
@@ -3659,6 +3714,10 @@ alter system set db_domain='' scope=spfile;
 alter system set service_names = 'mydb' scope = both;
 
 
+
+-- 查看tempfile使用情况
+
+select * from gv$tempseg_usage;
 
 
 -- 无法添加tempfile
@@ -4593,4 +4652,61 @@ RMAN> delete controlfilecopy '/u01/app/oracle/product/11.2.0/db_1/dbs/snapcf_olt
 
 -- 然后 https://oratechcloud.wordpress.com/database-corner/db-how-to-delete-obsolete-controlfile-copy/
 RMAN> change controlfilecopy '/u01/app/oracle/product/11.2.0/db_1/dbs/snapcf_oltp.f' uncatalog;
+
+
+---
+
+
+
+-- ------------------------------
+-- DBMS_SPM SQL plan management
+-- ------------------------------
+
+-- 获取之前运行的sql_id
+
+SELECT (SELECT t2.sql_id
+    FROM   v$sql t2
+    WHERE  t1.prev_sql_id = t2.sql_id
+    AND t1.prev_child_number = t2.child_number) sql_id
+FROM   v$session t1
+WHERE  t1.audsid = Sys_context('userenv', 'sessionid'); 
+
+-- display specified sql_id plan
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id',&plan_hash_value));
+
+
+-- 查上次的执行计划
+1.Add the GATHER_PLAN_STATISTICS hint to the SQL statement
+2. Setting the FORMAT parameter of DBMS_XPLAN.DISPLAY_CURSOR to ‘ALLSTATS LAST’
+SELECT /*+ GATHER_PLAN_STATISTICS */  * from scott.emp;
+SELECT * FROM TABLE(DBMS_XPLAN.display_cursor(format=>'ALLSTATS LAST'));
+
+
+
+-- 未优化 dfpk2mmwxk3jx  ,  HINT 优化 a4ap8wcf4bsua, 优化 plan 3618379962
+
+SQL_ID        SQL_TEXT
+------------- ------------------------------------------------------------------------------------------
+dfpk2mmwxk3jx select * from scott.emp where mgr=5
+a4ap8wcf4bsua select /*+INDEX(emp idx_emp_job_mgr)*/ * from scott.emp where mgr=5
+
+
+-- 绑定
+DECLARE
+  CNT   NUMBER;
+  V_SQL CLOB;
+BEGIN
+  --得到原语句SQL文本
+  SELECT SQL_FULLTEXT INTO V_SQL FROM V$SQL WHERE SQL_ID = 'dfpk2mmwxk3jx' AND ROWNUM=1;
+  --用加HINT的SQL的SQL_ID和PLAN_HASH_VALUE，来固定原语句的SQL
+  CNT := DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(SQL_ID          => 'a4ap8wcf4bsua',
+                                               PLAN_HASH_VALUE => 3618379962,
+                                               SQL_TEXT        => V_SQL);
+END;
+/
+
+-- 则表示成功。可以查看dba_sql_plan_baselines ，确认绑定成功
+
+SELECT * FROM dba_sql_plan_baselines ;
 

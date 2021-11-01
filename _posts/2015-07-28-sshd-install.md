@@ -150,6 +150,11 @@ yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmk
 make && make install
 
 # install
+
+echo /usr/local/openssl-local/lib >> /etc/ld.so.conf
+ldconfig
+ldd /usr/local/openssh-local/sbin/sshd
+
 yum install -y telnet-server
 sed -i 's/disable.*yes/disable = no/' /etc/xinetd.d/telnet
 chkconfig xinetd off
@@ -160,12 +165,33 @@ chkconfig --add sshd-local
 chkconfig sshd off
 sed -i 's#SSHD=/usr/sbin/sshd#SSHD=/usr/local/openssh-local/sbin/sshd#' /etc/init.d/sshd-local
 chkconfig --list | grep -P "sshd|xinetd"
-sed -i.8.4p1.bak 's/^GSSAPIAuthentication/#GSSAPIAuthentication/; s/^GSSAPICleanupCredentials/#GSSAPICleanupCredentials/' /etc/ssh/sshd_config
+sed -i.local.bak 's/^GSSAPIAuthentication/#GSSAPIAuthentication/; s/^GSSAPICleanupCredentials/#GSSAPICleanupCredentials/' /etc/ssh/sshd_config
 service sshd stop
 service sshd-local start
 ps -ef |grep sshd
 
 service xinetd stop
+/usr/local/openssh-local/bin/ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
+/usr/local/openssh-local/bin/ssh-keygen -t ecdsa -f  /etc/ssh/ssh_host_ecdsa_key
+```
+
+```
+#  openssl
+
+./config --prefix=/usr/local/openssl-1.1.1l
+make && make install
+cd /usr/local
+ln -svf openssl-1.1.1l openssl-local
+echo /usr/local/openssl-local/lib >> /etc/ld.so.conf
+ldconfig
+/usr/local/openssl-local/bin/openssl version -a
+
+
+# openssh
+yum install -y gcc make wget openssl-devel krb5-devel pam-devel libX11-devel xmkmf libXt-devel pam-devel
+./configure --with-pam --prefix=/usr/local/openssh-8.6p1 --sysconfdir=/etc/ssh  --with-md5-passwords --with-tcp-wrappers --with-ssl-dir=/usr/local/openssl-local --without-pie
+make && make install
+
 ```
 
 ---

@@ -206,3 +206,40 @@ SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA 
 ```
 4 5     * * *   root    mysql -e "PURGE BINARY LOGS BEFORE DATE(NOW() - INTERVAL 180 DAY);"
 ```
+
+---
+
+### [InnoDB read and write I/O threads in MySQL](https://www.saotn.org/mysql-innodb-performance-improvement/)
+
+
+如果设置**innodb_write_io_threads**和**innodb_read_io_threads**会导致IO异常, 默认4
+
+
+---
+
+### [mariadb install](https://www.itzgeek.com/how-tos/linux/centos-how-tos/how-to-install-mariadb-on-centos-6-rhel-6.html)
+
++ rh6
+
+```
+### CentOS 6 64 Bit ###
+
+cat <<EOF >> /etc/yum.repos.d/mariadb.repo
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.3/centos6-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
+### CentOS 6 32 Bit ###
+
+cat <<EOF >> /etc/yum.repos.d/mariadb.repo
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.3/centos6-x86
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+```
+
