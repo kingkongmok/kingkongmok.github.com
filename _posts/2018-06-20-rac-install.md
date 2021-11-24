@@ -577,10 +577,6 @@ grid@stb1:~$ ls -l oracle
 ```
 
 ---
-
-### 添加srvctl 服务
-
-```
 -- 删除旧服务
 $ srvctl remove database -d orcl
 -- 添加服务 用oracle用户

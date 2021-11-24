@@ -835,6 +835,32 @@ stb1.instance_number=1
 stb1.thread=1
 stb1.undo_tablespace=UNDOTBS1
 
+
+-- 如果是重建controlfile，会有ORA-01503: ORA-12720: 异常
+ORA-01503: CREATE CONTROLFILE failed
+ORA-12720: operation requires database is in EXCLUSIVE mode
+
+
+-- Number of Invalid Objects Remaining
+SELECT COUNT(*) FROM obj$ WHERE status IN (4, 5, 6); 
+-- Number of Objects Recompiled
+SELECT COUNT(*) FROM UTL_RECOMP_COMPILED; 
+-- Number of Objects Recompiled with Errors
+select COUNT(DISTINCT(obj#)) "OBJECTS WITH ERRORS" from utl_recomp_errors; 
+
+
+-- 操作前
+alter system set cluster_database=false scope=spfile sid='*';
+
+-- 操作后
+alter system set cluster_database=true scope=spfile sid='*';
+
+
+
+
+
+
+
 -- createdb.sql
 CREATE DATABASE ORADB
 MAXINSTANCES 32
@@ -1373,7 +1399,7 @@ select * from ( select name,to_char(next_time,'yyyy-mm-dd hh24:mi:ss') next_time
 
 
 select * from v$archive_dest_status;
-select INST_ID,DEST_ID,STATUS,TYPE,DATABASE_MODE,RECOVERY_MODE,PROTECTION_MODE,GAP_STATUS,APPLIED_THREAD#,APPLIED_SEQ# from gv$archive_dest_status where status='VALID';
+select INST_ID,DEST_ID,STATUS,TYPE,DATABASE_MODE,RECOVERY_MODE,PROTECTION_MODE,GAP_STATUS,APPLIED_THREAD#,ARCHIVED_SEQ#,APPLIED_SEQ#  from gv$archive_dest_status where status='VALID' order by INST_ID,DEST_ID,STATUS;
 select * from v$managed_standby;
 
 
@@ -1397,7 +1423,7 @@ SYS@STANDBY> select * from v$archive_gap;
    
 
 -- master adg ckecking
-select distinct instance_name,db_unique_name,protection_mode,database_role,open_mode,status,switchover_status from gv$instance,gv$database;
+select i.instance_name,d.db_unique_name,d.protection_mode,d.database_role,d.open_mode,i.status,d.switchover_status from gv$instance i,gv$database d where i.inst_id=d.inst_id;
 --
 INSTANCE_NAME    DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            STATUS       SWITCHOVER_STATUS
 ---------------- ------------------------------ ---------------- -------------------- ------------ --------------------
@@ -2569,7 +2595,7 @@ select spid from v$process where addr='000000007F495250';
 COLUMN spid FORMAT A10
 COLUMN username FORMAT A10
 COLUMN MACHINE FORMAT A25
-COLUMN program FORMAT A25
+COLUMN program FORMAT A50
 SELECT s.inst_id, s.sid, s.serial#, s.sql_id, p.spid, s.username, s.machine, s.program
 FROM   gv$session s
        JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id
