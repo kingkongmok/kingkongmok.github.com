@@ -76,7 +76,12 @@ fi
 
 # 包含以下字符的直接删除
 list+=( "\[S版\]"  )
-list+=( " 無修正"  )
+list+=( "\[無修正\]"  )
+list+=( "\[无修正\]"  )
+list+=( "bw版"  )
+list+=( "\[中國語\]"  )
+list+=( "（完全版）"  )
+list+=( "个人整理汉化版"  )
 list+=( "\(成年コミック\)"  )
 list+=( "\[Taka.Sub\]"  )
 list+=( "\[GB\]"  )
@@ -147,6 +152,7 @@ variable+="s/\|/_/g;"
 variable+="s/\(\)//g;"
 variable+="s/\[\]//g;"
 variable+="s/【】//g;"
+variable+="s/（）//g;"
 variable+="s/\t+//g;"
 
 variable+='s/\(C\d+\)//;'
@@ -167,6 +173,7 @@ variable+='s/\[[^]]*?翻(译|訳)\]//;'
 variable+='s/\[[^[]*?(漢|汉)化\]//;'
 variable+='s/\[[^[]*?(漢|汉)化(组|組)\]//;'
 variable+='s/\[[^[]*?中文版\]//;'
+variable+='s/\[[^[]*?中文\]//;'
 variable+='s/\[[^[]*?個人掃本\]//;'
 variable+='s/\[[^[]*?个人机翻\]//;'
 variable+='s/\[[^[]*?日语社\]//;'
