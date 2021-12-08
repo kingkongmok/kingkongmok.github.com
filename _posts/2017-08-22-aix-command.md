@@ -51,7 +51,12 @@ netstat -nltp | grep 22
 in aix
 
 ```
-netstat -Aan|grep 22
+#netstat -Aan |grep 8080
+f1000500038203b8 tcp        0      0  *.8080                *.*                   LISTEN
+
+# rmsock f1000500038203b8 tcpcb
+The socket 0xf100050003820008 is being held by proccess 4325554 (javaw).
+
 ```
 
 
