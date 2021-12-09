@@ -46,7 +46,7 @@ getURL()
     MESSAGESIZE=`echo "$MESSAGE" | wc -c`
 
     if [ $MESSAGESIZE -gt 1000 ] ; then
-        URLINFO=`echo "$MESSAGE" | perl -ne 'print $1 . ".zip" if /href="(.*?download.*?)"><span>&nbsp;本地下載一/' | python3 -c 'import html,sys; print(html.unescape(sys.stdin.read()), end="")'`
+        URLINFO=`echo "$MESSAGE" | perl -ne 'print $1 . ".zip" if /href="(.*?down.*?)"><span>&nbsp;本地下載一/' | python3 -c 'import html,sys; print(html.unescape(sys.stdin.read()), end="")'`
         URL=`echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } | perl -naE 'say $F[0]'`
         FILENAME=`echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } | perl -nE 'print $1 if / (.*$)/'`
 
