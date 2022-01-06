@@ -551,6 +551,10 @@ grant plustrace to SCOTT;
 
 -- turn off Oracle password expiration?
 --  https://stackoverflow.com/questions/1095871/how-do-i-turn-off-oracle-password-expiration
+
+-- current sid
+SELECT sys_context('USERENV', 'SID') FROM DUAL;
+
 SELECT profile FROM dba_users WHERE username = upper('&currentuser');
 alter profile <profile_name> limit password_life_time UNLIMITED;
 select resource_name,limit from dba_profiles where profile='<profile_name>';
@@ -1916,6 +1920,40 @@ select reason from dba_outstanding_alerts;
 select name,total_mb,total_mb-free_mb used_mb,free_mb,round((total_mb-free_mb)/total_mb,3)*100 "used%" from v$asm_diskgroup;
 
 
+-- snapshot dbtime and sessions
+
+select *
+  from (select sn.instance_number inst,
+               b.snap_id beginsnap,
+               to_char(sn.begin_interval_time, 'yyyy-mm-dd hh24:mi:ss') begintime,
+               e.snap_id endsnap,
+               to_char(sn.end_interval_time, 'yyyy-mm-dd hh24:mi:ss') endtime,
+               round((sum(e.value) - sum(b.value)) / 1000000 / 60, 2) dbtime
+          from dba_hist_snapshot       sn,
+               dba_hist_sys_time_model e,
+               dba_hist_sys_time_model b
+         where sn.snap_id = e.snap_id
+           and sn.instance_number = e.instance_number
+           and e.instance_number = b.instance_number
+           and b.snap_id + 1 = e.snap_id
+           and e.stat_name = 'DB time'
+           and b.stat_name = 'DB time'
+           and sn.begin_interval_time >= trunc(sysdate - 1)
+         group by sn.instance_number,
+                  b.snap_id,
+                  sn.begin_interval_time,
+                  e.snap_id,
+                  sn.end_interval_time)
+ order by beginsnap desc, inst;
+
+
+select snap_id,instance_number, sample_time,count(*) from
+dba_hist_active_sess_history
+where sample_time > (sysdate - 1)
+group by snap_id,instance_number, sample_time 
+order by  sample_time; 
+
+
 
 -- table modified
 select * from DBA_TAB_MODIFICATIONS;
@@ -2243,6 +2281,9 @@ DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES;
 -- 检查tablespace
 select distinct tablespace_name from user_tables ;
 
+
+-- Use only one parameter like SCHEMAS or TABLES.
+
 --example
 expdp cksp/NEWPASSWORD directory=expdir dumpfile=cksp83.dmp schemas=cksp exclude=TABLE:\"LIKE \'TMP%\'\"  logfile=expdp83.log parallel=2 job_name=expdpjob compression=all exclude=statistics 
 --example
@@ -2261,8 +2302,8 @@ impdp  \"/ as sysdba\" network_link=tmtest_dblink schemas=user job_name=impdp1`d
 expdp \"/ as sysdba\" tables=scott.t1 dumpfile=t1.`date +%F`.dump logfile=t1.`date +%F`.dump.log directory=DUMP_FILE_DIR
 expdp \"/ as sysdba\" tables=schema.table1,schema.table2 dumpfile=passengercheckinrecord.`date +%F`.dump logfile=passengercheckinrecord.`date +%F`.dump.log directory=dpdump
 impdp \"/ as sysdba\" dumpfile=SYS_ENTITY_OPERATE_LOG.2020-04-24.dump directory=CKSDATA
+impdp \"/ as sysdba\" tables=SCHEMA.TABLENAME directory=DATA_PUMP_DIR logfile=tablename.impdp.`date +%F`.log dumpfile=tablename.dump table_exists_action=replace;
 -- impdp sys用户不需要指定schema，因为expdp时候已经带有。但没有进行table_exists测试
-
 impdp \"/ as sysdba\" network_link=TNS_DBLINK schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.dump.log table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
 impdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.impdp.`date +%F`.log dumpfile=SCHEMA.dump table_exists_action=replace remap_schema=SCHEMA:SCHEMA EXCLUDE=STATISTICS
 expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log ESTIMATE_ONLY=yes 
@@ -2287,6 +2328,14 @@ exec utl_recomp.recomp_serial('CKSP');
 -- 查询index是否失效；
 select index_name, status, domidx_status, domidx_opstatus,funcidx_status from user_indexes where status<>'VALID' or funcidx_status<>'ENABLED' ;
 alter index IDX_TR_RPT1 rebuild;
+
+-- 索引碎片化
+analyze index INDEX_NAME validate structure;
+select name,HEIGHT,PCT_USED,DEL_LF_ROWS/LF_ROWS from index_stats where name='INDEX_NAME';
+-- 这里主要通过几个标准来判断是否需要整理碎片：
+1. HEIGHT>=4
+2. PCT_USED<50%
+3. DEL_ROWS/LF_ROWS>0.2
 
 
 -- ------------------------------
@@ -2760,9 +2809,15 @@ select * from user_ind_columns;
 select * from user_constraints;
 select constraint_name, constraint_type, table_name , R_CONSTRAINT_NAME, INDEX_NAME , DELETE_RULE, status from user_constraints ;
 
+select * from dba_cons_columns  where table_name='EMP';
+
 -- drop CONSTRAINTS
 select * from user_constraints;
 alter table T1 drop CONSTRAINTS SYS_C0011666;
+
+
+-- disable constraints ; 
+ALTER TABLE table_name DISABLE CONSTRAINT constraint_name;
 
 
 -- 增加索引
@@ -3001,7 +3056,9 @@ column username format a15
 column program format a25
 column logon_time format a25
 column SPID format a15
-select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 and s.username is not null order by PGA_USED_MEM;
+select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time, s.program, PGA_USED_MEM/1024/1024 PGA_USED_MEM, PGA_ALLOC_MEM/1024/1024 PGA_ALLOC_MEM 
+from gv$session s , gv$process p 
+Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > 20 and s.username is not null order by PGA_USED_MEM;
 --
 INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  PGA_USED_MEM PGA_ALLOC_MEM
 ------- ---------- ---------- --------------- --------------- ------------------------- ------------------------- ------------ -------------
@@ -3020,7 +3077,16 @@ select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_
 
 
 -- check remain time , 查看进程进度，推算剩余时间
-select  target,SOFAR  /  TOTALWORK *100 from V$session_longops where sid=1378 and SERIAL#   =29389;
+select  OPNAME,TARGET, SOFAR  /  TOTALWORK *100 from V$session_longops where sid='&sid' and SERIAL#='&serial';
+
+-- rebuild index online
+OPNAME                               TARGET                               SOFAR/TOTALWORK*100
+---------------------------------------------------------------- ---------------------------------------------------------------- -------------------
+Table Scan                           CKSP.VOYAGEMAPDETAIL                 100
+Sort/Merge                                                                100
+Sort Output                                                               68.1549089
+
+
 
 
 -- check sql_text
@@ -3346,6 +3412,23 @@ Start of `ora.ee.db` on member `orcl` succeeded.
 $ crs_stop -all
 
 
+-- ------------------------------
+-- ilo
+-- ------------------------------
+
+-- hp 服务器的ilo信息
+
+0  安装 hponcfg-5.6.0-0.x86_64.rpm
+1、先导出hponcfg -w /tmp/hp_ilo.xml
+
+ 查看即可，有账号和密码。
+如果还需要调整ilo信息，用下面两个步骤
+2、修改后再导入hponcfg -f /tmp/hp_ilo.xml
+3、或者直接重置ILO hponcfg -r
+
+
+
+fdisk -l powermt display dev=all 确认存储盘信息
 
 -- ------------------------------
 -- ASM
@@ -4279,7 +4362,9 @@ select text from ALL_VIEWS where upper(view_name) like upper('V_iew');
 -- http://www.dba-oracle.com/t_alter_table_move_shrink_space.htm
 -- http://www.2cto.com/database/201201/117275.html?spm=a2c6h.12873639.0.0.6d9e30321SeCyp
 
--- Alter table move - The alter table xxx move command moves rows down into un-used space and adjusts the HWM but does not adjust the segments extents, and the table size remains the same.  The alter table move syntax also preserves the index and constraint definitions.
+-- Alter table move 
+-- moves rows down into un-used space and adjusts the HWM
+-- NOT adjust the segments extents
 
 alter table t enable row movement;
 alter table t shrink move;
@@ -4288,10 +4373,12 @@ alter index idx_t_id rebuild;
 analyze table t compute statistics ;
 alter table t disable row movement;
  
--- Alter table shrink space - Using the "alter table xxx shrink space compact" command will re-pack the rows, move down the HWM, and releases unused extents.  With standard Oracle tables, you can reclaim space with the "alter table shrink space" command:
+-- Alter table shrink space 
+-- moves rows down into un-used space and adjusts the HWM
+-- DO adjust the segments extents
 -- 有两个步骤，
--- shrink space compact 可以在业务时段进行，
--- shrink space 在闲时进行
+-- shrink space compact 可以在业务时段进行，先将row映射到靠前的block， 有点像 alter table t shrink move。
+-- shrink space 在闲时进行, 释放extends
 -- 3.使用shrink space时，索引会自动维护。如果在业务繁忙时做压缩，可以先shrink space compact，来压缩数据而不移动HWM，等到不繁忙的时候再shrink space来移动HWM。
 -- 4.索引也是可以压缩的，压缩表时指定Shrink space cascade会同时压缩索引，也可以alter index xxx shrink space来压缩索引。
 -- 5.shrink space需要在表空间是自动段空间管理的，所以system表空间上的表无法shrink space。
@@ -4682,6 +4769,17 @@ RMAN> change controlfilecopy '/u01/app/oracle/product/11.2.0/db_1/dbs/snapcf_olt
 
 ---
 
+-- ------------------------------
+-- HINT
+-- ------------------------------
+
+/*+no_index (Table_name Index_name)*/
+/*+no_index (Table_name Index_name)*/
+/*+ INDEX(tablename indexname) */ 
+/*+ full (tablename ) */ 
+/*+ ALL_ROWS */
+/*+ FIRST_ROWS(10) */
+
 
 
 -- ------------------------------
@@ -4735,4 +4833,21 @@ END;
 -- 则表示成功。可以查看dba_sql_plan_baselines ，确认绑定成功
 
 SELECT * FROM dba_sql_plan_baselines ;
+
+
+
+
+-- ------------------------------
+-- partition
+-- ------------------------------
+
+-- add partition
+ALTER TABLE scott.big_table ADD PARTITION big_table_2018 VALUES LESS THAN (TO_DATE('01/01/2019', 'DD/MM/YYYY')) ; 
+ALTER TABLE scott.big_table ADD PARTITION big_table_max VALUES LESS THAN (MAXVALUE) ;
+
+-- split partition
+alter table scott.big_table SPLIT PARTITION BIG_TABLE_2020  at (TO_DATE('01/01/2019', 'DD/MM/YYYY')) INTO  ( PARTITION big_table_2018, PARTITION BIG_TABLE_2020);
+
+
+
 

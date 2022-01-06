@@ -148,6 +148,17 @@ wmic process where "name='mysqld.exe'" get ProcessID, ExecutablePath
 
 ---
 
+### [show jvm flas](http://techtalk.sanjaydhanwani.com/2019/02/find-jvm-start-arguments-of-java.html)
+
+```
+tasklist  | find "tomcat"
+
+cmd> c:\<path to your java dir>\jcmd <PID> VM.command_line
+cmd> c:\<path to your java dir>\jcmd <PID> VM.flags
+```
+
+---
+
 ### route add
 
 ```

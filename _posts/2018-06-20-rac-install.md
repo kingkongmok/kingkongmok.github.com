@@ -811,6 +811,32 @@ Enter value for 4: oracle
 
 specify log path as parameter 5:
 Enter value for 5: /u01/app/oracle/product/11.2.0/db_1/demo/schema/log/
+
+
+
+SQL> @?/demo/schema/sales_history/sh_main.sql
+
+specify password for SH as parameter 1:
+Enter value for 1: sh
+
+specify default tablespace for SH as parameter 2:
+Enter value for 2: USERS
+
+specify temporary tablespace for SH as parameter 3:
+Enter value for 3: TEMP
+
+specify password for SYS as parameter 4:
+Enter value for 4: PASSWORD
+
+specify directory path for the data files as parameter 5:
+Enter value for 5: +DATA
+
+writeable directory path for the log files as parameter 6:
+Enter value for 6: /u01/app/oracle/product/11.2.0/dbhome_1/demo/schema/log
+
+specify version as parameter 7:
+Enter value for 7: v3
+
 ```
 
 ---
@@ -826,7 +852,8 @@ perl -p -i.bak -e 's#__SUB__CWD__#'$(pwd)'#g' *.sql */*.sql */*.dat
 docker cp /tmp/db-sample-schemas oracle:/tmp/
 ...
 
-sqlplus system/oracle@pridb @mksample oracle oracle hr oe pm ix sh bi USERS TEMPTS1 /tmp/sample_install.log pridb
+sqlplus system/oracle@localhost/EE.oracle.docker @/tmp/db-sample-schemas/mksample oracle oracle hr oe pm ix sh bi USERS TEMP /tmp/sample_install.log localhost/EE.oracle.docker
+
 ```
 
 
@@ -913,7 +940,7 @@ CREATE UNDO TABLESPACE UNDOTBS2 datafile '+DATA';
 alter database add logfile thread 2 group 4 , group 5 , group 6 ;
 
 alter database enable public thread 2;
-alter system set cluster_database=false sid='*' scope=spfile;
+alter system set cluster_database=true sid='*' scope=spfile;
 ```
 
 
