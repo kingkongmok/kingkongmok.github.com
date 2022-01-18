@@ -180,3 +180,10 @@ M2TS TO MP4
 screen -S ffmpeg bash -c 'find . -iname "*m2ts" -exec ffmpeg -i {} -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "{}.mp4" \;'
 screen -S ffmpeg bash -c 'find . -size +100M -exec ffmpeg -i {} -vcodec libx264 -crf 20 -acodec ac3 -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "{}.mp4" \;'
 ```
+
+
+
+```
+screen -S ffmpeg sh -c 'for i in `find . -size +5M `; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 540 ] && ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -c:v libx265 -crf 28 -b:v 1500K   "${i}_ffmpeg.mp4" && mv -f "${i}_ffmpeg.mp4" "$i" ; done'
+
+```
