@@ -42,7 +42,7 @@ getURL()
     #METHODHOSTNAME=`echo $DOWNLOADLINE | perl -ne 'print $1 if /^(.*?\/\/.*)\//'`
     METHODHOSTNAME=`echo $DOWNLOADLINE | perl -ne 'print $1 if /^(.*?)\/\//'`
     # get URL from $1
-    MESSAGE=`$PROXYCHAINS -q $CURL -H "$CURL_HEADER" -s $DOWNLOADLINE`
+    MESSAGE=`$PROXYCHAINS -q $CURL -k -H "$CURL_HEADER" -s $DOWNLOADLINE`
     MESSAGESIZE=`echo "$MESSAGE" | wc -c`
 
     if [ $MESSAGESIZE -gt 1000 ] ; then
