@@ -1448,15 +1448,15 @@ select distinct  destination, error from v$archive_dest where error is not null;
 select protection_mode, protection_level from v$database;
 
 -- Maximum Availability.
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY' sid='*';
 alter database set standby database to maximize availability;
 
 -- Maximum Performance.
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby NOAFFIRM ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby NOAFFIRM ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY' sid='*';
 alter database set standby database to maximize performance;
 
 -- Maximum Protection.
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY';
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=db11g_stby AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=DB11G_STBY' sid='*';
 SHUTDOWN IMMEDIATE;
 STARTUP MOUNT;
 ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PROTECTION;
@@ -4166,6 +4166,13 @@ end;
 
 -- Run SQL Tuning Advisor For A Sql_id
 
+
+-- drop tunning task if exists
+BEGIN
+    DBMS_SQLTUNE.drop_tuning_task (task_name => 'my_sql_tuning_task_1');
+END;
+/
+
 -- Create Tuning Task
 DECLARE
   l_sql_tune_task_id  VARCHAR2(100);
@@ -4173,9 +4180,9 @@ BEGIN
   l_sql_tune_task_id := DBMS_SQLTUNE.create_tuning_task (
                           sql_id      => '5fmyz01ptmc7f',
                           scope       => DBMS_SQLTUNE.scope_comprehensive,
-                          time_limit  => 500,
-                          task_name   => '5fmyz01ptmc7f_tuning_task',
-                          description => 'Tuning task1 for statement 5fmyz01ptmc7f');
+                          time_limit  => 50000,
+                          task_name   => '5fmyz01ptmc7f_tuning_task'
+                          );
   DBMS_OUTPUT.put_line('l_sql_tune_task_id: ' || l_sql_tune_task_id);
 END;
 /
@@ -4200,9 +4207,8 @@ set serveroutput off;
 set linesize 200
 set pagesize 500
 set timing on
+-- sql statements
 select * from table (dbms_xplan.display_cursor (format=>'ALLSTATS LAST'));
---执行SQLXX
-select * from table(dbms_xplan.display_cursor(null,0,'allstats last'));
 
 
 
@@ -4592,6 +4598,7 @@ sudo chown grid.oinstall -R OPatch/
 sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
 ./OPatch/opatch lsinventory &> /tmp/PSU_new_GI_version
 
+-- 节点1、2分别做
 sudo su - oracle
 cd $ORACLE_HOME/
 sudo rm -rf OPatch
@@ -4601,8 +4608,10 @@ sudo chown oracle.oinstall -R OPatch/
 sudo ./OPatch/opatch auto /stage/31718723 -oh $ORACLE_HOME
 ./OPatch/opatch lsinventory &> /tmp/PSU_new_DB_version
 
-SQL>@?/rdbms/admin/catbundle.sql
+SQL>@?/rdbms/admin/catbundle.sql psu apply
 
+--查询
+select *  from dba_registry_history;
 
 
 -- ------------------------------
