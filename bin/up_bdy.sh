@@ -44,6 +44,22 @@ for FILE in `find * -maxdepth 1 -type d ! -empty` ; do
     [[  ! -d "$BAIDU_SHARE"/"$FILE" ]] && mkdir "$BAIDU_SHARE"/"$FILE"
     mv *gpg "$BAIDU_SHARE"/"$FILE" 
     # 备份
-    mv * "$HOME"/.p/"$FILE"
+    # mv * "$HOME"/.p/"$FILE"
+
+    if [ ! -d "${HOME}/.p/${FILE}" ] ; then
+        mkdir -p "${HOME}/.p/${FILE}"
+    fi
+
+
+    for filename in *; do
+        if [  -f "${HOME}/.p/${FILE}/${filename}" ] ; then
+            mv "$filename" "${HOME}/.p/${FILE}/${filename%.*}_`date +%F`_.${filename##*.}"
+        else
+            mv "$filename" "${HOME}/.p/${FILE}"
+        fi
+    done
+
+
+
     cd ..
 done
