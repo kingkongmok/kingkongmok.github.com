@@ -2869,6 +2869,38 @@ execute dbms_stats.gather_schema_stats('SCOTT');
 
 
 -- ------------------------------
+-- monitor index
+-- ------------------------------
+
+--enable index monitor
+alter index SCOTT.PK_DEPT monitoring usage;
+
+-- use this index
+select count(1) from DEPT where deptno=1 ;
+
+-- check status
+select * from v$object_usage ;
+
+INDEX_NAME       TABLE_NAME MONITORIN USED      START_MONITORING     END_MONITORING
+-------------------- ---------- --------- --------- -------------------- --------------------
+PK_DEPT          DEPT   NO    YES       01/26/2022 16:46:40  01/26/2022 16:47:49
+
+
+-- enable gather index_stats
+analyze index PK_DEPT validate structure ;
+
+-- 索引空间使用情况
+select NAME, PCT_USED from index_stats ;
+
+-- 合并索引
+alter index SCOTT.PK_DEPT coalesce; 
+
+
+index_stats;
+
+
+
+-- ------------------------------
 -- SQL TUNE
 -- ------------------------------
 
@@ -2896,6 +2928,11 @@ execute dbms_sqltune.accept_sql_profile(task_name => 'staName807', task_owner =>
 SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.v_$instance;
 
 
+
+-- ------------------------------
+-- awr and base
+-- ------------------------------
+
 -- ash & awr
 @?/rdbms/admin/ashrpt.sql
 @?/rdbms/admin/awrrpt.sql
@@ -2918,6 +2955,44 @@ EXEC DBMS_WORKLOAD_REPOSITORY.create_snapshot;
 
 -- awr 空间异常
 select a.owner,a.segment_name,a.segment_type,a.bytes/1024/1024/1024 from dba_segments a where a.tablespace_name='SYSAUX' order by 4 desc;
+
+
+col BASELINE_NAME for a50
+select dbid,baseline_name,start_snap_id,end_snap_id from dba_hist_baseline;
+
+-- list availabe snapshot
+SELECT baseline_id, baseline_name, START_SNAP_ID,
+   TO_CHAR(start_snap_time, 'DD-MON-YYYY HH24:MI') AS start_snap_time,
+   END_SNAP_ID,
+   TO_CHAR(end_snap_time, 'DD-MON-YYYY HH24:MI') AS end_snap_time
+FROM   dba_hist_baseline
+-- WHERE  baseline_type = 'STATIC'
+ORDER BY baseline_id
+
+-- show snapshot info
+SELECT * FROM TABLE(DBMS_WORKLOAD_REPOSITORY.select_baseline_details(0));
+
+
+-- create STATIC awr history basicline
+BEGIN
+ DBMS_WORKLOAD_REPOSITORY.CREATE_BASELINE(start_snap_id =>250,
+ end_snap_id => 260,
+ baseline_name => 'baseline01');
+END;
+/
+
+-- drop baseline
+
+BEGIN
+  DBMS_WORKLOAD_REPOSITORY.DROP_BASELINE(baseline_name =>'baseline01',cascade => true);
+END;
+/
+
+--  The current AWR retention period can be displayed by querying the RETENTION column of the DBA_HIST_WR_CONTROL view.
+-- RETENTION通过查询视图的列可以显示当前的 AWR 保留期DBA_HIST_WR_CONTROL。Oracle 11g 引入了移动窗口基线的概念，用于计算自适应阈值的度量。该窗口是保留期内 AWR 数据的视图。窗口的默认大小与 8 天的默认 AWR 保留期相匹配，但可以将其设置为此值的子集。在您可以增加窗口大小之前，您必须首先增加 AWR 保留期的大小。
+SELECT retention FROM dba_hist_wr_control;
+
+
 
 1、SYSAUX表空间容量异常，确认没有业务数据
 2、WRM$和WRI$打头的表占用大量空间
@@ -3785,6 +3860,10 @@ SYS_AUTO_SQL_TUNING_TASK       COMPLETED   09-NOV-18 22:53
 SYS_AUTO_SQL_TUNING_TASK       COMPLETED   10-NOV-18 06:00
 
 
+-- 查看完整  SYS_AUTO_SQL_TUNING_TASK  内容
+select DBMS_SQLTUNE.REPORT_TUNING_TASK( 'SYS_AUTO_SQL_TUNING_TASK') from dual;
+
+
 
 -- SQL建议
 set  linesize 3000 PAGESIZE 0 LONG 100000
@@ -4114,8 +4193,48 @@ col COMMENTS format a50
 col NEXT_START_DATE format a40
 select WINDOW_NAME,NEXT_START_DATE,DURATION,ENABLED,ACTIVE,COMMENTS from DBA_SCHEDULER_WINDOWS;
 
+
+-- 重启所有自动维护任务
+BEGIN
+      DBMS_AUTO_TASK_ADMIN.disable();
+      DBMS_AUTO_TASK_ADMIN.enable();
+END;
+/
+
+-- 单独打开auto optimizer stats collection ,关闭其他两个任务
+BEGIN
+    DBMS_AUTO_TASK_ADMIN.enable(client_name => 'auto optimizer stats collection',operation=> NULL,window_name => NULL);
+    DBMS_AUTO_TASK_ADMIN.disable(client_name => 'auto space advisor',operation =>NULL,window_name => NULL);
+    DBMS_AUTO_TASK_ADMIN.disable(client_name => 'sql tuning advisor',operation =>NULL,window_name => NULL);
+END;
+/
+
+
+-- 调整自动数据库维护任务执行时间策略,  修改周一到周五的启动时间,修改启动时间到晚上1点
+begin
+    dbms_scheduler.set_attribute(name=>'MONDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=MON;byhour=1;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'TUESDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=TUE;byhour=1;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'WEDNESDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=WED;byhour=1;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'THURSDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=THU;byhour=1;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'FRIDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=FRI;byhour=1;byminute=0; bysecond=0');
+end;
+/
+
+
+-- 设置周六、周日每天3点执行定时任务，每次执行四小时：
+begin
+    dbms_scheduler.set_attribute(name=>'SATURDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=SAT;byhour=3;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'SATURDAY_WINDOW',attribute=>'DURATION',value=>'+000 04:00:00');
+    dbms_scheduler.set_attribute(name=>'SUNDAY_WINDOW',attribute=>'REPEAT_INTERVAL',value=>'freq=daily;byday=SUN;byhour=3;byminute=0; bysecond=0');
+    dbms_scheduler.set_attribute(name=>'SUNDAY_WINDOW',attribute=>'DURATION',value=>'+000 04:00:00');
+end;
+/
+
+
 -- check done jobs
 select * from DBA_AUTOTASK_JOB_HISTORY;
+select * from dba_scheduler_job_run_details where job_name like 'ORA$AT_OS%' order by log_date desc;
+
 
 -- Activation / Deactivation
 -- disable
@@ -4213,7 +4332,12 @@ select * from table (dbms_xplan.display_cursor (format=>'ALLSTATS LAST'));
 
 
 
+
 -- explain plan
+
+-- display last running explain plan
+SELECT * FROM table(dbms_xplan.display_cursor);
+
 -- display running explain plan
 select * from table(dbms_xplan.display);
 -- display specified sql_id plan
@@ -4290,6 +4414,158 @@ BEGIN_INTERVAL_TIME END_INTERVAL_TIME      SNAP_ID       DBID SQL_ID            
 
 -- get explain plan from sql_id and plan_hash_value
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR('&sql_id', &plan_hash_value ));
+
+
+
+-- ------------------------------
+-- SQL Plan Management
+-- https://oracle-base.com/articles/11g/sql-plan-management-11gr1
+-- ------------------------------
+
+
+-- SQL_ID to manually load the SQL plan baseline.
+SET SERVEROUTPUT ON
+DECLARE
+  l_plans_loaded  PLS_INTEGER;
+BEGIN
+      l_plans_loaded := DBMS_SPM.load_plans_from_cursor_cache(
+            sql_id => 'gat6z1bc6nc2d');
+            
+          DBMS_OUTPUT.put_line('Plans Loaded: ' || l_plans_loaded);
+END;
+/
+
+-- check sql_handle and plan_name
+col SQL_HANDLE for a40
+col PLAN_NAME for a40
+select SQL_HANDLE,PLAN_NAME,ORIGIN,ENABLED,ACCEPTED,FIXED from DBA_SQL_PLAN_BASELINES;
+-- 新建index后，在manual状态似乎不能自动更新sql plan,
+-- 注意 DBA_SQL_PLAN_BASELINES要获取新执行计划才能继续，如果没有，多运行sql几次
+
+SQL_HANDLE               PLAN_NAME                ORIGIN                     ENABLED   ACCEPTED  FIXED
+---------------------------------------- ---------------------------------------- ------------------------------------------ --------- --------- ---------
+SYS_SQL_7b76323ad90440b9         SQL_PLAN_7qxjk7bch8h5tb65c37c8       MANUAL-LOAD                    YES       YES   NO
+SYS_SQL_7b76323ad90440b9         SQL_PLAN_7qxjk7bch8h5ted3324c0       AUTO-CAPTURE                   YES       YES   NO
+
+
+
+-- 以下查询使用该EVOLVE_SQL_PLAN_BASELINE函数来演进 SQL 计划基线并输出相关报告, 演化执行计划 演化就是将cost低的执行计划标记为accept
+SET LONG 10000 
+SELECT DBMS_SPM.evolve_sql_plan_baseline(sql_handle => 'SYS_SQL_7b76323ad90440b9') FROM dual; 
+
+
+--
+col SQL_HANDLE for a40
+SELECT sql_handle, plan_name, enabled, accepted FROM   dba_sql_plan_baselines WHERE  sql_handle = 'SYS_SQL_7b76323ad90440b9';
+
+SQL_HANDLE               PLAN_NAME                                          ENABLED   ACCEPTED
+---------------------------------------- ------------------------------------------------------------------------------------------ --------- ---------
+SYS_SQL_7b76323ad90440b9         SQL_PLAN_7qxjk7bch8h5tb65c37c8                                 YES       YES
+SYS_SQL_7b76323ad90440b9         SQL_PLAN_7qxjk7bch8h5ted3324c0                                 YES       YES
+
+
+
+-- 查看
+
+SET LONG 10000
+SELECT * FROM  TABLE(DBMS_XPLAN.display_sql_plan_baseline(SQL_HANDLE=>'SYS_SQL_7b76323ad90440b9'));
+-- or
+SELECT * FROM  TABLE(DBMS_XPLAN.display_sql_plan_baseline(PLAN_NAME=>'SQL_PLAN_7qxjk7bch8h5ted3324c0'));
+
+-- 修改 Altering Plan Baselines
+
+
+-- enabled (YES/NO) : If YES, the plan is available for the optimizer if it is also marked as accepted.
+-- fixed (YES/NO) : If YES, the SQL plan baseline will not evolve over time. Fixed plans are used in preference to non-fixed plans.
+-- autopurge (YES/NO) : If YES, the SQL plan baseline is purged automatically if it is not used for a period of time.
+-- plan_name : Used to amend the SQL plan name, up to a maximum of 30 character.
+-- description : Used to amend the SQL plan description, up to a maximum of 30 character.
+
+SET SERVEROUTPUT ON
+DECLARE
+  l_plans_altered  PLS_INTEGER;
+BEGIN
+  l_plans_altered := DBMS_SPM.alter_sql_plan_baseline(
+    sql_handle      => 'SYS_SQL_7b76323ad90440b9',
+    plan_name       => 'SYS_SQL_PLAN_d90440b9ed3324c0',
+    attribute_name  => 'fixed',
+    attribute_value => 'YES');
+
+  DBMS_OUTPUT.put_line('Plans Altered: ' || l_plans_altered);
+END;
+/
+
+-- dropping plans and baseline
+
+SET SERVEROUTPUT ON
+DECLARE
+  l_plans_dropped  PLS_INTEGER;
+BEGIN
+  l_plans_dropped := DBMS_SPM.drop_sql_plan_baseline (
+    sql_handle => 'HANDLE_NAME'
+    );
+    
+  DBMS_OUTPUT.put_line(l_plans_dropped);
+END;
+/
+
+
+
+-- config SQL Management Base
+-- space_budget_percent (default10) : Maximum size as a percentage of SYSAUX space.Allowable values 1-50.
+--  plan_retention_weeks (default 53) : Number of weeks unusedplans are retained before being purged. Allowable values 5-523 weeks.
+SELECT Parameter_name, parameter_value FROM dba_sql_management_config;
+
+PARAMETER_NAME               PARAMETER_VALUE
+---------------------------------------- ---------------
+SPACE_BUDGET_PERCENT                      10
+PLAN_RETENTION_WEEKS                      53
+
+
+-- config
+BEGIN
+DBMS_SPM.configure('space_budget_percent', 11);
+DBMS_SPM.configure('plan_retention_weeks', 54);
+END;
+/
+
+ 
+-- import/export SQL Plan Baselines
+-- create table
+BEGIN
+ DBMS_SPM.CREATE_STGTAB_BASELINE(
+   table_name      =>'spm_stageing_tab',
+   table_owner     => 'DAVE',
+   tablespace_name => 'USERS');
+END;
+/
+
+-- insert table
+SET SERVEROUTPUT ON
+DECLARE
+ l_plans_packed  PLS_INTEGER;
+BEGIN
+ l_plans_packed := DBMS_SPM.pack_stgtab_baseline(
+   table_name      =>'spm_stageing_tab',
+   table_owner     => 'DAVE');
+ DBMS_OUTPUT.put_line('Plans Packed: ' || l_plans_packed);
+END;
+/
+
+-- expdp / impdp
+
+-- 从表导出到SQL PLAN BASELINES
+SET SERVEROUTPUT ON
+DECLARE
+ l_plans_unpacked  PLS_INTEGER;
+BEGIN
+ l_plans_unpacked := DBMS_SPM.unpack_stgtab_baseline(
+   table_name      =>'spm_stageing_tab',
+   table_owner     => 'DAVE',
+   creator         => 'DAVE');
+ DBMS_OUTPUT.put_line('Plans Unpacked: ' || l_plans_unpacked);
+END;
+/
 
 
 -- ------------------------------
@@ -4845,6 +5121,15 @@ SELECT * FROM dba_sql_plan_baselines ;
 
 
 
+-- ------------------------------
+-- bind variable 绑定变量
+-- ------------------------------
+
+create table t as select * from dba_objects;
+variable id number;
+exec :id := 21;
+select * from t where object_id=:id; 
+
 
 -- ------------------------------
 -- partition
@@ -4860,3 +5145,17 @@ alter table scott.big_table SPLIT PARTITION BIG_TABLE_2020  at (TO_DATE('01/01/2
 
 
 
+-- ------------------------------
+-- session tracing
+-- ------------------------------
+-- https://sites.google.com/site/nazmulhudadba/how-to-collect-10046-trace-sql_trace-diagnostics-for-performance-issues?tmpl=%2Fsystem%2Fapp%2Ftemplates%2Fprint%2F&showPrintDialog=1
+
+-- show trace location
+select value from v$diag_info where name='Default Trace File'; 
+-- enable tracing
+alter session set events '10046 trace name context forever, level 12';
+
+--sql here
+
+-- disable tracing
+alter session set events '10046 trace name context off';
