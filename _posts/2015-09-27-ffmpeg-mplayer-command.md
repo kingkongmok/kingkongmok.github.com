@@ -35,6 +35,9 @@ screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
 
 
+screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -c:v libx265 -crf 28 -vf  scale="trunc(oh*a/2)*2:540" "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
+
+
 
 screen -S ffmpeg bash -c 'for i in *; do ffmpeg -i "$i" -vf scale="trunc(oh*a/2)*2:720" -b:v 1M "ffmpegTemp_${i}" && mv -f "ffmpegTemp_${i}" "$i" ; done'
 
@@ -51,10 +54,15 @@ ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -b:v 1M "${i}_ffmpeg.mp4" && mv 
 
 
 screen -S ffmpeg sh -c 'for i in `find . -size +5M `; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 540 ] && \
-ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -c:v libx265 -crf 28 "${i}_ffmpeg.mp4" && mv -f "${i}_ffmpeg.mp4" "$i" ; done'
+ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -c:v libx265 -crf 28 -b:v 2500K "${i}_ffmpeg.mp4" && mv -f "${i}_ffmpeg.mp4" "$i" ; done'
+
 
 screen -S ffmpeg sh -c 'for i in `find . -size +5M `; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 720 ] && \
-ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -c:v libx265 -crf 28 "${i}_ffmpeg.mp4" && mv -f "${i}_ffmpeg.mp4" "$i" ; done'
+ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -c:v libx265 -crf 28 -b:v 5000K "${i}_ffmpeg.mp4" && mv -f "${i}_ffmpeg.mp4" "$i" ; done'
+
+
+screen -S ffmpeg sh -c 'for i in *mp4; do ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:540" -c:v libx265 -crf 28 -c:s mov_text "${i}_ffmpeg.mp4" ; done'
+
 
 
 ```
