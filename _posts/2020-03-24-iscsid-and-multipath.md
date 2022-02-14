@@ -486,6 +486,36 @@ ls -l /dev/oracleasm/disks/
 ALTER DISKGROUP dgroup1 ADD DISK '/devices/diska*';
 
 ```
+
+
+---
+
+
+### [ORA-15039 and ORA-15001 while Dropping an ASM disk group](https://www.oraclenext.com/2020/10/ora-15039-and-ora-15001-while-dropping.html)
+
+
+```
+# drop diskgroup
+SQL> drop diskgroup fra force  including contents ;
+
+# delete
+$>  sudo /usr/sbin/asmtool -D -l /dev/oracleasm -n FRA -s /dev/mapper/storage-prifra -a force=yes
+
+#create 
+$> sudo /usr/sbin/asmtool -C -l /dev/oracleasm -n FRA -s /dev/mapper/storage-prifra -a force=yes
+
+# re-scan
+$> sudo /etc/init.d/oracleasm scandisks
+$> sudo /etc/init.d/oracleasm listdisks
+
+# add diskgroup
+SQL> CREATE DISKGROUP FRA  EXTERNAL REDUNDANCY DISK 'ORCL:FRA' ;
+
+# check
+SQL> select path,failgroup,mount_status,mode_status,header_status,state from v$asm_disk order by failgroup, path;
+
+```
+
 ---
 
 ### [asmtools: kfod, kfed, amdu](https://www.hhutzler.de/blog/asm-tools-used-by-support-kfod-kfed-amdu-doc-id-1485597-1/)
