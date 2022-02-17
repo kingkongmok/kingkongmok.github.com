@@ -66,7 +66,12 @@ ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:720" -c:v libx265 -crf 18 -b:v 5000K 
 # 目前测试中，
 screen -S ffmpeg sh -c 'for i in *; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" ; done'
 
-screen -S ffmpeg sh -c 'find . -size +5M -print0 | while read -d $'\''\0'\'' i ; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" ; done'
+screen -S ffmpeg sh -c 'find . -size +5M -print0 | while read -d $'\''\0'\'' i ; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  \
+ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" ; done'
+
+
+screen -S ffmpeg sh -c 'find . -size +5M -print0 | while read -d $'\''\0'\'' i ; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  \
+ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" && mv "${i}_ffmpeg.mp4" "$i" ; done'
 
 ```
 
