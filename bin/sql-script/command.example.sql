@@ -4895,6 +4895,24 @@ select *  from dba_registry_history;
 --  buffer busy waits
 -- ------------------------------
 
+
+
+-- 查找quest状态的session
+select ROW_WAIT_OBJ#, ROW_WAIT_FILE#, ROW_WAIT_BLOCK#, ROW_WAIT_ROW# from v$session where sid=103 ;
+
+ROW_WAIT_OBJ# ROW_WAIT_FILE# ROW_WAIT_BLOCK# ROW_WAIT_ROW#
+------------- -------------- --------------- -------------
+    73053          1           34261        33
+
+
+-- 其中，第一个1是指扩展, 获取这个rowid
+select dbms_rowid.rowid_create(1,73053,1,34261,33) from dual;
+
+select * from t where rowid='AAAR1dAABAAAIXVAAh';
+
+
+
+
 -- http://facedba.blogspot.com/2014/09/vsessionwait-tips.html
 -- http://blog.itpub.net/31480688/viewspace-2151969/
 
@@ -5159,3 +5177,33 @@ alter session set events '10046 trace name context forever, level 12';
 
 -- disable tracing
 alter session set events '10046 trace name context off';
+
+
+-- ------------------------------
+-- pdb pluggable database
+-- ------------------------------
+-- http://www.oracle-wiki.net/premium:startdocsminimultistartpdb
+-- show pdb status
+select name, open_mode from v$pdbs;
+
+-- start or close pdbs
+alter pluggable database myplugdb3 open;
+alter pluggable database all open;
+
+alter pluggable database myplugdb3 close immediate;
+alter pluggable database all close immediate;
+
+
+
+-- https://oracle-base.com/articles/12c/multitenant-connecting-to-cdb-and-pdb-12cr1
+
+-- Displaying the Current Container
+SHOW CON_NAME
+SHOW CON_ID
+
+-- Switching Between Containers
+ALTER SESSION SET CONTAINER=pdb1;
+ALTER SESSION SET CONTAINER=cdb$root;
+
+
+
