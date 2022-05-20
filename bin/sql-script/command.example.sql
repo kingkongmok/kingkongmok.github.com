@@ -1,3 +1,18 @@
+routins:
+
+
+DROP TABLE [schema.]table_name [CASCADE CONSTRAINTS] [PURGE];
+DROP USER username CASCADE;
+DROP INDEX [schema.]index_name [FORCE];
+DROP TABLESPACE tablespace_name [DROP/KEEP QUOTA] [INCLUDING CONTENS] [AND/KEEP DATAFILES] [CASCADE CONSTRAINTS]; 
+
+-- ------------------------------
+-- NLS_LANGUAGE
+-- ------------------------------
+
+
+gbk某些字符缺失，可考虑nvarchar2, 然后前端写入的时候，通过insert into t values （N'瓛')
+
 -- ------------------------------
 -- storage and multipath
 -- ------------------------------
@@ -292,6 +307,10 @@ ORACLE 10g      PGA自动管理，SGA自动管理（ASMM，自动共享内存管
 ORACLE 11g      PGA,SGA统一自动管理（AMM，自动内存管理）
 ORACLE 12c      跟11g一样，没有变化
 
+
+
+select * from GV$MEMORY_DYNAMIC_COMPONENTS ;
+
 -- ------------------------------
 --  SGA
 -- ------------------------------
@@ -455,6 +474,24 @@ ALTER USER user_name IDENTIFIED BY NEWPASSWORD account unlock;
 ALTER USER user_name account unlock;
 
 
+-- wrong password will causes library cache locks in the Database.
+-- Solution
+-- 1. Check for bad or incorrect password or login attack by running following sql:
+select username,
+os_username,
+userhost,
+client_id,
+trunc(timestamp),
+count(*) failed_logins
+from dba_audit_trail
+where returncode=1017 and --1017 is invalid username/password
+timestamp < sysdate -7
+group by username,os_username,userhost, client_id,trunc(timestamp);
+-- 2.Set the below event in the spfile or init.ora file and restart the database:
+alter system set event ="28401 TRACE NAME CONTEXT FOREVER, LEVEL 1" scope=spfile;
+
+
+
 -- change password setting
 
 
@@ -475,6 +512,43 @@ ALTER PROFILE DEFAULT LIMIT PASSWORD_VERIFY_FUNCTION verify_function_11G;
 
 -- show account not work
 SELECT username, account_status, created, lock_date, expiry_date FROM dba_users WHERE account_status != 'OPEN';
+
+-- ------------------------------
+-- audit
+-- ------------------------------
+
+
+-- https://www.cnblogs.com/eastsea/p/3905572.html
+
+(1). 简单来讲，就是把对数据库的操作记录下来。不管你是否打开数据库的审计功能，以下这些操作系统会强制记录。
+
+用管理员权限连接Instance
+启动数据库
+关闭数据库
+(2).记录对数据对象的所有操作。什么时候，什么用户对对象做出了什么类型的操作。默认情况下审计是关闭的。
+
+可以记录对数据库对象的所有操作。什么时候，什么用户对什么对象进行了什么类型的操作。
+但是无法得知操作的细节，比如到底数据更新成了1还是2。
+不过现在新出现的精细审计(Fine grained Auditing)，好像也可以记录DML语句了。
+(3). 审计的一些理解
+
+1. 对于权限审计和大部分语句，by session无效，无论指定by session/by access还是不指定，审计都自动为by access。
+
+2. 审计的语句级可以指定ALL，但是ALL只包括大部分语句，它不包括下面这些语句。
+
+ALTER SEQUENCE,ALTER TABLE, COMMENT TABLE, DELETE TABLE, EXECUTE PROCEDURE, GRANT DIRECTORY, GRANT PROCEDURE, GRANT SEQUENCE, GRANT TABLE, GRANT TYPE, INSERT TABLE, LOCK TABLE, SELECT SEQUENCE, SELECT TABLE, UPDATE TABLE
+
+3. 对于语句和权限审计，生效从执行语句后下一个登陆用户开始，当前的所有session不受影响。而对象的审计，则从审计语句开始后对当前所有的用户生效。
+
+4. 可以使用NOAUDIT ALL、NOAUDIT ALL PRIVILEGE取消所有的语句、权限的审计，但是如果在审计的时候指定了用户，则NOAUDIT ALL或NOAUDIT ALL PRIVILEGE的时候，不会取消这些明确用户的审计，必须在NOAUDIT的时候也明确的指出相应的用户。
+
+
+
+
+audit all by SCOTT by access;
+audit select table, update table, insert table, delete table by SCOTT by access;
+audit execute procedure by SCOTT by access;
+ 
 
 
 -- 查询目前audit情况
@@ -535,6 +609,25 @@ REVOKE EXECUTE ON object FROM user;
 REVOKE execute ON Find_Value FROM anderson;
 REVOKE EXECUTE ON Find_Value FROM public;
 
+
+-- https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_9013.htm
+
+-- grant_system_privileges::=
+grant SYSTEM_PRIVILEGE to GRANTEE_CLAUSE ( with admin option );
+grant ROLE to GRANTEE_CLAUSE ( with admin option );
+grant ALL PRIVILEGES to GRANTEE_CLAUSE ( with admin option );
+
+grant OBJECT_PRIVILEGE ( on object_clause ) to GRANTEE_CLAUSE ( WITH HIERARCHY OPTION ) ( WITH GRANT OPTION  ) ; 
+grant ALL PRIVILEGES ( on object_clause ) to GRANTEE_CLAUSE ( WITH hierarchy OPTION ) ( WITH GRANT OPTION  ) ; 
+
+
+-- check
+-- current session
+select * from session_privs;
+-- other
+select * from DBA_SYS_PRIVS
+select * from DBA_TAB_PRIVS
+select * from DBA_ROLE_PRIVS 
 
 -- autotrace
 set autotrace traceonly statistics; 
@@ -623,6 +716,15 @@ show parameter db_recovery
 show parameter db_create
 
 
+-- ------------------------------
+-- user, role and profile
+-- ------------------------------
+
+-- https://stackoverflow.com/questions/61668720/what-is-the-difference-between-user-profile-and-roles#:~:text=Profiles%20regulate%20a%20users's%20password,system%20privileges)%20a%20user%20has.
+SELECT username, profile FROM DBA_USERS;
+SELECT * FROM DBA_ROLES;
+SELECT * FROM DBA_ROLE_PRIVS; 
+
 
 -- ------------------------------
 -- USER and schema
@@ -636,6 +738,7 @@ SYS> select resource_name,limit from dba_profiles where profile='DEFAULT' and RE
 ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
 -- 尝试不退出
 ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS UNLIMITED;
+
 
 
 
@@ -661,17 +764,27 @@ SELECT * FROM DBA_TAB_PRIVS  WHERE GRANTEE IN (SELECT granted_role FROM DBA_ROLE
 SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = '&user'; 
 
 
+-- user role
+select * from dba_sys_privs where grantee='RESOURCE';
+CONNECT  : create session
+RESOURCE : create table, CREATE TRIGGER, 
+DBA :
+SELECT_CATALOG_ROLE :
+
 -- create user/schema
 select * from dba_temp_files;
 CREATE USER username IDENTIFIED BY password DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE default ACCOUNT unlock;
-GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE TO username;  
+-- GRANT CREATE SESSION, CREATE TABLE, CREATE TRIGGER, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE TO username;  
 GRANT CONNECT, RESOURCE TO username ; 
-GRANT UNLIMITED TABLESPACE TO users;
+GRANT UNLIMITED TABLESPACE TO username;
 -- CONNECT to assign privileges to the user through attaching the account to various roles
 -- RESOURCE role (allowing the user to create named types for custom schemas)
 -- DBA  which allows the user to not only create custom named types but alter and destroy them as well
 -- ensure our new user has disk space allocated in the system to actually create or modify tables and data
+select * from session_privs;
 
+
+alter user c##USERNAME quota 200M on USERS;
 
 -- create READ_ONLY role.
 CREATE ROLE CKS_RO_ROLE;
@@ -728,6 +841,21 @@ select file#,CHECKPOINT_CHANGE# from v$datafile;
 -- RMAN
 -- ------------------------------
 
+
+-- Incremental Backup
+-- Improving Incremental Backup Performance: Change Tracking
+ALTER DATABASE ENABLE BLOCK CHANGE TRACKING;
+select * from  V$BLOCK_CHANGE_TRACKING ;
+
+
+--
+BACKUP INCREMENTAL LEVEL 0 DATABASE;
+BACKUP INCREMENTAL LEVEL 1 TABLESPACE SYSTEM DATAFILE 'ora_home/oradata/trgt/tools01.dbf';
+BACKUP INCREMENTAL LEVEL = 1 CUMULATIVE TABLESPACE users;
+
+
+
+
 -- https://oraclespin.com/2011/01/22/rman-to-enable-compression-of-backupset/#:~:text=Backup%20in%20RMAN%20can%20be,backup%20database%20remain%20the%20same.
 -- Enable compression when creating backup to disk
 RMAN> configure device type disk backup type to compressed backupset;
@@ -769,7 +897,7 @@ CREATE DATABASE OLTP3140
    MAXDATAFILES 100
    CHARACTER SET AL32UTF8
    EXTENT MANAGEMENT LOCAL
-   DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/system01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
+   DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/system01.dbf' SIZE 325M REUSE ATOEXTEND ON MAXSIZE UNLIMITED
    SYSAUX DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/sysaux01.dbf' SIZE 325M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED
    DEFAULT TABLESPACE users
       DATAFILE '/u01/app/oracle/oradata/unique_db_name/datafile/users01.dbf'
@@ -1084,6 +1212,29 @@ run
 SET NEWNAME FOR DATABASE TO '/u01/app/oracle/oradata/ORCL/%b'; 
 restore database preview;
 }
+
+
+-- RMAN-06094: UNNAMED 
+
+RMAN> recover database ;
+
+Starting recover at 14-MAR-22
+using channel ORA_DISK_1
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 03/14/2022 09:52:22
+RMAN-06094: datafile 37 must be restored
+
+SYS@CDB1> select file#, name , status  from v$datafile ;
+37       /u01/app/oracle/product/19.0.0/dbhome_1/dbs/UNNAMED00037      RECOVER
+
+
+SYS@CDB1> alter database create datafile 37 as new;
+
+Database altered.
+
+
 
 -- https://docs.oracle.com/cd/E18283_01/backup.112/e10642/rcmdupad.htm
 -- rman backup archivelog
@@ -2310,6 +2461,12 @@ expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expd
 expdp \"/ as sysdba\" schemas=SCHEMA directory=DATA_PUMP_DIR logfile=SCHEMA.expdp.`date +%F`.log dumpfile=SCHEMA.expdp.`date +%F`.dump compression=all
 
 
+
+-- pdbs
+expdp system/oracle@localhost/pdb2  schemas=PDB2_ADMIN directory=DATA_PUMP_DIR dumpfile=PDB2_ADMIN_`date +"%Y%m%d"`.dmp logfile=PDB2_ADMIN_`date +"%Y%m%d"`.log
+impdp system/oracle@localhost/pdb1  schemas=PDB2_ADMIN directory=DATA_PUMP_DIR dumpfile=PDB2_ADMIN_`date +"%Y%m%d"`.dmp logfile=PDB2_ADMIN_`date +"%Y%m%d"`.log remap_schema=PDB2_ADMIN:SCOTT table_exists_action=replace
+
+
 -- check space
 select sum(bytes)/1024/1024 mb , tablespace_name  from user_segments group by tablespace_name;
 
@@ -2526,7 +2683,18 @@ select name,status from v$datafile
  where name like '%undo%';
 
 
--- undo 查询
+-- ------------------------------
+-- UNDO
+-- ------------------------------
+
+-- retention
+select TABLESPACE_NAME,RETENTION from dba_tablespaces where tablespace_name like '%UNDO%';
+show parameter undo_retention
+alter tablespace undotbs1 RETENTION GUARANTEE ;
+alter tablespace undotbs1 RETENTION noGUARANTEE ;
+
+
+
 select tablespace_name, status, count(*) from dba_rollback_segs group by tablespace_name, status;
 create undo tablespace UNDOTBS1 datafile '/u01/app/oracle/oradata/EE/undotbs01.dbf' size 200m AUTOEXTEND on MAXSIZE UNLIMITED;
 DROP TABLESPACE undotbs1 INCLUDING CONTENTS AND DATAFILES ;
@@ -4697,6 +4865,11 @@ alter database flashback on;
 
 --
 CREATE RESTORE POINT before_update GUARANTEE FLASHBACK DATABASE;
+--
+select * from v$restore_point;
+--
+drop RESTORE POINT before_update;
+--
 LIST RESTORE POINT ALL;
 FLASHBACK DATABASE TO RESTORE POINT 'BEFORE_UPDATE';
 ALTER DATABASE OPEN RESETLOGS;
@@ -4796,6 +4969,82 @@ alter database drop supplemental log data;
 --  TSPITR Performing RMAN Tablespace Point-in-Time Recovery
 -- ------------------------------
 recover tablespace 'TEST' until scn 16027745078 auxiliary destination '/u01/app/oracle/oraaux';
+
+
+-- ------------------------------
+--  create catalog
+-- ------------------------------
+SQL>
+alter session set container=pdb1;
+create tablespace rc datafile ;
+create user rc identified by oracle default tablespace rc;
+grant resource, connect to rc;
+grant unlimited tablespace to rc ;
+-- 重要
+GRANT recovery_catalog_owner TO rco;
+--
+rman catalog rc/oracle@localhost/pdb1
+RMAN> create catalog;
+--
+远端
+rman target / catalog rc/oracle@CATALOGSERVER:1521/pdb1
+register database;
+每次操作都会sync
+--
+UNREGISTER DATABASE;
+
+-- dbid 重复
+-- http://www.dba-oracle.com/t_rman_94_register_database_recovery_catalog.htm
+$ rman target / catalog rcat_owner/rcat@rc
+connected to target database: DB1 (DBID=1302506781)
+connected to recovery catalog database
+ 
+RMAN> register database;
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of register command on default channel at 01/24/2010
+19:12:12
+RMAN-20002: target database already registered in recovery catalog
+
+--更改dbid
+SQL> startup mount;
+SH> nid target=sys/pass dbname=db1clone
+-- SH> cd $ORACLE_HOME/dbs/
+-- SH> cp spfiledb1.ora spfiledb1clone.ora
+
+SQL> startup nomount ; 
+SQL> alter system set db_name=db1clone scope=spfile;
+SQL> startup mount force;
+
+-- pdb not open
+RMAN> recover pluggable database pdb2; 
+SQL> alter pluggable database pdb2 open resetlogs ;
+
+
+
+-- rman script, 需要catalog库
+
+SQL> rman target / catalog rc/oracle@localhost/pdb1 
+
+RMAN> create script bk 
+{
+backup database plus archivelog;
+}
+
+
+-- 执行
+RMAN> run { execute script bk; }
+
+--
+RMAN> list all script names;
+RMAN> print script bk;
+
+replace script bk {
+show all;
+}
+
+delete script bk;
 
 
 -- ------------------------------
@@ -4910,6 +5159,27 @@ select dbms_rowid.rowid_create(1,73053,1,34261,33) from dual;
 
 select * from t where rowid='AAAR1dAABAAAIXVAAh';
 
+
+
+-- 查找物理位置
+
+select rowid,
+dbms_rowid.rowid_object(rowid) "#objct",
+dbms_rowid.rowid_relative_fno(rowid) "#file",
+dbms_rowid.rowid_block_number(rowid) "#block",
+dbms_rowid.rowid_row_number(rowid) "#row"
+from t;
+
+SYS@CDB1> /
+
+ROWID              #objct      #file     #block   #row
+------------------ ---------- ---------- ---------- ----------
+AAAR1dAABAAAIWxAAA  73053          1      34225      0
+AAAR1dAABAAAIWxAAB  73053          1      34225      1
+AAAR1dAABAAAIWxAAC  73053          1      34225      2
+AAAR1dAABAAAIWxAAD  73053          1      34225      3
+
+SYS@CDB1> alter system dump datafile 1 block 34225 ;
 
 
 
@@ -5194,6 +5464,21 @@ alter pluggable database myplugdb3 close immediate;
 alter pluggable database all close immediate;
 
 
+-- open readwrite
+
+SQL> SHOW PDBS
+
+    CON_ID CON_NAME			  OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+	 2 PDB$SEED			  READ ONLY  NO
+	 3 PDB1 			  MOUNTED
+	 4 PDB2 			  MOUNTED
+	 5 PDB3 			  MOUNTED
+
+
+ALTER PLUGGABLE DATABASE pdb2 OPEN READ WRITE;
+ALTER PLUGGABLE DATABASE pdb3 OPEN READ WRITE;
+
 
 -- https://oracle-base.com/articles/12c/multitenant-connecting-to-cdb-and-pdb-12cr1
 
@@ -5204,6 +5489,123 @@ SHOW CON_ID
 -- Switching Between Containers
 ALTER SESSION SET CONTAINER=pdb1;
 ALTER SESSION SET CONTAINER=cdb$root;
+
+
+
+-- hot clone with dblink
+
+1. create dblink to remote CDB
+2.  on remote:
+alter system set session=pdb1;
+grant create pluggable database to system;
+
+3. CREATE PLUGGABLE DATABASE pdbnew from pdb1@racpdb1 ;
+    alter pluggable database pdbnew open;
+    create pluggable database ro_pdb from pdb1@racpdb1 refresh mode manual;
+    alter pluggable database ro_pdb open read only;
+
+
+
+
+
+-- https://oracle-base.com/articles/12c/multitenant-create-and-configure-pluggable-database-12cr1#manual-create-pdb
+
+create  pdb 
+有三种方法：
+-- 1、Oracle Managed Files (OMF)
+ALTER SYSTEM SET db_create_file_dest = '/u02/oradata';
+CREATE PLUGGABLE DATABASE pdb3 ADMIN USER pdb_adm IDENTIFIED BY Password1;
+-- 或者 
+CREATE PLUGGABLE DATABASE pdb2 ADMIN USER pdb_adm IDENTIFIED BY Password1 CREATE_FILE_DEST='/u01/app/oracle/oradata';
+
+-- 2 FILE_NAME_CONVERT 
+CREATE PLUGGABLE DATABASE pdb2 ADMIN USER pdb_adm IDENTIFIED BY Password1 FILE_NAME_CONVERT=('/u01/app/oracle/oradata/cdb1/pdbseed/','/u01/app/oracle/oradata/cdb1/pdb2/');
+-- or
+ALTER SESSION SET PDB_FILE_NAME_CONVERT='/u01/app/oracle/oradata/cdb1/pdbseed/','/u01/app/oracle/oradata/cdb1/pdb3/';
+CREATE PLUGGABLE DATABASE pdb3 ADMIN USER pdb_adm IDENTIFIED BY Password1;
+
+
+-- Unplug 
+ALTER PLUGGABLE DATABASE pdb2 CLOSE;
+ALTER PLUGGABLE DATABASE pdb2 UNPLUG INTO '/u01/app/oracle/oradata/cdb1/pdb2/pdb2.xml';
+
+asmcmd cp '+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/DATAFILE/sysaux.297.1098396035' /home/grid/
+asmcmd cp '+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/DATAFILE/system.296.1098396035' /home/grid/
+asmcmd cp '+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/DATAFILE/undotbs1.295.1098396035' /home/grid/
+asmcmd cp '+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/TEMPFILE/temp.298.1098396047' /home/grid/
+rsync to new cdb
+
+
+-- drop pdb
+DROP PLUGGABLE DATABASE PDB3 including datafiles ;
+
+
+-- Plugin 
+-- check compatible
+SET SERVEROUTPUT ON
+DECLARE
+  l_result BOOLEAN;
+BEGIN
+  l_result := DBMS_PDB.check_plug_compatibility(
+                pdb_descr_file => '/u01/app/oracle/oradata/cdb1/pdb2/pdb2.xml',
+                pdb_name       => 'pdb2');
+
+  IF l_result THEN
+    DBMS_OUTPUT.PUT_LINE('compatible');
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('incompatible');
+  END IF;
+END;
+/
+-- config with sed
+cp pdb2.xml pdb2_new.xml
+sed -i 's#+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/TEMPFILE/#/home/oracle/#' pdb2_new.xml
+sed -i 's#+DATA/ORADATA/D95CB79618E21AC0E053E21F1AAC4FCD/DATAFILE/#/home/oracle/#' pdb2_new.xml
+CREATE PLUGGABLE DATABASE pdb5 USING '/home/oracle/rman/pdb2_new.xml' FILE_NAME_CONVERT=('/home/oracle/' , '/u01/app/oracle/oradata/CDB1/PDB5/' );
+
+
+-- clone
+-- Setting the source to read-only is not necessary after Oracle 12cR2.
+ALTER PLUGGABLE DATABASE pdb3 CLOSE;
+ALTER PLUGGABLE DATABASE pdb3 OPEN READ ONLY;
+CREATE PLUGGABLE DATABASE pdb4 FROM pdb3
+  FILE_NAME_CONVERT=('/u01/app/oracle/oradata/cdb1/pdb3/','/u01/app/oracle/oradata/cdb1/pdb4/');
+ALTER PLUGGABLE DATABASE pdb4 OPEN READ WRITE;
+-- Switch the source PDB back to read/write if you made it read-only.
+ALTER PLUGGABLE DATABASE pdb3 CLOSE;
+ALTER PLUGGABLE DATABASE pdb3 OPEN READ WRITE;
+
+
+-- ------------------------------
+-- Manage Users and Privileges in pdbs
+-- ------------------------------
+-- https://oracle-base.com/articles/12c/multitenant-manage-users-and-privileges-for-cdb-and-pdb-12cr1
+
+
+
+
+-- ------------------------------
+-- DBMS_SERVICE
+-- ------------------------------
+-- https://docs.oracle.com/database/121/ARPLS/d_serv.htm#ARPLS092
+
+-- 删除
+SYS@CDB1> exec dbms_service.delete_service('test') ;
+alter session set container=pdb1 ;
+-- 添加一个服务例如叫test，监听服务为testlistener
+exec dbms_service.create_service('test', 'testlistener') ;
+-- 启动
+exec dbms_service.start_service('test') ;
+! lsnrctl status | grep testlistener -A1
+-- 关闭
+exec dbms_service.stop_service('test') ;
+-- 删除
+SYS@CDB1> exec dbms_service.delete_service('test') ;
+ 
+
+
+
+
 
 
 
