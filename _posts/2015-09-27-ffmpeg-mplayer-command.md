@@ -73,6 +73,10 @@ ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_te
 screen -S ffmpeg sh -c 'find . -size +5M -print0 | while read -d $'\''\0'\'' i ; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  \
 ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" && mv "${i}_ffmpeg.mp4" "$i" ; done'
 
+
+screen -S ffmpeg sh -c 'for i in *; do [ `ffmpeg -i "$i" 3>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  \
+ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" && mv "${i}_ffmpeg.mp4" "$i" ; done'
+
 ```
 
 + [first audio only](https://ottverse.com/add-remove-extract-audio-from-video-using-ffmpeg/)
