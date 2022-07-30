@@ -1,6 +1,7 @@
 routins:
 
 
+
 DROP TABLE [schema.]table_name [CASCADE CONSTRAINTS] [PURGE];
 DROP USER username CASCADE;
 DROP INDEX [schema.]index_name [FORCE];
@@ -4100,6 +4101,11 @@ V$TEMPSEG_USAGE
 -- ------------------------------
 
 
+-- 创建大表
+create table t as select rownum x, lpad('x', 500, 'x') xx from dual connect by level <= 10000;
+
+
+
 -- https://oracle-base.com/articles/misc/partitioning-an-existing-table
 -- check redef package
 EXEC DBMS_REDEFINITION.can_redef_table('SCOTT', 'BIG_TABLE');
@@ -4816,8 +4822,19 @@ select text from ALL_VIEWS where upper(view_name) like upper('V_iew');
 -- moves rows down into un-used space and adjusts the HWM
 -- NOT adjust the segments extents
 
+
+1、move table的功能：
+a. 将一个table从当前的tablespace上移动到另一个tablespace上：
+b. 来改变table已有的block的存储参数,如：alter table t move storage (initial 30k next 50k);
+c. move操作也可以用来解决table中的行迁移的问题。
+2、使用move的一些注意事项：
+a. table上的index需要rebuild：    在前面我们讨论过，move操作后，数据的rowid发生了改变，我们知道，index是通过rowid来fetch数据行的，所以，table上的index是必须要rebuild的。     alter index index_name rebuild online；
+b. move时对table的锁定我们对table进行move操作时，查询v$locked_objects视图可以发现，table上加了exclusive lock
+ ③：关于move时空间使用的问题：
+   当我们使用alter table move来降低table的HWM时，有一点是需要注意的，这时，当前的tablespace中需要有1倍于table的空闲空间以供使用。
+
 alter table t enable row movement;
-alter table t shrink move;
+alter table t move;
 -- move后,会改变一些记录的ROWID，所以MOVE之后索引会变为无效，需要REBUILD
 alter index idx_t_id rebuild;
 analyze table t compute statistics ;
@@ -4827,11 +4844,13 @@ alter table t disable row movement;
 -- moves rows down into un-used space and adjusts the HWM
 -- DO adjust the segments extents
 -- 有两个步骤，
--- shrink space compact 可以在业务时段进行，先将row映射到靠前的block， 有点像 alter table t shrink move。
--- shrink space 在闲时进行, 释放extends
+-- 1.  shrink space compact 可以在业务时段进行，先将row映射到靠前的block， 有点像 alter table t shrink move。
+--  通过一系列insert、delete操作，将数据尽量排列在段的前面。在这个过程中需要在表上加RX锁，即只在需要移动的行上加锁。 由于涉及到rowid的改变，需要enable row movement.同时要disable基于rowid的trigger.这一过程对业务影响比较小。
+-- 2. shrink space 在闲时进行, 释放extends
+-- HWM调整：第二阶段是调整HWM位置，释放空闲数据块。此过程需要在表上加X锁，会造成表上的所有DML语句阻塞。在业务特别繁忙的系统上可能造成比较大的影响。
 -- 3.使用shrink space时，索引会自动维护。如果在业务繁忙时做压缩，可以先shrink space compact，来压缩数据而不移动HWM，等到不繁忙的时候再shrink space来移动HWM。
 -- 4.索引也是可以压缩的，压缩表时指定Shrink space cascade会同时压缩索引，也可以alter index xxx shrink space来压缩索引。
--- 5.shrink space需要在表空间是自动段空间管理的，所以system表空间上的表无法shrink space。
+-- 5.shrink space需要在表空间是自动段空间管理的(ASSM)，所以system表空间上的表无法shrink space。
 
 alter table t enable row movement;  
 alter table t shrink space compact;
@@ -5608,4 +5627,7 @@ SYS@CDB1> exec dbms_service.delete_service('test') ;
 
 
 
-
+-- sqlserver 查询大小
+-- https://www.cnblogs.com/xwgli/p/4517208.html
+-- 如果只是查询数据库的大小的话，直接使用以下语句即可：
+EXEC sp_spaceused
