@@ -5631,3 +5631,20 @@ SYS@CDB1> exec dbms_service.delete_service('test') ;
 -- https://www.cnblogs.com/xwgli/p/4517208.html
 -- 如果只是查询数据库的大小的话，直接使用以下语句即可：
 EXEC sp_spaceused
+
+
+
+-- ------------------------------
+-- foreignname
+-- ------------------------------
+-- Oracle表主键作为外键都用在哪些表查询
+SELECT c.TABLE_NAME      tablename,
+       c.constraint_name foreignname,
+           u.column_name     columnname
+          FROM all_constraints p, all_constraints c, user_cons_columns u
+         WHERE p.table_name = 'APEX_USER_LOGIN'
+           AND p.OWNER = SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+           AND c.OWNER = SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+           AND c.constraint_type = 'R'
+           AND c.CONSTRAINT_NAME = u.constraint_name
+           AND p.CONSTRAINT_NAME = c.R_CONSTRAINT_NAME
