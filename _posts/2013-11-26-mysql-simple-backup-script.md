@@ -243,3 +243,31 @@ gpgcheck=1
 EOF
 ```
 
+---
+
+
+### [delete binlog](https://gist.github.com/tiagocardosos/0d8e7e95316696be7a400e2c60909c43)
+
+
+
+For example, if you run
+
+```
+PURGE BINARY LOGS TO mysql-bin.000223;
+```
+
+```
+PURGE BINARY LOGS BEFORE DATE(NOW() - INTERVAL 3 DAY) + INTERVAL 0 SECOND;
+```
+
+```
+mysql> SET GLOBAL expire_logs_days = 3;
+```
+
+```
+then add this to /etc/my.cnf
+[mysqld]
+expire_logs_days=3
+```
+
+
