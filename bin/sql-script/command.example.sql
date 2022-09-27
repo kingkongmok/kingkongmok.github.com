@@ -5648,3 +5648,54 @@ SELECT c.TABLE_NAME      tablename,
            AND c.constraint_type = 'R'
            AND c.CONSTRAINT_NAME = u.constraint_name
            AND p.CONSTRAINT_NAME = c.R_CONSTRAINT_NAME
+
+
+-- ------------------------------
+-- 密码错误
+-- ------------------------------
+
+
+-- 开启audit
+
+AUDIT SESSION WHENEVER NOT SUCCESSFUL;
+
+select * from dba_audit_trail 
+
+
+-- 密码输入错误次数
+select name,LCOUNT from sys.USER$  where name='SH';
+
+-- 密码输入错误详情
+SELECT D.USERNAME,D.TIMESTAMP,D.ACTION_NAME,D.OS_USERNAME,D.TERMINAL
+  FROM DBA_AUDIT_TRAIL D
+ WHERE D.RETURNCODE = 1017
+   AND D.USERNAME = 'SH'
+  ORDER BY D.TIMESTAMP DESC ;
+
+-- 或：
+SELECT *
+  FROM (SELECT A.DBID,
+               A.SESSIONID,
+               A.PROCESS#,
+               A.ENTRYID,
+               A.USERID,
+               (SELECT NA.LCOUNT FROM SYS.USER$ NA WHERE NA.NAME = A.USERID) LCOUNT,
+               A.USERHOST,
+               A.TERMINAL,
+               A.ACTION#,
+               A.RETURNCODE,
+               A.COMMENT$TEXT,
+               A.SPARE1,
+               A.NTIMESTAMP# + 8 / 24 LOGIN_TIME
+          FROM SYS.AUD$ A
+         WHERE A.RETURNCODE = 1017
+           AND A.NTIMESTAMP# + 8 / 24 >= SYSDATE - 7
+         ORDER BY A.NTIMESTAMP# DESC)
+ WHERE ROWNUM <= 100;
+
+SELECT d.userhost,
+       COUNT(*)
+FROM   sys.aud$ d
+WHERE  d.returncode = 1017
+AND    d.userid = 'SH' 
+GROUP  BY d.userhost; 
