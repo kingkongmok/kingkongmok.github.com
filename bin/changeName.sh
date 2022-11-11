@@ -73,6 +73,19 @@ if [ "$TESTMODE" == 0 ] ; then
 fi
 
 
+# uncen
+uncenlist+=( "\[無修正\]"  )
+uncenlist+=( "\[无修正\]"  )
+uncenlist+=( "\[無修正_重嵌\]"  )
+uncenlist+=( "\[无修正中文\]"  )
+uncenlist+=( "\[無碼\]"  )
+uncenlist+=( "\[无码\]"  )
+uncenlist+=( "\[Decensored\]" )
+command=''
+exp=''
+for mystr in "${uncenlist[@]}"; do 
+   variable+="s/$mystr/_uncen/; " 
+done
 
 # 包含以下字符的直接删除
 list+=( "\[S版\]"  )
@@ -90,6 +103,7 @@ list+=( "\[無修正_重嵌\]"  )
 list+=( "\[黑暗掃圖\]"  )
 list+=( "\[无修正中文\]"  )
 list+=( "\[原版\]"  )
+list+=( "\[中文字幕\]"  )
 list+=( "\[改正\]"  )
 list+=( "\[風的工房\]"  )
 list+=( "【鬼畜王汉化组】"  )
@@ -119,6 +133,8 @@ list+=( "\[天鹅之恋\]"  )
 list+=( "\[官方繁中\]"  )
 list+=( "\[無碼\]"  )
 list+=( "\[薄碼\]"  )
+list+=( "\[無邪気漢化組中字\]"  )
+list+=( "\[DL\]"  )
 list+=( "\[中国翻訳\]" )
 list+=( "\(单行本\)" )
 list+=( "\[中国語\]" )
