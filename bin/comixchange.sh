@@ -166,7 +166,7 @@ resize ()
 
 
     # convert \(bmp\|tiff\|tif\|png\) type to jpg
-    find . -type f -iregex ".*\.\(apng\|avif\|gif\|svg\|webp\|bmp\|ico\|cur\|tiff\|tif\|png\)$" -exec sh -c 'mogrify -format jpg "$1" && rm -f "$1" ' sh {} \;
+    find . -type f -iregex ".*\.\(apng\|avif\|svg\|webp\|bmp\|ico\|cur\|tiff\|tif\|png\)$" -exec sh -c 'mogrify -format jpg "$1" && rm -f "$1" ' sh {} \;
 
 
     # list all jpg files

@@ -87,6 +87,8 @@ for mystr in "${uncenlist[@]}"; do
    variable+="s/$mystr/_uncen/; " 
 done
 
+
+
 # 包含以下字符的直接删除
 list+=( "\[S版\]"  )
 list+=( "\[無修正\]"  )
