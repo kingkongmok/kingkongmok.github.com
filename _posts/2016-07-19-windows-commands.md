@@ -180,6 +180,9 @@ route add 77.77.77.36 mask 255.255.255.255 172.26.31.254
 
 ### telnet client install
 
+
+输入 windows feature
+
 在命令行在安装，安装后退出cmd，重新进入cmd后就有telnet命令
 
 ```
