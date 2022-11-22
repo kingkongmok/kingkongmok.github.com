@@ -1,3 +1,44 @@
+-- ------------------------------
+-- mysql
+-- ------------------------------
+
+
+MariaDB [Syslog]> SELECT PARTITION_ORDINAL_POSITION, TABLE_ROWS, PARTITION_METHOD
+    -> FROM information_schema.PARTITIONS
+        -> WHERE TABLE_SCHEMA = 'Syslog' AND TABLE_NAME = 'SystemEvents' ;
+        +----------------------------+------------+------------------+
+        | PARTITION_ORDINAL_POSITION | TABLE_ROWS | PARTITION_METHOD |
+        +----------------------------+------------+------------------+
+        |                          1 |          0 | RANGE            |
+        |                          2 |          0 | RANGE            |
+        |                          3 |          0 | RANGE            |
+        |                          4 |          0 | RANGE            |
+        |                          5 |          0 | RANGE            |
+        |                          6 |          0 | RANGE            |
+        |                          7 |          0 | RANGE            |
+        |                          8 |          0 | RANGE            |
+        |                          9 |          0 | RANGE            |
+        |                         10 |          0 | RANGE            |
+        |                         11 |          0 | RANGE            |
+        |                         12 |          0 | RANGE            |
+        |                         13 |     838737 | RANGE            |
+
+
+-- on mysql:
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+ALTER TABLE SystemEvents REORGANIZE PARTITION PM INTO ( PARTITION P31 VALUES LESS THAN (202301) , PARTITION PM VALUES LESS THAN MAXVALUE);
+
+
 routins:
 
 
