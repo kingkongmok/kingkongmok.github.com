@@ -15,7 +15,8 @@ nice /usr/local/mysql/bin/mysqldump -ukk -p igbsurvey | gzip > igbsurvey.sql.gz
 ## 还原
 
 ```
-nice zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
+zcat igbsurvey.sql.gz | mysql -uroot -p igbsurvey
+zcat zabbix.sql.gz | mysql -uroot -p
 ```
 
 --- 
