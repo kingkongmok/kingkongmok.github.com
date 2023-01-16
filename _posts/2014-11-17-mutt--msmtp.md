@@ -51,10 +51,10 @@ libssl.so.6
 # cat > ~/.msmtprc << EOF
 account default
 host smtp.163.com
-from kk_richinfo@163.com
+from kk_xxxxx@163.com
 auth login
 port 25
-user kk_richinfo@163.com
+user kk_xxxxx@163.com
 password 1q2w3e4r
 tls off
 syslog on
@@ -104,7 +104,7 @@ libc.so.6
 # cat >> ~/.muttrc << EOF
 set sendmail="/usr/local/bin/msmtp"
 set use_from=yes
-set from=kk_richinfo@163.com
+set from=kk_xxxxx@163.com
 set envelope_from=yes
 EOF
 ```
@@ -112,5 +112,5 @@ EOF
 ### test example
 
 ```bash
-cat ~/.bashrc | /usr/local/bin/mutt -e 'set content_type="text/html"' moqingqiang@richinfo.cn -s "testmail"
+cat ~/.bashrc | /usr/local/bin/mutt -e 'set content_type="text/html"' moqingqiang@xxxxx.cn -s "testmail"
 ```
