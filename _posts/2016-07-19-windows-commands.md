@@ -199,3 +199,17 @@ dism /online /Enable-Feature /FeatureName:TelnetClient
 
 
 netstat -nb  | find  /i "time_wait" /c
+
+---
+
+###  net use and net use delete
+
+```
+
+net use
+
+net use * /delete
+
+但另外需要凭据管理器进行删除
+
+```
