@@ -65,6 +65,7 @@ shift $(($OPTIND-1))
 backup_dir=changeNameBackup
 changename_log=${backup_dir}/changeName.log
 
+
 if [ "$TESTMODE" == 0 ] ; then
     if  [ ! -d "$backup_dir" ] ; then
 	mkdir "$backup_dir"
@@ -72,19 +73,27 @@ if [ "$TESTMODE" == 0 ] ; then
     find .  -maxdepth 1 -type f -exec ln {} "$backup_dir" \;
 fi
 
+find . -maxdepth 1  -type f -print0 | while read -d $'\0' file; do
+unset variable
+unset uncenlist
+unset list
 
 # uncen
+uncenlist+=( "\[無修正化\]"  )
 uncenlist+=( "\[無修正\]"  )
+uncenlist+=( "無修正"  )
 uncenlist+=( "\[无修正\]"  )
 uncenlist+=( "\[無修正_重嵌\]"  )
 uncenlist+=( "\[无修正中文\]"  )
+uncenlist+=( "\[英版无修重嵌\]"  )
+uncenlist+=( "\[無修化\]"  )
 uncenlist+=( "\[無碼\]"  )
 uncenlist+=( "\[无码\]"  )
 uncenlist+=( "\[Decensored\]" )
 command=''
 exp=''
 for mystr in "${uncenlist[@]}"; do 
-   variable+="s/$mystr/_uncen/; " 
+   variable+="s/$mystr//; " 
 done
 
 
@@ -97,6 +106,7 @@ list+=( "bw版"  )
 list+=( "\[中國語\]"  )
 list+=( "（完全版）"  )
 list+=( "个人整理汉化版"  )
+list+=( "【个人整理】"  )
 list+=( "\(成年コミック\)"  )
 list+=( "\[Taka.Sub\]"  )
 list+=( "\[GB\]"  )
@@ -118,6 +128,7 @@ list+=( "\[中\]"  )
 list+=( "\[chinese\]"  )
 list+=( "\[中國翻譯\]"  )
 list+=( "\[東方Project\]"  )
+list+=( "\[無邪気無修宇宙分組\]"  )
 list+=( "\[麻油鷄掃圖\]"  )
 list+=( "\[DL版v2\]"  )
 list+=( "\[皮皮个人重制\]"  )
@@ -136,13 +147,18 @@ list+=( "\[官方繁中\]"  )
 list+=( "\[無碼\]"  )
 list+=( "\[薄碼\]"  )
 list+=( "\[無邪気漢化組中字\]"  )
+list+=( "\[路過的騎士漢化組\*阿聰無修化\]"  )
 list+=( "\[DL\]"  )
 list+=( "\[中国翻訳\]" )
+list+=( "［胸垫汉化组］" )
 list+=( "\(单行本\)" )
 list+=( "\[中国語\]" )
+list+=( "\(PIXIV FANBOX\)" )
+list+=( "\(中國語\)" )
 list+=( "（Chinese）" )
-list+=( "(オリジナル)" )
-list+=( "(同人誌)" )
+list+=( "\(オリジナル\)" )
+list+=( "\(WEEKLY快楽天_\d+\)" )
+list+=( "\(同人誌\)" )
 list+=( "\[Digital\]" )
 list+=( "\[精修\]" )
 list+=( "\[Chinese\]" )
@@ -150,6 +166,10 @@ list+=( "\[Decensored\]" )
 list+=( "\(Complete\)" )
 list+=( "\[English\]" )
 list+=( "18禁アニメ"  )
+list+=( "阿聰化"  )
+list+=( "轟媽去黑格版"  )
+list+=( "\(siganos个人翻译）"  )
+list+=( "\(コミックホットミルク.*?号\)"  )
 command=''
 exp=''
 for mystr in "${list[@]}"; do 
@@ -186,6 +206,7 @@ variable+="s/（）//g;"
 variable+="s/\t+//g;"
 
 variable+='s/\(C\d+\)//;'
+variable+='s/\(ANGEL倶楽部.*?\)//;'
 # variable+='s/\(例大祭\d+\)//;'
 variable+='s/\[720P[^]]*?\]//;'
 variable+='s/\[AVC-1080P\]//;'
@@ -199,9 +220,14 @@ variable+='s/\(COMIC.*?\)//;'
 variable+='s/【.*?(漢|汉)化】//;'
 variable+='s/【.*?翻(译|訳)】//;'
 variable+='s/【.*?限定版】//;'
-variable+='s/\[[^]]*?翻(译|訳)\]//;'
+variable+='s/\[[^]]*?改圖\]//;'
+variable+='s/\[[^]]*?嵌字\]//;'
+variable+='s/\[[^]]*?翻(譯|译|訳)\]//;'
+variable+='s/\[[^]]*?無修正化\]//;'
 variable+='s/\[[^[]*?(漢|汉)化\]//;'
+variable+='s/\([^[]*?(漢|汉)化\)//;'
 variable+='s/\[[^[]*?(漢|汉)化(组|組)\]//;'
+variable+='s/\([^[]*?(漢|汉)化(组|組)\)//;'
 variable+='s/\[[^[]*?中文版\]//;'
 variable+='s/\[[^[]*?中文\]//;'
 variable+='s/\[[^[]*?個人掃本\]//;'
@@ -228,11 +254,14 @@ variable+='s/Vol.(\d)/_$1/g;'
 # variable+='s/～[^\]]*?\././;'
 
 # [fakename(realname)] -> [realname]
-variable+='s/\[[^(]*?\((.*?)\)\]/\[$1\]/;'
+variable+='s/\[[^(]*?\((.*?)\)\]/\[$1\]/; '
 
 command="perl-rename -n '$variable' " 
 
-find . -maxdepth 1  -type f -print0 | while read -d $'\0' file; do
+
+for mystr in "${uncenlist[@]}"; do 
+    ls "$file" | grep -qs "$mystr" && variable+='s/(.\w+?)$/_uncen$1/;' && break
+done
 
 # eval "$command \"$file\"" >> "$changename_log"
 if [ "$TESTMODE" == 0 ] ; then

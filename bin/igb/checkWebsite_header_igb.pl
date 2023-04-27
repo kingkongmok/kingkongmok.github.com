@@ -31,7 +31,7 @@ use DateTime;
 my @websites = qw( 
     http://www.igrandbuy.com/
 );
-my $tomailuser='13725269365@139.com';
+my $tomailuser='xxxxx';
 my $frommailuser='kk@gentoo.kk.igb';
 
 our $dt = DateTime->now ;

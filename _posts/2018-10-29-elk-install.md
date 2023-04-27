@@ -298,6 +298,18 @@ PUT .kibana/_settings
 }
 ```
 
+<<<<<<< HEAD
+=======
+
+```
+
+docker exec -it elasticsearch sh
+curl -XPUT -H "Content-Type: application/json" http://localhost:9200/_all/_settings -d '{"index.blocks.read_only_allow_delete": null}'
+
+```
+
+
+>>>>>>> c316837544b8748ce8673cc68c2739627c102432
 ---
 
 ### command
