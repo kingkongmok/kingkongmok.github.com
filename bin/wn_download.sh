@@ -64,6 +64,7 @@ getURL()
                     # 不在list和done名单
                     if [ ! "$(cat $comicDownloadList $comicDownloadFinish 2>/dev/null | grep $URL)" ] ; then
                         echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } >> $comicDownloadList
+                        echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } OK
                     else
                         echo "$DOWNLOADLINE is marked before" 
                     fi
@@ -79,6 +80,7 @@ getURL()
                 # 不在list和done名单
                 if [ ! "$(cat $comicDownloadList $comicDownloadFinish 2>/dev/null | grep $URL)" ] ; then
                     echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } >> $comicDownloadList
+                    echo ${METHODHOSTNAME}${URLINFO/zip?n=/zip } OK
                 else
                     echo "$DOWNLOADLINE is marked before" 
                 fi
@@ -159,7 +161,7 @@ downUrl()
                 
                 # download the file
                 if  [ "$SIZE" -gt "$localfile_size" ]; then 
-                    $CURL -k -s -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
+                    $CURL -k -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
                     sleep 60
                 fi
 

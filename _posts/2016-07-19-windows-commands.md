@@ -199,6 +199,8 @@ dism /online /Enable-Feature /FeatureName:TelnetClient
 
 
 netstat -nb  | find  /i "time_wait" /c
+<<<<<<< HEAD
+=======
 
 ---
 
@@ -213,6 +215,7 @@ net use * /delete
 但另外需要凭据管理器进行删除
 
 ```
+<<<<<<< HEAD
 
 ---
 
@@ -223,3 +226,6 @@ net use * /delete
 netsh winhttp show proxy
 
 ```
+=======
+>>>>>>> c316837544b8748ce8673cc68c2739627c102432
+>>>>>>> b84e20ae0ce9125fd529700cc195063a8a15d429
