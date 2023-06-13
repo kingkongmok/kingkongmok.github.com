@@ -169,6 +169,7 @@ list+=( "18禁アニメ"  )
 list+=( "阿聰化"  )
 list+=( "轟媽去黑格版"  )
 list+=( "\(siganos个人翻译）"  )
+list+=( "\(東方Project\)"  )
 list+=( "\(コミックホットミルク.*?号\)"  )
 command=''
 exp=''
