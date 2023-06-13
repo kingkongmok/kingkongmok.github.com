@@ -213,3 +213,13 @@ net use * /delete
 但另外需要凭据管理器进行删除
 
 ```
+
+---
+
+### show Proxy Server address
+
+```
+
+netsh winhttp show proxy
+
+```

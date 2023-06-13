@@ -5551,6 +5551,9 @@ ALTER SESSION SET CONTAINER=pdb1;
 ALTER SESSION SET CONTAINER=cdb$root;
 
 
+-- drop pluggable database
+
+DROP PLUGGABLE DATABASE pdb1 INCLUDING DATAFILES;
 
 -- hot clone with dblink
 
