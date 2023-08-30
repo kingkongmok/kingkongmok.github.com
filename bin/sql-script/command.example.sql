@@ -2435,6 +2435,31 @@ GROUP by A.tablespace_name, D.mb_total
 
 -- tempfile
 
+
+select a.SQL_ID, a.MACHINE, a.SAMPLE_TIME, a.program,
+       sum(trunc(a.TEMP_SPACE_ALLOCATED / 1024 / 1024)) MB
+  from gv$active_session_history a
+ where TEMP_SPACE_ALLOCATED is not null 
+ and sample_time between
+ to_date(sysdate-1) and
+ to_date(sysdate)
+ group by a.sql_id,a.SAMPLE_TIME,a.PROGRAM,a.MACHINE
+ order by MB asc,3 desc;
+ 
+ 
+ 
+ 
+SQL_ID        MACHINE                        SAMPLE_TIME                              PROGRAM                      MB
+------------- ------------------------------ ---------------------------------------- -------------------- ----------
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.00.091 AM                JDBC Thin Client          75586
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.01.091 AM                JDBC Thin Client          75632
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.02.111 AM                JDBC Thin Client          75685
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.03.111 AM                JDBC Thin Client          75743
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.04.111 AM                JDBC Thin Client          75827
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.05.111 AM                JDBC Thin Client          75906
+
+
+
 -- move tempfile
 STARTUP MOUNT
 SELECT name FROM v$tempfile;
@@ -2835,6 +2860,20 @@ FROM gV$LOCK l , gv$session s
 ORDER BY l.inst_id,l.id1, l.request
 /
 
+
+-- check sql_text
+select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
+select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV';
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
+
+-- check session
+select * from gv$session_wait where INST_ID='&INST_ID' and SID='&SID' and SEQ#='&SEQ#';
+
+
+-- kill session
+select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
+alter system kill session '&sid,&serial' immediate;
+alter system kill session '&sid,&serial,@&inst_id' immediate;
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
@@ -2866,17 +2905,6 @@ and s.sid='&sid'
 ---------- ---------- ---------- ------------- ---------- ---------- ---------------------------------------------
          1        141      21812 d7y679cgur3qq 17274      SCOTT      sqlplus@f1259e845a55 (TNS V1-V3)        
 
-
--- check sql_text
-select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
-select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV';
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
-
-
--- kill session
-select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
-alter system kill session '&sid,&serial' immediate;
-alter system kill session '&sid,&serial,@&inst_id' immediate;
 
 
 -- 杀所有来自相同machine的session
@@ -3144,7 +3172,7 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 -- ------------------------------
 
 -- ash & awr
-@?/rdbms/admin/ashrpt.sql
+ ?/rdbms/admin/ashrpt.sql
 @?/rdbms/admin/awrrpt.sql
 
 
@@ -5743,3 +5771,17 @@ FROM   sys.aud$ d
 WHERE  d.returncode = 1017
 AND    d.userid = 'SH' 
 GROUP  BY d.userhost; 
+
+-- ------------------------------
+-- CKSP
+-- ------------------------------
+
+-- 查询登录
+
+select distinct u.account,u.name,lr.ip,p.code,count(lr.id)
+from logonrecord lr
+inner join users u on u.id = lr.user_id 
+inner join portcompany p on p.id = u.portcompany_id
+where 
+lr.ip = '&ip' and LOGONTIME > sysdate-1  group by u.account,u.name,lr.ip,p.code
+

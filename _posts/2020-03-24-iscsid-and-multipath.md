@@ -604,14 +604,14 @@ alter diskgroup DATA add disk 'ORCL:DATA1' rebalance power 10;
 ### emc switch
 
 
-检查交换机收发异常
++ 检查交换机收发异常
 
 ```
 $> porterrshow
 ```
 
 
-清理一下计数器
++ 清理一下计数器
 
 ```
 statsclear
@@ -631,5 +631,31 @@ RX Power:    -2.4    dBm (577.0uW)
 TX Power:    -3.1    dBm (487.9 uW)
 
 State transitions: 1
+```
+
+```
+$> switchshow
+
+switchName:	DS650
+switchType:	118.1
+switchState:	Online
+switchMode:	Native
+switchRole:	Principal
+switchDomain:	1
+switchId:	fffc01
+switchWwn:	10:xxxxxxxxxxxxxxxxx
+zoning:		ON (DS650)
+switchBeacon:	OFF
+HIF Mode:	OFF
+
+Index Port Address  Media Speed   State       Proto
+==================================================
+   0   0   010000   id    N16	  Online      FC  F-Port  50:xxxxxxxxxxxxxxxxxxx
+   1   1   010100   id    N16	  No_Light    FC
+   2   2   010200   id    N16	  Laser_Flt   FC
+   3   3   010300   id    N16	  Online      FC  F-Port  10:xxxxxxxxxxxxxxxxx
+   4   4   010400   id    N16	  Online      FC  F-Port  50:xxxxxxxxxxxxxxxxx
+   5   5   010500   id    N16	  Online      FC  F-Port  10:xxxxxxxxxxxxxxxxx
+
 ```
 

@@ -229,3 +229,15 @@ netsh winhttp show proxy
 =======
 >>>>>>> c316837544b8748ce8673cc68c2739627c102432
 >>>>>>> b84e20ae0ce9125fd529700cc195063a8a15d429
+
+
+---
+
+[重装系统后桌面图标有的变白的解决方法](https://www.zhihu.com/question/35669038)
+
+```
+ie4uinit.exe -ClearIconCache
+taskkill /IM explorer.exe /F
+del /A /Q "%localappdata%\IconCache.db"
+del /A /F /Q "%localappdata%"\Microsoft\windows\Explorer\iconcache*
+```
