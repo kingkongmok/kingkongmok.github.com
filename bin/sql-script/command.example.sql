@@ -2860,6 +2860,15 @@ FROM gV$LOCK l , gv$session s
 ORDER BY l.inst_id,l.id1, l.request
 /
 
+-- 查询tx锁
+col sample_time for a40;
+col sql_text for a60;
+col event for a40;
+select to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss'),a.SESSION_ID,a.SESSION_SERIAL#,a.event,a.p1,a.p2,a.p3,a.sql_id,a.BLOCKING_SESSION,a.BLOCKING_SESSION_SERIAL#,b.sql_text from DBA_HIST_ACTIVE_SESS_HISTORY a,dba_hist_sqltext b 
+where a.SAMPLE_TIME between to_date('2023-09-19 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2023-09-20 00:00:00','yyyy-mm-dd hh24:mi:ss')  and a.sql_id=b.sql_id            
+AND a.EVENT = 'enq: TX - row lock contention'
+order by to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss') ;
+
 
 -- check sql_text
 select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
