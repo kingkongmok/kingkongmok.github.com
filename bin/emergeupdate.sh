@@ -54,7 +54,7 @@ else
     sudo emaint --fix cleanresume
 fi
 
-sudo emerge-webrsync && \
+# sudo emerge-webrsync && \
 sudo emerge --sync 
 sudo emerge --keep-going --update --deep --with-bdeps=y --newuse @world && \
 sudo emerge --depclean && \
