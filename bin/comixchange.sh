@@ -122,6 +122,14 @@ extract_it ()
             fi
             ;;
 
+        cbz | CBZ)
+            if [ -z "$PASSWORD" ] ; then
+                unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
+            else
+                unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
+            fi
+            ;;
+
         rar | RAR)
             mkdir "${WORKPATH}/${FILENAME}" -p
             if [ -z "$PASSWORD" ] ; then
