@@ -2391,6 +2391,14 @@ ALTER DATABASE DATAFILE '/u02/oracle/rbdb1/users03.dbf' AUTOEXTEND ON NEXT 50M M
 select round(sum(user_bytes)/(1024*1024*1024),2) "TotalSpace GB" from dba_data_files;
 
 
+-- 用户统计
+-- 货运
+SELECT case when FISDELETE = '0' then '在用用户' when FISDELETE = '1' then '过期用户' end as 用户统计  , COUNT(1) FROM T_PM_USER group by FISDELETE ;
+
+-- 客运
+select case when type=1 then '线上虚拟用户' when type=0 then '实体票务用户' end as 用户类型 , count(1) from users where status=1 group by type ;
+
+
 -- show specific datafile and info
 col 'Tablespace Name' format a15
 col 'File Name' format a50
