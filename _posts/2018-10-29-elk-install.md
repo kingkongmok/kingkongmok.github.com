@@ -332,6 +332,12 @@ curl -s http://127.0.0.1:9200/_cat/health
 curl -XDELETE localhost:9200/api*
 ```
 
+### delete ALL indexes
+
+```
+curl -X DELETE 'http://localhost:9200/_all'
+```
+
 #### mapping
 
 ```
