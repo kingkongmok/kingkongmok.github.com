@@ -292,3 +292,19 @@ echo "free  memory = ${fm}MB"
 echo "used  memory = ${um}MB"
 echo "\n\n-----------------------\n";
 ```
+
+---
+
+## mount
+
++ /etc/filesystems
+
+```
+/mnt/nas:
+        dev             = /volume1/backup/ptms_db
+        vfs             = nfs
+        nodename        = NAS_IP_ADDR
+        mount           = true
+        options         = rw,bg,hard,intr,proto=tcp,vers=3,rsize=65536,wsize=65536,timeo=600
+        account         = false
+```

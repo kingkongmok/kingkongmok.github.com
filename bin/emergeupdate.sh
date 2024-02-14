@@ -49,20 +49,20 @@ shift $(($OPTIND-1))
 
 
 if [ "$ForceUpdate" != 1 ] ; then
-    sudo nice -n 19 emerge --resume 
+    sudo emerge --resume 
 else
     sudo emaint --fix cleanresume
 fi
 
-sudo nice -n 19 emerge-webrsync && \
-sudo nice -n 19 emerge --sync 
-sudo nice -n 19 emerge --keep-going --update --deep --with-bdeps=y --newuse @world && \
-sudo nice -n 19 emerge --depclean && \
-sudo nice -n 19 revdep-rebuild.sh
+# sudo emerge-webrsync && \
+sudo emerge --sync 
+sudo emerge --keep-going --update --deep --with-bdeps=y --newuse @world && \
+sudo emerge --depclean && \
+sudo evdep-rebuild.sh
 
 
 # https://forums.gentoo.org/viewtopic-t-564143-start-0.html
 if [ -d "/usr/portage/packages" ] ; then
-    sudo nice eclean -C -q packages 
+    sudo eclean -C -q packages 
 fi
-sudo nice eclean -C -q -d -t1w distfiles
+sudo eclean -C -q -d -t1w distfiles

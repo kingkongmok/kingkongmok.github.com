@@ -229,3 +229,27 @@ netsh winhttp show proxy
 =======
 >>>>>>> c316837544b8748ce8673cc68c2739627c102432
 >>>>>>> b84e20ae0ce9125fd529700cc195063a8a15d429
+
+
+---
+
+[重装系统后桌面图标有的变白的解决方法](https://www.zhihu.com/question/35669038)
+
+```
+ie4uinit.exe -ClearIconCache
+taskkill /IM explorer.exe /F
+del /A /Q "%localappdata%\IconCache.db"
+del /A /F /Q "%localappdata%"\Microsoft\windows\Explorer\iconcache*
+```
+
+---
+
+winmtr
+
+```
+Windows环境下可以使用WinMTR测试：
+https://www.alibabacloud.com/help/en/elastic-compute-service/latest/mtr-tool-usage-instructions-and-result-analysis#c03f5e4381wpe
+
+WinMTR下载地址：
+https://sourceforge.net/projects/winmtr/files/WinMTR-v092.zip/download?spm=a2c9r.12641821.0.0.18a15e3bgZqv4N
+```

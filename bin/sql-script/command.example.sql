@@ -2391,6 +2391,14 @@ ALTER DATABASE DATAFILE '/u02/oracle/rbdb1/users03.dbf' AUTOEXTEND ON NEXT 50M M
 select round(sum(user_bytes)/(1024*1024*1024),2) "TotalSpace GB" from dba_data_files;
 
 
+-- 用户统计
+-- 货运
+SELECT case when FISDELETE = '0' then '在用用户' when FISDELETE = '1' then '过期用户' end as 用户统计  , COUNT(1) FROM T_PM_USER group by FISDELETE ;
+
+-- 客运
+select case when type=1 then '线上虚拟用户' when type=0 then '实体票务用户' end as 用户类型 , count(1) from users where status=1 group by type ;
+
+
 -- show specific datafile and info
 col 'Tablespace Name' format a15
 col 'File Name' format a50
@@ -2434,6 +2442,31 @@ GROUP by A.tablespace_name, D.mb_total
 
 
 -- tempfile
+
+
+select a.SQL_ID, a.MACHINE, a.SAMPLE_TIME, a.program,
+       sum(trunc(a.TEMP_SPACE_ALLOCATED / 1024 / 1024)) MB
+  from gv$active_session_history a
+ where TEMP_SPACE_ALLOCATED is not null 
+ and sample_time between
+ to_date(sysdate-1) and
+ to_date(sysdate)
+ group by a.sql_id,a.SAMPLE_TIME,a.PROGRAM,a.MACHINE
+ order by MB asc,3 desc;
+ 
+ 
+ 
+ 
+SQL_ID        MACHINE                        SAMPLE_TIME                              PROGRAM                      MB
+------------- ------------------------------ ---------------------------------------- -------------------- ----------
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.00.091 AM                JDBC Thin Client          75586
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.01.091 AM                JDBC Thin Client          75632
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.02.111 AM                JDBC Thin Client          75685
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.03.111 AM                JDBC Thin Client          75743
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.04.111 AM                JDBC Thin Client          75827
+5408k7qnhhpkf EASTMAP2                       17-AUG-23 10.49.05.111 AM                JDBC Thin Client          75906
+
+
 
 -- move tempfile
 STARTUP MOUNT
@@ -2835,6 +2868,29 @@ FROM gV$LOCK l , gv$session s
 ORDER BY l.inst_id,l.id1, l.request
 /
 
+-- 查询tx锁
+col sample_time for a40;
+col sql_text for a60;
+col event for a40;
+select to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss'),a.SESSION_ID,a.SESSION_SERIAL#,a.event,a.p1,a.p2,a.p3,a.sql_id,a.BLOCKING_SESSION,a.BLOCKING_SESSION_SERIAL#,b.sql_text from DBA_HIST_ACTIVE_SESS_HISTORY a,dba_hist_sqltext b 
+where a.SAMPLE_TIME between to_date('2023-09-19 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2023-09-20 00:00:00','yyyy-mm-dd hh24:mi:ss')  and a.sql_id=b.sql_id            
+AND a.EVENT = 'enq: TX - row lock contention'
+order by to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss') ;
+
+
+-- check sql_text
+select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
+select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV';
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
+
+-- check session
+select * from gv$session_wait where INST_ID='&INST_ID' and SID='&SID' and SEQ#='&SEQ#';
+
+
+-- kill session
+select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
+alter system kill session '&sid,&serial' immediate;
+alter system kill session '&sid,&serial,@&inst_id' immediate;
 -- V$SESSION.SID and V$SESSION.SERIAL# are database process id
 -- V$PROCESS.SPID – Shadow process id on the database server
 -- V$SESSION.PROCESS – Client process id
@@ -2866,17 +2922,6 @@ and s.sid='&sid'
 ---------- ---------- ---------- ------------- ---------- ---------- ---------------------------------------------
          1        141      21812 d7y679cgur3qq 17274      SCOTT      sqlplus@f1259e845a55 (TNS V1-V3)        
 
-
--- check sql_text
-select sql_fulltext from gv$sqlarea where sql_id='&sql_id';
-select sid,serial#, user, machine from gv$session where sql_id='&sql_id' and status='ACTIV';
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id',0));
-
-
--- kill session
-select OSUSER,MACHINE,TERMINAL,PROCESS,program from gv$session where sid = &sid;
-alter system kill session '&sid,&serial' immediate;
-alter system kill session '&sid,&serial,@&inst_id' immediate;
 
 
 -- 杀所有来自相同machine的session
@@ -3144,7 +3189,7 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 -- ------------------------------
 
 -- ash & awr
-@?/rdbms/admin/ashrpt.sql
+ ?/rdbms/admin/ashrpt.sql
 @?/rdbms/admin/awrrpt.sql
 
 
@@ -5743,3 +5788,17 @@ FROM   sys.aud$ d
 WHERE  d.returncode = 1017
 AND    d.userid = 'SH' 
 GROUP  BY d.userhost; 
+
+-- ------------------------------
+-- CKSP
+-- ------------------------------
+
+-- 查询登录
+
+select distinct u.account,u.name,lr.ip,p.code,count(lr.id)
+from logonrecord lr
+inner join users u on u.id = lr.user_id 
+inner join portcompany p on p.id = u.portcompany_id
+where 
+lr.ip = '&ip' and LOGONTIME > sysdate-1  group by u.account,u.name,lr.ip,p.code
+
