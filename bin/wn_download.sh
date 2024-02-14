@@ -27,7 +27,7 @@ comicDownloadFailure=~/Dropbox/var/log/wn_download/comic.fail
 CURL_HEADER="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
 DOWNLOAD_DIR=~/Downloads/comic
 # --socks5-hostname Use  the specified SOCKS5 proxy (and let the proxy resolve the host name)
-CURL="/usr/bin/curl --socks5-hostname 127.0.0.1:7074"
+CURL="/usr/bin/curl --socks5-hostname 127.0.0.1:7073"
 FailureMode=0
 ERRORMAKR=0
 
@@ -162,7 +162,7 @@ downUrl()
                 # download the file
                 if  [ "$SIZE" -gt "$localfile_size" ]; then 
                     $CURL -k -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
-                    sleep 60
+                    sleep 5 
                 fi
 
 

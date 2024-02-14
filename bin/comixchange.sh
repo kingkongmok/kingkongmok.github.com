@@ -159,15 +159,6 @@ resize ()
 
     cd "${WORKPATH}/${FILENAME}" || exit 23
 
-    
-    # rename all the images file if RENAME_TRIGGER is ON
-    if [ $RENAME_TRIGGER -eq 1 ]  ; then
-        shopt  -s dotglob
-        find -type f -exec perl-rename 's/\///g' {} -i \;
-        perl-rename 's/.*\./sprintf"%04d.",++$i/e' * -i
-        shopt  -u dotglob
-    fi
-
 
     # delete NOT IMAGE files
     find . -type f ! -iregex ".*\.\(apng\|avif\|gif\|jfif\|pjpeg\|pjp\|svg\|webp\|bmp\|ico\|cur\|jpg\|jpeg\|tiff\|tif\|png\)$" -exec rm -f "{}" \;
@@ -234,4 +225,14 @@ extract_it
 if [ -z "$NOTDOFLAG" ]; then
 	resize
 fi
+
+if [ $RENAME_TRIGGER -eq 1 ]  ; then
+    cd "${WORKPATH}/${FILENAME}" || exit 23
+    shopt  -s dotglob
+    find -type f -exec perl-rename 's/\///g' {} -i \;
+    perl-rename 's/.*\./sprintf"%04d.",++$i/e' * -i
+    shopt  -u dotglob
+fi
+
+
 tar_it
