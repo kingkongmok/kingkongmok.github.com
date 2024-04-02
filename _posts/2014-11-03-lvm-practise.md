@@ -98,6 +98,12 @@ mount /dev/vgloop01/lvloop01 /disk/lvm/
 
 ### 2.增加pv
 
+
+```
+假设卷的size调整了
+pvresize /dev/sda3
+```
+
 ```
 dd if=/dev/zero of=/disk/hdc bs=1M count=100
 losetup /dev/loop2 /disk/hdc
