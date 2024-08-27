@@ -144,3 +144,16 @@ Accept-Ranges: bytes
 < 
 * Connection #0 to host ins14.datlet.com left intact
 ```
+
+
+---
+
+## [X509_check_private_key:key values mismatch](https://developer.aliyun.com/article/1136074)
+
+
+```
+[root@--]# openssl x509 -noout -modulus -in ssl.crt | openssl md5
+(stdin)= 8216eeaa8e1a346dd1f5dfecaadfec1d
+[root@--]# openssl rsa -noout -modulus -in ssl.key | openssl md5
+(stdin)= 8216eeaa8e1a346dd1f5dfecaadfec1d
+```
