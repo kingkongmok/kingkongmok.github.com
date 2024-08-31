@@ -27,9 +27,11 @@ TARGETHI=1600
 #TARGETAVGSIZE=360
 TARGETAVGSIZE=350
 
-function usage () {
+
+
+if [ "$#" -eq 0 ] ; then
 cat << EOF
-usage:  `basename $0` ZIPFILE to convert
+usage:  comixchange ZIPFILE to convert
 options:
 -h : show this help;
 -w : set the sleep time;
@@ -38,11 +40,6 @@ options:
 -r : auto rename all the images;
 EOF
 exit 3
-}
-
-
-if [ "$#" -eq 0 ] ; then
-    usage;
 fi
 
 PASSWORD=
@@ -115,28 +112,32 @@ extract_it ()
 {
     case $SUFFIX in
         zip | ZIP)
-            if [ -z "$PASSWORD" ] ; then
-                unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
-            else
-                unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
-            fi
+            # if [ -z "$PASSWORD" ] ; then
+            #     unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
+            # else
+            #     unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
+            # fi
+
+            7z x "$FILE" -o"${WORKPATH}/${FILENAME}"
             ;;
 
         cbz | CBZ)
-            if [ -z "$PASSWORD" ] ; then
-                unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
-            else
-                unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
-            fi
+            # if [ -z "$PASSWORD" ] ; then
+            #     unzip -nLqa "$FILE" -d "${WORKPATH}/${FILENAME}"
+            # else
+            #     unzip -nLqa -P "$PASSWORD" "$FILE" -d "${WORKPATH}/${FILENAME}"
+            # fi
+            7z x "$FILE" -o"${WORKPATH}/${FILENAME}"
             ;;
 
         rar | RAR)
-            mkdir "${WORKPATH}/${FILENAME}" -p
-            if [ -z "$PASSWORD" ] ; then
-                unrar x "$FILE" "${WORKPATH}/${FILENAME}"
-            else
-                unrar x -p"$PASSWORD" "$FILE" "${WORKPATH}/${FILENAME}"
-            fi
+            # mkdir "${WORKPATH}/${FILENAME}" -p
+            # if [ -z "$PASSWORD" ] ; then
+            #     unrar x "$FILE" "${WORKPATH}/${FILENAME}"
+            # else
+            #     unrar x -p"$PASSWORD" "$FILE" "${WORKPATH}/${FILENAME}"
+            # fi
+            7z x "$FILE" -o"${WORKPATH}/${FILENAME}"
             ;;
 
         tar | TAR)
@@ -169,19 +170,22 @@ resize ()
 
 
     # list all jpg files
+    OIFS="$IFS"
+    IFS=$(echo -en "\n\b")
     for i in `find . -type f -size +300k -iregex ".*\.\(jpg\|jpeg\|jfif\|pjpeg\|pjp\)$"` ; do
 
 
         # change size if too hi
-        if [[ `identify -format "%h" $i` -gt $TARGETHI ]] ; then
+        THISH=$(identify -format "%h" "$i")
+        if [ $THISH -gt $TARGETHI ] ; then
             convert -resize "x$TARGETHI" "$i" "$i"
         fi
 
 
         # change quality
-        WIDTH=$(identify -format '%w' $i)
-        HEIGHT=$(identify -format '%h' $i)
-        FILESIZE=$(stat --printf="%s" $i)
+        WIDTH=$(identify -format '%w' "$i")
+        HEIGHT=$(identify -format '%h' "$i")
+        FILESIZE=$(stat --printf="%s" "$i")
 
         # single page
         if  [ $HEIGHT -gt $WIDTH ] ; then
@@ -202,6 +206,7 @@ resize ()
         
 
     done
+    IFS="$OIFS"
 
 
 }	# ----------  end of function do_resize  ----------

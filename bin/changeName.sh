@@ -182,6 +182,7 @@ list+=( "\(コミックアンリアル.*?\)"  )
 list+=( "\(ComicKairakutenBEAST.*?\)"  )
 list+=( "\[漢化組.*?\]"  )
 list+=( "\[漢化組.*?\]"  )
+list+=( "\[d／art·\]"  )
 list+=( "rongjx个人中文机翻润色"  )
 command=''
 exp=''
