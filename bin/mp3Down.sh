@@ -31,8 +31,8 @@ downUrl()
         else
             echo "$1" >> /tmp/youtube-dl.${timestamp}.log
             echo "$1" >> "$DownloadLog"
-            /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
-            nohup /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl  --extract-audio --audio-format mp3 "$1" \
+            /usr/bin/proxychains youtube-dlc -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
+            nohup /usr/bin/proxychains youtube-dlc  --extract-audio --audio-format mp3 "$1" \
                 -o '/home/kk/Downloads/videos/%(title)s.%(ext)s' \
                 >> /tmp/youtube-dl.${timestamp}.log 2>&1 
         fi
@@ -44,8 +44,8 @@ forceDownUrl()
     timestamp=`date +%s`
     echo "$1" >> /tmp/youtube-dl.${timestamp}.log
     echo "$1" >> "$DownloadLog"
-    /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
-    nohup /usr/bin/proxychains /home/kk/workspace/youtube-dl/youtube-dl --extract-audio --audio-format mp3 "$1" \
+    /usr/bin/proxychains youtube-dlc -F "$1" | perl -nE 'say $& if /(?<=Finished downloading playlist: ).*/' >> "$DownloadLog"
+    nohup /usr/bin/proxychains youtube-dlc --extract-audio --audio-format mp3 "$1" \
         -o '/home/kk/Downloads/videos/%(title)s.%(ext)s' \
         >> /tmp/youtube-dl.${timestamp}.log 2>&1 
 }	# ----------  end of function downUrl  ----------

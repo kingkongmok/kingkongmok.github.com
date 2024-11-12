@@ -27,7 +27,7 @@ comicDownloadFailure=~/Dropbox/var/log/wn_download/comic.fail
 CURL_HEADER="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
 DOWNLOAD_DIR=~/Downloads/comic
 # --socks5-hostname Use  the specified SOCKS5 proxy (and let the proxy resolve the host name)
-CURL="/usr/bin/curl --socks5-hostname 10.255.255.3:7073"
+CURL="/usr/bin/curl --socks5-hostname 10.255.255.3:7073 -k"
 # CURL="/usr/bin/curl"
 FailureMode=0
 ERRORMAKR=0
@@ -44,7 +44,7 @@ getURL()
     METHODHOSTNAME=`echo $DOWNLOADLINE | perl -ne 'print $1 if /^(.*?)\/\//'`
     # get URL from $1
     #CURL="/usr/bin/curl --socks5-hostname 127.0.0.1:7074"
-    MESSAGE=`$CURL -k -H "$CURL_HEADER" -s $DOWNLOADLINE`
+    MESSAGE=`$CURL -H "$CURL_HEADER" -s $DOWNLOADLINE`
     MESSAGESIZE=`echo "$MESSAGE" | wc -c`
 
     if [ $MESSAGESIZE -gt 1000 ] ; then
@@ -139,7 +139,7 @@ downUrl()
             DownloadURL=`echo $line | perl -naE 'say $F[0]'`
             #FILENAME=`echo $line | perl -naE 'say join" ", @F[1..$#F]'`
             FILENAME=`echo $line | perl -nE 'print $1 if / (.*$)/'`
-            SIZE=`$CURL -k -H "$CURL_HEADER" -s -I $DownloadURL | grep -i content-length: | perl -naE 'say $F[-1]'`
+            SIZE=`$CURL -H "$CURL_HEADER" -s -I $DownloadURL | grep -i content-length: | perl -naE 'say $F[-1]'`
             SIZE=${SIZE:-0}
 
             # the filesize in http is more than 0
@@ -163,7 +163,7 @@ downUrl()
                 
                 # download the file
                 if  [ "$SIZE" -gt "$localfile_size" ]; then 
-                    $CURL -k -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
+                    $CURL -H "$CURL_HEADER" -C - $DownloadURL --retry 5 --retry-delay 5 -o "$localfile" 
                     sleep 5 
                 fi
 
