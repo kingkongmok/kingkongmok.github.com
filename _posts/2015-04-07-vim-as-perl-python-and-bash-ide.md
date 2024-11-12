@@ -204,3 +204,24 @@ pip install --user sqlparse
 ```
 %!sqlformat --reindent --keywords upper --identifiers lower -
 ```
+
+---
+
+### [Turn off color syntax highlighting in vim](https://www.cyberciti.biz/faq/turn-on-or-off-color-syntax-highlighting-in-vi-or-vim/)
+
+```
+:syntax off
+```
+
+### [Turn off color in Linux terminal for ls/grep/egrep commands](https://www.cyberciti.biz/faq/turn-off-color-in-linux-terminal-bash-session/)
+
+```
+alias ls='ls --color=auto'
+```
+
+### [preserve color in sar](https://askubuntu.com/questions/1407036/system-activity-report-sar-how-can-i-preserve-color-but-disable-extra-heade)
+
+
+```
+sar | cat 
+```

@@ -2868,6 +2868,50 @@ FROM gV$LOCK l , gv$session s
 ORDER BY l.inst_id,l.id1, l.request
 /
 
+
+-- check blocking
+
+col lock_chain for a75
+col EVENT_CHAIN for a50
+col first_seen for a18
+col last_seen for a18
+col BLOCKING_HEADER for a10
+col first_seen for a18
+col last_seen for a18
+col BLOCKING_HEADER for a10
+with ash as (
+select *
+  from gv$active_session_history
+ where sample_time>=to_date('2024-10-03 08:50:00','yyyy-mm-dd hh24:mi:ss')
+   and sample_time< to_date('2024-10-03 09:15:00','yyyy-mm-dd hh24:mi:ss')),
+ash2 as (
+select sample_time,inst_id,session_id,session_serial#,sql_id,sql_opname,
+       event,blocking_inst_id,blocking_session,blocking_session_serial#,
+       level lv,
+       connect_by_isleaf isleaf,
+   sys_connect_by_path(inst_id||'_'||session_id||'_'||session_serial#||':'||sql_id||':'||sql_opname,'->') lock_chain,
+       sys_connect_by_path(EVENT,',') EVENT_CHAIN ,
+       connect_by_root(inst_id||'_'||session_id||'_'||session_serial#) root_sess
+  from ash
+ --start with event like 'enq: TX - row lock contention%'
+ start with blocking_session is not null
+ connect by nocycle 
+        prior blocking_inst_id=inst_id
+    and prior blocking_session=session_id
+    and prior blocking_session_serial#=session_serial#
+    and prior sample_id=sample_id)
+select lock_chain lock_chain,
+       case when blocking_session is not null then blocking_inst_id||'_'||blocking_session||'_'||blocking_session_serial# else inst_id||'_'||session_id||'_'||session_serial# end blocking_header, EVENT_CHAIN,
+       count(*) cnt,
+       TO_CHAR(min(sample_time),'YYYYMMDD HH24:MI:ss') first_seen,
+       TO_CHAR(max(sample_time),'YYYYMMDD HH24:MI:ss') last_seen
+   from ash2
+  where isleaf=1
+group by lock_chain,EVENT_CHAIN,case when blocking_session is not null then blocking_inst_id||'_'||blocking_session||'_'||blocking_session_serial# else inst_id||'_'||session_id||'_'||session_serial# end
+having count(*)>1
+order by first_seen, cnt desc;
+
+
 -- 查询tx锁
 col sample_time for a40;
 col sql_text for a60;
