@@ -54,6 +54,10 @@ done
 
 
 # 使用 Bash 的字符串操作来获取下划线前的部分
+if [[ $base_filename =~ ^[0-9]+_ ]]; then
+    # 使用参数扩展移除最短匹配的前缀（即数字和紧随其后的下划线）
+    base_filename=${base_filename#*_}
+fi
 front_part=${base_filename%%_*}
 
 # 输出结果
@@ -69,13 +73,11 @@ chinese_string="$front_part"
 # 使用 printf 将字符串转换为 URL 编码
 encoded_string=$(printf "%s" "$chinese_string" | xxd -p -c256 | tr -d '\n' | sed 's/\(..\)/%\1/g')
 
-# 输出编码后的字符串
-echo "$encoded_string"
 
 sitename=`cat ~/Dropbox/pan/e_site`
 
 URI="http://${sitename}/?f_search="
 
-echo "${URI}${encoded_string}"
 
-$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; say "_$_"}}'
+#$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; say "_$_"}}'
+$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; s/netorare/ntr/; s/schoolgirl_uniform/jk/; s/gyaru/gal/; s/dark_skin/dark/; s/sole_female/sole/;  say "_$_"}}'
