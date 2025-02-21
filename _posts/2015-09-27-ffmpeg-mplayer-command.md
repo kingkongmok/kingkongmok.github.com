@@ -54,8 +54,8 @@ screen -S ffmpeg sh -c 'for i in *; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.
 
 
 
-# 目前测试中，
-screen -S ffmpeg sh -c 'for i in *; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" ; done'
+# 目前测试中， current testing
+screen -S ffmpeg sh -c 'for i in *; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  ffmpeg -i "$i" -vf  scale="trunc(oh*a/2)*2:480" -c:v libx265 -crf 18 -c:s mov_text "${i}_ffmpeg.mp4" ; mv "${i}_ffmpeg.mp4" "$i" ;  done'
 
 <<<<<<< HEAD
 screen -S ffmpeg sh -c 'find . -size +5M -print0 | while read -d $'\''\0'\'' i ; do [ `ffmpeg -i "$i" 2>&1 | grep -oP "Video.*x(\d+)" | grep -oP "\d+$"` -gt 480 ] &&  \
@@ -132,6 +132,15 @@ for i in *ass; do ffmpeg -i "${i%ass}mp4" -i "$i" -c copy -c:s mov_text outfile_
 ```
 ffmpeg -i input.mkv -c copy -c:s mov_text output.mp4
 screen -S ffmpeg sh -c 'for i in *mkv ; do ffmpeg -i "$i" -c copy -c:s mov_text "${i%mkv}mp4" ; done'
+```
+
+
+```
+ffmpeg -i input.mkv -map 0:v:0 -map 0:a:0 -c copy -map_chapters -1 output.mp4
+-map 0:v:0 选择第一个视频流。
+-map 0:a:0 选择第一个音频流。
+-c copy 确保视频和音频流直接复制而不进行重新编码。
+-map_chapters -1 表示不从任何输入文件中复制章节信息。
 ```
 
 ### wmv to mp4 

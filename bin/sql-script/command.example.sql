@@ -3233,7 +3233,7 @@ SELECT to_char(startup_time,'yyyy-mm-dd hh24:mi:ss') "DB Startup Time" FROM sys.
 -- ------------------------------
 
 -- ash & awr
- ?/rdbms/admin/ashrpt.sql
+@?/rdbms/admin/ashrpt.sql
 @?/rdbms/admin/awrrpt.sql
 
 
@@ -5846,3 +5846,29 @@ inner join portcompany p on p.id = u.portcompany_id
 where 
 lr.ip = '&ip' and LOGONTIME > sysdate-1  group by u.account,u.name,lr.ip,p.code
 
+
+
+-- 脱敏
+-- 处理旅客信息表
+update PASSENGERINFO set passport = F_AES_ENCRYPT(id);
+commit;
+update AIRPASSENGER_DETAIL set passport = F_AES_ENCRYPT(id);
+commit;
+--订单信息
+update  PERSONALINFORMATION set email = id||'@a.com',address = IDNUMBER||STATUS||IDNUMBER;
+commit;
+--新会员
+update N_MEMBER set phone = F_AES_ENCRYPT(id),ID_NUMBER =  F_AES_ENCRYPT(id),arrress = 'test_address';
+commit;
+--临时售票记录
+update webticketrecord set IDNO_REALNAME = F_AES_ENCRYPT(REALNAMEINFO_ID) where REALNAMEINFO_ID is not null;
+commit;
+--售票记录
+update ticketrecord set IDNO_REALNAME = F_AES_ENCRYPT(REALNAMEINFO_ID) where REALNAMEINFO_ID is not null;
+commit;
+-- 实名制
+update REALNAMEINFO set idno_realname = F_AES_ENCRYPT(id),phone = F_AES_ENCRYPT(id);
+commit;
+-- CWJ会员
+update MEMBERUSER set email = id||'@MUSER.com',CONTACTNUMBER = id;
+commit;
