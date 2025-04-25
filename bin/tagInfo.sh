@@ -65,7 +65,7 @@ echo "searching: $front_part"
 
 
 CURL_HEADER="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
-CURL="/usr/bin/curl -q -k --socks5-hostname 10.255.255.3:7073"
+CURL="/usr/bin/curl -q -k --socks5-hostname localhost:7073"
 
 # 定义要转换的中文字符串
 chinese_string="$front_part"
