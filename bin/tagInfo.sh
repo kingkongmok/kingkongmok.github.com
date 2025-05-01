@@ -80,4 +80,4 @@ URI="http://${sitename}/?f_search="
 
 
 #$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; say "_$_"}}'
-$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; s/netorare/ntr/; s/schoolgirl_uniform/jk/; s/gyaru/gal/; s/dark_skin/dark/; s/sole_female/sole/;  say "_$_"}}'
+$CURL -H "$CURL_HEADER" -q "${URI}${encoded_string}" | perl -nE 'while(/<div class="gt" title="(.*?)">/gsm ){ if ($1 !~ /language:.*/) {$H{$1}++}} }{ for (sort {$H{$a}<=>$H{$b}} keys %H){print "$H{$_}\t$_\t"; if(/:(.*)/){s/.*://; s/\s+/_/g; s/netorare/ntr/; s/schoolgirl_uniform/jk/; s/gyaru-oh/bss/ ; s/gyaru/gal/; s/dark_skin/dark/; s/sole_female/sole/;  say "_$_"}}'
