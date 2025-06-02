@@ -1,0 +1,385 @@
+数据库软件安装，
+实例创建及管理，
+表空间管理，
+用户管理，
+创建表， 
+创建约束，
+导入数据，
+创建视图，
+创建索引，
+修改数据库的参数，
+开启归档模式， 
+物理备份，
+逻辑备份，
+作业管理，
+ODBC 接口配置等
+
+-- OS
+root
+Dameng123
+dmdba
+Dameng123
+
+-- DB：
+sysdba
+Dameng123
+
+
+
+-- sysconf
+
+--root
+export PS1='\[\e[1;31m\]\u@\h\[\e[m\] \[\e[1;35m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+
+cat >> /etc/sysctl.conf << EOF
+# damemg rdmbs
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+fs.pipe-max-size = 1048576
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 1048576
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+EOF
+
+sysctl -p
+
+
+
+cat >> /etc/security/limits.conf  << EOF
+dmdba soft nproc 10240
+dmdba hard nproc 65536
+EOF
+
+
+
+
+systemctl stop firewalld
+systemctl disable firewalld
+
+
+
+groupadd dinstall
+useradd -g dinstall dmdba
+usermod -aG wheel dmdba
+
+
+echo -e "Dameng123\nDameng123" | passwd dmdba
+
+
+mkdir /dm8
+chown dmdba:dinstall -R /dm8
+
+
+
+sed -i.default 's/^#%wheel/%wheel/; s/^# %wheel/%wheel/' /etc/sudoers
+
+
+chmod +rx DMInstall.bin
+
+
+
+-- dmdba
+export PS1='\[\e[1;35m\]\u@\h\[\e[m\] \[\e[1;35m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] \[\e[1;37m\]'
+
+
+-- profile
+
+export DM_INSTALL_TMPDIR=/home/dmdba/tmp
+
+export PATH="$PATH:/dm8/bin"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/dm8/bin"
+
+
+
+-- install instance_name
+
+./DMInstall.bin -i
+
+是否输入Key文件路径? (Y/y:是 N/n:否) [Y/y]:Y
+请输入Key文件的路径地址 [dm.key]:/home/dmdba/dm1301128247.key
+
+
+是否设置时区? (Y/y:是 N/n:否) [Y/y]:
+
+请选择安装目录 [/home/dmdba/dmdbms]:/dm8
+
+
+
+
+-- uninstall
+
+sudo systemctl stop DmServicePROD
+./uninstall.sh -i
+
+请确认是否卸载达梦数据库(/dm8/)? (y/Y:是 n/N:否)：y
+
+是否删除dm_svc.conf配置文件? (y/Y:是 n/N:否):y
+
+使用root用户执行命令:
+/dm8/root_uninstaller.sh
+
+sudo /dm8/root_uninstaller.sh
+删除DmAPService服务
+Removed /etc/systemd/system/multi-user.target.wants/DmAPService.service.
+删除DmServicePROD服务
+Removed /etc/systemd/system/multi-user.target.wants/DmServicePROD.service.
+删除/etc/dm_svc.conf文件
+
+
+
+-- dbca
+$ /dm8/bin/dminit path=/dm8/data db_name=DMDB instance_name=PROD port_num=5236 sysdba_pwd=Dameng123 sysauditor_pwd=Dameng123 log_size=256
+# /dm8/script/root/dm_service_installer.sh -t dmserver -p PROD -dm_ini /dm8/data/DMDB/dm.ini
+
+systemctl start DmServicePROD
+systemctl enable DmServicePROD
+
+
+
+systemctl
+/usr/lib/systemd/system/DmServiceDMSERVER
+
+
+
+
+
+--  ntp
+echo server pool.ntp.org iburst >> /etc/ntp.conf
+
+
+
+
+-- views to select
+
+v$rlog
+v$rlogfile
+v$dm_arch_ini ;
+dba_segments;
+v$dm_ini;
+v$archived_log;
+
+
+
+-- archive mode
+select * from v$archived_log;
+checkpoint(100);
+
+$ mkdir /dm8/data/DMDB/arch
+
+
+alter database mount;
+alter database archivelog;
+alter database add archivelog 'DEST=/dm8/data/DMDB/arch, TYPE=LOCAL, FILE_SIZE=128, SPACE_LIMIT=0, ARCH_FLUSH_BUF_SIZE=0, HANG_FLAG=1';
+alter database open;
+
+
+
+
+-- dm_ini and parameter
+
+select * from v$dm_ini where PARA_NAME like '%COMPATIBLE_MODE%';
+
+
+select * from v$dm_ini where PARA_NAME = 'COMPATIBLE_MODE' ;
+
+sp_set_para_value(2,'COMPATIBLE_MODE',2);
+其中，第一个数字是用于表明是 memory还是spfile，1是memory，2是spfile
+所以
+alter system set 'COMPATIBLE_MODE'=2 spfile;
+就是
+sp_set_para_value(2,'COMPATIBLE_MODE',2);
+
+
+
+
+
+SQL> select * from V$PROCESS;
+
+LINEID     PID         PNAME    TRACE_NAME TYPE$
+---------- ----------- -------- ---------- -----------
+1          36076       dmserver            1
+
+
+
+
+Select * from v$threads;
+select * from dba_tablespaces;
+select * from DBA_DATA_FILES;
+select * from v$tablespace;
+
+create tablespace "TEST" datafile 'TEST.dbf' size 128 autoextend on next 1 maxsize 10240 CACHE = NORMAL;
+
+select name,STATUS$ from v$tablespace;
+alter TABLESPACE TEST online ;
+alter TABLESPACE TEST OFFLINE ;
+
+
+-- 这里是指database最大空间为100MB
+alter tablespace "TEST" resize datafile 'TEST.dbf' to 100;
+alter tablespace "TEST" add datafile 'TEST1.DBF' size 100 ;
+
+
+alter tablespace test offline ;
+alter tablespace "TEST" rename datafile 'TEST1.DBF' to '/home/dmdba/TEST02_02.DBF';
+alter tablespace test online;
+
+
+
+select * from V$DATAFILE;
+
+SELECT arch_mode FROM v$database;
+
+
+alter tablespace "TEST" cache = "KEEP" ;
+alter tablespace "TEST" cache = NORMAL ;
+
+
+
+select * from v$dm_ini where para_name like '%TEMP%' ;
+sp_set_para_value('TEMP_SIZE',100);
+
+
+SQL> select * from DBA_DATA_FILES where TABLESPACE_NAME='ROLL';
+
+
+
+alter tablespace ROLL resize datafile '/dm/data/DAMENG/ROLL.DBF' TO 256;
+
+
+
+select USERNAME,ACCOUNT_STATUS,LOCK_DATE,EXPIRY_DATE,DEFAULT_TABLESPACE from dba_users;
+select * from dba_sys_privs;
+
+create user "TEST" identified by "Dameng123"
+limit FAILED_LOGIN_ATTEMPS 5 ASSWORD_LIFE_TIME 180 PASSWORD_LOCK_TIME 3 default tablespace "TEST";
+	
+create user "TEST" IDENTIFIED BY "Dameng123" DEFAULT TABLESPACE "TEST";
+
+grant "PUBLIC","RESOURCE","SOI" to TEST; 
+grant CREATE TABLE,CREATE VIEW to TEST;
+
+
+start DDL.sql
+
+select * from DBA_ROLE_PRIVS where GRANTEE='TEST';
+select * from DBA_SYS_PRIVS where GRANTEE='TEST';
+select * from DBA_TAB_PRIVS where GRANTEE='TEST';
+select * from DBA_COL_PRIVS where GRANTEE='TEST';
+
+
+select a.USERNAME,a.LOCK_DATE,a.EXPIRY_DATE,a.DEFAULT_TABLESPACE,b.FAILED_NUM,b.LIFE_TIME,b.LOCK_TIME from dba_users a,SYSUSERS b where a.USER_ID=b.ID and a.USERNAME='TEST';
+
+create table EMPLOYEE ( id number, hire_date timestamp, employee_name VARCHAR2, PHONE_NUM number, CONSTRAINT EMPLOYEE_PK PRIMARY KEY (id)  ) tablespace TEST  ; 
+create table DEPARTMENT ( id number, CONSTRAINT DEPARTMENT_PK PRIMARY KEY (id) ) ;
+create role ROLEM; 
+grant "RESOURCE" to ROLEM; 
+grant CREATE TABLE,CREATE VIEW,CREATE INDEX to ROLEM; 
+grant SELECT (hire_date) on TEST.EMPLOYEE to ROLEM; 
+grant select (employee_name) on TEST.employee to ROLEM; 
+grant SELECT on TEST.DEPARTMENT to ROLEM; 
+grant UPDATE (PHONE_NUM)on TEST.EMPLOYEE to ROLEM;
+
+grant rolem to test;
+
+角色的禁用和启用 1：启用 0 禁用 
+SP_SET_ROLE('ROLEM',0); 
+SP_SET_ROLE('ROLEM',1); 
+
+删除角色： drop role ROLEM;
+
+revoke CREATE VIEW from TEST;
+alter user test identified by Dameng123
+
+
+
+-- datadump open状态进行
+mkdir /dm8/data/DMDB/dump
+dexp sysdba/Dameng123 DIRECTORY='/dm8/data/DMDB/dump' FILE=full.dmp FULL=Y LOG=full.log
+/dm/bin/dexp sysdba/Dameng123 DIRECTORY='/dm/data/DAMENG/dump' FILE=full.dmp FULL=Y LOG=full.log
+
+
+
+/dm/bin/dexp sysdba/Dameng123 DIRECTORY='/dm/data/DAMENG/dump' FILE=TEST.dmp schemas=TEST LOG=test.log
+/dm/bin/dimp sysdba/Dameng123 DIRECTORY='/dm/data/DAMENG/dump' FILE=TEST.dmp schemas=TEST LOG=test_import.log
+
+
+-- rman  mount或者关闭状态进行
+
+
+
+/dm/bin/dmrman
+
+
+sudo systemctl stop DmServicePROD
+sudo systemctl stop DmServiceDMSERVER
+/dm/bin/dmrman
+
+RMAN> remove backupset '/dm/data/DAMENG/bak/DB_DAMENG_FULL_2025_02_20_17_05_52';
+
+RMAN> backup database '/dm/data/DAMENG/dm.ini' full backupset '/dm/data/DAMENG/bak'
+RMAN> backup database '/dm8/data/DMDB/dm.ini' full backupset '/dm8/data/DMDB/bak/full_test';
+
+-- 删除数据后启动有问题
+
+sudo systemctl restart DmServiceDMSERVER
+
+
+RMAN> show backupset '/dm/data/DAMENG/bak' ;
+RMAN> check backupset '/dm/data/DAMENG/bak';
+RMAN> restore database '/dm/data/DAMENG/dm.ini' from backupset '/dm/data/DAMENG/bak' ;
+RMAN> recover database '/dm/data/DAMENG/dm.ini' from backupset '/dm/data/DAMENG/bak' ;
+RMAN> recover database '/dm/data/DAMENG/dm.ini' update db_magic;
+
+重启 systemctl restart DmServiceDMSERVER
+
+
+
+
+
+
+-- odbc
+
+
+
+
+tar -xzvf unixODBC-2.3.0.tar.gz
+cd unixODBC-2.3.0/
+./configure
+make && make install
+
+
+odbc_config --version
+odbcinst -j
+
+
+cat > odbc.ini << EOF
+[DM8]
+Description   = DM ODBC DSN
+Driver     = DM8 ODBC DRIVER
+SERVER     = localhost
+UID       = SYSDBA
+PWD       = Dameng123
+TCP_PORT   = 5236
+EOF
+
+cat > odbcinst.ini << EOF
+[DM8 ODBC DRIVER]
+Description = ODBC DRIVER FOR DM8
+Driver = /dm/bin/libdodbc.so
+EOF
+
+
+
+
+
+
+
+
+
+
+
+
