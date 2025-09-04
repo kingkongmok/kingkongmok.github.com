@@ -32,7 +32,7 @@ local_ip=`/sbin/ip ro | grep 'proto kernel' | grep -v docker | awk '{print $9}' 
 #local_ip=`/bin/ip ro | grep 'proto kernel' | grep -v docker | awk '{print $9}' | tail -1`
 fromUser='from@email.com'
 recipients="to@email.com"
-ELK_URL='http://172.16.46.29:5601/goto/9afcf85ba510c0546c4d7b4709582317'
+ELK_URL='http://192.168.46.29:5601/goto/9afcf85ba510c0546c4d7b4709582317'
 
 sendErrorMail(){
 	Subject="API too much 50X error occurs"

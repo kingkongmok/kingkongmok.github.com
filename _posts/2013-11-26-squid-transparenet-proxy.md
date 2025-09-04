@@ -46,7 +46,7 @@ acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
 acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
-acl localnet src 172.16.0.0/12 # RFC1918 possible internal network
+acl localnet src 192.168.0.0/12 # RFC1918 possible internal network
 acl localnet src 192.168.0.0/16 # RFC1918 possible internal network
 acl SSL_ports port 443 # https
 acl SSL_ports port 563 # snews

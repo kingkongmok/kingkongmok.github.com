@@ -76,7 +76,7 @@ prtconf |grep disk
 config file **/etc/syslog.conf**, 注意中间的是tab
 
 ```
-*.emerg;*.alert;*.crit;*.warning;*.err;*.notice;*.info  @172.16.40.73
+*.emerg;*.alert;*.crit;*.warning;*.err;*.notice;*.info  @192.168.40.73
 ```
 
 ```

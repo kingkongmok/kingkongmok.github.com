@@ -59,7 +59,7 @@ else
 	    ;;
 	    172.16*) # Exclude local LAN
 	    ;;
-	    172.26*) # Exclude local LAN
+	    192.168.) # Exclude local LAN
 	    ;;
 	    *) # Add rule against intruding IP
 	    echo iptables -I INPUT -s $IP -j DROP

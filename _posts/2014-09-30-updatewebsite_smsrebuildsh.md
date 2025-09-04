@@ -20,35 +20,35 @@ tags: [rsync, smsRebuild, update]
 kk@ins14 ~/bin $ ./updateWebsite_smsRebuild.sh -t -m sms
 
 #backuping the sms modules.
-ssh 172.16.210.52 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.52 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
-ssh 172.16.210.53 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.53 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
-ssh 172.16.210.54 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.54 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
+ssh 192.168.210.52 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.52 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
+ssh 192.168.210.53 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.53 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
+ssh 192.168.210.54 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.54 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms /home/appBackup/20140930135321/
 
 #updating the sms modules.
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 172.16.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 172.16.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 172.16.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 192.168.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 192.168.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/sms/ 192.168.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_A/webapps/sms/
 
 #backuping the sms configs.
-ssh 172.16.210.52 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.52 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
-ssh 172.16.210.53 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.53 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
-ssh 172.16.210.54 mkdir -p /home/appBackup/20140930135321
-ssh 172.16.210.54 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
+ssh 192.168.210.52 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.52 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
+ssh 192.168.210.53 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.53 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
+ssh 192.168.210.54 mkdir -p /home/appBackup/20140930135321
+ssh 192.168.210.54 rsync -a /home/appSys/smsRebuild/AppConfig/smscfg /home/appBackup/20140930135321/
 
 #updating the sms configs.
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 172.16.210.52:/home/appSys/smsRebuild/AppConfig/smscfg/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 172.16.210.53:/home/appSys/smsRebuild/AppConfig/smscfg/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 172.16.210.54:/home/appSys/smsRebuild/AppConfig/smscfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 192.168.210.52:/home/appSys/smsRebuild/AppConfig/smscfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 192.168.210.53:/home/appSys/smsRebuild/AppConfig/smscfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_sms/smscfg/ 192.168.210.54:/home/appSys/smsRebuild/AppConfig/smscfg/
 
 #restarting the tomcat.
-ssh 172.16.210.52 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
-ssh 172.16.210.53 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
-ssh 172.16.210.54 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
+ssh 192.168.210.52 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
+ssh 192.168.210.53 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
+ssh 192.168.210.54 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
 ```
 
 
@@ -56,40 +56,40 @@ ssh 172.16.210.54 /home/appSys/smsRebuild/sbin/tomcat_sms_mms_card.sh restart
 kk@ins14 ~/bin $ ./updateWebsite_smsRebuild.sh -t -m calendar -w -c
 
 #backuping the calendar modules.
-ssh 172.16.210.52 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.52 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
-ssh 172.16.210.53 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.53 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
-ssh 172.16.210.54 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.54 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
+ssh 192.168.210.52 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.52 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
+ssh 192.168.210.53 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.53 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
+ssh 192.168.210.54 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.54 rsync -a /home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar /home/appBackup/20140930135422/
 
 #updating the calendar WEB-INF folder.
-rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 172.16.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
-rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 172.16.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
-rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 172.16.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 192.168.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 192.168.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync --delete -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/WEB-INF 192.168.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
 
 #updating the calendar modules.
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 172.16.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 172.16.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 172.16.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 192.168.210.52:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 192.168.210.53:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendar/ 192.168.210.54:/home/appSys/smsRebuild/tomcat_7.0.20_B/webapps/calendar/
 
 #backuping the calendar configs.
-ssh 172.16.210.52 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.52 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
-ssh 172.16.210.53 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.53 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
-ssh 172.16.210.54 mkdir -p /home/appBackup/20140930135422
-ssh 172.16.210.54 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
+ssh 192.168.210.52 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.52 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
+ssh 192.168.210.53 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.53 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
+ssh 192.168.210.54 mkdir -p /home/appBackup/20140930135422
+ssh 192.168.210.54 rsync -a /home/appSys/smsRebuild/AppConfig/calendarcfg /home/appBackup/20140930135422/
 
 #updating the calendar configs.
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 172.16.210.52:/home/appSys/smsRebuild/AppConfig/calendarcfg/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 172.16.210.53:/home/appSys/smsRebuild/AppConfig/calendarcfg/
-rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 172.16.210.54:/home/appSys/smsRebuild/AppConfig/calendarcfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 192.168.210.52:/home/appSys/smsRebuild/AppConfig/calendarcfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 192.168.210.53:/home/appSys/smsRebuild/AppConfig/calendarcfg/
+rsync -az /home/appSys/smsRebuild/sbin/update/local_calendar/calendarcfg/ 192.168.210.54:/home/appSys/smsRebuild/AppConfig/calendarcfg/
 
 #restarting the tomcat.
-ssh 172.16.210.52 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
-ssh 172.16.210.53 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
-ssh 172.16.210.54 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
+ssh 192.168.210.52 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
+ssh 192.168.210.53 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
+ssh 192.168.210.54 /home/appSys/smsRebuild/sbin/tomcat_disk_bmail_calendar.sh restart
 
 #backuping the local calendar modules.
 mkdir -p /home/appBackup/20140930135422

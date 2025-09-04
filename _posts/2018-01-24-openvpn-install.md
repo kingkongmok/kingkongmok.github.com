@@ -25,7 +25,7 @@ systemctl disable firewalld
 
 ```
 ################## Server informations ##################
-Server Hostname/IP: 172.26.31.201
+Server Hostname/IP: 192.168.31.201
 OpenVPN protocol (tcp or udp) [tcp]: tcp
 Port [443]: 443
 MySQL root password: 

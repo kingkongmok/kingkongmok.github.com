@@ -53,13 +53,13 @@ export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$PATH
 ### hosts
 
 ```
-172.26.31.226   rac1
-172.26.31.227   rac2
+192.168.31.226   rac1
+192.168.31.227   rac2
 192.168.255.3   rac1-priv
 192.168.255.4   rac2-priv
-172.26.31.228   rac1-vip
-172.26.31.229   rac2-vip
-172.26.31.230   rac-scan
+192.168.31.228   rac1-vip
+192.168.31.229   rac2-vip
+192.168.31.230   rac-scan
 
 ```
 
@@ -138,7 +138,7 @@ oracle.install.crs.config.gpnp.gnsSubDomain=
 oracle.install.crs.config.gpnp.gnsVIPAddress=
 oracle.install.crs.config.sites=
 oracle.install.crs.config.clusterNodes=rac1:rac1-vip,rac2:rac2-vip
-oracle.install.crs.config.networkInterfaceList=enp0s3:172.26.31.0:1,enp0s8:192.168.255.0:5
+oracle.install.crs.config.networkInterfaceList=enp0s3:192.168.31.0:1,enp0s8:192.168.255.0:5
 oracle.install.crs.configureGIMR=false
 oracle.install.asm.configureGIMRDataDG=false
 oracle.install.crs.config.storageOption=FLEX_ASM_STORAGE

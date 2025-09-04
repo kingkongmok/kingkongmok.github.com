@@ -13,7 +13,7 @@ my %methods = ( "tid" => "tid",
     "doPut" => "doPut",
 );
 
-my @logs= glob "/logs/pnsMsg/172.16.210.10*/cardDav/carddav.log";
+my @logs= glob "/logs/pnsMsg/192.168.210.10*/cardDav/carddav.log";
 my %H;
 
 foreach my $log (@logs  ) {
