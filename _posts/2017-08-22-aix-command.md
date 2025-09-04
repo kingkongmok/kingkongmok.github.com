@@ -301,7 +301,7 @@ echo "\n\n-----------------------\n";
 
 ```
 /mnt/nas:
-        dev             = /volume1/backup/ptms_db
+        dev             = /volume1/backup/db
         vfs             = nfs
         nodename        = NAS_IP_ADDR
         mount           = true

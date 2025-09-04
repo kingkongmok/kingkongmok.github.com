@@ -94,12 +94,7 @@ select s.inst_id, s.sid, s.serial#, p.spid, s.machine, s.username, s.logon_time,
 
 INST_ID        SID    SERIAL# SPID            USERNAME        LOGON_TIME                PROGRAM                   PGA_USED_MEM PGA_ALLOC_MEM
 ------- ---------- ---------- --------------- --------------- ------------------------- ------------------------- ------------ -------------
-      2       4474          1 12275                           2018-10-12_12:02:58       oracle@ckstmis-db2 (ARCH)           41            44
-      1       3480          1 10846                           2018-10-12_12:14:28       oracle@ckstmis-db1 (ARC3)           51            55
-      2       3764          5 12255                           2018-10-12_12:02:57       oracle@ckstmis-db2 (ARC7)           51            55
-      2       3551         15 12249                           2018-10-12_12:02:57       oracle@ckstmis-db2 (ARC4)           51            55
-      2       3409         37 12245                           2018-10-12_12:02:57       oracle@ckstmis-db2 (ARC2)           51            55
-      1       3764          1 10855                           2018-10-12_12:14:28       oracle@ckstmis-db1 (ARC7)           52            56
+      1       3764          1 10855                           2018-10-12_12:14:28       oracle@cdb1 (ARC7)           52            56
       1       1990      22249 26260           CKS             2018-10-19_10:19:34       JDBC Thin Client                    83            92
       1       3559      60977 54081           CKS             2018-10-19_11:00:45       JDBC Thin Client                   209           218
 
