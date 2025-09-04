@@ -1,9 +1,0 @@
-connect target  /
-run {
-allocate channel d1 type disk;
-crosscheck archivelog all;
-crosscheck backup of archivelog all;
-delete noprompt expired archivelog all;
-delete noprompt archivelog until time 'sysdate-8';
-release channel d1;
-}

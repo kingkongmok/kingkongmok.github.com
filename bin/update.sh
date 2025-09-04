@@ -1,1 +1,0 @@
-screen -S update sudo sh -c 'cd /usr/src && rm -f linux && ln -svf `ls | sort -gr | head -n1` linux && cd /usr/src/linux && zcat /proc/config.gz > .config && mount -o remount,rw /boot && yes "" | make oldconfig ; make && make modules_install && make install && grub-mkconfig -o /boot/grub/grub.cfg && emerge @module-rebuild'
