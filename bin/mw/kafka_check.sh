@@ -6,8 +6,7 @@
 # 检测zookeeper的zookeeper.out是否有更新
 # =======
 
-#mail_user="moqingqiang@richinfo.cn fengxy@richinfo.cn"
-mail_user="moqingqiang@richinfo.cn"
+mail_user="user@email.com"
 local_ip=`/sbin/ip ro | grep 'proto kernel' | awk '{print $9}' | tail -1`
 #ErrorMsg="some logs is NOT changed in last 5min, please check\n"
 ErrorMsg="以下日志在5分钟内没更新，请查看kafka和zookeeper以下log日志的相关进程\n"
