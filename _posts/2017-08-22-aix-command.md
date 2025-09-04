@@ -317,3 +317,11 @@ echo "\n\n-----------------------\n";
 tail -n2555 listener.log | perl -ne '$H{$1}++ if /tcp\)\(HOST=(\S+?)\)/ }{ print "$_ $H{$_}\n" for keys %H'
 
 ```
+
+---
+
+## 查错
+
+```
+errpt
+```

@@ -2879,36 +2879,55 @@ col BLOCKING_HEADER for a10
 col first_seen for a18
 col last_seen for a18
 col BLOCKING_HEADER for a10
+
 with ash as (
-select *
-  from gv$active_session_history
- where sample_time>=to_date('2024-10-03 08:50:00','yyyy-mm-dd hh24:mi:ss')
-   and sample_time< to_date('2024-10-03 09:15:00','yyyy-mm-dd hh24:mi:ss')),
+    select *
+      from gv$active_session_history
+     where sample_time >= sysdate - 3/24
+       and sample_time < sysdate
+),
 ash2 as (
-select sample_time,inst_id,session_id,session_serial#,sql_id,sql_opname,
-       event,blocking_inst_id,blocking_session,blocking_session_serial#,
-       level lv,
-       connect_by_isleaf isleaf,
-   sys_connect_by_path(inst_id||'_'||session_id||'_'||session_serial#||':'||sql_id||':'||sql_opname,'->') lock_chain,
-       sys_connect_by_path(EVENT,',') EVENT_CHAIN ,
-       connect_by_root(inst_id||'_'||session_id||'_'||session_serial#) root_sess
-  from ash
- --start with event like 'enq: TX - row lock contention%'
- start with blocking_session is not null
- connect by nocycle 
-        prior blocking_inst_id=inst_id
-    and prior blocking_session=session_id
-    and prior blocking_session_serial#=session_serial#
-    and prior sample_id=sample_id)
-select lock_chain lock_chain,
-       case when blocking_session is not null then blocking_inst_id||'_'||blocking_session||'_'||blocking_session_serial# else inst_id||'_'||session_id||'_'||session_serial# end blocking_header, EVENT_CHAIN,
+    select sample_time,
+           inst_id,
+           session_id,
+           session_serial#,
+           sql_id,
+           sql_opname,
+           event,
+           blocking_inst_id,
+           blocking_session,
+           blocking_session_serial#,
+           level lv,
+           connect_by_isleaf isleaf,
+           sys_connect_by_path(inst_id||'_'||session_id||'_'||session_serial#||':'||sql_id||':'||sql_opname, '->') lock_chain,
+           sys_connect_by_path(event, ',') event_chain,
+           connect_by_root(inst_id||'_'||session_id||'_'||session_serial#) root_sess
+      from ash
+     start with blocking_session is not null
+    connect by nocycle
+           prior blocking_inst_id = inst_id
+       and prior blocking_session = session_id
+       and prior blocking_session_serial# = session_serial#
+       and prior sample_id = sample_id
+)
+select lock_chain,
+       case when blocking_session is not null
+            then blocking_inst_id || '_' || blocking_session || '_' || blocking_session_serial#
+            else inst_id || '_' || session_id || '_' || session_serial#
+       end blocking_header,
+       event_chain,
        count(*) cnt,
-       TO_CHAR(min(sample_time),'YYYYMMDD HH24:MI:ss') first_seen,
-       TO_CHAR(max(sample_time),'YYYYMMDD HH24:MI:ss') last_seen
-   from ash2
-  where isleaf=1
-group by lock_chain,EVENT_CHAIN,case when blocking_session is not null then blocking_inst_id||'_'||blocking_session||'_'||blocking_session_serial# else inst_id||'_'||session_id||'_'||session_serial# end
-having count(*)>1
+       to_char(min(sample_time), 'YYYYMMDD HH24:MI:ss') first_seen,
+       to_char(max(sample_time), 'YYYYMMDD HH24:MI:ss') last_seen
+  from ash2
+ where isleaf = 1
+group by lock_chain,
+         event_chain,
+         case when blocking_session is not null
+              then blocking_inst_id || '_' || blocking_session || '_' || blocking_session_serial#
+              else inst_id || '_' || session_id || '_' || session_serial#
+         end
+having count(*) > 1
 order by first_seen, cnt desc;
 
 
@@ -2917,7 +2936,7 @@ col sample_time for a40;
 col sql_text for a60;
 col event for a40;
 select to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss'),a.SESSION_ID,a.SESSION_SERIAL#,a.event,a.p1,a.p2,a.p3,a.sql_id,a.BLOCKING_SESSION,a.BLOCKING_SESSION_SERIAL#,b.sql_text from DBA_HIST_ACTIVE_SESS_HISTORY a,dba_hist_sqltext b 
-where a.SAMPLE_TIME between to_date('2023-09-19 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2023-09-20 00:00:00','yyyy-mm-dd hh24:mi:ss')  and a.sql_id=b.sql_id            
+where a.SAMPLE_TIME between sysdate - 2/24  and sysdate  and a.sql_id=b.sql_id            
 AND a.EVENT = 'enq: TX - row lock contention'
 order by to_char(a.SAMPLE_TIME,'yyyymmdd hh24:mi:ss') ;
 
@@ -3418,8 +3437,9 @@ select * from (
     module
     from gv$sqlarea a where
     LAST_ACTIVE_TIME >=  (sysdate - 20/60*24)
-    order by TOTAL_USER_IO desc)
-where ROWNUM < 6
+    -- order by TOTAL_USER_IO desc)
+    order by TOTAL_ELAPSED desc)
+where ROWNUM < 20
 /
 
 -- 超过20MBPGA的查询 The following query will find any sessions in an Oracle dedicated environment using over 20mb pga memory:
@@ -3448,6 +3468,12 @@ INST_ID        SID    SERIAL# SPID	      USERNAME	      LOGON_TIME		PROGRAM 		  
 -- 自定义pga数，例如输入20就是pga20M的查询
 
 select s.inst_id, s.sql_id, s.sid, s.serial#, p.spid, s.machine, s.username, to_char(  s.logon_time, 'yyyy-mm-dd_hh24:mi:ss' ) logon_time, s.program, round(PGA_USED_MEM/1024/1024,0) PGA_USED_MEM, round(PGA_ALLOC_MEM/1024/1024,0) PGA_ALLOC_MEM from gv$session s , gv$process p Where s.paddr = p.addr and s.inst_id = p.inst_id and PGA_USED_MEM/1024/1024 > &mem_size and s.username is not null order by PGA_USED_MEM;
+
+
+
+-- 查找最忙的module
+
+select inst_id,  module , machine , count(1) from gv$session where status='ACTIVE' group by inst_id, module , machine  order by count(1) desc ;
 
 
 -- check remain time , 查看进程进度，推算剩余时间
@@ -4635,7 +4661,46 @@ select * from table (dbms_xplan.display_cursor (format=>'ALLSTATS LAST'));
 
 
 
+-- check PLAN_HASH_VALUE current
 
+SELECT SQL_ID, PLAN_HASH_VALUE, EXECUTIONS, ELAPSED_TIME, SQL_TEXT
+FROM DBA_HIST_SQLSTAT
+WHERE SQL_ID = '&sql_id';
+
+
+-- check PLAN_HASH_VALUE history
+
+
+col SCHEMA for a12
+col inst  for 9999
+col "Begin Time" for a16
+col "End Time" for a16
+col sql_id for a14
+select s.parsing_schema_name schema,
+       sn.instance_number "Inst",
+       s.executions_delta "Exec",
+    --  s.buffer_gets_delta "Gets",
+    --  decode(s.executions_delta,0,0,round(s.buffer_gets_delta / s.executions_delta, 2)) "Gets/per",
+    --  s.disk_reads_delta "Reads",
+    --  decode(s.executions_delta,0,0,round(s.disk_reads_delta / s.executions_delta, 4)) "Reads/per",
+       round(s.elapsed_time_delta * 1 / 1000000) "Elap",
+       decode(s.executions_delta,0,0,round(s.elapsed_time_delta / s.executions_delta * 1 / 1000000, 4)) "Elap/per",
+       round(s.cpu_time_delta * 1 / 1000000) "CPU",
+       decode(s.executions_delta,0,0,round(s.cpu_time_delta / s.executions_delta * 1 / 1000000, 4)) "CPU/per",
+       to_char(sn.begin_interval_time, 'yyyy-mm-dd hh24:mi') "Begin Time",
+       to_char(sn.end_interval_time, 'yyyy-mm-dd hh24:mi') "End Time",
+       t.sql_id,
+    -- t.sql_text,
+       s.plan_hash_value,
+       s.snap_id "Snap"
+  from dba_hist_snapshot sn, dba_hist_sqlstat s, dba_hist_sqltext t
+ where sn.snap_id = s.snap_id
+   and sn.instance_number = s.instance_number
+   and s.sql_id = t.sql_id
+   and s.sql_id in ('&sql_id')
+ --  and s.snap_id between 10242 and 10242
+ order by "Snap" DESC,"Inst";
+ 
 
 -- explain plan
 
@@ -4686,6 +4751,47 @@ alter system flush buffer_cache
 -- For RAC Environment:
 alter system flush buffer_cache global;
 alter system flush shared_pool global;
+
+
+
+
+-- 检查注册的绑定计划
+
+select * from dba_sql_plan_baselines;
+
+-- 绑定执行计划
+
+DECLARE
+    l_plans_loaded PLS_INTEGER;
+BEGIN
+    l_plans_loaded := DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(
+        sql_id => 'your_sql_id',            -- 目标 SQL_ID
+        plan_hash_value => 123456789,       -- 要绑定的计划的 PLAN_HASH_VALUE
+        fixed => 'YES'                      -- 是否固定此计划
+    );
+END;
+/
+
+
+
+-- 检查执行计划
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY_SQL_PLAN_BASELINE(
+    sql_handle => 'SQL_27e3cbf8b4c2ddb0',   -- 替换为实际的 SQL_HANDLE
+    plan_name  => 'SQL_PLAN_2gsybz2uc5rdhaf471d14'     -- 可选，替换为具体的 PLAN_NAME
+));
+
+
+
+-- 
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY_SQL_PLAN_BASELINE(
+    sql_handle => 'SQL_27e3cbf8b4c2ddb0',   -- 替换为实际的 SQL_HANDLE
+    plan_name  => 'SQL_PLAN_2gsybz2uc5rdhaf471d14'     -- 可选，替换为具体的 PLAN_NAME
+));
+
 
 
 -- 带绑定变量的

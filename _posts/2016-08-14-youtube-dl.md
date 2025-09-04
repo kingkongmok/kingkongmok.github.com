@@ -30,3 +30,11 @@ youtube-dl -x --audio-format mp3 URL
 ```
 youtube-dl -x --audio-format mp3 --playlist-start 1 --playlist-end 5 URL
 ```
+
+---
+
+yt-dlp 默认就可以自动选择最优画质的音视频组合并下载，你只需要加上 -f bestvideo+bestaudio 或干脆 不加格式参数，它会自动帮你完成合并，非常方便。
+
+```
+yt-dlp -f bestvideo+bestaudio --merge-output-format mp4 -o "%(title)s.%(ext)s" URL
+```

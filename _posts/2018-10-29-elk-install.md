@@ -326,6 +326,19 @@ curl -s "http://127.0.0.1:9200/_cat/indices?v"
 curl -s http://127.0.0.1:9200/_cat/health
 ```
 
+
+```
+curl -s 'http://127.0.0.1:9200/_cluster/allocation/explain'
+```
+
+
+查看未分配分片详情
+
+
+```
+curl -s 'http://127.0.0.1:9200/_cat/shards?v'
+```
+
 #### delete indexes
 
 ```
